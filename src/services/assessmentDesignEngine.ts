@@ -15,7 +15,7 @@ import { kbService, KnowledgeNode } from "./kbService";
 import { dbService, chapters, questions } from "./db";
 
 export interface ExamDesignOptions {
-  examType: "adaptive" | "mock" | "revision" | "chapter" | "topic" | "custom" | "ai-smart";
+  examType: "adaptive" | "mock" | "revision" | "chapter" | "topic" | "custom" | "ai-smart" | "random";
   questionCount?: number;
   chapterId?: number;
   topicId?: string;
@@ -181,6 +181,37 @@ export const assessmentDesignEngine = {
         }
         round++;
         if (round > 20) break;
+      }
+      if (selected.length > 0) return selected;
+    } else if (options.examType === "random") {
+      // Đề ngẫu nhiên tổng hợp: xáo trộn thứ tự chương và node trong từng chương,
+      // rồi round-robin qua các chương để chắc chắn TRẢI RỘNG mọi chương có câu hỏi.
+      const shuffle = <T,>(arr: T[]): T[] => {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      };
+      const chapterList = shuffle(chapters.map(c => c.id));
+      const nodesByChapter = new Map<number, KnowledgeNode[]>();
+      chapterList.forEach(cId => {
+        nodesByChapter.set(cId, shuffle(filteredNodes.filter(n => n.chapter === cId)));
+      });
+
+      const selected: KnowledgeNode[] = [];
+      let round = 0;
+      while (selected.length < count && selected.length < filteredNodes.length) {
+        for (const cId of chapterList) {
+          const chNodes = nodesByChapter.get(cId) || [];
+          if (chNodes[round] && !selected.some(s => s.id === chNodes[round].id)) {
+            selected.push(chNodes[round]);
+            if (selected.length >= count) break;
+          }
+        }
+        round++;
+        if (round > 50) break;
       }
       if (selected.length > 0) return selected;
     }

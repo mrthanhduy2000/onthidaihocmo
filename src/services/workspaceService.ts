@@ -22,6 +22,10 @@ const UNFINISHED_SESSION_KEY = () => `poly_econ_unfinished_session_${dbService.g
 // Key cũ dùng chung (không theo môn) - đọc để dọn nốt phiên treo tồn đọng.
 const LEGACY_UNFINISHED_KEY = "poly_econ_unfinished_session";
 const ARCHIVED_SUBJECTS_KEY = "poly_econ_archived_subjects";
+// Danh sách id câu hỏi vừa ra ở các lượt gần đây (theo môn) để chống lặp câu cũ liên tục.
+const RECENT_SERVED_KEY = () => `poly_econ_recent_served_${dbService.getActiveSubjectId()}`;
+// Giữ tối đa bao nhiêu id gần nhất trong hàng đợi chống lặp.
+const RECENT_SERVED_LIMIT = 80;
 
 export const workspaceService = {
   /**
@@ -254,6 +258,29 @@ export const workspaceService = {
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem(LEGACY_UNFINISHED_KEY);
     }
+  },
+
+  /**
+   * Chống lặp câu cũ: hàng đợi id câu vừa ra gần đây (theo môn).
+   * Các lượt tạo đề sẽ đẩy những câu này xuống cuối để ưu tiên câu mới hơn.
+   */
+  getRecentlyServedQuestionIds(): number[] {
+    const raw = localStorage.getItem(RECENT_SERVED_KEY());
+    if (!raw) return [];
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr.filter((n: any) => typeof n === "number") : [];
+    } catch {
+      return [];
+    }
+  },
+
+  recordServedQuestionIds(ids: number[]): void {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    const prev = this.getRecentlyServedQuestionIds();
+    // Câu mới ra đưa lên đầu; loại trùng; cắt theo hạn mức.
+    const merged = [...ids, ...prev.filter(id => !ids.includes(id))].slice(0, RECENT_SERVED_LIMIT);
+    localStorage.setItem(RECENT_SERVED_KEY(), JSON.stringify(merged));
   },
 
   /**

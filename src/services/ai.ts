@@ -10,6 +10,7 @@ import { learningEngine } from "./learningEngine";
 import { learnerModelService } from "./learnerModel";
 import { assessmentDesignEngine } from "./assessmentDesignEngine";
 import { examReviewEngine } from "./examReviewEngine";
+import { workspaceService } from "./workspaceService";
 import { AIRecommendation, ExamAttempt, Question, DifficultyLevel } from "../types";
 import { supabase } from "./supabaseClient";
 
@@ -538,17 +539,20 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     }
 
     // Chống lặp câu cũ: với các loại đề không phải "adaptive" (đã tự sắp theo điểm),
-    // ưu tiên câu CHƯA từng làm rồi mới tới câu đã làm, và xáo trộn trong từng nhóm để
-    // mỗi lần luyện chương/chủ đề/ngẫu nhiên ra bộ câu khác nhau, đồng thời câu AI tạo sinh
-    // (nằm cuối ngân hàng) cũng có cơ hội xuất hiện thay vì luôn trúng câu gốc đầu danh sách.
+    // xếp ưu tiên theo 2 tiêu chí: (1) chưa từng làm hơn đã làm, (2) chưa ra gần đây hơn vừa ra.
+    // Nhờ đó các lượt luyện liên tiếp không lặp lại cùng bộ câu, và câu AI tạo sinh cũng có cơ hội xuất hiện.
     if (config.type !== "adaptive") {
       const answered = new Set<number>();
       dbService.getHistory().forEach(h => {
         if (h && h.answers) Object.keys(h.answers).forEach(id => answered.add(parseInt(id)));
       });
-      const fresh = shuffleInPlace(pool.filter(q => !answered.has(q.id)));
-      const seen = shuffleInPlace(pool.filter(q => answered.has(q.id)));
-      pool = [...fresh, ...seen];
+      const recent = new Set<number>(workspaceService.getRecentlyServedQuestionIds());
+      // 4 nhóm ưu tiên giảm dần: mới&chưa-ra-gần > đã-làm&chưa-ra-gần > mới&vừa-ra > đã-làm&vừa-ra.
+      const freshNew = shuffleInPlace(pool.filter(q => !answered.has(q.id) && !recent.has(q.id)));
+      const seenNew = shuffleInPlace(pool.filter(q => answered.has(q.id) && !recent.has(q.id)));
+      const freshRecent = shuffleInPlace(pool.filter(q => !answered.has(q.id) && recent.has(q.id)));
+      const seenRecent = shuffleInPlace(pool.filter(q => answered.has(q.id) && recent.has(q.id)));
+      pool = [...freshNew, ...seenNew, ...freshRecent, ...seenRecent];
     }
 
     // Với các loại đề có ràng buộc (chương, chủ đề, mức độ, câu sai, câu đánh dấu),
@@ -590,6 +594,9 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
 
     // 3. Review assembled exam via Exam Review Engine
     const reviewResult = examReviewEngine.reviewExam(examSpec, selectedQuestions);
+
+    // Ghi nhận các câu vừa ra để lượt sau tránh lặp lại ngay (chống lặp câu cũ).
+    workspaceService.recordServedQuestionIds(selectedQuestions.map(q => q.id));
 
     return {
       id: `exam-${config.type}-${TimeService.nowTimestamp()}`,

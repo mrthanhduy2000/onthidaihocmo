@@ -35,13 +35,11 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
   // vô tình ghi lại bản chưa nộp đè lên bản đã nộp (dùng ref để tránh giá trị exam cũ trong closure).
   const submittedRef = useRef<boolean>(initialExam.isSubmitted);
 
-  // AI Tutor & Coaching States
+  // AI Tutor State (phản hồi tức thì bám sát câu hỏi, không còn dùng "coaching node" chung chung)
   const [isTutorMode, setIsTutorMode] = useState<boolean>(true);
-  const [coachingActive, setCoachingActive] = useState<boolean>(false);
-  const [coachingNode, setCoachingNode] = useState<any | null>(null);
-  const [coachingAnswered, setCoachingAnswered] = useState<boolean>(false);
-  const [coachingAnswerKey, setCoachingAnswerKey] = useState<string | null>(null);
-  const [coachingIsCorrect, setCoachingIsCorrect] = useState<boolean | null>(null);
+  // Các câu đã "chốt" đáp án trong chế độ gia sư: một khi đã lộ đáp án đúng thì khóa vĩnh viễn
+  // trong phiên, không cho đổi kể cả khi người dùng tắt công tắc gia sư (giữ liêm chính điểm số).
+  const [lockedIds, setLockedIds] = useState<Set<number>>(new Set());
   const [explanationLevel, setExplanationLevel] = useState<"simple" | "academic" | "expert" | "practical" | "business" | "teacher">("academic");
 
   // AI Explanation State
@@ -71,15 +69,6 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     };
   }, []);
 
-  // Reset coaching and success states when the active question changes (currentIdx changes)
-  useEffect(() => {
-    setCoachingActive(false);
-    setCoachingNode(null);
-    setCoachingAnswered(false);
-    setCoachingAnswerKey(null);
-    setCoachingIsCorrect(null);
-  }, [currentIdx]);
-
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const examQuestions: Question[] = exam.questions
@@ -87,6 +76,38 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     .filter((q): q is Question => !!q);
 
   const activeQuestion = examQuestions[currentIdx];
+
+  // Phím tắt chuyển câu: "," = câu trước, "." = câu sau. Bỏ qua khi đang gõ vào ô nhập
+  // hoặc khi hộp thoại nộp bài đang mở, để không cướp phím của người dùng.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (showSubmitModal) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable) return;
+      if (e.key === ",") {
+        setCurrentIdx(prev => (prev > 0 ? prev - 1 : prev));
+      } else if (e.key === ".") {
+        setCurrentIdx(prev => (prev < examQuestions.length - 1 ? prev + 1 : prev));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [examQuestions.length, showSubmitModal]);
+
+  // Khi ở chế độ gia sư và câu hiện tại đã có đáp án -> chốt khóa câu đó. Đã chốt thì
+  // giữ khóa vĩnh viễn trong phiên (tắt gia sư sau đó cũng không mở lại được).
+  useEffect(() => {
+    if (isTutorMode && activeQuestion && exam.answers[activeQuestion.id] !== undefined) {
+      setLockedIds(prev => {
+        if (prev.has(activeQuestion.id)) return prev;
+        const next = new Set(prev);
+        next.add(activeQuestion.id);
+        return next;
+      });
+    }
+  }, [isTutorMode, currentIdx, exam.answers]);
 
   // Set up timer (either countdown for exam, or count up elapsed for study)
   useEffect(() => {
@@ -175,9 +196,12 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
   const handleSelectAnswer = (optionKey: "a" | "b" | "c" | "d") => {
     if (exam.isSubmitted) return;
-    if (coachingActive) return; // Block answers during active coaching
-
-    const isCorrect = activeQuestion.correctAnswer === optionKey;
+    // Câu đã chốt (đã lộ đáp án đúng trong chế độ gia sư) thì khóa vĩnh viễn, kể cả khi
+    // người dùng tắt công tắc gia sư sau đó, để giữ liêm chính điểm số.
+    if (lockedIds.has(activeQuestion.id)) return;
+    // Chế độ gia sư: đã trả lời câu này thì không cho đổi (chặn cả trường hợp bấm nhanh
+    // trước khi effect chốt khóa kịp chạy). Chế độ thường vẫn cho đổi trước khi nộp.
+    if (isTutorMode && exam.answers[activeQuestion.id] !== undefined) return;
 
     // Lưu ý: trước đây có đoạn "đảo câu thích ứng thời gian thực" thay câu ở vị trí kế tiếp
     // ngay khi người dùng trả lời. Việc đó làm mồ côi các đáp án đã trả lời (câu bị thay ra khỏi
@@ -196,19 +220,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     // Chỉ lưu tiến trình vào PHIÊN chưa hoàn thành; không ghi vào lịch sử khi chưa nộp.
     workspaceService.saveUnfinishedSession(updated);
     setExam(updated);
-
-    // Trigger coaching immediately if wrong & tutor mode is active
-    if (!isCorrect && isTutorMode) {
-      const activeSubjectId = dbService.getActiveSubjectId();
-      const conceptNode = kbService.getConceptForQuestion(activeSubjectId, activeQuestion);
-      if (conceptNode) {
-        setCoachingNode(conceptNode);
-        setCoachingActive(true);
-        setCoachingAnswered(false);
-        setCoachingAnswerKey(null);
-        setCoachingIsCorrect(null);
-      }
-    }
+    // Phản hồi tức thì (đáp án đúng + lời giải bám sát câu hỏi) do các panel bên dưới đảm nhiệm.
   };
 
   const toggleBookmark = (qId: number) => {
@@ -503,7 +515,6 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           checked={isTutorMode} 
                           onChange={(e) => {
                             setIsTutorMode(e.target.checked);
-                            if (!e.target.checked) setCoachingActive(false);
                           }}
                           className="sr-only" 
                         />
@@ -580,17 +591,24 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
               {/* Multiple Choice Options */}
               <div className="grid grid-cols-1 gap-2.5 pt-1">
-                {(["a", "b", "c", "d"] as const).map((key) => {
+                {(() => {
+                  // Trong chế độ gia sư, khi đã trả lời thì lộ đáp án đúng/sai ngay trên các phương án
+                  // (không cần đợi nộp bài). Câu đã chốt khóa cũng luôn lộ + khóa. Chế độ thường chỉ lộ sau khi nộp.
+                  const answeredThis = exam.answers[activeQuestion.id] !== undefined;
+                  const committed = lockedIds.has(activeQuestion.id) || (isTutorMode && answeredThis);
+                  const reveal = exam.isSubmitted || committed;
+                  const locked = exam.isSubmitted || committed;
+                  return (["a", "b", "c", "d"] as const).map((key) => {
                   const optionText = activeQuestion.options[key];
                   const isSelected = exam.answers[activeQuestion.id] === key;
                   const isCorrect = activeQuestion.correctAnswer === key;
                   const isWrongSelection = isSelected && !isCorrect;
 
                   let optionStyle = "border-border-primary bg-bg-card text-text-secondary hover:bg-bg-surface/50 hover:border-text-muted/20";
-                  
-                  if (isSelected && !exam.isSubmitted) {
+
+                  if (isSelected && !reveal) {
                     optionStyle = "bg-bg-surface/80 border-text-primary text-text-primary font-medium shadow-xs";
-                  } else if (exam.isSubmitted) {
+                  } else if (reveal) {
                     if (isCorrect) {
                       optionStyle = "bg-brand-success-bg border-brand-success-border text-brand-success font-medium";
                     } else if (isWrongSelection) {
@@ -601,19 +619,19 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   }
 
                   return (
-                    <button 
+                    <button
                       key={key}
                       onClick={() => handleSelectAnswer(key)}
-                      disabled={exam.isSubmitted}
-                      className={`w-full text-left p-3.5 min-h-[44px] rounded-xl border flex items-center justify-between gap-4 transition-all duration-150 group relative cursor-pointer ${optionStyle}`}
+                      disabled={locked}
+                      className={`w-full text-left p-3.5 min-h-[44px] rounded-xl border flex items-center justify-between gap-4 transition-all duration-150 group relative ${locked ? "cursor-default" : "cursor-pointer"} ${optionStyle}`}
                     >
                       <div className="flex items-center gap-3.5">
                         <span className={`w-6 h-6 rounded-md flex items-center justify-center font-medium font-mono text-[11px] transition duration-150 ${
-                          isSelected && !exam.isSubmitted 
-                            ? "bg-text-primary text-bg-card" 
-                            : exam.isSubmitted && isCorrect 
+                          isSelected && !reveal
+                            ? "bg-text-primary text-bg-card"
+                            : reveal && isCorrect
                             ? "bg-brand-success text-white"
-                            : exam.isSubmitted && isWrongSelection
+                            : reveal && isWrongSelection
                             ? "bg-brand-danger text-white"
                             : "bg-bg-surface group-hover:bg-border-primary text-text-muted border border-border-primary/60"
                         }`}>
@@ -622,175 +640,42 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <span className="text-xs leading-relaxed font-sans">{optionText}</span>
                       </div>
 
-                      {exam.isSubmitted && isCorrect && (
+                      {reveal && isCorrect && (
                         <Check className="w-4 h-4 text-brand-success shrink-0" />
                       )}
-                      {exam.isSubmitted && isWrongSelection && (
+                      {reveal && isWrongSelection && (
                         <AlertCircle className="w-4 h-4 text-brand-danger shrink-0" />
                       )}
                     </button>
                   );
-                })}
+                });
+                })()}
               </div>
 
-              {/* Wrong Answer Coaching Panel */}
-              {coachingActive && coachingNode && (
-                <div className="border border-brand-warning-border/40 bg-brand-warning-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
-                  <div className="flex items-center gap-2 border-b border-brand-warning-border/30 pb-2.5">
-                    <Brain className="w-5 h-5 text-brand-warning animate-pulse" />
-                    <div>
-                      <h4 className="text-xs font-semibold text-brand-warning">Gia sư AI Coaching: Chấn chỉnh bẫy lý thuyết</h4>
-                      <p className="text-[10px] text-text-muted font-sans">Đừng lo lắng! Hãy rà soát lại khái niệm để nắm vững kiến thức gốc.</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 text-xs leading-relaxed font-sans text-text-secondary">
-                    {coachingNode.teaching?.misconception && (
-                      <div className="space-y-1">
-                        <span className="text-brand-danger font-semibold uppercase tracking-wider text-[9px] block">Lỗi hiểu sai phổ biến:</span>
-                        <p className="bg-brand-danger-bg/20 border border-brand-danger-border/20 p-3 rounded-lg text-text-primary">{coachingNode.teaching.misconception}</p>
-                      </div>
-                    )}
-
-                    <div className="space-y-1">
-                      <span className="text-brand-success font-semibold uppercase tracking-wider text-[9px] block">Bài học cốt lõi rút ngắn:</span>
-                      <p className="bg-bg-surface border border-border-primary/50 p-3 rounded-lg text-text-primary whitespace-pre-line">{coachingNode.coaching?.miniLesson || coachingNode.definition}</p>
-                    </div>
-
-                    {coachingNode.explanation?.analogy && (
-                      <p className="text-[11px] italic text-text-muted pl-2.5 border-l-2 border-text-muted">💡 Phép ẩn dụ: {coachingNode.explanation.analogy}</p>
-                    )}
-
-                    {/* Follow-up micro-quiz */}
-                    <div className="border-t border-border-primary/60 pt-3.5 space-y-3">
-                      <span className="text-brand-info font-semibold uppercase tracking-wider text-[9px] block flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-brand-info animate-pulse" />
-                        Câu hỏi rà soát nhanh (Micro-Quiz):
-                      </span>
-                      <p className="font-semibold text-text-primary text-xs leading-relaxed">{kbService.getCoachingOptions(coachingNode).question}</p>
-
-                      <div className="grid grid-cols-1 gap-2">
-                        {kbService.getCoachingOptions(coachingNode).options.map((opt) => {
-                          const isSelected = coachingAnswerKey === opt.key;
-                          let btnStyle = "border-border-primary bg-bg-card hover:bg-bg-surface text-text-secondary";
-                          if (isSelected) {
-                            btnStyle = opt.isCorrect 
-                              ? "bg-brand-success-bg border-brand-success text-brand-success font-medium"
-                              : "bg-brand-danger-bg border-brand-danger text-brand-danger font-medium";
-                          }
-
-                          return (
-                            <button
-                              key={opt.key}
-                              disabled={coachingAnswered && coachingIsCorrect === true}
-                              onClick={() => {
-                                setCoachingAnswerKey(opt.key);
-                                setCoachingAnswered(true);
-                                setCoachingIsCorrect(opt.isCorrect);
-                                if (opt.isCorrect) {
-                                  dbService.boostConceptMastery(coachingNode.id, 15);
-                                }
-                              }}
-                              className={`w-full text-left p-3 rounded-xl border text-xs leading-relaxed flex items-center gap-3 transition-all duration-150 cursor-pointer ${btnStyle}`}
-                            >
-                              <span className={`w-5 h-5 rounded-md flex items-center justify-center font-bold text-[10px] ${
-                                isSelected && opt.isCorrect ? "bg-brand-success text-white" :
-                                isSelected && !opt.isCorrect ? "bg-brand-danger text-white" : "bg-bg-surface border"
-                              }`}>
-                                {opt.key.toUpperCase()}
-                              </span>
-                              <span>{opt.text}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {coachingAnswered && (
-                        <div className="animate-fade-in pt-1">
-                          {coachingIsCorrect ? (
-                            <div className="bg-brand-success-bg border border-brand-success-border text-brand-success p-3 rounded-lg text-xs leading-relaxed font-sans flex items-start gap-2">
-                              <Check className="w-4 h-4 mt-0.5 shrink-0" />
-                              <div>
-                                <strong>Tuyệt vời!</strong> Bạn đã thấu suốt bản chất lý thuyết. Hệ thống cộng <strong>+15% điểm thông thạo</strong> cho khái niệm <strong>{coachingNode.concept}</strong>.
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-brand-danger-bg border border-brand-danger-border text-brand-danger p-3 rounded-lg text-xs leading-relaxed font-sans flex items-start gap-2">
-                              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                              <div>
-                                <strong>Chưa đúng rồi!</strong> Hãy xem kỹ lại bài học rút ngắn ở trên và thử chọn lại đáp án đúng nhé.
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Coach Action footer to dismiss coaching once correct */}
-                  <div className="flex justify-end pt-2 border-t border-brand-warning-border/30">
-                    <button
-                      onClick={() => {
-                        setCoachingActive(false);
-                        setCoachingNode(null);
-                        setCoachingAnswerKey(null);
-                        setCoachingAnswered(false);
-                        setCoachingIsCorrect(null);
-                        if (currentIdx === examQuestions.length - 1) {
-                          submitExam();
-                        } else {
-                          handleNext();
-                        }
-                      }}
-                      className="bg-brand-warning text-white text-[11px] font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition duration-150 flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>{currentIdx === examQuestions.length - 1 ? "Hoàn thành & Xem kết quả" : "Tiếp tục học phần"}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Correct Answer Success Panel (Tutor Mode) */}
-              {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] === activeQuestion.correctAnswer && !coachingActive && (
+              {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] === activeQuestion.correctAnswer && (
                 <div className="border border-brand-success-border/40 bg-brand-success-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
                   <div className="flex items-center gap-2 border-b border-brand-success-border/30 pb-2.5">
                     <CheckCircle2 className="w-5 h-5 text-brand-success animate-pulse" />
                     <div>
                       <h4 className="text-xs font-semibold text-brand-success">Chính xác! Bạn đã chọn đúng đáp án</h4>
-                      <p className="text-[10px] text-text-muted font-sans">Tuyệt vời! Bạn đã trả lời đúng câu hỏi này.</p>
+                      <p className="text-[10px] text-text-muted font-sans">Dùng phím Câu trước/Câu sau (hoặc phím , và .) để chuyển câu.</p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2 text-xs font-sans text-text-secondary">
                     <span className="text-brand-success font-semibold uppercase tracking-wider text-[9px] block">Giải nghĩa từ giáo trình:</span>
                     <p className="bg-bg-card border border-border-primary/50 p-3 rounded-lg text-text-primary leading-relaxed">
                       {activeQuestion.explanation}
                     </p>
                   </div>
-
-                  <div className="flex justify-end pt-2 border-t border-brand-success-border/30">
-                    <button
-                      onClick={() => {
-                        if (currentIdx === examQuestions.length - 1) {
-                          submitExam();
-                        } else {
-                          handleNext();
-                        }
-                      }}
-                      className="bg-brand-success text-white text-[11px] font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition duration-150 flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>{currentIdx === examQuestions.length - 1 ? "Hoàn thành & Xem kết quả" : "Tiếp tục học phần"}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
               )}
 
-              {/* Phản hồi khi trả lời SAI (tutor mode): luôn hiện đáp án đúng + giải thích + nút đi tiếp,
-                  để người học không bị "im lặng không phản hồi" và không kẹt lại thành phiên dở. */}
+              {/* Phản hồi khi trả lời SAI (tutor mode): bám sát ĐÚNG câu hỏi hiện tại,
+                  hiện thẳng đáp án đúng + lời giải giáo trình, và cho phép yêu cầu AI phân tích sâu. */}
               {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] !== undefined
-                && exam.answers[activeQuestion.id] !== activeQuestion.correctAnswer && !coachingActive && (
+                && exam.answers[activeQuestion.id] !== activeQuestion.correctAnswer && (
                 <div className="border border-brand-danger-border/40 bg-brand-danger-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
                   <div className="flex items-center gap-2 border-b border-brand-danger-border/30 pb-2.5">
                     <AlertCircle className="w-5 h-5 text-brand-danger" />
@@ -798,7 +683,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <h4 className="text-xs font-semibold text-brand-danger">Chưa đúng. Cùng xem lại nhé</h4>
                       <p className="text-[10px] text-text-muted font-sans">
                         Bạn chọn {String(exam.answers[activeQuestion.id]).toUpperCase()}. Đáp án đúng là{" "}
-                        <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>.
+                        <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>. Dùng phím , và . để chuyển câu.
                       </p>
                     </div>
                   </div>
@@ -814,21 +699,32 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     </p>
                   </div>
 
-                  <div className="flex justify-end pt-2 border-t border-brand-danger-border/30">
-                    <button
-                      onClick={() => {
-                        if (currentIdx === examQuestions.length - 1) {
-                          submitExam();
-                        } else {
-                          handleNext();
-                        }
-                      }}
-                      className="bg-text-primary text-bg-card text-[11px] font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition duration-150 flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>{currentIdx === examQuestions.length - 1 ? "Hoàn thành & Xem kết quả" : "Câu tiếp theo"}</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  {/* Gia sư AI phân tích sâu theo đúng câu hỏi (gọi khi người học yêu cầu) */}
+                  {aiExplanations[activeQuestion.id] ? (
+                    <div className="space-y-1.5">
+                      <span className="text-brand-info font-semibold uppercase tracking-wider text-[9px] block flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-brand-info" />
+                        Gia sư AI phân tích sâu:
+                      </span>
+                      <div className="bg-bg-surface border border-brand-info/30 p-3 rounded-lg text-text-primary leading-relaxed text-xs">
+                        <SimpleMarkdown text={aiExplanations[activeQuestion.id]} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex justify-start pt-1">
+                      <button
+                        onClick={() => handleRequestAIExplanation(activeQuestion.id)}
+                        disabled={aiLoading[activeQuestion.id]}
+                        className="bg-brand-info/10 text-brand-info border border-brand-info/30 text-[11px] font-semibold px-4 py-2 rounded-lg hover:bg-brand-info/20 transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{aiLoading[activeQuestion.id] ? "Đang phân tích..." : "Nhờ gia sư AI phân tích sâu"}</span>
+                      </button>
+                    </div>
+                  )}
+                  {aiError[activeQuestion.id] && (
+                    <p className="text-[11px] text-brand-danger">{aiError[activeQuestion.id]}</p>
+                  )}
                 </div>
               )}
 

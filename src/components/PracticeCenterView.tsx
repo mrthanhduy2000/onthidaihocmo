@@ -4,10 +4,10 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Play, Brain, RotateCcw, Award, Layers, ChevronRight, 
+import {
+  Play, Brain, RotateCcw, Award, Layers, ChevronRight,
   BookOpen, Bookmark, Sparkles, Filter, Clock, CheckCircle2,
-  Sliders
+  Sliders, Shuffle
 } from "lucide-react";
 import { dbService, chapters, topics, questions } from "../services/db";
 import { aiService } from "../services/ai";
@@ -112,7 +112,9 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
   };
 
   const handleStartCustomRandom = () => {
-    const exam = aiService.generateExam({ type: "random", count: randomCount });
+    if (totalAvailable === 0) return;
+    const count = Math.min(randomCount, totalAvailable);
+    const exam = aiService.generateExam({ type: "random", count });
     onStartExam(exam);
   };
 
@@ -253,6 +255,49 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Giải đề ngẫu nhiên tổng hợp: rút câu ngẫu nhiên trải rộng mọi chương, ưu tiên câu ít gặp gần đây */}
+      <div className="bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-info/15 text-brand-info flex items-center justify-center shrink-0">
+            <Shuffle className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-medium text-text-primary">Giải đề ngẫu nhiên tổng hợp</h3>
+            <p className="text-xs text-text-muted mt-1 leading-relaxed">
+              Rút ngẫu nhiên {Math.min(randomCount, totalAvailable) || randomCount} câu trải rộng {chaptersWithQuestions}/{chapters.length} chương,
+              ưu tiên câu ít gặp gần đây. Kết quả tự động cập nhật vào thống kê, điểm yếu và tiến độ sau khi nộp.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Chọn quy mô đề ngẫu nhiên */}
+          <div className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60">
+            {[10, 20, 30].map((n) => (
+              <button
+                key={n}
+                onClick={() => setRandomCount(n)}
+                className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                  randomCount === n
+                    ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary"
+                    : "text-text-muted hover:text-text-primary"
+                }`}
+              >
+                {n} câu
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={handleStartCustomRandom}
+            disabled={totalAvailable === 0}
+            className="bg-brand-info text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            <Play className="w-3.5 h-3.5" />
+            <span>Bắt đầu</span>
+          </button>
         </div>
       </div>
 
