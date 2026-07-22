@@ -51,7 +51,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
   const [debtItems, setDebtItems] = useState<StudyDebtItem[]>(() => examForecaster.getStudyDebtItems());
 
   // Sessions State
-  const [sessions, setSessions] = useState<ExamAttempt[]>(() => dbService.getHistory());
+  // Chỉ hiển thị các bài ĐÃ NỘP trong lịch sử phiên làm bài.
+  const [sessions, setSessions] = useState<ExamAttempt[]>(() => dbService.getHistory().filter(a => a.isSubmitted));
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [showClearHistoryConfirm, setShowClearHistoryConfirm] = useState<boolean>(false);
 
@@ -65,7 +66,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
     setGoal(updatedGoal);
     setPrediction(examForecaster.calculatePrediction(activeSubjectId));
     setDebtItems(examForecaster.getStudyDebtItems());
-    setSessions(dbService.getHistory());
+    setSessions(dbService.getHistory().filter(a => a.isSubmitted));
   }, [activeSubjectId]);
 
   const handleGoalSave = (newGoal: Partial<SubjectGoal>) => {
@@ -85,7 +86,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
   const handleDeleteSession = (attemptId: string) => {
     dbService.deleteHistoryAttempt(attemptId);
-    setSessions(dbService.getHistory());
+    setSessions(dbService.getHistory().filter(a => a.isSubmitted));
     setPrediction(examForecaster.calculatePrediction(activeSubjectId));
     setSessionToDelete(null);
   };
@@ -93,7 +94,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
   const handleDuplicateSession = (attemptId: string) => {
     const dup = dbService.duplicateAttempt(attemptId);
     if (dup) {
-      setSessions(dbService.getHistory());
+      setSessions(dbService.getHistory().filter(a => a.isSubmitted));
       onStartExam(dup.examType, dup);
     }
   };

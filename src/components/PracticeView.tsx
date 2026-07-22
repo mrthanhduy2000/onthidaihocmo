@@ -31,6 +31,9 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
   
   // Ref to track timeSpent to avoid rendering/updating DB on every single second
   const timeSpentRef = useRef<number>(initialExam.timeSpent);
+  // Đánh dấu đã nộp để các effect nền (đồng bộ định kỳ, cleanup khi unmount) KHÔNG
+  // vô tình ghi lại bản chưa nộp đè lên bản đã nộp (dùng ref để tránh giá trị exam cũ trong closure).
+  const submittedRef = useRef<boolean>(initialExam.isSubmitted);
 
   // AI Tutor & Coaching States
   const [isTutorMode, setIsTutorMode] = useState<boolean>(true);
@@ -141,12 +144,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     };
   }, [exam.isSubmitted, timerActive, userSettings.enableTimer]);
 
-  // Periodic sync to dbService every 10 seconds to make sure state is saved in case of exit/refresh
+  // Đồng bộ tiến trình mỗi 10 giây để không mất bài khi thoát/tải lại.
+  // LƯU vào PHIÊN chưa hoàn thành (không ghi vào lịch sử) để lịch sử chỉ chứa bài đã nộp.
   useEffect(() => {
     if (exam.isSubmitted) return;
 
     const interval = setInterval(() => {
-      dbService.saveAttempt({
+      if (submittedRef.current) return;
+      workspaceService.saveUnfinishedSession({
         ...exam,
         timeSpent: timeSpentRef.current
       });
@@ -155,11 +160,12 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     return () => clearInterval(interval);
   }, [exam]);
 
-  // Save on component unmount
+  // Lưu khi rời trang: chỉ lưu vào phiên chưa hoàn thành, và bỏ qua nếu đã nộp
+  // (kiểm tra qua ref để không dùng giá trị exam cũ trong closure gây tái tạo phiên đã nộp).
   useEffect(() => {
     return () => {
-      if (!exam.isSubmitted) {
-        dbService.saveAttempt({
+      if (!submittedRef.current) {
+        workspaceService.saveUnfinishedSession({
           ...exam,
           timeSpent: timeSpentRef.current
         });
@@ -265,6 +271,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         score: correctCount,
       };
 
+      // Đánh dấu đã nộp TRƯỚC để các effect nền không ghi đè bản đã nộp.
+      submittedRef.current = true;
       // Save attempt synchronously and clear unfinished session
       dbService.saveAttempt(updated);
       workspaceService.clearUnfinishedSession();
@@ -276,6 +284,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     } catch (err) {
       console.error("Error submitting exam:", err);
       // Fallback: at least mark as submitted and close modal to unblock user
+      submittedRef.current = true;
       const fallbackAttempt: ExamAttempt = { ...exam, isSubmitted: true };
       dbService.saveAttempt(fallbackAttempt);
       workspaceService.clearUnfinishedSession();
@@ -398,6 +407,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               <button
                 onClick={() => {
                   const newExam = aiService.generateExam({ type: "adaptive", count: 10 });
+                  submittedRef.current = false;
                   workspaceService.saveUnfinishedSession(newExam);
                   setExam(newExam);
                   setCurrentIdx(0);
