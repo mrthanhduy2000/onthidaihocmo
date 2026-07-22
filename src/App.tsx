@@ -7,10 +7,8 @@ import React, { useState, useEffect } from "react";
 import { 
   LayoutDashboard, Play, RotateCcw, BarChart3, Brain, 
   Sun, Moon, Monitor, GraduationCap, Flame, Award, Target,
-  FolderKanban, Command, Settings as SettingsIcon, Search, LogOut
+  FolderKanban, Command, Settings as SettingsIcon, Search
 } from "lucide-react";
-import { supabase } from "./services/supabaseClient";
-import { cloudSync } from "./services/cloudSync";
 import Dashboard from "./components/Dashboard";
 import PracticeCenterView from "./components/PracticeCenterView";
 import ReviewNotebookView from "./components/ReviewNotebookView";
@@ -233,20 +231,6 @@ export default function App() {
             >
               <SettingsIcon className="w-3.5 h-3.5" />
             </button>
-
-            {/* Sign-out Button */}
-            {supabase && (
-              <button
-                onClick={async () => {
-                  await cloudSync.push();
-                  await supabase.auth.signOut();
-                }}
-                className="p-1.5 bg-bg-surface border border-border-primary hover:border-brand-danger/40 rounded-md text-text-muted hover:text-brand-danger transition cursor-pointer"
-                title="Đăng xuất (đã lưu dữ liệu lên đám mây)"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            )}
 
             <div className="h-4 w-[1px] bg-border-primary/85 hidden sm:block" />
             <div className="flex items-center gap-3 text-xs">

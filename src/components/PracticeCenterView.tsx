@@ -267,8 +267,8 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
           <div>
             <h3 className="text-base font-medium text-text-primary">Giải đề ngẫu nhiên tổng hợp</h3>
             <p className="text-xs text-text-muted mt-1 leading-relaxed">
-              Rút ngẫu nhiên {Math.min(randomCount, totalAvailable) || randomCount} câu trải rộng {chaptersWithQuestions}/{chapters.length} chương,
-              ưu tiên câu ít gặp gần đây. Kết quả tự động cập nhật vào thống kê, điểm yếu và tiến độ sau khi nộp.
+              Rút {Math.min(randomCount, totalAvailable) || randomCount} câu trải rộng {chaptersWithQuestions}/{chapters.length} chương,
+              ưu tiên ôn lại câu từng sai (lặp lại giãn cách) để nhớ lâu hơn. Kết quả tự cập nhật thống kê, điểm yếu và tiến độ sau khi nộp.
             </p>
           </div>
         </div>

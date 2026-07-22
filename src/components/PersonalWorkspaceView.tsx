@@ -32,6 +32,7 @@ import {
   Check,
   Share2,
   ListFilter,
+  Shuffle,
   X
 } from "lucide-react";
 import { dbService, chapters } from "../services/db";
@@ -439,6 +440,28 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             </div>
 
           </div>
+
+          {/* Giải đề ngẫu nhiên tổng hợp (ôn tập thông minh để nhớ lâu) */}
+          <button
+            onClick={() => onStartExam("random", aiService.generateExam({ type: "random", count: 20 }))}
+            className="w-full bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 hover:border-brand-info rounded-2xl p-5 flex items-center justify-between gap-4 transition cursor-pointer text-left group shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-info/15 text-brand-info flex items-center justify-center shrink-0">
+                <Shuffle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-text-primary">Giải đề ngẫu nhiên tổng hợp</h4>
+                <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                  20 câu trải rộng mọi chương, ưu tiên ôn lại câu từng sai để nhớ lâu hơn (lặp lại giãn cách + xen kẽ chương).
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-brand-info flex items-center gap-1 shrink-0">
+              Bắt đầu
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </span>
+          </button>
 
           {/* Resource Relation Graph Preview */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">

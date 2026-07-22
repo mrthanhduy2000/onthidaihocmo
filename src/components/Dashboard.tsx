@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { 
   Play, RotateCcw, Brain, Calendar, Clock, Award, Flame, 
   ArrowRight, ChevronRight, CheckCircle2, AlertTriangle, BookOpen, 
-  Sparkles, Layers, TrendingUp, Target, Sliders, Eye, EyeOff
+  Sparkles, Layers, TrendingUp, Target, Sliders, Eye, EyeOff, Shuffle
 } from "lucide-react";
 import { dbService, chapters } from "../services/db";
 import { aiService } from "../services/ai";
@@ -87,6 +87,11 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
     else if (sec.actionType === "practice-center") onNavigate("practice");
   };
 
+  const handleStartComprehensive = () => {
+    const exam = aiService.generateExam({ type: "random", count: 20 });
+    onStartExam(exam);
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto px-4 sm:px-6 py-8 fade-in-up">
       {/* 5 CORE QUESTIONS SIMPLIFIED BAR */}
@@ -140,11 +145,33 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
         />
       )}
 
+      {/* GIẢI ĐỀ NGẪU NHIÊN TỔNG HỢP (ôn tập thông minh để nhớ lâu) */}
+      <button
+        onClick={handleStartComprehensive}
+        className="w-full bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 hover:border-brand-info rounded-2xl p-5 flex items-center justify-between gap-4 transition cursor-pointer text-left group"
+      >
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-info/15 text-brand-info flex items-center justify-center shrink-0">
+            <Shuffle className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-medium text-text-primary">Giải đề ngẫu nhiên tổng hợp</h3>
+            <p className="text-xs text-text-muted mt-1 leading-relaxed">
+              20 câu trải rộng mọi chương, ưu tiên ôn lại câu từng sai để nhớ lâu hơn (lặp lại giãn cách + xen kẽ chương).
+            </p>
+          </div>
+        </div>
+        <span className="text-xs font-semibold text-brand-info flex items-center gap-1 shrink-0">
+          Bắt đầu
+          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </span>
+      </button>
+
       {/* SINGLE HERO DECISION CARD */}
-      <HomeHero 
-        action={nextAction} 
-        onExecutePrimary={handleExecutePrimary} 
-        onExecuteSecondary={handleExecuteSecondary} 
+      <HomeHero
+        action={nextAction}
+        onExecutePrimary={handleExecutePrimary}
+        onExecuteSecondary={handleExecuteSecondary}
       />
 
       {/* DAILY LEARNING STORY */}

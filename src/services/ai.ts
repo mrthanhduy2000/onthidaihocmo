@@ -538,16 +538,34 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
       pool = scored.map(s => s.q);
     }
 
-    // Chống lặp câu cũ: với các loại đề không phải "adaptive" (đã tự sắp theo điểm),
-    // xếp ưu tiên theo 2 tiêu chí: (1) chưa từng làm hơn đã làm, (2) chưa ra gần đây hơn vừa ra.
-    // Nhờ đó các lượt luyện liên tiếp không lặp lại cùng bộ câu, và câu AI tạo sinh cũng có cơ hội xuất hiện.
-    if (config.type !== "adaptive") {
+    // Chống lặp câu cũ + ôn tập thông minh.
+    if (config.type === "random") {
+      // Đề ngẫu nhiên tổng hợp = ôn tập để NHỚ LÂU: ưu tiên theo khoa học ghi nhớ (giãn cách + xen kẽ):
+      //   1) câu TỪNG SAI (nợ kiến thức, cần gặp lại để củng cố)
+      //   2) câu CHƯA TỪNG LÀM (mở rộng độ phủ)
+      //   3) câu ĐÃ ĐÚNG (ôn lại giãn cách để khỏi quên)
+      // Trong mỗi nhóm, câu chưa ra gần đây đứng trước; câu vừa ra dồn xuống cuối để tránh lặp ngay.
+      const stats = dbService.getStatistics();
+      const wrong = new Set<number>(Object.keys(stats.incorrectQuestionHistory || {}).map(id => parseInt(id)));
       const answered = new Set<number>();
       dbService.getHistory().forEach(h => {
         if (h && h.answers) Object.keys(h.answers).forEach(id => answered.add(parseInt(id)));
       });
       const recent = new Set<number>(workspaceService.getRecentlyServedQuestionIds());
-      // 4 nhóm ưu tiên giảm dần: mới&chưa-ra-gần > đã-làm&chưa-ra-gần > mới&vừa-ra > đã-làm&vừa-ra.
+      const notRecent = (q: Question) => !recent.has(q.id);
+      const wrongB = shuffleInPlace(pool.filter(q => wrong.has(q.id) && notRecent(q)));
+      const freshB = shuffleInPlace(pool.filter(q => !answered.has(q.id) && !wrong.has(q.id) && notRecent(q)));
+      const correctB = shuffleInPlace(pool.filter(q => answered.has(q.id) && !wrong.has(q.id) && notRecent(q)));
+      const recentB = shuffleInPlace(pool.filter(q => recent.has(q.id)));
+      pool = [...wrongB, ...freshB, ...correctB, ...recentB];
+    } else if (config.type !== "adaptive") {
+      // Các loại đề còn lại (đã tự sắp theo điểm với "adaptive"): xếp ưu tiên theo 2 tiêu chí:
+      // (1) chưa từng làm hơn đã làm, (2) chưa ra gần đây hơn vừa ra.
+      const answered = new Set<number>();
+      dbService.getHistory().forEach(h => {
+        if (h && h.answers) Object.keys(h.answers).forEach(id => answered.add(parseInt(id)));
+      });
+      const recent = new Set<number>(workspaceService.getRecentlyServedQuestionIds());
       const freshNew = shuffleInPlace(pool.filter(q => !answered.has(q.id) && !recent.has(q.id)));
       const seenNew = shuffleInPlace(pool.filter(q => answered.has(q.id) && !recent.has(q.id)));
       const freshRecent = shuffleInPlace(pool.filter(q => !answered.has(q.id) && recent.has(q.id)));
