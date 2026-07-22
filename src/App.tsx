@@ -104,7 +104,7 @@ export default function App() {
                   <GraduationCap className="w-4 h-4" />
                 </div>
                 <span className="font-display font-medium text-xs tracking-wider text-text-primary hidden sm:inline-block">
-                  ÔN THI KINH TẾ CHÍNH TRỊ
+                  ÔN THI ĐẠI HỌC MỞ
                 </span>
               </div>
               

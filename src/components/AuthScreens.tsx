@@ -14,7 +14,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             <GraduationCap className="w-5 h-5" />
           </div>
           <div>
-            <div className="font-display font-medium text-sm tracking-wide">ÔN THI KINH TẾ CHÍNH TRỊ</div>
+            <div className="font-display font-medium text-sm tracking-wide">ÔN THI ĐẠI HỌC MỞ</div>
             <div className="text-[11px] text-text-muted">Hệ thống luyện thi cá nhân</div>
           </div>
         </div>

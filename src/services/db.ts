@@ -41,7 +41,10 @@ export const chapterMap = new Map<number, Chapter>();
 
 // Keys
 const SETTINGS_KEY = "poly_econ_settings";
-let activeSubjectId = localStorage.getItem("poly_econ_active_subject_id") || "poli_econ";
+let activeSubjectId = localStorage.getItem("poly_econ_active_subject_id") || "customer_behavior";
+// Môn Kinh tế chính trị đã đóng: nếu trạng thái cũ (kể cả đã đồng bộ từ cloud) đang chọn
+// môn này thì tự chuyển về Hành vi khách hàng để không kẹt ở môn không còn hiển thị.
+if (activeSubjectId === "poli_econ") activeSubjectId = "customer_behavior";
 
 const HISTORY_KEY = () => `poly_econ_history_${activeSubjectId}`;
 const STATS_KEY = () => `poly_econ_statistics_${activeSubjectId}`;
@@ -171,12 +174,9 @@ loadSubject(activeSubjectId);
 
 export const dbService = {
   getSubjects(): Subject[] {
+    // Môn Kinh tế chính trị Mác - Lênin đã đóng (đã thi xong) nên gỡ khỏi danh sách hiển thị.
+    // Dữ liệu môn này vẫn còn trong code nhưng không được chọn nữa.
     const defaultSubjects: Subject[] = [
-      {
-        id: "poli_econ",
-        name: "Kinh tế chính trị Mác - Lênin",
-        description: "Hệ thống lý luận kinh tế học Mác - Lênin, bao gồm hàng hóa, giá trị thặng dư, độc quyền và kinh tế thị trường định hướng XHCN Việt Nam."
-      },
       {
         id: "customer_behavior",
         name: "Hành vi Khách hàng",
@@ -248,7 +248,7 @@ export const dbService = {
     localStorage.removeItem(`poly_econ_statistics_${id}`);
 
     if (activeSubjectId === id) {
-      this.setActiveSubjectId("poli_econ");
+      this.setActiveSubjectId("customer_behavior");
     }
   },
 
@@ -259,7 +259,7 @@ export const dbService = {
   getActiveSubjectName(): string {
     const subjects = this.getSubjects();
     const currentSubject = subjects.find(s => s.id === activeSubjectId);
-    return currentSubject ? currentSubject.name : "Kinh tế chính trị Mác - Lênin";
+    return currentSubject ? currentSubject.name : "Hành vi Khách hàng";
   },
 
   addCustomSubject(id: string, name: string, description: string): Subject {
