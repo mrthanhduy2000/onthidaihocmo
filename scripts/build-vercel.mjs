@@ -21,13 +21,13 @@ const root = path.join(__dirname, "..");
 const outDir = path.join(root, ".vercel", "output");
 const NODE_RUNTIME = "nodejs22.x";
 
-// Danh sách route serverless: đường dẫn file nguồn -> route URL.
+// Danh sách route serverless: đường dẫn file nguồn (ngoài /api để Vercel không tự build) -> route URL.
 const routes = [
-  { src: "api/health.ts", route: "api/health" },
-  { src: "api/ai/generate.ts", route: "api/ai/generate" },
-  { src: "api/ai/explain.ts", route: "api/ai/explain" },
-  { src: "api/ai/chat.ts", route: "api/ai/chat" },
-  { src: "api/ai/recommend.ts", route: "api/ai/recommend" },
+  { src: "functions-src/health.ts", route: "api/health" },
+  { src: "functions-src/ai/generate.ts", route: "api/ai/generate" },
+  { src: "functions-src/ai/explain.ts", route: "api/ai/explain" },
+  { src: "functions-src/ai/chat.ts", route: "api/ai/chat" },
+  { src: "functions-src/ai/recommend.ts", route: "api/ai/recommend" },
 ];
 
 async function main() {

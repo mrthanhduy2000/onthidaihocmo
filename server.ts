@@ -10,11 +10,11 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 
-import health from "./api/health";
-import generate from "./api/ai/generate";
-import explain from "./api/ai/explain";
-import chat from "./api/ai/chat";
-import recommend from "./api/ai/recommend";
+import health from "./functions-src/health";
+import generate from "./functions-src/ai/generate";
+import explain from "./functions-src/ai/explain";
+import chat from "./functions-src/ai/chat";
+import recommend from "./functions-src/ai/recommend";
 
 dotenv.config();
 
