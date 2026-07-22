@@ -43,7 +43,7 @@ ${text}
 Yêu cầu biên soạn:
 1. Mỗi câu hỏi phải có đúng 4 phương án lựa chọn (A, B, C, D) rõ ràng, khoa học, tránh bẫy ngôn từ vô nghĩa.
 2. Chỉ có duy nhất 1 phương án đúng.
-3. Đáp án đúng được lưu dưới dạng chữ thường ('a', 'b', 'c', hoặc 'd').
+3. Đáp án đúng được lưu dưới dạng chữ thường ('a', 'b', 'c', hoặc 'd'). CỰC KỲ QUAN TRỌNG: trước khi trả về mỗi câu, hãy TỰ KIỂM TRA lại rằng trường correctAnswer trỏ ĐÚNG vào phương án mà phần explanation khẳng định là đúng. Với câu hỏi dạng phủ định ('KHÔNG', 'NGOẠI TRỪ'), correctAnswer phải là phương án nằm NGOÀI danh sách/không thỏa điều kiện. Tuyệt đối không để lệch giữa correctAnswer và nội dung phương án đúng.
 4. Phần giải thích (explanation) phải viết bằng tiếng Việt thật chi tiết, có tính sư phạm cao, lý giải rõ tại sao phương án đó là đúng và tại sao các phương án khác chưa chính xác.
 ${chapterInstruction}
 6. Gán topicId: sử dụng mã chủ đề phù hợp, ví dụ 'CB_T1.1', 'CB_T2.1' hoặc 'T1.1' tùy theo nội dung và chương học.

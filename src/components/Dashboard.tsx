@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { dbService, chapters } from "../services/db";
 import { aiService } from "../services/ai";
+import { workspaceService } from "../services/workspaceService";
 import { TimeService } from "../services/time";
 import { learningJourneyOrchestrator, DailyLearningStoryData, SimplifiedDashboardState } from "../services/learningJourneyOrchestrator";
 import { NextBestAction } from "../services/nextBestAction";
@@ -52,7 +53,13 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
     setSimplified(learningJourneyOrchestrator.getSimplifiedDashboardState());
   }, []);
 
-  const unfinishedExam = overview.lastExam && !overview.lastExam.isSubmitted ? overview.lastExam : null;
+  // Bài đang làm dở lấy từ phiên chưa hoàn thành (đã kiểm tra bỏ qua bài đã nộp),
+  // và chỉ tính là "dở" khi còn câu chưa trả lời.
+  const pendingSession = workspaceService.getUnfinishedSession();
+  const unfinishedExam = pendingSession
+    && Object.keys(pendingSession.answers || {}).length < (pendingSession.questions?.length || 0)
+    ? pendingSession
+    : null;
 
   const handleExecutePrimary = (primary: NextBestAction["primaryAction"]) => {
     if (primary.examType === "continue" && unfinishedExam) {

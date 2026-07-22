@@ -4,6 +4,7 @@
  */
 
 import { dbService } from "./db";
+import { workspaceService } from "./workspaceService";
 import { learnerModelService } from "./learnerModel";
 import { NextBestAction } from "./nextBestAction";
 
@@ -13,16 +14,20 @@ export const homeHeroDecisionEngine = {
    * utility arbitration and state hysteresis to decide the SINGLE primary Next Best Action.
    */
   decideNextBestAction(): NextBestAction {
-    const attempts = dbService.getHistory();
     const stats = dbService.getStatistics();
-    const unsubmitted = attempts.find(a => !a.isSubmitted);
+    const attempts = dbService.getHistory();
+    // Bài đang làm dở đọc từ phiên chưa hoàn thành (đã có kiểm tra bỏ qua bài đã nộp),
+    // KHÔNG quét lịch sử nữa vì lịch sử chỉ còn chứa bài đã nộp.
+    const unsubmitted = workspaceService.getUnfinishedSession();
 
-    // Rule 1: Priority #1 - Hard Constraint: Continue an unsubmitted active exam
+    // Rule 1: Priority #1 - Hard Constraint: Continue an unsubmitted active exam.
+    // Chỉ nhắc tiếp tục khi CÒN câu chưa trả lời; nếu đã trả lời hết thì coi như xong, không nhắc.
     if (unsubmitted) {
       const answeredCount = Object.keys(unsubmitted.answers || {}).length;
       const totalCount = unsubmitted.questions.length;
       const remainingCount = totalCount - answeredCount;
       const estMinutes = Math.max(Math.ceil(remainingCount * 1.2), 2);
+      if (remainingCount > 0) {
 
       return {
         type: "continue-exam",
@@ -42,6 +47,7 @@ export const homeHeroDecisionEngine = {
           actionType: "practice-center"
         }
       };
+      }
     }
 
     // -------------------------------------------------------------

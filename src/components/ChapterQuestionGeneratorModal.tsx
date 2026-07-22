@@ -11,6 +11,22 @@
 import React, { useState } from "react";
 import { Sparkles, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { aiService } from "../services/ai";
+import { dbService } from "../services/db";
+
+/**
+ * Khi người dùng KHÔNG dán nội dung mới, tự tổng hợp "nguồn" từ chính ngân hàng câu hỏi
+ * của chương đó (khái niệm, mục tiêu học, lời giải) để AI có cơ sở soạn thêm câu mới,
+ * thay vì bắt người dùng dán lại tài liệu.
+ */
+function buildSourceFromChapter(chapterId: number): string {
+  const qs = dbService.getQuestions().filter((q) => q.chapterId === chapterId);
+  if (qs.length === 0) return "";
+  const parts = qs.slice(0, 60).map((q) => {
+    const bits = [q.concept, q.learningObjective, q.explanation].filter(Boolean);
+    return bits.join(". ");
+  });
+  return parts.join("\n\n");
+}
 
 interface Props {
   chapterId: number;
@@ -31,10 +47,16 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
   const [note, setNote] = useState("");
 
   const handleGenerate = async () => {
-    const text = materialText.trim();
+    // Nếu để trống ô dán, tự tổng hợp nguồn từ ngân hàng câu hỏi sẵn có của chương.
+    let text = materialText.trim();
+    let usedExisting = false;
     if (!text) {
-      setError("Hãy dán nội dung của chương để AI soạn câu hỏi.");
-      return;
+      text = buildSourceFromChapter(chapterId);
+      usedExisting = true;
+      if (!text) {
+        setError("Chương này chưa có câu hỏi nào để AI dựa vào. Hãy dán một ít nội dung của chương.");
+        return;
+      }
     }
     setError("");
     setNote("");
@@ -66,6 +88,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
       }
       if (result.duplicatesSkipped > 0) notes.push(`Đã bỏ ${result.duplicatesSkipped} câu trùng lặp.`);
       if (result.failedBatches > 0) notes.push(`Có ${result.failedBatches} lượt AI lỗi (đã bỏ qua).`);
+      if (usedExisting) notes.push("Đã tự sinh thêm từ nội dung chương có sẵn (bạn không cần dán tài liệu).");
       setNote(notes.join(" "));
 
       setProgress(100);
@@ -128,20 +151,19 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
 
               <div>
                 <label className="text-text-muted block mb-1">
-                  Dán nội dung của chương (bài giảng, tóm tắt, ghi chú)
+                  Dán nội dung của chương (tùy chọn)
                 </label>
                 <textarea
                   value={materialText}
                   onChange={(e) => setMaterialText(e.target.value)}
-                  rows={7}
-                  placeholder="Dán nội dung của riêng chương này. AI sẽ dựa hoàn toàn vào đây để soạn câu hỏi."
+                  rows={6}
+                  placeholder="Để trống: AI tự soạn thêm câu mới từ nội dung chương đã có. Hoặc dán tài liệu mới để AI bám sát tài liệu đó."
                   className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-text-primary focus:outline-none resize-y leading-relaxed"
                 />
                 <div className="text-[10px] text-text-muted mt-1 font-mono">
-                  {materialText.trim().length.toLocaleString("vi-VN")} ký tự
-                  {materialText.trim().length > 0 && materialText.trim().length < 200 && (
-                    <span className="text-brand-warning"> • nên dán ít nhất vài đoạn để câu hỏi chất lượng hơn</span>
-                  )}
+                  {materialText.trim().length > 0
+                    ? `${materialText.trim().length.toLocaleString("vi-VN")} ký tự`
+                    : "Để trống cũng được — AI sẽ tự sinh thêm từ ngân hàng câu hỏi của chương này."}
                 </div>
               </div>
 
@@ -192,7 +214,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
                 Hủy
               </button>
               <button
-                disabled={isBusy || !materialText.trim()}
+                disabled={isBusy}
                 onClick={handleGenerate}
                 className="px-4 py-1.5 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5"
               >

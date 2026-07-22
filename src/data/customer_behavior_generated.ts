@@ -969,7 +969,7 @@ export const cbGeneratedQuestions: Question[] = [
       "c": "Thái độ của khách hàng về sản phẩm hiện nay như thế nào và tại sao họ thích thương hiệu A hơn B?",
       "d": "Khách hàng có gặp áp lực về thời gian khi đứng trước quầy thanh toán không?"
     },
-    "correctAnswer": "a",
+    "correctAnswer": "c",
     "chapterId": 1,
     "topicId": "CB_T1.2",
     "difficulty": "Khó",
@@ -3573,7 +3573,7 @@ export const cbGeneratedQuestions: Question[] = [
       "c": "Tổ chức cho khách hàng dùng thử sản phẩm hoặc học thử khóa học.",
       "d": "Thay đổi hoàn toàn chuẩn mực và giá trị văn hóa của cộng đồng."
     },
-    "correctAnswer": "a",
+    "correctAnswer": "c",
     "chapterId": 4,
     "topicId": "CB_T4.1",
     "difficulty": "Trung bình",
@@ -6373,7 +6373,7 @@ export const cbGeneratedQuestions: Question[] = [
       "c": "Phương pháp triệt tiêu hoàn toàn rủi ro trong giao dịch thương mại",
       "d": "Cách thay đổi toàn bộ cơ cấu tổ chức của doanh nghiệp khách hàng"
     },
-    "correctAnswer": "a",
+    "correctAnswer": "b",
     "chapterId": 6,
     "topicId": "CB_T6.3",
     "difficulty": "Khó",
@@ -6905,7 +6905,7 @@ export const cbGeneratedQuestions: Question[] = [
       "c": "Người mua bỏ qua bước trao đổi với đại diện bán hàng để tự ra quyết định độc lập",
       "d": "Người mua yêu cầu nhà cung cấp giao hàng dùng thử trước khi thực hiện chào hàng"
     },
-    "correctAnswer": "a",
+    "correctAnswer": "b",
     "chapterId": 7,
     "topicId": "CB_T7.1",
     "difficulty": "Khó",

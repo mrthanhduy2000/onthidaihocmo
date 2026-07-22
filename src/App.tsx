@@ -68,7 +68,8 @@ export default function App() {
   const handleStartExam = (exam: ExamAttempt) => {
     setActiveExam(exam);
     setCurrentView("practice");
-    dbService.saveAttempt(exam);
+    // Chỉ lưu vào PHIÊN chưa hoàn thành khi bắt đầu; KHÔNG ghi vào lịch sử.
+    // Lịch sử chỉ nhận bài đã nộp (khi submit), tránh để lại "bài dở" treo mãi.
     workspaceService.saveUnfinishedSession(exam);
   };
 

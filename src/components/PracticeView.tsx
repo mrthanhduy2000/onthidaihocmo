@@ -187,8 +187,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         [activeQuestion.id]: optionKey
       }
     };
-    // Save state synchronously outside of setState
-    dbService.saveAttempt(updated);
+    // Chỉ lưu tiến trình vào PHIÊN chưa hoàn thành; không ghi vào lịch sử khi chưa nộp.
     workspaceService.saveUnfinishedSession(updated);
     setExam(updated);
 
@@ -399,7 +398,6 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               <button
                 onClick={() => {
                   const newExam = aiService.generateExam({ type: "adaptive", count: 10 });
-                  dbService.saveAttempt(newExam);
                   workspaceService.saveUnfinishedSession(newExam);
                   setExam(newExam);
                   setCurrentIdx(0);
@@ -418,7 +416,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 onClick={onNavigateHome}
                 className="px-4 py-2.5 bg-bg-surface border border-border-primary hover:bg-bg-card text-text-secondary font-medium text-xs rounded-xl transition cursor-pointer"
               >
-                <span>Kết thúc hôm nay</span>
+                <span>Kết thúc bài làm</span>
               </button>
             </div>
           </div>
@@ -722,7 +720,6 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   {/* Coach Action footer to dismiss coaching once correct */}
                   <div className="flex justify-end pt-2 border-t border-brand-warning-border/30">
                     <button
-                      disabled={!coachingIsCorrect}
                       onClick={() => {
                         setCoachingActive(false);
                         setCoachingNode(null);
@@ -735,7 +732,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           handleNext();
                         }
                       }}
-                      className="bg-brand-warning disabled:opacity-40 text-white text-[11px] font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition duration-150 flex items-center gap-1 cursor-pointer"
+                      className="bg-brand-warning text-white text-[11px] font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition duration-150 flex items-center gap-1 cursor-pointer"
                     >
                       <span>{currentIdx === examQuestions.length - 1 ? "Hoàn thành & Xem kết quả" : "Tiếp tục học phần"}</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -780,6 +777,51 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 </div>
               )}
 
+              {/* Phản hồi khi trả lời SAI (tutor mode): luôn hiện đáp án đúng + giải thích + nút đi tiếp,
+                  để người học không bị "im lặng không phản hồi" và không kẹt lại thành phiên dở. */}
+              {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] !== undefined
+                && exam.answers[activeQuestion.id] !== activeQuestion.correctAnswer && !coachingActive && (
+                <div className="border border-brand-danger-border/40 bg-brand-danger-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
+                  <div className="flex items-center gap-2 border-b border-brand-danger-border/30 pb-2.5">
+                    <AlertCircle className="w-5 h-5 text-brand-danger" />
+                    <div>
+                      <h4 className="text-xs font-semibold text-brand-danger">Chưa đúng. Cùng xem lại nhé</h4>
+                      <p className="text-[10px] text-text-muted font-sans">
+                        Bạn chọn {String(exam.answers[activeQuestion.id]).toUpperCase()}. Đáp án đúng là{" "}
+                        <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-xs font-sans">
+                    <span className="text-brand-success font-semibold uppercase tracking-wider text-[9px] block">Đáp án đúng:</span>
+                    <p className="bg-brand-success-bg/40 border border-brand-success-border/40 p-3 rounded-lg text-text-primary leading-relaxed">
+                      <strong>{activeQuestion.correctAnswer.toUpperCase()}.</strong> {activeQuestion.options[activeQuestion.correctAnswer]}
+                    </p>
+                    <span className="text-text-muted font-semibold uppercase tracking-wider text-[9px] block pt-1">Giải nghĩa từ giáo trình:</span>
+                    <p className="bg-bg-card border border-border-primary/50 p-3 rounded-lg text-text-secondary leading-relaxed">
+                      {activeQuestion.explanation}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-end pt-2 border-t border-brand-danger-border/30">
+                    <button
+                      onClick={() => {
+                        if (currentIdx === examQuestions.length - 1) {
+                          submitExam();
+                        } else {
+                          handleNext();
+                        }
+                      }}
+                      className="bg-text-primary text-bg-card text-[11px] font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition duration-150 flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>{currentIdx === examQuestions.length - 1 ? "Hoàn thành & Xem kết quả" : "Câu tiếp theo"}</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Navigation Controls: Back/Forward */}
               <div className="flex items-center justify-between border-t border-border-primary/60 pt-5">
                 <button 
@@ -808,8 +850,9 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
             </div>
           )}
 
-          {/* AI Explanation & Standard Review Section (Rendered POST submission only) */}
-          {exam.isSubmitted && activeQuestion && (
+          {/* Phần bài giảng lý luận và giải nghĩa (sau khi nộp): CHỈ hiện ở câu trả lời SAI,
+              câu đúng không cần lặp lại lý thuyết cho gọn. Phần tô màu đáp án đúng/sai vẫn hiện đủ. */}
+          {exam.isSubmitted && activeQuestion && exam.answers[activeQuestion.id] !== activeQuestion.correctAnswer && (
             <div className="space-y-5 animate-fade-in-up">
               
               {/* AI Expert Explanation Action Trigger */}
