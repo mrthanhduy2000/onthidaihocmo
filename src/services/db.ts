@@ -22,6 +22,7 @@ import { cbQuestions, cbTopics, cbChapters } from "../data/customer_behavior";
 import { cbGeneratedQuestions } from "../data/customer_behavior_generated";
 import { cbKnowledgeGraph } from "../data/customer_behavior_kb";
 import { TimeService } from "./time";
+import { shuffleQuestionOptions } from "./optionShuffle";
 import { ExamAttempt, Statistics, UserSettings, DashboardOverview, Chapter, Topic, Question, SubjectGoal } from "../types";
 
 export interface Subject {
@@ -163,8 +164,10 @@ export function loadSubject(subjectId: string) {
     }
   }
 
-  // Populate maps
-  questions.forEach(q => questionMap.set(q.id, q));
+  // Populate maps.
+  // questionMap giữ bản ĐÃ TRỘN thứ tự phương án (tất định theo id) để xóa thiên lệch vị trí đáp án;
+  // mảng `questions` giữ nguyên bản gốc để việc lưu/override/ngân hàng câu hỏi không bị trộn lồng nhiều lần.
+  questions.forEach(q => questionMap.set(q.id, shuffleQuestionOptions(q)));
   topics.forEach(t => topicMap.set(t.id, t));
   chapters.forEach(c => chapterMap.set(c.id, c));
 }
