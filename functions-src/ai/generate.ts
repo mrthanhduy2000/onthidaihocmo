@@ -9,24 +9,31 @@ import { pedagogicalReviewEngine } from "../../src/services/pedagogicalReviewEng
 export default async function handler(req: any, res: any) {
   if (!(await requireUser(req, res))) return;
   try {
-    const { text, count, subjectName, chapterOutline } = req.body || {};
+    const { text, count, subjectName, chapterOutline, targetChapterId, targetChapterTitle } = req.body || {};
     if (!text || !String(text).trim()) {
       return res.status(400).json({ error: "Thiếu nội dung tài liệu để tạo câu hỏi." });
     }
 
     const targetCount = count ? Math.min(Math.max(parseInt(count), 2), 15) : 5;
     const currentSubjectName = subjectName || "Hành vi Khách hàng";
+    const forcedChapter = targetChapterId ? parseInt(targetChapterId) : 0;
 
     // Dàn ý chương thật của môn (nếu client gửi lên) để AI gán chapterId chính xác.
     const chapterGuide = chapterOutline && String(chapterOutline).trim()
       ? `\n\nDàn ý các chương của môn học (chỉ được dùng đúng các số chương này):\n${chapterOutline}`
       : "";
-    const chapterInstruction = chapterGuide
+    // Khi người dùng đã chỉ định chương đích, ép AI đặt toàn bộ chapterId về đúng chương đó.
+    const chapterInstruction = forcedChapter
+      ? `5. Gán chapterId: BẮT BUỘC đặt bằng ${forcedChapter}${targetChapterTitle ? ` (chương "${targetChapterTitle}")` : ""} cho MỌI câu hỏi. Tất cả câu phải xoay quanh nội dung của chương này, không tạo câu thuộc chương khác.`
+      : chapterGuide
       ? `5. Gán chapterId: chọn ĐÚNG số chương phù hợp nhất trong dàn ý chương bên dưới, không dùng số chương nằm ngoài danh sách.`
       : `5. Gán chapterId: hãy cố gắng phân tích xem câu hỏi này thuộc chương nào trong slide, sử dụng một số nguyên từ 1 đến 7.`;
 
+    const chapterFocus = forcedChapter
+      ? ` Toàn bộ câu hỏi phải thuộc CHƯƠNG ${forcedChapter}${targetChapterTitle ? ` - "${targetChapterTitle}"` : ""}.`
+      : "";
     const prompt = `Bạn là chuyên gia khảo thí và xây dựng đề thi trắc nghiệm đại học xuất sắc cho môn: ${currentSubjectName}.
-Hãy phân tích tài liệu sau và biên soạn chính xác ${targetCount} câu hỏi trắc nghiệm (multiple-choice) chất lượng cao, có tính phân hóa tốt, bao quát các kiến thức cốt lõi.
+Hãy phân tích tài liệu sau và biên soạn chính xác ${targetCount} câu hỏi trắc nghiệm (multiple-choice) chất lượng cao, có tính phân hóa tốt, bao quát các kiến thức cốt lõi.${chapterFocus}
 
 Tài liệu gốc:
 """

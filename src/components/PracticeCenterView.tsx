@@ -14,6 +14,7 @@ import { aiService } from "../services/ai";
 import { ExamAttempt, DifficultyLevel } from "../types";
 import PracticeView from "./PracticeView";
 import AssessmentDesignDashboard from "./AssessmentDesignDashboard";
+import ChapterQuestionGeneratorModal from "./ChapterQuestionGeneratorModal";
 
 interface PracticeCenterProps {
   key?: string;
@@ -41,6 +42,11 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
   const [showAssessmentDesign, setShowAssessmentDesign] = useState<boolean>(false);
   // Số câu mong muốn cho mỗi đề theo chương (0 = làm hết số câu chương có).
   const [chapterCount, setChapterCount] = useState<number>(10);
+  // Quy mô đề thi thử toàn bộ (số câu trải rộng các chương).
+  const [mockCount, setMockCount] = useState<number>(25);
+  // Chương đang mở modal tạo sinh AT (null = không mở). refreshKey để tính lại số liệu sau khi tạo.
+  const [genChapter, setGenChapter] = useState<{ id: number; title: string } | null>(null);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const stats = dbService.getStatistics();
   const incorrectCount = Object.keys(stats.incorrectQuestionHistory || {}).length;
@@ -62,6 +68,10 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
     return withData.sort((a, b) => (a.accuracy! - b.accuracy!))[0].chapter.id;
   })();
 
+  // Số chương đang có câu hỏi (để hiển thị mức phủ của đề thi thử toàn bộ).
+  const chaptersWithQuestions = chapterProgress.filter((c) => c.available > 0).length;
+  const totalAvailable = chapterProgress.reduce((s, c) => s + c.available, 0);
+
   // Mode Handlers
   const handleStartAdaptive = () => {
     const exam = aiService.generateExam({ type: "adaptive", count: 15 });
@@ -69,7 +79,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
   };
 
   const handleStartSmartMock = () => {
-    const exam = aiService.generateExam({ type: "ai-smart", count: 25 });
+    const exam = aiService.generateExam({ type: "ai-smart", count: mockCount });
     onStartExam(exam);
   };
 
@@ -109,7 +119,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10 fade-in-up">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10 fade-in-up" data-refresh={refreshKey}>
       {/* Header */}
       <div className="border-b border-border-primary pb-6 space-y-1">
         <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-info">
@@ -173,22 +183,42 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                   <Award className="w-5 h-5" />
                 </div>
                 <span className="text-[10px] font-mono text-text-muted">
-                  Chuẩn 25 phút
+                  Phủ {chaptersWithQuestions}/{chapters.length} chương
                 </span>
               </div>
 
               <div>
                 <h3 className="text-base font-medium text-text-primary group-hover:text-text-primary transition">
-                  Thi thử theo cấu trúc đề
+                  Thi thử toàn bộ chương
                 </h3>
                 <p className="text-xs text-text-muted mt-1.5 leading-relaxed">
-                  Làm 25 câu trải rộng các chương để kiểm tra mức sẵn sàng.
+                  Làm {Math.min(mockCount, totalAvailable)} câu trải rộng các chương để kiểm tra mức sẵn sàng.
                 </p>
+              </div>
+
+              {/* Chọn quy mô đề (chặn nổi bọt để không kích hoạt vào thi ngay) */}
+              <div onClick={(e) => e.stopPropagation()} className="pt-1">
+                <span className="text-[10px] text-text-muted font-mono block mb-1">Quy mô đề:</span>
+                <div className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60 w-fit">
+                  {[25, 40, 50].map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setMockCount(n)}
+                      className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition ${
+                        mockCount === n
+                          ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary"
+                          : "text-text-muted hover:text-text-primary"
+                      }`}
+                    >
+                      {n} câu
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-border-primary/60 flex items-center justify-between text-xs font-medium text-text-primary">
-              <span>Vào thi thử ngay</span>
+              <span>Vào thi thử ngay ({Math.min(mockCount, totalAvailable)} câu)</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
@@ -297,20 +327,23 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 const isSuggested = ch.id === nextChapterId;
                 const willDo = isEmpty ? 0 : chapterCount === 0 ? available : Math.min(chapterCount, available);
                 return (
-                  <button
+                  <div
                     key={ch.id}
-                    onClick={() => handleStartChapter(ch.id)}
-                    disabled={isEmpty}
-                    className={`p-3.5 rounded-xl text-left transition group border ${
+                    className={`p-3.5 rounded-xl transition group border ${
                       isEmpty
-                        ? "bg-bg-surface/50 border-border-primary/50 opacity-70 cursor-not-allowed"
+                        ? "bg-bg-surface/50 border-border-primary/50"
                         : isSuggested
                         ? "bg-brand-info/5 border-brand-info/50 hover:border-brand-info"
                         : "bg-bg-surface hover:bg-bg-surface-hover border-border-primary/80 hover:border-brand-info/50"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="space-y-1 min-w-0 flex-1">
+                      {/* Vùng thông tin: bấm để giải đề chương (chỉ khi có câu hỏi) */}
+                      <button
+                        onClick={() => !isEmpty && handleStartChapter(ch.id)}
+                        disabled={isEmpty}
+                        className={`space-y-1 min-w-0 flex-1 text-left ${isEmpty ? "cursor-default" : "cursor-pointer"}`}
+                      >
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-[10px] font-mono text-brand-info font-semibold">Chương {ch.id}</span>
                           {isSuggested && !isEmpty && (
@@ -334,20 +367,33 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         <div className="text-[10px] text-text-muted font-mono">
                           {isEmpty ? "Chưa có câu hỏi" : `${available} câu có sẵn • đã làm ${solved} lượt`}
                         </div>
-                      </div>
+                      </button>
 
                       <div className="shrink-0 flex items-center gap-2">
+                        {/* Nút tạo câu hỏi AI cho đúng chương này */}
+                        <button
+                          onClick={() => setGenChapter({ id: ch.id, title: ch.title })}
+                          title={`Dùng AI tạo câu hỏi cho Chương ${ch.id}`}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info/10 transition cursor-pointer"
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          <span className="hidden sm:inline">{isEmpty ? "Tạo bằng AI" : "Tạo thêm"}</span>
+                        </button>
+
                         {isEmpty ? (
-                          <span className="text-[10px] text-text-muted font-mono">Sắp có</span>
+                          <span className="text-[10px] text-text-muted font-mono hidden sm:inline">Chưa có đề</span>
                         ) : (
-                          <>
-                            <span className="text-[10px] font-mono text-brand-info hidden sm:inline">Giải {willDo} câu</span>
+                          <button
+                            onClick={() => handleStartChapter(ch.id)}
+                            className="flex items-center gap-1 text-[10px] font-mono text-brand-info cursor-pointer"
+                          >
+                            <span className="hidden sm:inline">Giải {willDo} câu</span>
                             <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-brand-info group-hover:translate-x-0.5 transition-transform" />
-                          </>
+                          </button>
                         )}
                       </div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -401,6 +447,16 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
           </div>
         </div>
       </div>
+
+      {/* Modal tạo sinh câu hỏi AI cho đúng một chương */}
+      {genChapter && (
+        <ChapterQuestionGeneratorModal
+          chapterId={genChapter.id}
+          chapterTitle={genChapter.title}
+          onClose={() => setGenChapter(null)}
+          onDone={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
     </div>
   );
 }

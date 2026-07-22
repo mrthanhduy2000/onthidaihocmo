@@ -53,14 +53,38 @@ function normalizeQuestionText(s: string): string {
   return String(s).toLowerCase().replace(/[.,;:?!"'“”()\-]/g, "").replace(/\s+/g, " ").trim();
 }
 
-/** Gọi 1 lượt API sinh câu hỏi, trả về mảng câu hợp lệ (chưa gán ID). Ném lỗi nếu request thất bại. */
-async function requestQuestionBatch(text: string, count: number): Promise<any[]> {
+/**
+ * Kiểm tra một câu thô từ AI có đạt chất lượng tối thiểu không: có đề bài, đủ 4 phương án
+ * khác rỗng, đáp án đúng nằm trong a/b/c/d và 4 phương án không trùng lặp nhau.
+ */
+function isQualityQuestion(q: any): boolean {
+  if (!q || typeof q.question !== "string" || q.question.trim().length < 8) return false;
+  const o = q.options;
+  if (!o) return false;
+  const vals = [o.a, o.b, o.c, o.d].map(v => String(v ?? "").trim());
+  if (vals.some(v => v.length === 0)) return false;
+  // Bốn phương án phải phân biệt (không có hai phương án giống hệt nhau).
+  const uniq = new Set(vals.map(v => v.toLowerCase()));
+  if (uniq.size < 4) return false;
+  const ca = String(q.correctAnswer || "").trim().toLowerCase();
+  if (!["a", "b", "c", "d"].includes(ca)) return false;
+  return true;
+}
+
+/**
+ * Gọi 1 lượt API sinh câu hỏi, trả về mảng câu đạt chất lượng (chưa gán ID). Ném lỗi nếu request thất bại.
+ * targetChapterId (nếu có) được gửi kèm để AI bám sát đúng chương đang cần tạo.
+ */
+async function requestQuestionBatch(text: string, count: number, targetChapterId?: number): Promise<any[]> {
   const subjectName = dbService.getActiveSubjectName();
   const chapterOutline = chapters.map(c => `${c.id}. ${c.title}`).join("\n");
+  const targetChapterTitle = targetChapterId
+    ? (chapters.find(c => c.id === targetChapterId)?.title || "")
+    : undefined;
   const response = await fetch("/api/ai/generate", {
     method: "POST",
     headers: await apiHeaders(),
-    body: JSON.stringify({ text, count, subjectName, chapterOutline }),
+    body: JSON.stringify({ text, count, subjectName, chapterOutline, targetChapterId, targetChapterTitle }),
   });
   if (!response.ok) {
     let msg = "Không tạo được câu hỏi từ AI. Vui lòng thử lại.";
@@ -69,26 +93,33 @@ async function requestQuestionBatch(text: string, count: number): Promise<any[]>
   }
   const data = await response.json();
   const raw: any[] = Array.isArray(data.questions) ? data.questions : [];
-  return raw.filter(
-    q => q && typeof q.question === "string" && q.question.trim() &&
-      q.options && q.options.a && q.options.b && q.options.c && q.options.d
-  );
+  return raw.filter(isQualityQuestion);
 }
 
-/** Chuẩn hóa 1 câu thô từ AI thành đối tượng Question hoàn chỉnh (gán ID, kẹp chapterId hợp lệ). */
-function rawToQuestion(q: any, id: number, source: string): Question {
+/**
+ * Chuẩn hóa 1 câu thô từ AI thành đối tượng Question hoàn chỉnh (gán ID, kẹp chapterId hợp lệ).
+ * forcedChapterId (nếu có) ép câu về đúng chương đích, bỏ qua chapterId AI tự đoán.
+ */
+function rawToQuestion(q: any, id: number, source: string, forcedChapterId?: number): Question {
   const maxChapter = chapters.length || 1;
   const validDiff = ["Dễ", "Trung bình", "Khó", "Rất khó"];
-  const chapterId = Math.min(Math.max(parseInt(q.chapterId) || 1, 1), maxChapter);
+  const chapterId = forcedChapterId
+    ? Math.min(Math.max(forcedChapterId, 1), maxChapter)
+    : Math.min(Math.max(parseInt(q.chapterId) || 1, 1), maxChapter);
   const ca = String(q.correctAnswer || "a").trim().toLowerCase();
   const correctAnswer = (["a", "b", "c", "d"].includes(ca) ? ca : "a") as "a" | "b" | "c" | "d";
+  // Khi ép chương: giữ topicId của AI nếu nó thuộc đúng chương, ngược lại đưa về chủ đề đầu chương.
+  const rawTopic = typeof q.topicId === "string" ? q.topicId : "";
+  const topicId = forcedChapterId
+    ? (rawTopic.includes(`${forcedChapterId}.`) ? rawTopic : `T${chapterId}.1`)
+    : (rawTopic || `T${chapterId}.1`);
   return {
     id,
     question: String(q.question).trim(),
     options: { a: String(q.options.a), b: String(q.options.b), c: String(q.options.c), d: String(q.options.d) },
     correctAnswer,
     chapterId,
-    topicId: q.topicId || `T${chapterId}.1`,
+    topicId,
     difficulty: validDiff.includes(q.difficulty) ? q.difficulty : "Trung bình",
     difficultyRating: Number(q.difficultyRating) || 3,
     explanation: q.explanation || "",
@@ -393,8 +424,9 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     text: string,
     targetTotal: number,
     sourceTitle?: string,
-    onProgress?: (batchDone: number, totalBatches: number, accumulated: number) => void
-  ): Promise<{ added: number; requested: number; batches: number; duplicatesSkipped: number }> {
+    onProgress?: (batchDone: number, totalBatches: number, accumulated: number) => void,
+    targetChapterId?: number
+  ): Promise<{ added: number; requested: number; batches: number; duplicatesSkipped: number; failedBatches: number }> {
     const subjectId = dbService.getActiveSubjectId();
     const target = Math.min(Math.max(Math.floor(targetTotal) || 5, 2), 60);
     const perBatchMax = 8;
@@ -419,12 +451,13 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
 
     const collected: any[] = [];
     let duplicatesSkipped = 0;
+    let failedBatches = 0;
     let lastError: Error | null = null;
 
     for (let b = 0; b < plan.length; b++) {
       if (onProgress) onProgress(b, totalBatches, collected.length);
       try {
-        const raw = await requestQuestionBatch(plan[b].chunk, plan[b].count);
+        const raw = await requestQuestionBatch(plan[b].chunk, plan[b].count, targetChapterId);
         for (const q of raw) {
           const key = normalizeQuestionText(q.question);
           if (!key) continue;
@@ -433,7 +466,8 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
           collected.push(q);
         }
       } catch (e: any) {
-        // Một lượt lỗi không làm hỏng cả mẻ; ghi lại để báo nếu tất cả đều thất bại.
+        // Một lượt lỗi không làm hỏng cả mẻ; đếm lại và ghi lỗi để báo cho người dùng.
+        failedBatches++;
         lastError = e instanceof Error ? e : new Error(String(e));
       }
     }
@@ -443,13 +477,13 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
       throw lastError || new Error("AI chưa tạo được câu hỏi hợp lệ. Hãy thử lại với nội dung dài và rõ hơn.");
     }
 
-    // Gán ID mới không trùng rồi lưu một lần.
+    // Gán ID mới không trùng rồi lưu một lần. Ép về chương đích nếu người dùng chỉ định.
     const existingIds = questions.map(q => q.id);
     let nextId = (existingIds.length ? Math.max(...existingIds) : 0) + 1;
-    const processed: Question[] = collected.map(q => rawToQuestion(q, nextId++, source));
+    const processed: Question[] = collected.map(q => rawToQuestion(q, nextId++, source, targetChapterId));
 
     dbService.addQuestionsToSubject(subjectId, processed);
-    return { added: processed.length, requested: target, batches: totalBatches, duplicatesSkipped };
+    return { added: processed.length, requested: target, batches: totalBatches, duplicatesSkipped, failedBatches };
   },
 
   /**

@@ -34,7 +34,7 @@ import {
   ListFilter,
   X
 } from "lucide-react";
-import { dbService } from "../services/db";
+import { dbService, chapters } from "../services/db";
 import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
 import { examForecaster } from "../services/examForecaster";
@@ -85,6 +85,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
   // Tạo câu hỏi bằng AI từ nội dung dán vào
   const [materialText, setMaterialText] = useState("");
   const [genCount, setGenCount] = useState<number>(10);
+  // 0 = để AI tự phân loại chương; > 0 = ép toàn bộ câu về đúng chương này.
+  const [genChapterId, setGenChapterId] = useState<number>(0);
   const [importError, setImportError] = useState<string>("");
   const [successCount, setSuccessCount] = useState<number>(0);
   const [successNote, setSuccessNote] = useState<string>("");
@@ -177,7 +179,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               ? "Đang lưu vào ngân hàng câu hỏi..."
               : `AI đang soạn lượt ${batchDone + 1}/${totalBatches} (đã có ${accumulated} câu)...`
           );
-        }
+        },
+        genChapterId || undefined
       );
 
       // Ghi nhận tài liệu nguồn với số câu thực tế đã tạo.
@@ -196,11 +199,18 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
       // Ghi chú khi tạo được ít hơn mục tiêu (do tài liệu ngắn) hoặc có câu trùng bị bỏ.
       const notes: string[] = [];
+      if (genChapterId) {
+        const chTitle = chapters.find(c => c.id === genChapterId)?.title || `Chương ${genChapterId}`;
+        notes.push(`Tất cả câu đã gán vào Chương ${genChapterId} (${chTitle}).`);
+      }
       if (result.added < result.requested) {
         notes.push(`Mới đạt ${result.added}/${result.requested} câu; dán thêm nội dung dài hơn để tạo nhiều câu hơn.`);
       }
       if (result.duplicatesSkipped > 0) {
         notes.push(`Đã bỏ ${result.duplicatesSkipped} câu trùng lặp.`);
+      }
+      if (result.failedBatches > 0) {
+        notes.push(`Có ${result.failedBatches} lượt gọi AI lỗi (đã bỏ qua); bấm "Tạo tiếp" để bổ sung nếu cần.`);
       }
       setSuccessNote(notes.join(" "));
 
@@ -870,6 +880,27 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                       <option value="ghi chú">Ghi chú cá nhân</option>
                       <option value="mindmap">Sơ đồ tư duy</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="text-text-muted block mb-1">Gán câu hỏi vào chương</label>
+                    <select
+                      value={genChapterId}
+                      onChange={(e) => setGenChapterId(Number(e.target.value))}
+                      className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-text-primary cursor-pointer focus:outline-none"
+                    >
+                      <option value={0}>Để AI tự phân loại theo nội dung</option>
+                      {chapters.map((ch) => (
+                        <option key={ch.id} value={ch.id}>
+                          Chương {ch.id} - {ch.title}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="text-[10px] text-text-muted mt-1">
+                      {genChapterId > 0
+                        ? "Toàn bộ câu tạo ra sẽ được ép vào đúng chương này, phục vụ luyện đề theo chương."
+                        : "Nên chọn chương nếu bạn đang dán tài liệu của riêng một chương."}
+                    </div>
                   </div>
 
                   <div>
