@@ -438,7 +438,9 @@ export const dbService = {
 
     if (attempt.isSubmitted) {
       if (typeof window !== "undefined" && window.localStorage) {
+        // Xóa cả key cũ dùng chung lẫn key theo môn để phiên đã nộp không hiện lại "chưa hoàn thành".
         window.localStorage.removeItem("poly_econ_unfinished_session");
+        window.localStorage.removeItem(`poly_econ_unfinished_session_${activeSubjectId}`);
       }
       this.recomputeStatistics();
       this._submitHooks.forEach(hook => {
@@ -542,8 +544,12 @@ export const dbService = {
       studyDates.add(dateStr);
 
       const answers = attempt.answers || {};
+      // Chỉ tính các câu thực sự thuộc đề của lượt làm này. Tránh đếm "đáp án mồ côi"
+      // (câu từng bị thay ra khỏi đề bởi cơ chế đảo câu cũ) làm sai lệch điểm và thống kê.
+      const questionIdSet = Array.isArray(attempt.questions) ? new Set(attempt.questions) : null;
       Object.entries(answers).forEach(([qIdStr, answer]) => {
         const qId = parseInt(qIdStr);
+        if (questionIdSet && !questionIdSet.has(qId)) return;
         const q = questionMap.get(qId);
         if (!q) return;
 
@@ -728,6 +734,10 @@ export const dbService = {
   clearAllHistory(): void {
     localStorage.removeItem(HISTORY_KEY());
     localStorage.removeItem(STATS_KEY());
+    // Dọn luôn phiên chưa hoàn thành (cả key cũ dùng chung lẫn key theo môn) để không còn
+    // banner "phiên chưa hoàn thành" tồn đọng sau khi làm mới tiến trình.
+    localStorage.removeItem("poly_econ_unfinished_session");
+    localStorage.removeItem(`poly_econ_unfinished_session_${activeSubjectId}`);
     this.recomputeStatistics();
   },
 

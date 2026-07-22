@@ -16,7 +16,9 @@ import {
   AlertCircle,
   FileSpreadsheet,
   Target,
-  Sparkles
+  Sparkles,
+  RotateCcw,
+  AlertTriangle
 } from "lucide-react";
 import { workspaceService } from "../services/workspaceService";
 import { dbService } from "../services/db";
@@ -35,6 +37,17 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
   
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+
+  const handleResetProgress = () => {
+    dbService.clearAllHistory();
+    workspaceService.clearUnfinishedSession();
+    setConfirmReset(false);
+    setResetDone(true);
+    onRefreshData();
+    setTimeout(() => setResetDone(false), 3000);
+  };
 
   if (!isOpen) return null;
 
@@ -209,6 +222,55 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>{importStatus}</span>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 4: Làm mới tiến trình học */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">
+              <RotateCcw className="w-3.5 h-3.5 text-brand-warning" />
+              Làm mới tiến trình học
+            </h4>
+
+            <div className="p-4 bg-bg-surface border border-brand-warning/30 rounded-xl space-y-3">
+              <p className="text-xs text-text-muted leading-relaxed">
+                Xóa toàn bộ lịch sử làm bài, thống kê và phiên chưa hoàn thành của môn{" "}
+                <strong className="text-text-primary">{dbService.getActiveSubjectName()}</strong> để bắt đầu lại từ đầu.
+                Ngân hàng câu hỏi (kể cả câu AI đã tạo) vẫn được giữ nguyên. Hãy dùng khi số liệu bị lệch do dữ liệu cũ.
+              </p>
+
+              {resetDone ? (
+                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs font-mono text-brand-success flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Đã làm mới tiến trình. Số liệu đã về 0.</span>
+                </div>
+              ) : confirmReset ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-brand-warning font-medium flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" /> Chắc chắn xóa? Không thể hoàn tác.
+                  </span>
+                  <button
+                    onClick={handleResetProgress}
+                    className="px-3.5 py-1.5 bg-brand-danger text-white text-xs font-semibold rounded-xl hover:opacity-90 transition cursor-pointer"
+                  >
+                    Xóa và làm mới
+                  </button>
+                  <button
+                    onClick={() => setConfirmReset(false)}
+                    className="px-3.5 py-1.5 bg-bg-card border border-border-primary text-xs rounded-xl cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmReset(true)}
+                  className="px-4 py-2 bg-bg-card border border-brand-warning/40 text-brand-warning font-semibold text-xs rounded-xl hover:bg-brand-warning/10 transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Làm mới tiến trình môn này</span>
+                </button>
               )}
             </div>
           </div>

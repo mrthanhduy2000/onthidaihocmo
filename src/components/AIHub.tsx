@@ -218,8 +218,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                             key={node.id} 
                             className="bg-bg-surface border border-border-primary hover:border-brand-info/50 rounded-xl p-3.5 transition space-y-2"
                           >
-                            <div className="flex items-center justify-between text-[11px]">
-                              <span className="font-mono text-text-muted">ID: {node.id}</span>
+                            <div className="flex items-center justify-end text-[11px]">
                               <span className={`font-mono font-bold ${statusColor}`}>{score}% nắm chắc</span>
                             </div>
                             <h5 className="text-xs font-semibold text-text-primary leading-snug">{node.concept}</h5>

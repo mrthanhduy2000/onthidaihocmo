@@ -48,6 +48,15 @@ function splitIntoChunks(text: string, maxChars = 2800): string[] {
   return chunks.length ? chunks : [text];
 }
 
+/** Xáo trộn mảng tại chỗ (Fisher-Yates) để mỗi lần tạo đề cho ra thứ tự/lựa chọn câu khác nhau. */
+function shuffleInPlace<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 /** Chuẩn hóa đề bài để so trùng lặp (bỏ hoa/thường, dấu câu, khoảng trắng thừa). */
 function normalizeQuestionText(s: string): string {
   return String(s).toLowerCase().replace(/[.,;:?!"'“”()\-]/g, "").replace(/\s+/g, " ").trim();
@@ -526,6 +535,20 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
       const scored = learningEngine.scoreQuestions(pool);
       scored.sort((a, b) => (b.score + Math.random() * 2) - (a.score + Math.random() * 2));
       pool = scored.map(s => s.q);
+    }
+
+    // Chống lặp câu cũ: với các loại đề không phải "adaptive" (đã tự sắp theo điểm),
+    // ưu tiên câu CHƯA từng làm rồi mới tới câu đã làm, và xáo trộn trong từng nhóm để
+    // mỗi lần luyện chương/chủ đề/ngẫu nhiên ra bộ câu khác nhau, đồng thời câu AI tạo sinh
+    // (nằm cuối ngân hàng) cũng có cơ hội xuất hiện thay vì luôn trúng câu gốc đầu danh sách.
+    if (config.type !== "adaptive") {
+      const answered = new Set<number>();
+      dbService.getHistory().forEach(h => {
+        if (h && h.answers) Object.keys(h.answers).forEach(id => answered.add(parseInt(id)));
+      });
+      const fresh = shuffleInPlace(pool.filter(q => !answered.has(q.id)));
+      const seen = shuffleInPlace(pool.filter(q => answered.has(q.id)));
+      pool = [...fresh, ...seen];
     }
 
     // Với các loại đề có ràng buộc (chương, chủ đề, mức độ, câu sai, câu đánh dấu),

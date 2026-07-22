@@ -173,38 +173,11 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
     const isCorrect = activeQuestion.correctAnswer === optionKey;
 
-    // Real-time Adaptive Difficulty Queue Swap
-    if (exam.examType === "adaptive" || exam.examType === "ai-smart") {
-      const activeSubjectId = dbService.getActiveSubjectId();
-      // Find all pool questions for the current chapter/subject
-      const allPool = questions.filter(q => q.chapterId === activeQuestion.chapterId);
-      
-      if (isCorrect) {
-        // Correct answer: Swap next question with a harder one if possible
-        const targetDiff = activeQuestion.difficulty === "Dễ" ? "Trung bình" : "Khó";
-        const nextHarder = allPool.find(q => 
-          q.difficulty === targetDiff && 
-          !exam.questions.includes(q.id)
-        );
-        if (nextHarder && currentIdx < exam.questions.length - 1) {
-          const updatedQs = [...exam.questions];
-          updatedQs[currentIdx + 1] = nextHarder.id;
-          exam.questions = updatedQs;
-        }
-      } else {
-        // Incorrect answer: Swap next question with an easier one if possible
-        const targetDiff = activeQuestion.difficulty === "Khó" ? "Trung bình" : "Dễ";
-        const nextEasier = allPool.find(q => 
-          q.difficulty === targetDiff && 
-          !exam.questions.includes(q.id)
-        );
-        if (nextEasier && currentIdx < exam.questions.length - 1) {
-          const updatedQs = [...exam.questions];
-          updatedQs[currentIdx + 1] = nextEasier.id;
-          exam.questions = updatedQs;
-        }
-      }
-    }
+    // Lưu ý: trước đây có đoạn "đảo câu thích ứng thời gian thực" thay câu ở vị trí kế tiếp
+    // ngay khi người dùng trả lời. Việc đó làm mồ côi các đáp án đã trả lời (câu bị thay ra khỏi
+    // đề nhưng đáp án vẫn còn trong exam.answers), dẫn tới câu trả lời đúng bị tính/hiển thị thành
+    // sai khi chấm và xem lại. Đã bỏ hoàn toàn để danh sách câu hỏi giữ nguyên trong suốt bài làm;
+    // độ khó thích ứng đã được xử lý ngay từ khâu tạo đề (learningEngine.scoreQuestions).
 
     const updated: ExamAttempt = {
       ...exam,
@@ -438,7 +411,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 className="px-5 py-2.5 bg-text-primary text-bg-card hover:opacity-90 font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
-                <span>Tiếp tục 6 phút nữa</span>
+                <span>Làm thêm 10 câu mới</span>
               </button>
 
               <button

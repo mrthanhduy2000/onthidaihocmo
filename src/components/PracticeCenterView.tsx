@@ -13,7 +13,6 @@ import { dbService, chapters, topics, questions } from "../services/db";
 import { aiService } from "../services/ai";
 import { ExamAttempt, DifficultyLevel } from "../types";
 import PracticeView from "./PracticeView";
-import AssessmentDesignDashboard from "./AssessmentDesignDashboard";
 import ChapterQuestionGeneratorModal from "./ChapterQuestionGeneratorModal";
 
 interface PracticeCenterProps {
@@ -39,7 +38,6 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>("Trung bình");
   const [randomCount, setRandomCount] = useState<number>(10);
-  const [showAssessmentDesign, setShowAssessmentDesign] = useState<boolean>(false);
   // Số câu mong muốn cho mỗi đề theo chương (0 = làm hết số câu chương có).
   const [chapterCount, setChapterCount] = useState<number>(10);
   // Quy mô đề thi thử toàn bộ (số câu trải rộng các chương).
@@ -258,28 +256,6 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
         </div>
       </div>
 
-      {/* Progressive Disclosure Section: Bàn thiết kế đề thi */}
-      <div className="space-y-3 pt-2">
-        <button
-          onClick={() => setShowAssessmentDesign(!showAssessmentDesign)}
-          className="w-full p-3 bg-bg-card border border-border-primary hover:border-brand-info/60 rounded-xl flex items-center justify-between text-xs font-mono uppercase tracking-wider text-text-muted hover:text-text-primary transition cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-brand-info" />
-            <span>Tùy chỉnh đề nâng cao</span>
-          </div>
-          <span className="text-[11px] text-brand-info font-sans lowercase">
-            {showAssessmentDesign ? "Ẩn tùy chỉnh ▲" : "Mở tùy chỉnh ▼"}
-          </span>
-        </button>
-
-        {showAssessmentDesign && (
-          <div className="p-4 bg-bg-card border border-border-primary rounded-2xl fade-in space-y-3">
-            <AssessmentDesignDashboard onStartExam={onStartExam} />
-          </div>
-        )}
-      </div>
-
       {/* Secondary Custom Options Section (Collapsible/Grouped) */}
       <div className="space-y-4 pt-4 border-t border-border-primary/60">
         <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted flex items-center gap-2">
@@ -365,7 +341,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         </div>
                         <div className="text-xs font-medium text-text-primary truncate">{ch.title}</div>
                         <div className="text-[10px] text-text-muted font-mono">
-                          {isEmpty ? "Chưa có câu hỏi" : `${available} câu có sẵn • đã làm ${solved} lượt`}
+                          {isEmpty ? "Chưa có câu hỏi" : `${available} câu có sẵn • đã làm ${solved} câu`}
                         </div>
                       </button>
 

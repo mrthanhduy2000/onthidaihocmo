@@ -40,11 +40,11 @@ export default function TeachingAnalyticsView() {
               <BarChart3 className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-bold text-text-primary">
-              Pedagogical Evaluation & Teaching Analytics
+              Phân tích việc học và hiệu quả ôn tập
             </h2>
           </div>
           <p className="text-sm text-text-secondary">
-            Đánh giá hiệu quả sư phạm định tính & định lượng 100% Deterministic. Theo dõi mức độ tiến bộ thực tế của học viên.
+            Theo dõi mức độ tiến bộ thực tế: khái niệm còn yếu, lỗi hay mắc và xu hướng làm bài của bạn.
           </p>
         </div>
 

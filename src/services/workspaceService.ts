@@ -17,7 +17,10 @@ import { TimeService } from "./time";
 
 const RESOURCES_KEY = (subId: string) => `poly_econ_resources_${subId}`;
 const SETTINGS_KEY = "poly_econ_settings";
-const UNFINISHED_SESSION_KEY = "poly_econ_unfinished_session";
+// Phiên chưa hoàn thành lưu riêng theo từng môn để không lẫn giữa các môn.
+const UNFINISHED_SESSION_KEY = () => `poly_econ_unfinished_session_${dbService.getActiveSubjectId()}`;
+// Key cũ dùng chung (không theo môn) - đọc để dọn nốt phiên treo tồn đọng.
+const LEGACY_UNFINISHED_KEY = "poly_econ_unfinished_session";
 const ARCHIVED_SUBJECTS_KEY = "poly_econ_archived_subjects";
 
 export const workspaceService = {
@@ -218,27 +221,39 @@ export const workspaceService = {
    * Session Recovery (Save/Detect/Resume)
    */
   getUnfinishedSession(): ExamAttempt | null {
-    const raw = localStorage.getItem(UNFINISHED_SESSION_KEY);
+    // Dọn nốt phiên treo ở key cũ dùng chung (di sản trước khi tách theo môn).
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(LEGACY_UNFINISHED_KEY);
+    }
+    const raw = localStorage.getItem(UNFINISHED_SESSION_KEY());
     if (!raw) return null;
     try {
       const parsed = JSON.parse(raw);
-      if (parsed && !parsed.isSubmitted) {
-        return parsed;
+      if (!parsed || parsed.isSubmitted) return null;
+      // Nếu bài này đã có bản đã nộp trong lịch sử thì coi như đã hoàn thành, không hiện lại.
+      const submittedBefore = dbService.getHistory().some(h => h && h.id === parsed.id && h.isSubmitted);
+      if (submittedBefore) {
+        localStorage.removeItem(UNFINISHED_SESSION_KEY());
+        return null;
       }
+      return parsed;
     } catch {}
     return null;
   },
 
   saveUnfinishedSession(session: ExamAttempt): void {
     if (!session.isSubmitted) {
-      localStorage.setItem(UNFINISHED_SESSION_KEY, JSON.stringify(session));
+      localStorage.setItem(UNFINISHED_SESSION_KEY(), JSON.stringify(session));
     } else {
-      localStorage.removeItem(UNFINISHED_SESSION_KEY);
+      localStorage.removeItem(UNFINISHED_SESSION_KEY());
     }
   },
 
   clearUnfinishedSession(): void {
-    localStorage.removeItem(UNFINISHED_SESSION_KEY);
+    localStorage.removeItem(UNFINISHED_SESSION_KEY());
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(LEGACY_UNFINISHED_KEY);
+    }
   },
 
   /**
