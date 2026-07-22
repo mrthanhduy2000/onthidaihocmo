@@ -1,0 +1,243 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from "react";
+import { 
+  Play, RotateCcw, Brain, Calendar, Clock, Award, Flame, 
+  ArrowRight, ChevronRight, CheckCircle2, AlertTriangle, BookOpen, 
+  Sparkles, Layers, TrendingUp, Target, Sliders, Eye, EyeOff
+} from "lucide-react";
+import { dbService, chapters } from "../services/db";
+import { aiService } from "../services/ai";
+import { TimeService } from "../services/time";
+import { learningJourneyOrchestrator, DailyLearningStoryData, SimplifiedDashboardState } from "../services/learningJourneyOrchestrator";
+import { NextBestAction } from "../services/nextBestAction";
+import HomeHero from "./HomeHero";
+import DailyLearningStory from "./DailyLearningStory";
+import ContinueLearningCard from "./ContinueLearningCard";
+import EmptyState from "./EmptyState";
+import { DashboardOverview, Statistics, ExamAttempt, DifficultyLevel } from "../types";
+
+interface DashboardProps {
+  key?: any;
+  onStartExam: (exam: ExamAttempt) => void;
+  onNavigate: (view: "dashboard" | "practice" | "review" | "progress" | "ai_coach" | "settings") => void;
+  onSubjectChange?: (subjectId: string) => void;
+}
+
+export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
+  const [overview, setOverview] = useState<DashboardOverview>(dbService.getDashboardOverview());
+  const [stats, setStats] = useState<Statistics>(dbService.getStatistics());
+  const [nextAction, setNextAction] = useState<NextBestAction>(learningJourneyOrchestrator.getNextBestAction());
+  const [story, setStory] = useState<DailyLearningStoryData>(learningJourneyOrchestrator.getDailyLearningStory());
+  const [simplified, setSimplified] = useState<SimplifiedDashboardState>(learningJourneyOrchestrator.getSimplifiedDashboardState());
+  const [recentAttempts, setRecentAttempts] = useState<ExamAttempt[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+
+  useEffect(() => {
+    setOverview(dbService.getDashboardOverview());
+    const currentStats = dbService.getStatistics();
+    setStats(currentStats);
+
+    const history = dbService.getHistory();
+    const sortedHistory = [...history].sort((a, b) => 
+      TimeService.parseToDate(b.startTime).getTime() - TimeService.parseToDate(a.startTime).getTime()
+    );
+    setRecentAttempts(sortedHistory.slice(0, 4));
+
+    setNextAction(learningJourneyOrchestrator.getNextBestAction());
+    setStory(learningJourneyOrchestrator.getDailyLearningStory());
+    setSimplified(learningJourneyOrchestrator.getSimplifiedDashboardState());
+  }, []);
+
+  const unfinishedExam = overview.lastExam && !overview.lastExam.isSubmitted ? overview.lastExam : null;
+
+  const handleExecutePrimary = (primary: NextBestAction["primaryAction"]) => {
+    if (primary.examType === "continue" && unfinishedExam) {
+      onStartExam(unfinishedExam);
+      return;
+    }
+
+    let exam: ExamAttempt;
+    if (primary.examType === "chapter" && primary.chapterId) {
+      exam = aiService.generateExam({ type: "chapter", chapterId: primary.chapterId, count: primary.count || 10 });
+    } else if (primary.examType === "incorrect") {
+      exam = aiService.generateExam({ type: "incorrect", count: primary.count || 8 });
+    } else if (primary.examType === "ai-smart") {
+      exam = aiService.generateExam({ type: "ai-smart", count: primary.count || 20 });
+    } else {
+      exam = aiService.generateExam({ type: "adaptive", count: primary.count || 10 });
+    }
+    onStartExam(exam);
+  };
+
+  const handleExecuteSecondary = (sec?: NextBestAction["secondaryAction"]) => {
+    if (!sec) return;
+    if (sec.actionType === "review-notebook") onNavigate("review");
+    else if (sec.actionType === "analytics") onNavigate("progress");
+    else if (sec.actionType === "practice-center") onNavigate("practice");
+  };
+
+  return (
+    <div className="space-y-8 max-w-6xl mx-auto px-4 sm:px-6 py-8 fade-in-up">
+      {/* 5 CORE QUESTIONS SIMPLIFIED BAR */}
+      <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-info/10 text-brand-info flex items-center justify-center font-bold">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[10px] font-mono text-text-muted uppercase">1. Thời gian tới kỳ thi</div>
+            <div className="text-sm font-semibold text-text-primary">
+              {simplified.timeToExamText}
+            </div>
+          </div>
+        </div>
+
+        <div className="h-8 w-[1px] bg-border-primary/60 hidden sm:block" />
+
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-success/10 text-brand-success flex items-center justify-center font-bold">
+            <Target className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[10px] font-mono text-text-muted uppercase">2. Việc nên làm ngay</div>
+            <div className="text-sm font-semibold text-text-primary">
+              {simplified.todayGoalText}
+            </div>
+          </div>
+        </div>
+
+        <div className="h-8 w-[1px] bg-border-primary/60 hidden lg:block" />
+
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-warning/10 text-brand-warning flex items-center justify-center font-bold">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[10px] font-mono text-text-muted uppercase">3. Tiến độ hiện tại</div>
+            <div className="text-sm font-semibold text-text-primary">
+              {simplified.progressSummary}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ACTIVE UNFINISHED SESSION CARD IF ANY */}
+      {unfinishedExam && (
+        <ContinueLearningCard 
+          exam={unfinishedExam} 
+          onContinue={(examId) => onStartExam(unfinishedExam)} 
+        />
+      )}
+
+      {/* SINGLE HERO DECISION CARD */}
+      <HomeHero 
+        action={nextAction} 
+        onExecutePrimary={handleExecutePrimary} 
+        onExecuteSecondary={handleExecuteSecondary} 
+      />
+
+      {/* DAILY LEARNING STORY */}
+      <DailyLearningStory 
+        story={story} 
+        onActionNextStep={() => handleExecutePrimary(nextAction.primaryAction)} 
+      />
+
+      {/* PROGRESSIVE DISCLOSURE TOGGLE FOR SECONDARY DETAILS */}
+      <div className="flex items-center justify-between pt-2 border-t border-border-primary/60">
+        <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-brand-info" />
+          Tùy chọn ôn tập thêm
+        </h2>
+
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="px-3 py-1.5 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary text-text-muted hover:text-text-primary text-xs font-medium rounded-lg transition inline-flex items-center gap-1.5 cursor-pointer"
+        >
+          {showAdvanced ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          <span>{showAdvanced ? "Ẩn phần mở rộng" : "Xem phần mở rộng"}</span>
+        </button>
+      </div>
+
+      {/* SECONDARY UTILITIES (PROGRESSIVELY DISCLOSED) */}
+      {showAdvanced && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in-up">
+          {/* Quick Chapter Selector */}
+          <div className="lg:col-span-2 bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
+            <div className="text-xs font-semibold text-text-primary flex items-center justify-between">
+              <span>Ôn theo chương</span>
+              <span className="text-[10px] font-mono text-text-muted">6 chương trọng tâm</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {chapters.slice(0, 6).map((ch) => (
+                <button
+                  key={ch.id}
+                  onClick={() => {
+                    const exam = aiService.generateExam({ type: "chapter", chapterId: ch.id, count: 10 });
+                    onStartExam(exam);
+                  }}
+                  className="p-3 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary/60 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
+                >
+                  <div>
+                    <div className="text-[10px] font-mono text-brand-info font-bold">Chương {ch.id}</div>
+                    <div className="text-xs font-medium text-text-primary truncate max-w-[200px]">{ch.title}</div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Attempts History */}
+          <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
+            <div className="text-xs font-semibold text-text-primary flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-text-muted" />
+                Lịch sử làm bài
+              </span>
+              <button 
+                onClick={() => onNavigate("progress")}
+                className="text-[11px] text-brand-info hover:underline font-mono cursor-pointer"
+              >
+                Tất cả
+              </button>
+            </div>
+
+            {recentAttempts.length === 0 ? (
+              <EmptyState 
+                type="no-data" 
+                title="Chưa có bài thi" 
+                description="Hoàn thành bài đầu tiên để xem thống kê." 
+              />
+            ) : (
+              <div className="space-y-2">
+                {recentAttempts.map((att) => {
+                  const percent = Math.round((att.score / (att.questions.length || 1)) * 100);
+                  return (
+                    <div key={att.id} className="p-2.5 bg-bg-surface rounded-xl border border-border-primary/60 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="font-medium text-text-primary">
+                          {att.examType === "ai-smart" ? "Thi thử" : att.examType === "adaptive" ? "Thích ứng" : "Chương " + (att.chapterId || "")}
+                        </div>
+                        <div className="text-[10px] text-text-muted font-mono">{att.startTime.slice(0, 10)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-mono font-semibold ${percent >= 80 ? "text-brand-success" : "text-brand-warning"}`}>
+                          {att.score}/{att.questions.length} ({percent}%)
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

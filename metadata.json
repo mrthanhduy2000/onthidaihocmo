@@ -1,0 +1,6 @@
+{
+  "name": "Luyện thi Kinh tế chính trị",
+  "description": "Nền tảng luyện thi và ôn tập kiến thức môn Kinh tế chính trị Mác - Lênin cao cấp, tích hợp AI chẩn đoán học tập thích ứng, giải thích đề thi chi tiết và theo dõi tiến độ vạn năng.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

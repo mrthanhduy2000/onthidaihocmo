@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Color System Light Mode - Crisp, Academic & Premium (Apple/Notion/Arc style) */
+  --bg-app: #fafafc;       /* Clean warm off-white */
+  --bg-card: #ffffff;      /* Pure white card */
+  --bg-surface: #f1f1f4;   /* Light gray surface */
+  --bg-surface-hover: #e4e4e7; /* Zinc-200 */
+  --border-primary: #e2e2e8; /* Super clean light border */
+  --border-secondary: #f1f1f4; /* Zinc-100 */
+  
+  --text-primary: #111111;   /* True high-contrast charcoal */
+  --text-secondary: #444446; /* Mid-tone gray */
+  --text-muted: #767680;     /* Muted gray */
+  --text-dimmed: #aeaeae;    /* Subtle placeholder / disabled */
+  
+  --color-success: #16a34a;  /* Emerald-600 */
+  --color-success-bg: #f0fdf4; /* Emerald-50 */
+  --color-success-border: #bbf7d0; /* Emerald-200 */
+  
+  --color-warning: #ea580c;  /* Orange-600 */
+  --color-warning-bg: #fff7ed; /* Orange-50 */
+  --color-warning-border: #ffedd5; /* Orange-200 */
+  
+  --color-error: #dc2626;    /* Red-600 */
+  --color-error-bg: #fef2f2;   /* Red-50 */
+  --color-error-border: #fee2e2; /* Red-200 */
+  
+  --color-info: #3b82f6;     /* Blue-600 */
+  --color-info-bg: #eff6ff;  /* Blue-50 */
+  --color-info-border: #bfdbfe; /* Blue-200 */
+}
+
+.dark {
+  /* Color System Dark Mode - Expensive, high-density professional terminal workspace style */
+  --bg-app: #0c0c0e;       /* Deep rich dark backdrop */
+  --bg-card: #131316;      /* Slightly lifted cards */
+  --bg-surface: #1c1c20;   /* Surface containers */
+  --bg-surface-hover: #26262b; /* Interactive hover */
+  --border-primary: #222227; /* Thin sleek border */
+  --border-secondary: #131316; /* Clean separator */
+  
+  --text-primary: #f5f5f7;   /* High readability white */
+  --text-secondary: #d1d1d6; /* Secondary light gray */
+  --text-muted: #8e8e93;     /* Muted gray */
+  --text-dimmed: #636366;    /* Dark placeholder */
+  
+  --color-success: #4ade80;  /* Emerald-400 */
+  --color-success-bg: #052e16; /* Emerald-950 */
+  --color-success-border: #15803d; /* Emerald-700 */
+  
+  --color-warning: #fb923c;  /* Orange-400 */
+  --color-warning-bg: #431407; /* Orange-950 */
+  --color-warning-border: #9a3412; /* Orange-700 */
+  
+  --color-error: #f87171;    /* Red-400 */
+  --color-error-bg: #450a0a;   /* Red-950 */
+  --color-error-border: #991b1b; /* Red-700 */
+  
+  --color-info: #60a5fa;     /* Blue-400 */
+  --color-info-bg: #172554;  /* Blue-950 */
+  --color-info-border: #1d4ed8; /* Blue-800 */
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Theme Design Token Colors */
+  --color-bg-app: var(--bg-app);
+  --color-bg-card: var(--bg-card);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-hover: var(--bg-surface-hover);
+  --color-border-primary: var(--border-primary);
+  --color-border-secondary: var(--border-secondary);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-dimmed: var(--text-dimmed);
+  
+  --color-brand-success: var(--color-success);
+  --color-brand-success-bg: var(--color-success-bg);
+  --color-brand-success-border: var(--color-success-border);
+  
+  --color-brand-warning: var(--color-warning);
+  --color-brand-warning-bg: var(--color-warning-bg);
+  --color-brand-warning-border: var(--color-warning-border);
+  
+  --color-brand-error: var(--color-error);
+  --color-brand-error-bg: var(--color-error-bg);
+  --color-brand-error-border: var(--color-error-border);
+  
+  --color-brand-info: var(--color-info);
+  --color-brand-info-bg: var(--color-info-bg);
+  --color-brand-info-border: var(--color-info-border);
+}
+
+/* Base Aesthetics for premium Workspace style */
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth transitons for layout containers */
+div, header, nav, main, footer, button, select, input {
+  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1), fill 200ms cubic-bezier(0.4, 0, 0.2, 1), stroke 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Subtle, ultra-crisp custom components */
+.workspace-card {
+  @apply bg-bg-card border border-border-primary/80 rounded-xl transition-all duration-200;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01), 0 4px 12px rgba(0, 0, 0, 0.01);
+}
+
+.workspace-card:hover {
+  @apply border-border-primary shadow-xs;
+}
+
+/* Subtle input overrides */
+input[type="text"], select {
+  @apply bg-bg-card border border-border-primary rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:border-text-muted focus:ring-2 focus:ring-brand-info/5 transition-all text-text-primary placeholder:text-text-dimmed;
+}
+
+/* Custom interactive animation for elegant fade-in */
+.fade-in-up {
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbars for high-end aesthetic */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-300/60 dark:bg-zinc-800 rounded-full hover:bg-zinc-400 dark:hover:bg-zinc-700 transition-colors;
+}
+
+/* Subtle spotlight or gradient focus accent */
+.accent-glow {
+  @apply relative overflow-hidden;
+}
+
+.accent-glow::before {
+  content: '';
+  @apply absolute top-0 left-1/4 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent;
+}
+
+/* Elegant option card states for the exam view */
+.option-card {
+  @apply flex items-start gap-3.5 p-4 rounded-xl border transition-all duration-150 cursor-pointer text-left w-full relative overflow-hidden;
+}

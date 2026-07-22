@@ -1,0 +1,64 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from "react";
+import { Play, Clock, AlertCircle, ArrowRight } from "lucide-react";
+import { ExamAttempt } from "../types";
+
+interface ContinueLearningCardProps {
+  exam: ExamAttempt;
+  onContinue: (examId: string) => void;
+}
+
+export default function ContinueLearningCard({ exam, onContinue }: ContinueLearningCardProps) {
+  const answeredCount = Object.keys(exam.answers || {}).length;
+  const totalCount = exam.questions.length;
+  const progressPct = totalCount > 0 ? Math.round((answeredCount / totalCount) * 100) : 0;
+  const remainingCount = totalCount - answeredCount;
+  const estMinutes = Math.max(Math.ceil(remainingCount * 1.2), 2);
+
+  return (
+    <div className="bg-bg-card border border-brand-info/40 rounded-2xl p-5 shadow-sm space-y-4 hover:border-brand-info/60 transition">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-info font-bold">
+          <AlertCircle className="w-4 h-4" />
+          <span>Phiên học đang diễn ra • Học tiếp</span>
+        </div>
+        <span className="text-xs font-mono text-text-muted flex items-center gap-1">
+          <Clock className="w-3.5 h-3.5" />
+          <span>Còn ~{estMinutes} phút</span>
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-lg font-display font-light text-text-primary">
+          Tiếp tục phiên luyện tập ({exam.examType.toUpperCase()})
+        </h3>
+        <p className="text-xs text-text-muted">
+          Bạn đã trả lời <strong className="text-text-primary font-mono">{answeredCount}/{totalCount} câu</strong> ({progressPct}% tiến độ). Dữ liệu đã được lưu tự động.
+        </p>
+
+        {/* Progress Bar */}
+        <div className="w-full h-2 bg-bg-surface border border-border-primary/60 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-brand-info rounded-full transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="pt-1 flex justify-end">
+        <button
+          onClick={() => onContinue(exam.id)}
+          className="px-5 py-2.5 bg-brand-info text-white font-medium text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-2 cursor-pointer"
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          <span>Tiếp tục làm bài ({answeredCount}/{totalCount})</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}

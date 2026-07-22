@@ -1,0 +1,483 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export interface Chapter {
+  id: number;
+  code: string; // e.g. "CH1", "CH2"
+  title: string;
+  description: string;
+}
+
+export interface Topic {
+  id: string; // e.g. "T1.1", "T2.3"
+  chapterId: number;
+  title: string;
+  description: string;
+}
+
+export type DifficultyLevel = "Dễ" | "Trung bình" | "Khó" | "Rất khó";
+export type BloomLevel = "Remember" | "Understand" | "Apply" | "Analyze" | "Evaluate" | "Create";
+export type BlueprintType = 
+  | "scenario-based" 
+  | "misconception-analysis" 
+  | "definition-recall" 
+  | "comparative-analysis" 
+  | "cause-effect-linking" 
+  | "cause-effect-reasoning"
+  | "policy-evaluation"
+  | "step-by-step-problem-solving"
+  | string;
+
+export interface Question {
+  id: number;
+  question: string;
+  options: {
+    a: string;
+    b: string;
+    c: string;
+    d: string;
+  };
+  correctAnswer: "a" | "b" | "c" | "d";
+  chapterId: number;
+  topicId: string;
+  difficulty: DifficultyLevel;
+  difficultyRating: number; // 1-5 stars
+  explanation: string;
+  sourcePdf: string; // e.g. "FULL CHƯƠNG.pdf" or "Slide bài giảng"
+  sourcePage: number | string; // page number or slide number
+  knowledgeMapping: string[]; // keywords/tags
+  relatedQuestions: number[]; // related question IDs
+  estimatedTime: number; // in seconds
+  questionType: "multiple-choice";
+  learningObjective: string;
+  // Audit and expansion fields
+  questionCode?: string; // Unique standardized reference code, e.g. "POLI-CH1-Q001"
+  createdAt?: string;    // Metadata creation timestamp
+  updatedAt?: string;    // Metadata modification timestamp
+  version?: number;      // Question versioning for content revisions
+  tags?: string[];       // Extra keywords and tags for flexible filtering
+  concept?: string;      // Theoretical concept linked, e.g. "Derived Demand"
+  misconception?: string;// Common misconception tested, e.g. "Direct Demand"
+  bloomLevel?: string;   // Bloom taxonomy classification
+  metadata?: GeneratedQuestionMetadata;
+  pedagogicalMetadata?: PedagogicalMetadata;
+}
+
+export interface QuestionSpecification {
+  learningObjective: string;
+  conceptId: string;
+  conceptName: string;
+  chapterId: number;
+  topicId: string;
+  subjectId: string;
+  blueprint: string;
+  bloomLevel: string;
+  difficulty: DifficultyLevel;
+  targetStudentLevel: string;
+  pedagogicalReason: string;
+  expectedMisconception: string;
+  prerequisiteConcepts: string[];
+  evidenceIds: string[];
+  distractorStrategy: string[];
+  generationConstraints: string[];
+}
+
+export interface PedagogicalQualityMetrics {
+  questionAmbiguity: number;
+  answerUniqueness: number;
+  distractorPlausibility: number;
+  pedagogicalClarity: number;
+  evidenceSufficiency: number;
+  blueprintConsistency: number;
+  bloomConsistency: number;
+  difficultyConsistency: number;
+  teachingValue: number;
+  questionOriginality: number;
+}
+
+export interface PedagogicalMetadata {
+  learningObjective: string;
+  pedagogicalReason: string;
+  expectedMisconception: string;
+  whyBlueprintSelected: string;
+  whyDifficultySelected: string;
+  reviewPassed: boolean;
+  reviewIssues: string[];
+  reviewScore: number;
+  metrics?: PedagogicalQualityMetrics;
+}
+
+export interface GeneratedQuestionMetadata {
+  questionId: string | number;
+  subjectId: string;
+  chapterId: number;
+  conceptId: string;
+  blueprintId: string;
+  evidenceIds: string[];
+  difficulty: number;
+  bloomLevel: string;
+  generationStrategy: string;
+  generatedAt: string;
+  generatorVersion: string;
+  groundingScore: number;
+  qualityMetrics?: {
+    overallScore: number;
+    conceptCoverage: number;
+    distractorQuality: number;
+    bloomAccuracy: number;
+    evidenceCoverage: number;
+    difficultyConfidence: number;
+    pedagogicalValue: number;
+    questionDiversity: number;
+  };
+}
+
+export interface QuestionSpecification {
+  questionIndex: number;
+  concept: string;
+  chapterId: number;
+  topicId: string;
+  bloom: BloomLevel;
+  difficulty: DifficultyLevel;
+  blueprint: BlueprintType;
+  evidenceIds: string[];
+  reason: string;
+  targetMisconception?: string;
+}
+
+export interface ExamSpecification {
+  id: string;
+  examType: string;
+  subjectId: string;
+  questionCount: number;
+  questionSpecs: QuestionSpecification[];
+  coverage: Record<number, number>; // chapterId -> count
+  bloomDistribution: Record<string, { count: number; percentage: number }>;
+  difficultyDistribution: Record<string, { count: number; percentage: number }>;
+  blueprintDistribution: Record<string, { count: number; percentage: number }>;
+  rhythmSequence: string[];
+  plannedTimeMinutes: number;
+  generatorVersion: string;
+  createdAt: string;
+}
+
+export interface ExamReviewResult {
+  passed: boolean;
+  overallScore: number;
+  checks: {
+    coverage: { status: "PASS" | "WARN" | "FAIL"; details: string };
+    bloom: { status: "PASS" | "WARN" | "FAIL"; details: string };
+    difficulty: { status: "PASS" | "WARN" | "FAIL"; details: string };
+    redundancy: { status: "PASS" | "WARN" | "FAIL"; details: string };
+    conceptBalance: { status: "PASS" | "WARN" | "FAIL"; details: string };
+    rhythm: { status: "PASS" | "WARN" | "FAIL"; details: string };
+    expectedTime: { status: "PASS" | "WARN" | "FAIL"; details: string };
+  };
+  recommendations: string[];
+  reviewedAt: string;
+}
+
+export interface ExamAttempt {
+  id: string;
+  examType: "sequential" | "random" | "ai-smart" | "chapter" | "topic" | "difficulty" | "incorrect" | "bookmark" | "adaptive" | "custom";
+  chapterId?: number;
+  topicId?: string;
+  difficulty?: DifficultyLevel;
+  startTime: string; // ISO string
+  endTime?: string; // ISO string
+  questions: number[]; // question IDs in order
+  answers: Record<number, "a" | "b" | "c" | "d">; // questionID -> selectedOption
+  bookmarks: number[]; // bookmarked question IDs
+  flags: number[]; // flagged question IDs
+  isSubmitted: boolean;
+  score: number; // number of correct answers
+  timeSpent: number; // in seconds
+  examSpecification?: ExamSpecification;
+  examReviewResult?: ExamReviewResult;
+}
+
+export interface Statistics {
+  totalSolved: number;
+  totalCorrect: number;
+  totalTimeSpent: number; // in seconds
+  studyStreak: number;
+  lastStudyDate?: string;
+  accuracyByChapter: Record<number, { correct: number; total: number }>;
+  accuracyByTopic: Record<string, { correct: number; total: number }>;
+  incorrectQuestionHistory: Record<number, number>; // questionID -> wrong attempt count
+  bookmarks: number[];
+  flags: number[];
+  conceptMastery?: Record<string, number>; // conceptID/conceptName -> mastery percentage (0-100)
+}
+
+export interface UserSettings {
+  theme: "light" | "dark" | "system";
+  fontSize: "sm" | "base" | "lg" | "xl";
+  enableAnimations: boolean;
+  enableTimer: boolean;
+  enableSound: boolean;
+  autoSaveProgress: boolean;
+}
+
+export interface AIRecommendation {
+  id: string;
+  date: string;
+  weakChapters: number[];
+  weakTopics: string[];
+  recommendationText: string;
+  suggestedAction: {
+    type: "smart-exam" | "chapter-review" | "topic-review";
+    chapterId?: number;
+    topicId?: string;
+    count: number;
+  };
+}
+
+export interface DashboardOverview {
+  subjectName: string;
+  totalQuestions: number;
+  totalChapters: number;
+  totalTopics: number;
+  completionRate: number; // percentage of questions solved at least once correctly
+  progress: number; // overall progress percentage
+  lastExam?: ExamAttempt;
+}
+
+export interface SubjectGoal {
+  subjectId: string;
+  targetScore: number; // e.g. 8.0, 8.5, 9.0, 10.0
+  examDate: string; // ISO date YYYY-MM-DD
+  dailyStudyMinutes: number; // e.g. 30, 45, 60, 90, 120
+  priority: "High" | "Medium" | "Low";
+  updatedAt: string;
+}
+
+export interface ExamPrediction {
+  subjectId: string;
+  predictedScore: number; // e.g. 8.1
+  confidenceMargin: number; // e.g. 0.3 -> 8.1 ± 0.3
+  confidenceLevel: "Cao" | "Trung bình" | "Cần thêm dữ liệu";
+  targetScore: number;
+  gap: number; // targetScore - predictedScore
+  readinessPercentage: number; // 0-100%
+  metricsBreakdown: {
+    masteryScore: number; // 0-100
+    chapterCoverage: number; // 0-100
+    conceptCoverage: number; // 0-100
+    bloomDistributionScore: number; // 0-100
+    learningVelocity: number; // qs/day
+    retentionRate: number; // 0-100
+    wrongQuestionRate: number; // 0-100
+    mockExamAverage: number; // 0-10
+    studyDebtCount: number;
+    remainingDays: number;
+    stableMastery?: number;
+    learningAcceleration?: number;
+    urgencyIndex?: number;
+    stageLabel?: string;
+  };
+  gapActionPlan: {
+    id: string;
+    title: string;
+    type: "chapter" | "mastery" | "debt" | "mock";
+    impact: number; // predicted score boost (+0.4)
+    timeEstimateMinutes: number;
+    completed: boolean;
+    targetConcept?: string;
+    unlockedConceptsCount?: number;
+  }[];
+  riskReport: {
+    level: "Thấp" | "Trung bình" | "Cao";
+    reasons: string[];
+    mitigations: string[];
+    multidimensionalRisk?: {
+      knowledgeRisk: number;
+      retentionRisk: number;
+      timeRisk: number;
+      coverageRisk: number;
+      bloomRisk: number;
+      consistencyRisk: number;
+      fatigueRisk: number;
+    };
+  };
+  explainability: {
+    decision: string;
+    reason: string;
+    evidence: string;
+    policy: string;
+    timestamp: string;
+    majorPositives?: string[];
+    majorNegatives?: string[];
+    uncertaintySource?: string;
+    nextAction?: string;
+  };
+  calibration?: {
+    rawPrediction: number;
+    calibrationOffset: number;
+    smoothedPrediction: number;
+    historicalErrorAvg: number;
+  };
+  calibrationProfile?: ForecastCalibrationProfile;
+  sensitivityAnalysis?: SensitivityItem[];
+  uncertaintyDecomposition?: UncertaintyDecomposition;
+  stressTestReport?: StressTestReport;
+  pressureCurveStage?: string;
+  adaptiveWeights?: {
+    masteryWeight: number;
+    retentionWeight: number;
+    coverageWeight: number;
+    bloomWeight: number;
+    mockWeight: number;
+    debtWeight: number;
+  };
+}
+
+export interface ForecastCalibrationProfile {
+  subjectId: string;
+  overallBias: number; // e.g. -0.2 (system overestimates by 0.2)
+  chapterBias: Record<number, number>;
+  difficultyBias: Record<string, number>;
+  bloomBias: Record<string, number>;
+  examTypeBias: Record<string, number>;
+  predictionVariance: number;
+  calibrationCount: number;
+  calibrationHistory: {
+    timestamp: string;
+    predictedScore: number;
+    actualScore: number;
+    bias: number;
+    examType: string;
+  }[];
+}
+
+export interface SensitivityItem {
+  activityKey: string;
+  activityLabel: string;
+  additional30MinGain: number; // e.g. +0.43
+  elasticityIndex: number;
+  diminishingPhase: "HIGH_GAIN" | "MODERATE_GAIN" | "SATURATED";
+  opportunityCostIfSkipped: number; // e.g. -0.42
+}
+
+export interface UncertaintyDecomposition {
+  knowledgeUncertainty: number; // 0-1
+  retentionUncertainty: number;
+  coverageUncertainty: number;
+  timeUncertainty: number;
+  behaviorUncertainty: number;
+  dependencyUncertainty: number;
+  bloomUncertainty: number;
+  overallConfidencePct: number; // e.g. 88%
+  stabilityIndex: number; // 0-100
+}
+
+export interface StressTestReport {
+  mostSensitiveVariable: string;
+  mostEfficientAction: string;
+  leastEfficientAction: string;
+  criticalBottleneck: string;
+  scenarios: {
+    id: string;
+    scenarioName: string;
+    projectedScore: number;
+    deltaFromBaseline: number;
+    description: string;
+  }[];
+}
+
+export interface StudyActivityROI {
+  id: string;
+  title: string;
+  type: "wrong_notebook" | "adaptive_practice" | "mock_exam" | "chapter_review";
+  durationMinutes: number;
+  forecastPointGain: number; // e.g. +0.42
+  roiValue: number; // gain per 10 mins
+  priority: "Rất cao" | "Cao" | "Trung bình";
+  reason: string;
+}
+
+export interface StudyDebtItem {
+  id: string;
+  questionId?: number;
+  conceptName: string;
+  chapterId: number;
+  topicId: string;
+  debtType: "wrong_attempt" | "unlearned_chapter" | "low_bloom" | "overdue_review";
+  priority: "Cao" | "Trung bình" | "Thấp";
+  wrongCount: number;
+  lastAttemptAt?: string;
+  status: "pending" | "postponed" | "resolved";
+}
+
+export interface SessionItem {
+  id: string;
+  name: string;
+  examType: string;
+  subjectId: string;
+  startTime: string;
+  questionCount: number;
+  score: number;
+  timeSpent: number;
+  status: "active" | "completed" | "archived";
+}
+
+export type ResourceType = "giáo trình" | "slide" | "đề cũ" | "flashcard" | "ghi chú" | "mindmap";
+
+export interface LearningResource {
+  id: string;
+  title: string;
+  type: ResourceType;
+  status: "available" | "missing";
+  conceptCount: number;
+  updatedAt: string;
+  fileSize?: string;
+  url?: string;
+}
+
+export interface KnowledgeHealthItem {
+  chapterId: number;
+  chapterTitle: string;
+  coveragePercentage: number;
+  missingConcepts: string[];
+  totalConcepts: number;
+}
+
+export interface KnowledgeVersion {
+  version: string;
+  date: string;
+  addedConceptsCount: number;
+  removedDuplicatesCount: number;
+  coveragePercentage: number;
+  description: string;
+}
+
+export interface LearningLogEntry {
+  id: string;
+  date: string;
+  type: "Adaptive" | "Review" | "Mock Exam" | "Mastered" | "Retention";
+  title: string;
+  detail: string;
+  score?: string;
+}
+
+export interface StudySnapshot {
+  weekLabel: string;
+  date: string;
+  masteryPct: number;
+  forecastScore: number;
+  debtCount: number;
+  solvedQuestions: number;
+}
+
+export interface AppSettings {
+  focusMode: boolean;
+  keyboardShortcuts: boolean;
+  animations: boolean;
+  autoSaveSession: boolean;
+  soundEffects: boolean;
+  dailyReminderTime: string;
+}
+
+

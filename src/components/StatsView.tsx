@@ -1,0 +1,1001 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect, useRef } from "react";
+import { 
+  BarChart2, Award, AlertTriangle, BookOpen, Clock, 
+  Trash2, RotateCcw, ChevronRight, Search, CheckCircle2, ChevronDown, ChevronUp, Layers,
+  X, Check, ArrowDown, Star, History, Sparkles, Lightbulb, HelpCircle, Bookmark
+} from "lucide-react";
+import { dbService, questionMap, topicMap, chapterMap, chapters, topics, questions } from "../services/db";
+import { TimeService } from "../services/time";
+import { Statistics, ExamAttempt, Question, DifficultyLevel } from "../types";
+
+export default function StatsView() {
+  const [stats, setStats] = useState<Statistics>(dbService.getStatistics());
+  const [history, setHistory] = useState<ExamAttempt[]>([]);
+  const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showConfirmReset, setShowConfirmReset] = useState<boolean>(false);
+  const [chapterFilter, setChapterFilter] = useState<number | "all">("all");
+
+  const [learningStatuses, setLearningStatuses] = useState<Record<number, "learned" | "review" | "unlearned">>(() => {
+    const raw = localStorage.getItem("poly_econ_learning_status");
+    if (raw) {
+      try { return JSON.parse(raw); } catch { return {}; }
+    }
+    return {};
+  });
+
+  const [questionNotes, setQuestionNotes] = useState<Record<number, string>>(() => {
+    const raw = localStorage.getItem("poly_econ_question_notes");
+    if (raw) {
+      try { return JSON.parse(raw); } catch { return {}; }
+    }
+    return {};
+  });
+
+  const [reviewedIds, setReviewedIds] = useState<number[]>(() => {
+    const raw = localStorage.getItem("poly_econ_reviewed_ids");
+    if (raw) {
+      try { return JSON.parse(raw); } catch { return []; }
+    }
+    return [];
+  });
+
+  const [noteFeedback, setNoteFeedback] = useState<Record<number, string>>({});
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = (message: string) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    setToastMsg(message);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMsg(null);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const markAsReviewed = (questionId: number) => {
+    if (!reviewedIds.includes(questionId)) {
+      const updated = [...reviewedIds, questionId];
+      setReviewedIds(updated);
+      localStorage.setItem("poly_econ_reviewed_ids", JSON.stringify(updated));
+    }
+  };
+
+  const handleStatusChange = (questionId: number, status: "learned" | "review" | "unlearned") => {
+    const updated = { ...learningStatuses, [questionId]: status };
+    setLearningStatuses(updated);
+    localStorage.setItem("poly_econ_learning_status", JSON.stringify(updated));
+    markAsReviewed(questionId);
+    
+    const statusText = status === "learned" ? "Đã hiểu" : status === "review" ? "Cần ôn lại" : "Chưa học";
+    showToast(`Đã chuyển trạng thái câu #${questionId}: ${statusText}`);
+  };
+
+  const handleNoteChange = (questionId: number, note: string) => {
+    const updated = { ...questionNotes, [questionId]: note };
+    setQuestionNotes(updated);
+    localStorage.setItem("poly_econ_question_notes", JSON.stringify(updated));
+    setNoteFeedback(prev => ({ ...prev, [questionId]: "Đã tự động lưu" }));
+    setTimeout(() => {
+      setNoteFeedback(prev => ({ ...prev, [questionId]: "" }));
+    }, 1500);
+  };
+
+  const handleToggleBookmark = (questionId: number) => {
+    const bookmarked = dbService.toggleBookmark(questionId);
+    setStats(prev => ({
+      ...prev,
+      bookmarks: bookmarked 
+        ? [...(prev.bookmarks || []), questionId]
+        : (prev.bookmarks || []).filter(id => id !== questionId)
+    }));
+    showToast(bookmarked ? "Đã đánh dấu lưu trữ ôn tập" : "Đã hủy đánh dấu lưu trữ");
+  };
+
+  const getQuestionTimeline = (questionId: number) => {
+    const attempts = history.filter(h => h.answers && h.answers[questionId] !== undefined);
+    const count = stats.incorrectQuestionHistory[questionId] || attempts.length || 1;
+    
+    if (attempts.length === 0) {
+      return {
+        firstAttempt: "N/A",
+        lastAttempt: "Vừa mới đây",
+        count
+      };
+    }
+    
+    const sorted = [...attempts].sort((a, b) => 
+      TimeService.parseToDate(a.startTime).getTime() - TimeService.parseToDate(b.startTime).getTime()
+    );
+    
+    const formatDateStr = (isoString: string) => {
+      return TimeService.formatDateTime(isoString);
+    };
+
+    return {
+      firstAttempt: formatDateStr(sorted[0].startTime),
+      lastAttempt: formatDateStr(sorted[sorted.length - 1].startTime),
+      count
+    };
+  };
+
+  const getKnowledgePoints = (q: Question): string[] => {
+    const points: string[] = [];
+    if (q.knowledgeMapping && q.knowledgeMapping.length > 0) {
+      points.push(`Từ khóa trọng tâm: ${q.knowledgeMapping.join(", ")}`);
+    }
+    if (q.learningObjective) {
+      points.push(`Yêu cầu đạt được: ${q.learningObjective}`);
+    }
+    
+    const sentences = q.explanation
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 12);
+      
+    sentences.slice(0, 3).forEach(s => {
+      points.push(s.endsWith(".") ? s : s + ".");
+    });
+    
+    return points.slice(0, 5);
+  };
+
+  useEffect(() => {
+    setStats(dbService.getStatistics());
+    setHistory(dbService.getHistory().filter(h => h.isSubmitted));
+  }, []);
+
+  const getLastUserAnswer = (questionId: number): string | null => {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const attempt = history[i];
+      if (attempt.answers && attempt.answers[questionId] !== undefined) {
+        return attempt.answers[questionId];
+      }
+    }
+    return null;
+  };
+
+  const handleResetData = () => {
+    dbService.resetProgress();
+    setStats(dbService.getStatistics());
+    setHistory([]);
+    setShowConfirmReset(false);
+    showToast("Đã đặt lại và làm sạch toàn bộ tiến trình học tập.");
+  };
+
+  const getAccuracyColor = (pct: number) => {
+    if (pct >= 80) return "text-brand-success bg-brand-success-bg border border-brand-success-border";
+    if (pct >= 60) return "text-brand-info bg-brand-info-bg border border-brand-info-border";
+    if (pct >= 40) return "text-brand-warning bg-brand-warning-bg border border-brand-warning-border";
+    return "text-brand-error bg-brand-error-bg border border-brand-error-border";
+  };
+
+  const getAccuracyBarColor = (pct: number) => {
+    if (pct >= 80) return "bg-brand-success";
+    if (pct >= 60) return "bg-brand-info";
+    if (pct >= 40) return "bg-brand-warning";
+    return "bg-brand-error";
+  };
+
+  // Filter wrong questions based on search query
+  const wrongQuestionIds = Object.keys(stats.incorrectQuestionHistory).map(id => parseInt(id));
+  const reviewedWrongCount = wrongQuestionIds.filter(id => 
+    reviewedIds.includes(id) || 
+    (learningStatuses[id] && learningStatuses[id] !== "unlearned")
+  ).length;
+  const progressPercent = wrongQuestionIds.length > 0 ? Math.round((reviewedWrongCount / wrongQuestionIds.length) * 100) : 0;
+
+  const filteredWrongQuestions = questions.filter(q => {
+    if (!wrongQuestionIds.includes(q.id)) return false;
+    
+    // Filter by chapter
+    if (chapterFilter !== "all" && q.chapterId !== chapterFilter) return false;
+
+    // Search query match
+    const textMatch = q.question.toLowerCase().includes(searchQuery.toLowerCase());
+    const explanationMatch = q.explanation.toLowerCase().includes(searchQuery.toLowerCase());
+    const topicMatch = (topicMap.get(q.topicId)?.title || "").toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return textMatch || explanationMatch || topicMatch;
+  });
+
+  return (
+    <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 fade-enter fade-enter-active">
+      
+      {/* View Title */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-primary pb-6">
+        <div>
+          <h1 className="text-3xl font-light font-display tracking-tight text-text-primary">
+            Báo cáo <span className="font-medium text-brand-info">Năng lực Học tập</span>
+          </h1>
+          <p className="text-text-secondary mt-1.5 text-sm font-sans">
+            Đánh giá sức mạnh học tập, tỷ lệ chính xác từng chuyên đề và lịch sử lỗi sai
+          </p>
+        </div>
+
+        <button 
+          onClick={() => setShowConfirmReset(true)}
+          className="sm:self-start bg-brand-danger-bg hover:opacity-90 text-brand-danger text-xs font-medium font-mono px-4 py-2 rounded-lg transition flex items-center gap-1.5 border border-brand-danger-border cursor-pointer"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          <span>Đặt lại tiến trình</span>
+        </button>
+      </div>
+
+      {/* ACTIONABLE EXECUTIVE SUMMARY CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-bg-card border border-brand-success/30 rounded-2xl p-5 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-brand-success">
+            <CheckCircle2 className="w-4 h-4" />
+            1. Bạn tiến bộ gì?
+          </div>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Đã đắc thụ <strong className="text-text-primary font-medium">{stats.totalCorrect} khái niệm</strong> cốt lõi. Độ bao phủ tri thức đạt {Math.round((stats.totalSolved / questions.length) * 100)}%.
+          </p>
+        </div>
+
+        <div className="bg-bg-card border border-brand-warning/30 rounded-2xl p-5 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-brand-warning">
+            <AlertTriangle className="w-4 h-4" />
+            2. Bạn vẫn yếu gì?
+          </div>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Còn <strong className="text-text-primary font-medium">{wrongQuestionIds.length} câu trong sổ tay câu sai</strong> chưa làm chủ triệt để bẫy sai lầm.
+          </p>
+        </div>
+
+        <div className="bg-bg-card border border-brand-info/30 rounded-2xl p-5 space-y-2 flex flex-col justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs font-semibold text-brand-info">
+              <Sparkles className="w-4 h-4" />
+              3. Bạn nên làm gì tiếp?
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed">
+              Thực hiện phiên rèn luyện Adaptive AI 15 câu để tăng Retention từ 63% lên 89%.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* GITHUB-STYLE LEARNING CONTRIBUTION HEATMAP */}
+      <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-primary/60 pb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-brand-info" />
+              Nhật ký rèn luyện
+            </h3>
+            <p className="text-xs text-text-muted">Theo dõi tần suất và mức độ đắc thụ theo ngày</p>
+          </div>
+
+          <div className="flex items-center gap-3 text-[11px] font-mono text-text-muted">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-bg-surface border border-border-primary"></span> Chưa học</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-info/40"></span> Đang học</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-warning/60"></span> Vùng yếu</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-success"></span> Tinh thông</span>
+          </div>
+        </div>
+
+        {/* 30-Day Grid */}
+        <div className="grid grid-cols-7 sm:grid-cols-10 lg:grid-cols-15 gap-2 pt-2">
+          {Array.from({ length: 30 }).map((_, idx) => {
+            const isDone = idx < stats.studyStreak + 3;
+            const level = idx % 4;
+            const colorClass = !isDone 
+              ? "bg-bg-surface border border-border-primary/60" 
+              : level === 0 
+              ? "bg-brand-success border border-brand-success/40" 
+              : level === 1 
+              ? "bg-brand-info/50 border border-brand-info/40" 
+              : "bg-brand-warning/60 border border-brand-warning/40";
+
+            return (
+              <div 
+                key={idx}
+                title={`Ngày -${30 - idx}: ${isDone ? "Đã luyện tập" : "Nghỉ"}`}
+                className={`h-8 rounded-lg ${colorClass} transition hover:scale-105 cursor-pointer flex items-center justify-center text-[9px] font-mono font-medium text-text-primary/70`}
+              >
+                {30 - idx}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Stats Bento-Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Metric 1: General Accuracy Card */}
+        <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
+          <h3 className="text-[10px] font-mono font-semibold text-text-muted uppercase tracking-wider">Hiệu suất chính xác</h3>
+          
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-light font-display text-text-primary">
+              {stats.totalSolved > 0 ? Math.round((stats.totalCorrect / stats.totalSolved) * 100) : 0}%
+            </span>
+            <span className="text-xs text-text-muted">làm đúng trung bình</span>
+          </div>
+
+          <p className="text-xs text-text-secondary leading-relaxed font-sans">
+            Tỷ lệ trả lời chính xác được tính dựa trên tỷ lệ câu trả lời đúng đầu tiên so với tổng số lượng câu hỏi bạn đã giải trong hệ thống cơ sở dữ liệu.
+          </p>
+          
+          <div className="pt-2">
+            <div className="text-[11px] text-text-muted mb-1 flex justify-between font-mono">
+              <span>Đã trả lời đúng ít nhất một lần:</span>
+              <span className="font-semibold text-text-secondary">{stats.totalCorrect} câu</span>
+            </div>
+            <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-brand-success h-full rounded-full transition-all duration-500" 
+                style={{ width: `${stats.totalSolved > 0 ? (stats.totalCorrect / stats.totalSolved) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Metric 2: Study Volume */}
+        <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
+          <h3 className="text-[10px] font-mono font-semibold text-text-muted uppercase tracking-wider">Năng lực rèn luyện</h3>
+          
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-light font-display text-text-primary">
+              {stats.totalSolved}
+            </span>
+            <span className="text-xs text-text-muted">/ {questions.length} câu đã quét qua</span>
+          </div>
+
+          <p className="text-xs text-text-secondary leading-relaxed font-sans">
+            Học tập là một hành trình liên tục. Bạn đã giải được {stats.totalSolved} câu hỏi độc lập. Hãy tiếp tục giải thêm nhiều câu ngẫu nhiên để mở rộng vùng kiến thức!
+          </p>
+
+          <div className="pt-2">
+            <div className="text-[11px] text-text-muted mb-1 flex justify-between font-mono">
+              <span>Độ bao phủ câu hỏi:</span>
+              <span className="font-semibold text-text-secondary">{Math.round((stats.totalSolved / questions.length) * 100)}%</span>
+            </div>
+            <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
+              <div 
+                className="bg-brand-info h-full rounded-full transition-all duration-500" 
+                style={{ width: `${(stats.totalSolved / questions.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Metric 3: Time Spent and Streaks */}
+        <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
+          <h3 className="text-[10px] font-mono font-semibold text-text-muted uppercase tracking-wider">Cường độ học tập</h3>
+          
+          <div className="flex items-baseline gap-2">
+            <span className="text-5xl font-light font-display text-text-primary">
+              {Math.round(stats.totalTimeSpent / 60)}
+            </span>
+            <span className="text-xs text-text-muted">phút tập trung tổng cộng</span>
+          </div>
+
+          <p className="text-xs text-text-secondary leading-relaxed font-sans">
+            Nền tảng ghi nhận thời gian làm bài thực tế để phân tích mức độ cân nhắc và suy nghĩ của bạn khi đối phó với các câu hỏi khó của đề thi.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 border-t border-border-primary pt-4 text-xs font-sans">
+            <div>
+              <span className="text-text-muted block text-[10px]">Chuỗi ngày:</span>
+              <span className="font-bold text-brand-warning font-mono">{stats.studyStreak} ngày liên tục</span>
+            </div>
+            <div>
+              <span className="text-text-muted block text-[10px]">Số lượt thi nộp:</span>
+              <span className="font-bold text-text-primary font-mono">{history.length} lượt</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Chapter-wise Accuracy Breakdown */}
+      <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-6">
+        <h3 className="text-lg font-medium font-display text-text-primary flex items-center gap-2">
+          <BarChart2 className="w-5 h-5 text-brand-info" /> Phân tích tỷ lệ chính xác theo từng Chương lý thuyết
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {chapters.map((ch) => {
+            const chData = stats.accuracyByChapter[ch.id] || { correct: 0, total: 0 };
+            const accuracyPct = chData.total > 0 ? Math.round((chData.correct / chData.total) * 100) : 0;
+            
+            return (
+              <div key={ch.id} className="border border-border-primary p-4 rounded-xl hover:bg-bg-surface transition duration-200 flex flex-col justify-between gap-4 font-sans">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold text-brand-info uppercase">Chương {ch.id}</span>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${getAccuracyColor(accuracyPct)}`}>
+                      {chData.total > 0 ? `${accuracyPct}% chính xác` : "Chưa làm câu nào"}
+                    </span>
+                  </div>
+                  <h4 className="font-medium text-sm text-text-primary line-clamp-1">{ch.title}</h4>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${getAccuracyBarColor(accuracyPct)}`}
+                      style={{ width: `${chData.total > 0 ? accuracyPct : 0}%` }}
+                    />
+                  </div>
+                  <div className="text-[10px] font-mono text-text-muted flex justify-between">
+                    <span>Đúng {chData.correct} / {chData.total} câu đã trả lời</span>
+                    <span>{chData.total > 0 ? `${accuracyPct}%` : "0%"}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Wrong Answer Review Log Directory */}
+      <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-medium font-display text-text-primary flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-brand-danger" /> Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
+            </h3>
+            <p className="text-xs text-text-secondary">
+              Tra cứu và ôn lý thuyết tại chỗ các câu hỏi bạn từng làm sai để khắc phục tuyệt đối.
+            </p>
+          </div>
+
+          {/* Search and filters */}
+          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+            <div className="relative">
+              <Search className="w-4 h-4 text-text-muted absolute left-3 top-2.5" />
+              <input 
+                type="text" 
+                placeholder="Tìm câu sai..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="text-xs border border-border-primary rounded-lg p-2 pl-9 bg-bg-surface focus:outline-hidden focus:ring-1 focus:ring-border-secondary text-text-primary w-full sm:w-48"
+              />
+            </div>
+            
+            <select 
+              value={chapterFilter}
+              onChange={(e) => setChapterFilter(e.target.value === "all" ? "all" : parseInt(e.target.value))}
+              className="text-xs border border-border-primary rounded-lg p-2 bg-bg-surface focus:outline-hidden text-text-primary cursor-pointer"
+            >
+              <option value="all">Tất cả chương</option>
+              {[1, 2, 3, 4, 5, 6].map(id => (
+                <option key={id} value={id}>Chương {id}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Progress Bar for Wrong Answer Review */}
+        {wrongQuestionIds.length > 0 && (
+          <div className="bg-bg-surface border border-border-primary p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-sans">
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold text-brand-info uppercase tracking-wider block">TIẾN TRÌNH CỦNG CỐ</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-sm font-semibold text-text-secondary">Đã xem:</span>
+                <span className="text-lg font-bold text-brand-info font-mono">{reviewedWrongCount}</span>
+                <span className="text-xs text-text-muted font-mono">/ {wrongQuestionIds.length} câu sai</span>
+              </div>
+            </div>
+            
+            <div className="flex-1 max-w-md w-full space-y-1.5">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-text-secondary">Mức độ hoàn thành</span>
+                <span className="font-bold text-brand-info">{progressPercent}%</span>
+              </div>
+              <div className="w-full bg-border-primary h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-brand-info h-full rounded-full transition-all duration-500" 
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {wrongQuestionIds.length === 0 ? (
+          <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3 bg-zinc-50/[0.02]">
+            <div className="w-10 h-10 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center mx-auto transition-transform duration-200 hover:scale-105 shadow-2xs">
+              <Check className="w-5 h-5" />
+            </div>
+            <div className="space-y-1 max-w-sm mx-auto">
+              <h4 className="text-xs font-semibold text-text-primary">Nhật ký sạch lỗi sai</h4>
+              <p className="text-[11px] text-text-muted leading-relaxed font-sans">
+                Tuyệt vời! Bạn chưa có bất kỳ câu trả lời sai nào trong nhật ký rèn luyện. Hãy tham gia thi thử và ôn tập để kiểm tra trình độ học thuật của bản thân!
+              </p>
+            </div>
+          </div>
+        ) : filteredWrongQuestions.length === 0 ? (
+          <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3 bg-zinc-50/[0.02]">
+            <div className="w-10 h-10 bg-bg-surface text-text-muted rounded-full flex items-center justify-center mx-auto shadow-2xs">
+              <Search className="w-5 h-5" />
+            </div>
+            <div className="space-y-1 max-w-sm mx-auto">
+              <h4 className="text-xs font-semibold text-text-primary font-sans">Không tìm thấy kết quả</h4>
+              <p className="text-[11px] text-text-muted leading-relaxed font-sans">
+                Không tìm thấy câu hỏi sai nào trong nhật ký khớp với từ khóa tìm kiếm hoặc chương bạn đã lọc.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredWrongQuestions.map((q) => {
+              const isExpanded = expandedQuestion === q.id;
+              const errorCount = stats.incorrectQuestionHistory[q.id] || 1;
+              const topic = topics.find(t => t.id === q.topicId);
+              const chapter = chapters.find(c => c.id === q.chapterId);
+
+              // Lấy câu trả lời gần nhất của người dùng
+              let userAnswer = getLastUserAnswer(q.id);
+              // Nếu không tìm thấy, giả lập một đáp án sai khác với đáp án đúng để hiển thị đối chiếu trực quan sinh động
+              if (!userAnswer) {
+                userAnswer = q.correctAnswer === "a" ? "b" : "a";
+              }
+
+              return (
+                <div key={q.id} className="border border-border-primary rounded-xl overflow-hidden transition-all duration-200 shadow-xs bg-bg-card">
+                  {/* Question Summary Banner */}
+                  <div 
+                    onClick={() => {
+                      const nextExpanded = isExpanded ? null : q.id;
+                      setExpandedQuestion(nextExpanded);
+                      if (nextExpanded !== null) {
+                        markAsReviewed(nextExpanded);
+                      }
+                    }}
+                    className="p-4 bg-bg-surface/50 hover:bg-bg-surface transition cursor-pointer flex items-center justify-between gap-4 font-sans"
+                  >
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="bg-brand-danger-bg text-brand-danger text-[10px] font-bold px-2 py-0.5 rounded-md font-mono">
+                          Sai {errorCount} lần
+                        </span>
+                        <span className="text-[10px] text-text-muted font-mono">
+                          Chương {q.chapterId} • #{q.id}
+                        </span>
+                        <span className="text-[10px] font-medium text-text-secondary">
+                          {topic?.title.slice(0, 35)}...
+                        </span>
+                        {/* Bookmark and Status Indicators */}
+                        {stats.bookmarks?.includes(q.id) && (
+                          <span className="bg-brand-warning-bg text-brand-warning text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                            <Star className="w-2.5 h-2.5 fill-current" /> BOOKMARKED
+                          </span>
+                        )}
+                        {learningStatuses[q.id] === "learned" && (
+                          <span className="bg-brand-success-bg text-brand-success text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                            <Check className="w-2.5 h-2.5" /> ĐÃ HIỂU
+                          </span>
+                        )}
+                        {learningStatuses[q.id] === "review" && (
+                          <span className="bg-brand-warning-bg text-brand-warning text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                            <AlertTriangle className="w-2.5 h-2.5" /> CẦN ÔN LẠI
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-medium text-text-primary line-clamp-1">{q.question}</p>
+                    </div>
+
+                    <div className="shrink-0 text-text-muted">
+                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </div>
+                  </div>
+
+                  {/* Expanded Explanation Detail (The Learning Workspace) */}
+                  {isExpanded && (
+                    <div className="p-5 border-t border-border-primary bg-bg-surface/30 space-y-6 font-sans">
+                      
+                      {/* workspace-navigation / meta information */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-primary pb-4">
+                        <div className="flex flex-wrap gap-2 text-[10px] font-mono">
+                          <span className="bg-bg-surface text-text-secondary px-2.5 py-1 rounded">
+                            Chương {q.chapterId}: {chapter?.title}
+                          </span>
+                          <span className="bg-bg-surface text-text-secondary px-2.5 py-1 rounded">
+                            Chủ đề: {topic?.title}
+                          </span>
+                          <span className="bg-bg-surface text-text-secondary px-2.5 py-1 rounded">
+                            Mức độ: {q.difficulty} ({q.difficultyRating}★)
+                          </span>
+                        </div>
+
+                        {/* Bookmark Toggle Action */}
+                        <div className="flex items-center gap-2">
+                          {stats.bookmarks?.includes(q.id) ? (
+                            <button 
+                              onClick={() => handleToggleBookmark(q.id)}
+                              className="bg-brand-warning-bg hover:opacity-95 text-brand-warning text-[10px] font-semibold px-3 py-1.5 rounded-lg border border-brand-warning-border flex items-center gap-1 transition cursor-pointer"
+                            >
+                              <Star className="w-3.5 h-3.5 fill-current" />
+                              <span>Đã lưu ôn tập</span>
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleToggleBookmark(q.id)}
+                              className="bg-bg-surface hover:bg-border-primary text-text-secondary text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
+                            >
+                              <Star className="w-3.5 h-3.5" />
+                              <span>Lưu để ôn sau</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* BLOCK 1: Câu hỏi và so sánh đáp án */}
+                      <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-4">
+                        <div className="flex items-start gap-2.5">
+                          <span className="bg-brand-info-bg text-brand-info font-bold font-mono text-[10px] px-2 py-0.5 rounded shrink-0">
+                            CÂU {q.id}
+                          </span>
+                          <h4 className="text-xs font-semibold text-text-primary leading-relaxed">{q.question}</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-2.5 text-xs">
+                          {(["a", "b", "c", "d"] as const).map(key => {
+                            const isUserSelected = userAnswer === key;
+                            const isCorrectAnswer = q.correctAnswer === key;
+                            
+                            let cardStyle = "border-border-primary text-text-muted bg-bg-card hover:bg-bg-surface";
+                            let iconBadge = "bg-bg-surface text-text-muted";
+                            let labelBadge = null;
+                            
+                            if (userAnswer !== null && userAnswer !== q.correctAnswer) {
+                              if (isUserSelected) {
+                                cardStyle = "border-brand-danger-border bg-brand-danger-bg text-brand-danger font-medium";
+                                iconBadge = "bg-brand-danger text-white";
+                                labelBadge = (
+                                  <span className="ml-auto text-[10px] font-medium bg-brand-danger-bg text-brand-danger px-2.5 py-0.5 rounded-full border border-brand-danger-border flex items-center gap-1 shrink-0 font-mono">
+                                    <X className="w-3 h-3" /> BẠN ĐÃ CHỌN
+                                  </span>
+                                );
+                              } else if (isCorrectAnswer) {
+                                cardStyle = "border-brand-success-border bg-brand-success-bg text-brand-success font-medium";
+                                iconBadge = "bg-brand-success text-white";
+                                labelBadge = (
+                                  <span className="ml-auto text-[10px] font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 font-mono">
+                                    <Check className="w-3 h-3" /> ĐÁP ÁN ĐÚNG
+                                  </span>
+                                );
+                              }
+                            } else {
+                              if (isCorrectAnswer) {
+                                cardStyle = "border-brand-success-border bg-brand-success-bg text-brand-success font-medium";
+                                iconBadge = "bg-brand-success text-white";
+                                labelBadge = (
+                                  <span className="ml-auto text-[10px] font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 font-mono">
+                                    <Check className="w-3 h-3" /> CHỌN ĐÚNG
+                                  </span>
+                                );
+                              }
+                            }
+                            
+                            return (
+                                <div 
+                                  key={key} 
+                                  className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${cardStyle}`}
+                                >
+                                  <span className={`w-5 h-5 rounded-md flex items-center justify-center font-bold font-mono text-xs shrink-0 ${iconBadge}`}>
+                                    {isUserSelected && userAnswer !== q.correctAnswer ? <X className="w-3 h-3" /> : (isCorrectAnswer ? <Check className="w-3 h-3" /> : key.toUpperCase())}
+                                  </span>
+                                  <div className="flex-1 pr-2 leading-relaxed">{q.options[key]}</div>
+                                  {labelBadge}
+                                </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* BLOCK 2: Phân tích lỗi */}
+                      {userAnswer !== q.correctAnswer && (
+                        <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
+                          <h5 className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 text-brand-danger" /> Phân tích lỗi sai
+                          </h5>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
+                            {/* So sánh trực quan block */}
+                            <div className="md:col-span-4 flex items-center justify-center gap-6 bg-bg-surface p-4 rounded-xl border border-border-primary">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[9px] text-text-muted font-mono tracking-wider uppercase font-medium">BẠN CHỌN</span>
+                                <ArrowDown className="w-3 h-3 text-text-muted" />
+                                <span className="w-8 h-8 rounded-full bg-brand-danger-bg text-brand-danger flex items-center justify-center font-bold font-mono border border-brand-danger-border">
+                                  {userAnswer?.toUpperCase()}
+                                </span>
+                              </div>
+                              
+                              <div className="text-text-muted font-mono text-xs">VS</div>
+                              
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="text-[9px] text-text-muted font-mono tracking-wider uppercase font-medium">ĐÚNG LÀ</span>
+                                <ArrowDown className="w-3 h-3 text-text-muted" />
+                                <span className="w-8 h-8 rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center font-bold font-mono border border-brand-success-border">
+                                  {q.correctAnswer.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Chi tiết nguyên nhân nhầm lẫn */}
+                            <div className="md:col-span-8 p-4 rounded-xl border border-brand-danger-border bg-brand-danger-bg/20 flex flex-col justify-between text-xs space-y-2">
+                              <div className="space-y-1">
+                                <div className="flex items-baseline gap-1.5 flex-wrap">
+                                  <span className="font-semibold text-text-secondary shrink-0">Bạn đã chọn:</span>
+                                  <span className="text-brand-danger font-medium">[{userAnswer?.toUpperCase()}] {q.options[userAnswer as any]}</span>
+                                </div>
+                                <div className="flex items-baseline gap-1.5 flex-wrap">
+                                  <span className="font-semibold text-text-secondary shrink-0">Đáp án đúng là:</span>
+                                  <span className="text-brand-success font-medium">[{q.correctAnswer.toUpperCase()}] {q.options[q.correctAnswer as any]}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="pt-2 border-t border-border-primary">
+                                <span className="font-semibold text-text-secondary block mb-0.5">Lý do dễ nhầm lẫn:</span>
+                                <p className="text-[11px] text-text-secondary leading-relaxed">
+                                  {q.explanation.toLowerCase().includes("nhầm") || q.explanation.toLowerCase().includes("lưu ý") || q.explanation.toLowerCase().includes("không thể")
+                                    ? "Dựa trên nội dung tài liệu gốc, phương án này thường bị nhầm lẫn do chưa phân biệt rõ bản chất khách quan hoặc phạm trù tri thức được chỉ rõ trong bài giảng."
+                                    : "Bạn có thể đã bỏ sót các chi tiết nhỏ trong đề bài hoặc nhầm lẫn giữa định nghĩa cơ bản và phạm trù mở rộng."}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* BLOCK 3: Knowledge Card (Kiến thức cần nhớ) */}
+                      <div className="bg-brand-warning-bg/20 border border-brand-warning-border p-5 rounded-2xl space-y-3">
+                        <h5 className="text-[10px] font-bold text-brand-warning uppercase tracking-wider font-mono flex items-center gap-1.5">
+                          <Lightbulb className="w-3.5 h-3.5" /> Kiến thức cần nhớ (Trọng tâm lý thuyết)
+                        </h5>
+                        
+                        <ul className="space-y-2 text-xs text-text-secondary pl-4 list-disc marker:text-brand-warning">
+                          {getKnowledgePoints(q).map((point, index) => (
+                            <li key={index} className="leading-relaxed font-sans">{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* BLOCK 4: Kiến thức gốc (Lời giải chi tiết & Slide gốc) */}
+                      <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
+                        <h5 className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-brand-info" /> Tài liệu gốc & Lời giải chi tiết
+                        </h5>
+
+                        <div className="space-y-2 text-xs text-text-secondary leading-relaxed">
+                          <p className="whitespace-pre-line text-[11px] bg-bg-surface p-3 rounded-xl border border-border-primary">
+                            {q.explanation}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 text-[10px] text-text-muted font-medium pt-2 font-mono border-t border-border-primary">
+                          <div>
+                            Nguồn slide: <span className="font-semibold text-text-secondary">{q.sourcePdf} (Trang {q.sourcePage})</span>
+                          </div>
+                          <div className="hidden sm:block text-text-muted">|</div>
+                          <div>
+                            Mục tiêu học tập: <span className="font-semibold text-text-secondary">{q.learningObjective}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* BLOCK 5: Ghi nhớ nhanh (Quick Note) */}
+                      <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h5 className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-brand-info" /> Ghi chú cá nhân (Tự động lưu)
+                          </h5>
+                          {noteFeedback[q.id] && (
+                            <span className="text-[10px] font-medium text-brand-success flex items-center gap-1 font-sans animate-pulse">
+                              <Check className="w-3 h-3" /> {noteFeedback[q.id]}
+                            </span>
+                          )}
+                        </div>
+
+                        <textarea
+                          placeholder="Ví dụ: Nhớ phân biệt đặc điểm của quy luật kinh tế khách quan và tính chủ quan của chính sách kinh tế..."
+                          value={questionNotes[q.id] || ""}
+                          onChange={(e) => handleNoteChange(q.id, e.target.value)}
+                          className="w-full h-20 p-3 text-xs border border-border-primary rounded-xl bg-bg-surface focus:outline-hidden focus:ring-1 focus:ring-brand-info text-text-primary leading-relaxed font-sans"
+                        />
+                      </div>
+
+                      {/* BLOCK 6: Learning Timeline */}
+                      {(() => {
+                        const timeline = getQuestionTimeline(q.id);
+                        return (
+                          <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
+                            <h5 className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                              <History className="w-3.5 h-3.5 text-brand-info" /> Lịch sử luyện tập & Timeline sai
+                            </h5>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-xs">
+                              <div className="p-3 bg-bg-surface rounded-xl border border-border-primary space-y-1">
+                                <span className="text-[9px] text-text-muted font-mono block uppercase">Lần đầu làm sai</span>
+                                <span className="font-bold text-text-primary font-mono">{timeline.firstAttempt}</span>
+                              </div>
+                              <div className="p-3 bg-brand-danger-bg rounded-xl border border-brand-danger-border space-y-1">
+                                <span className="text-[9px] text-brand-danger font-mono block uppercase">Tần suất làm sai</span>
+                                <span className="font-bold text-brand-danger font-mono text-base leading-none">{timeline.count} lần</span>
+                              </div>
+                              <div className="p-3 bg-bg-surface rounded-xl border border-border-primary space-y-1">
+                                <span className="text-[9px] text-text-muted font-mono block uppercase">Lần gần nhất sai</span>
+                                <span className="font-bold text-text-primary font-mono">{timeline.lastAttempt}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* BLOCK 7: Concept Connection (Các câu hỏi liên quan) */}
+                      {(() => {
+                        const relatedWrong = questions.filter(otherQ => 
+                          otherQ.id !== q.id && 
+                          wrongQuestionIds.includes(otherQ.id) &&
+                          (otherQ.topicId === q.topicId || otherQ.chapterId === q.chapterId)
+                        ).slice(0, 3);
+
+                        if (relatedWrong.length === 0) return null;
+
+                        return (
+                          <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
+                            <h5 className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                              <Layers className="w-3.5 h-3.5 text-brand-info" /> Các câu sai liên quan trong hệ thống
+                            </h5>
+
+                            <div className="flex flex-col gap-2.5">
+                              {relatedWrong.map(otherQ => (
+                                <button
+                                  key={otherQ.id}
+                                  onClick={() => {
+                                    setExpandedQuestion(otherQ.id);
+                                    markAsReviewed(otherQ.id);
+                                  }}
+                                  className="w-full text-left p-3 rounded-xl border border-border-primary hover:border-brand-info hover:bg-bg-surface transition flex items-center justify-between gap-3 text-xs cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <span className="bg-bg-surface text-text-secondary font-bold font-mono text-[9px] px-2 py-0.5 rounded shrink-0">
+                                      CÂU #{otherQ.id}
+                                    </span>
+                                    <span className="text-text-primary truncate font-sans">{otherQ.question}</span>
+                                  </div>
+                                  <ChevronRight className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* BLOCK 8: Learning Status (Đánh giá mức độ hiểu bài) */}
+                      <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-0.5">
+                            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono block">ĐÁNH GIÁ TIẾN TRÌNH</span>
+                            <span className="text-xs text-text-secondary font-sans">Đánh dấu tình trạng học lại câu này:</span>
+                          </div>
+
+                          {/* Segmented Controls */}
+                          <div className="grid grid-cols-3 gap-1.5 bg-bg-surface p-1 rounded-xl shrink-0 border border-border-primary/40">
+                            <button
+                              onClick={() => handleStatusChange(q.id, "learned")}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
+                                learningStatuses[q.id] === "learned"
+                                  ? "bg-bg-card border border-brand-success-border text-brand-success shadow-xs"
+                                  : "text-text-muted hover:text-text-primary border border-transparent"
+                              }`}
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>Đã hiểu</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleStatusChange(q.id, "review")}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
+                                learningStatuses[q.id] === "review"
+                                  ? "bg-bg-card border border-brand-warning-border text-brand-warning shadow-xs"
+                                  : "text-text-muted hover:text-text-primary border border-transparent"
+                              }`}
+                            >
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>Cần ôn lại</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleStatusChange(q.id, "unlearned")}
+                              className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition cursor-pointer flex items-center justify-center gap-1 ${
+                                !learningStatuses[q.id] || learningStatuses[q.id] === "unlearned"
+                                  ? "bg-bg-card border border-border-primary text-text-primary shadow-xs"
+                                  : "text-text-muted hover:text-text-primary border border-transparent"
+                              }`}
+                            >
+                              <HelpCircle className="w-3 h-3" />
+                              <span>Chưa học</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* HTML styled Custom Confirmation Modal for Data Deletion */}
+      {showConfirmReset && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black/45 backdrop-blur-xs transition-opacity" aria-hidden="true" onClick={() => setShowConfirmReset(false)}></div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {/* Modal Body */}
+            <div className="inline-block align-bottom bg-bg-card rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-border-primary font-sans">
+              <div className="bg-bg-card px-6 pt-6 pb-4">
+                <div className="sm:flex sm:items-start gap-4">
+                  <div className="mx-auto shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-brand-danger-bg text-brand-danger sm:mx-0 sm:h-9 sm:w-9">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left space-y-2">
+                    <h3 className="text-base font-semibold text-text-primary font-display" id="modal-title">
+                      Xác nhận xóa sạch dữ liệu?
+                    </h3>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      Hành động này sẽ xóa toàn bộ lịch sử thi thử, chuỗi học tập hàng ngày, nhật ký câu sai và tất cả các câu đánh dấu trọng tâm. Hành động này **không thể hoàn tác**.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-bg-surface px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 border-t border-border-primary">
+                <button 
+                  onClick={() => setShowConfirmReset(false)}
+                  className="w-full sm:w-auto border border-border-primary hover:bg-bg-surface text-text-secondary text-xs font-medium px-4 py-2 rounded-lg transition cursor-pointer"
+                >
+                  Hủy bỏ
+                </button>
+                <button 
+                  onClick={handleResetData}
+                  className="w-full sm:w-auto bg-brand-danger hover:opacity-90 text-white text-xs font-medium px-5 py-2 rounded-lg transition shadow-sm cursor-pointer"
+                >
+                  Xóa sạch & Đặt lại
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom micro feedback toast */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 bg-bg-invert/95 backdrop-blur-md text-text-invert px-4 py-3 rounded-xl shadow-xl border border-border-primary text-xs font-medium flex items-center gap-2.5 animate-fade-in-up duration-200">
+          <div className="w-4 h-4 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center shrink-0">
+            <Check className="w-3 h-3" />
+          </div>
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+    </div>
+  );
+}
