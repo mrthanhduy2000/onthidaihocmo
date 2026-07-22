@@ -19,6 +19,7 @@ import { questions as defaultQuestions } from "../data/questions";
 import { topics as defaultTopics } from "../data/topics";
 import { chapters as defaultChapters } from "../data/chapters";
 import { cbQuestions, cbTopics, cbChapters } from "../data/customer_behavior";
+import { cbGeneratedQuestions } from "../data/customer_behavior_generated";
 import { cbKnowledgeGraph } from "../data/customer_behavior_kb";
 import { TimeService } from "./time";
 import { ExamAttempt, Statistics, UserSettings, DashboardOverview, Chapter, Topic, Question, SubjectGoal } from "../types";
@@ -100,6 +101,7 @@ export function loadSubject(subjectId: string) {
 
   if (subjectId === "customer_behavior") {
     questions.push(...cbQuestions);
+    questions.push(...cbGeneratedQuestions);
     topics.push(...cbTopics);
     chapters.push(...cbChapters);
 
