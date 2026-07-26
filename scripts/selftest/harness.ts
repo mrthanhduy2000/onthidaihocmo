@@ -16,6 +16,11 @@
 import { dbService, questions, questionMap, chapters, topics } from "../../src/services/db";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
+import { learningEngine } from "../../src/services/learningEngine";
+import { conceptMemoryService } from "../../src/services/conceptMemoryService";
+import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
+import { kbService } from "../../src/services/kbService";
+import { learnerModelService } from "../../src/services/learnerModel";
 import { Question } from "../../src/types";
 
 type Result = { group: string; name: string; ok: boolean; detail: string };
@@ -257,6 +262,242 @@ if (mapped.correctAnswer !== raw.correctAnswer) {
 } else {
   info("Bỏ qua phép kiểm chấm theo bản đã trộn: câu đầu tiên tình cờ có đáp án trùng bản gốc.");
 }
+
+// ===========================================================================
+// F. Trí thông minh nội tại của các engine
+// ===========================================================================
+g("F. Suy luận của engine");
+
+// --- F1. Hàm so sánh khi xếp hạng phải ỔN ĐỊNH và tái lập được ---------------
+// Bản cũ gọi Math.random ngay trong hàm so sánh, nên cùng một trạng thái học có thể cho ra
+// hai thứ hạng khác nhau. Nay nhiễu được rút một lần cho mỗi câu từ hạt giống tất định.
+dbService.clearAllHistory();
+const adaptiveA = aiService.generateExam({ type: "adaptive", count: 15 });
+const adaptiveB = aiService.generateExam({ type: "adaptive", count: 15 });
+// Hai lần gọi liên tiếp KHÔNG cùng trạng thái (danh sách câu vừa ra đã đổi), nên chỉ cần
+// kiểm rằng mỗi đề đều hợp lệ và tất định khi trạng thái không đổi.
+const recentKeyAdaptive = `poly_econ_recent_served_${dbService.getActiveSubjectId()}`;
+const snapshot = localStorage.getItem(recentKeyAdaptive);
+const rerun1 = aiService.generateExam({ type: "adaptive", count: 15 });
+if (snapshot === null) localStorage.removeItem(recentKeyAdaptive);
+else localStorage.setItem(recentKeyAdaptive, snapshot);
+const rerun2 = aiService.generateExam({ type: "adaptive", count: 15 });
+check(
+  "Đề thích ứng tái lập được khi trạng thái học không đổi",
+  JSON.stringify(rerun1.questions) === JSON.stringify(rerun2.questions),
+  "cùng dữ liệu phải cho cùng thứ hạng"
+);
+check("Đề thích ứng vẫn tạo đủ câu", adaptiveA.questions.length === 15 && adaptiveB.questions.length === 15,
+  `${adaptiveA.questions.length} và ${adaptiveB.questions.length} câu`);
+
+// --- F0. Câu hỏi phải TRA ĐƯỢC ra khái niệm ---------------------------------
+// Phép kiểm quan trọng nhất nhóm này. Nếu tỷ lệ tra được về 0 thì toàn bộ mô hình chấm
+// thích ứng bên dưới (độ thạo, đường quên, tiên quyết, Bloom, trọng tâm) trở thành đồ trang
+// trí: mọi câu rơi vào nhánh dự phòng và đề "thích ứng" chỉ còn xếp theo lịch sử làm sai.
+// Đây chính là trạng thái thực tế trước đợt nâng cấp này, đo được 0/292.
+const activeSubject = dbService.getActiveSubjectId();
+let resolvedCount = 0;
+let affinitySum = 0;
+questions.forEach(q => {
+  const r = kbService.resolveConceptsForQuestion(activeSubject, q, 3);
+  if (r.length > 0) {
+    resolvedCount++;
+    affinitySum += r[0].affinity;
+  }
+});
+const resolveRate = resolvedCount / Math.max(1, questions.length);
+check("Câu hỏi tra được ra khái niệm trong đồ thị tri thức", resolveRate >= 0.8,
+  `${resolvedCount}/${questions.length} câu (${(resolveRate * 100).toFixed(1)}%)`);
+info(`Độ gần gũi trung bình của khái niệm khớp nhất: ${(affinitySum / Math.max(1, resolvedCount)).toFixed(3)} trên thang 0 đến 1.`);
+
+// Bộ tra cứu phải TẤT ĐỊNH: gọi lại phải ra đúng thứ hạng cũ.
+const sampleQ = questions[0];
+const r1 = kbService.resolveConceptsForQuestion(activeSubject, sampleQ, 3).map(r => r.node.id).join(",");
+const r2 = kbService.resolveConceptsForQuestion(activeSubject, sampleQ, 3).map(r => r.node.id).join(",");
+check("Tra cứu khái niệm là tất định", r1 === r2, r1 || "(không khớp khái niệm nào)");
+
+// --- F2. Không còn thiên lệch theo SỐ NHÃN khái niệm -------------------------
+// Gộp theo trung bình thay vì cộng dồn, nên câu gắn nhiều nhãn không tự động được ưu tiên.
+const scored = learningEngine.scoreQuestions(questions);
+const byTagCount = new Map<number, { sum: number; n: number }>();
+scored.forEach(s => {
+  const tags = Math.min(4, (s.q.knowledgeMapping || []).length);
+  const cur = byTagCount.get(tags) || { sum: 0, n: 0 };
+  cur.sum += s.score;
+  cur.n++;
+  byTagCount.set(tags, cur);
+});
+const tagGroups = [...byTagCount.entries()].filter(([, v]) => v.n >= 5).sort((a, b) => a[0] - b[0]);
+if (tagGroups.length >= 2) {
+  const means = tagGroups.map(([t, v]) => ({ tags: t, mean: v.sum / v.n }));
+  const spread = Math.max(...means.map(m => m.mean)) / Math.max(0.0001, Math.min(...means.map(m => m.mean)));
+  check("Điểm ưu tiên không lệch theo số nhãn khái niệm", spread <= 2.0,
+    means.map(m => `${m.tags} nhãn: ${m.mean.toFixed(2)}`).join(", "));
+} else {
+  info("Bỏ qua phép kiểm thiên lệch số nhãn: không đủ nhóm để so sánh.");
+}
+
+// --- F3. Điểm ưu tiên phải LIÊN TỤC, không nhảy bậc --------------------------
+// Kiểm trực tiếp bằng cách tăng dần độ thạo của một khái niệm quanh các mốc cũ (40 và 85)
+// rồi xem điểm ưu tiên có nhảy đột ngột không.
+// Lưu ý về KHÓA: độ thạo được lưu theo TÊN KHÁI NIỆM trong đồ thị tri thức (xem
+// learnerModel.updateConceptMastery và các nơi gọi kbService.getConceptForQuestion), chứ
+// không theo nhãn tự do gắn trên câu hỏi. Đặt sai khóa thì phép kiểm sẽ báo "độ thạo không
+// có tác dụng" trong khi mã nguồn hoàn toàn đúng.
+const probeQ = questions.find(q => kbService.resolveConceptsForQuestion(dbService.getActiveSubjectId(), q, 1).length > 0);
+if (probeQ) {
+  const concept = kbService.resolveConceptsForQuestion(dbService.getActiveSubjectId(), probeQ, 1)[0].node.concept;
+
+  // Tạo BẰNG CHỨNG thật trước đã. Nếu khái niệm chưa từng được làm lần nào thì trọng số
+  // bằng chứng bằng 0 và độ thạo bị kéo hoàn toàn về mốc trung tính 50, nên thay đổi con số
+  // thành thạo sẽ không tác động gì. Đó là hành vi ĐÚNG (không tin số liệu không có cơ sở),
+  // vì vậy phép kiểm phải đi qua đúng đường dẫn thật: ghi nhận một số lượt làm bài trước.
+  for (let i = 0; i < 12; i++) {
+    learnerModelService.logConceptAttempt(concept, true, 12);
+  }
+
+  const curve: { m: number; score: number }[] = [];
+  for (let m = 0; m <= 100; m += 5) {
+    const st = dbService.getStatistics();
+    st.conceptMastery = { ...(st.conceptMastery || {}), [concept]: m };
+    dbService.saveStatistics(st);
+    const s = learningEngine.scoreQuestions([probeQ])[0];
+    curve.push({ m, score: s.score });
+  }
+  let maxJump = 0;
+  for (let i = 1; i < curve.length; i++) {
+    maxJump = Math.max(maxJump, Math.abs(curve[i].score - curve[i - 1].score));
+  }
+  const range = Math.max(...curve.map(c => c.score)) - Math.min(...curve.map(c => c.score));
+
+  // Điều kiện 1: độ thạo PHẢI thực sự tác động tới điểm ưu tiên. Nếu dải bằng 0 thì mô hình
+  // đang chết lặng, và một phép kiểm chỉ đo "không nhảy bậc" sẽ ĐẠT một cách rỗng tuếch.
+  const probeAttempts = learnerModelService.getOrCreateProfile(concept).attemptsCount;
+  check("Độ thạo có tác động thật lên điểm ưu tiên", range > 0.01,
+    `dải biến thiên ${range.toFixed(3)}; khái niệm "${concept}" có ${probeAttempts} lượt làm`);
+
+  // Điều kiện 2: biến thiên phải liên tục, không có bậc nhảy như các mốc cứng 40 và 85 cũ.
+  check("Điểm ưu tiên biến thiên liên tục theo độ thạo", range > 0 && maxJump <= range * 0.35,
+    `bước nhảy lớn nhất ${maxJump.toFixed(3)} trên dải ${range.toFixed(3)}`);
+
+  // Điều kiện 3: hướng suy luận phải đúng, càng thạo thì càng ít cần hỏi lại.
+  check("Càng thành thạo thì ưu tiên hỏi lại càng giảm", curve[curve.length - 1].score < curve[0].score,
+    `độ thạo 0 cho ${curve[0].score.toFixed(3)}, độ thạo 100 cho ${curve[curve.length - 1].score.toFixed(3)}`);
+
+  // Trả thống kê về trạng thái sạch để các phép kiểm sau không bị ảnh hưởng.
+  const st = dbService.getStatistics();
+  st.conceptMastery = {};
+  dbService.saveStatistics(st);
+}
+
+// --- F4. Chuyển giao kiến thức phải PHÂN BIỆT được hai tình huống trái ngược ---
+// Người vững ở nấc thấp nhưng tụt ở nấc vận dụng (chuyển giao kém) phải bị chấm thấp hơn
+// người giữ nguyên phong độ ở cả hai nấc. Bản cũ chấm hai người này BẰNG NHAU.
+const mkProfile = (lowA: number, lowN: number, highA: number, highN: number) =>
+  conceptMemoryService.recomputeConceptDynamics({
+    ...conceptMemoryService.getConceptProfile("khái niệm kiểm thử chuyển giao"),
+    timesStudied: lowN + highN,
+    bloomPerformance: {
+      Remember: { attempts: lowN, correct: Math.round(lowA * lowN), accuracy: lowA },
+      Apply: { attempts: highN, correct: Math.round(highA * highN), accuracy: highA }
+    }
+  });
+const poorTransfer = mkProfile(0.9, 20, 0.6, 20).transferQualityScore ?? 0;   // giỏi nhớ, kém vận dụng
+const evenTransfer = mkProfile(0.6, 20, 0.6, 20).transferQualityScore ?? 0;   // đều hai nấc
+const goodTransfer = mkProfile(0.6, 20, 0.85, 20).transferQualityScore ?? 0;  // lên nấc cao càng vững
+check("Chuyển giao kiến thức phân biệt được kém, đều và tốt",
+  poorTransfer < evenTransfer && evenTransfer < goodTransfer,
+  `kém ${poorTransfer}, đều ${evenTransfer}, tốt ${goodTransfer}`);
+
+// --- F5. Đà học phải bền với nhiễu -------------------------------------------
+// Dãy dao động mạnh và dãy tiến đều KHÔNG được cho cùng một kết luận.
+const mkHistory = (scores: number[]) =>
+  conceptMemoryService.recomputeConceptDynamics({
+    ...conceptMemoryService.getConceptProfile("khái niệm kiểm thử đà học"),
+    timesStudied: scores.length,
+    scoreHistory: scores.map((s, i) => ({ timestamp: new Date(2026, 0, i + 1).toISOString(), score: s }))
+  });
+const steady = mkHistory([50, 55, 60, 65, 70]);
+const noisy = mkHistory([50, 95, 55, 90, 52]);
+check("Dãy tiến đều được nhận là đang tiến bộ", (steady.shortTermMomentum ?? 0) > 0,
+  `độ dốc ${steady.shortTermMomentum}`);
+check("Dãy dao động mạnh không bị kết luận là tiến bộ đều",
+  noisy.momentumTrend !== "improving" || (noisy.rollingVariance ?? 0) > 100,
+  `xu hướng "${noisy.momentumTrend}", phương sai ${noisy.rollingVariance}`);
+
+// --- F6. Đường cong quên phải KHỚP với điểm trí nhớ --------------------------
+// Hai công thức từng bị chép thành hai bản; nếu lệch nhau thì biểu đồ nói một đằng, lịch ôn
+// tập tính một nẻo. Nay dùng chung một nguồn nên điểm tại mốc 0 ngày phải bằng 1,0 và đường
+// cong phải giảm đơn điệu.
+const memProfile = conceptMemoryService.getConceptProfile("khái niệm kiểm thử trí nhớ");
+const curveOut = conceptMemoryService.generateForgetCurve(memProfile);
+const monotone = curveOut.every((p, i) => i === 0 || p.retention <= curveOut[i - 1].retention);
+check("Đường cong quên giảm đơn điệu theo thời gian", monotone,
+  curveOut.map(p => `${p.daysAhead}d:${p.retention}`).join(" "));
+
+// --- F7. Bộ dựng đề mặc định không đặt hàng trùng khái niệm ------------------
+const spec = assessmentDesignEngine.designExam({ examType: "sequential" as any, questionCount: 25 });
+const specConcepts = spec.questionSpecs.map(s => s.concept);
+const dupSpec = specConcepts.length - new Set(specConcepts).size;
+check("Bản thiết kế đề không lặp lại cùng một khái niệm", dupSpec === 0,
+  `${dupSpec} khái niệm bị đặt trùng trên ${specConcepts.length} chỗ`);
+
+// --- F7b. Độ thành thạo khái niệm: một giá trị, hai khóa, và "chưa học" khác "học trượt" ---
+// Đây là phép kiểm cho khiếm khuyết nặng nhất tìm được trong đợt rà soát: bảng độ thạo từng
+// tồn tại HAI không gian khóa song song (theo mã khái niệm và theo tên khái niệm), các nơi
+// đọc lại tra mã trước, nên giá trị do mô hình người học ghi theo tên không bao giờ tới được
+// nơi ra quyết định. Đồng thời khái niệm chưa làm câu nào bị chấm 0%, lẫn với làm sai sạch.
+dbService.clearAllHistory();
+const cmExam = aiService.generateExam({ type: "random", count: 6 });
+cmExam.answers = {};
+cmExam.questions.forEach(id => {
+  const qq = questionMap.get(id);
+  if (qq) cmExam.answers[id] = qq.correctAnswer; // trả lời đúng hết
+});
+cmExam.isSubmitted = true;
+dbService.saveAttempt(cmExam);
+
+const cmAfter = dbService.getStatistics().conceptMastery || {};
+const graphNodes = kbService.getKnowledgeGraph(dbService.getActiveSubjectId());
+
+let keyPairMismatch = 0;
+graphNodes.forEach(n => {
+  const byId = cmAfter[n.id];
+  const byName = cmAfter[n.concept];
+  if (byId !== undefined && byName !== undefined && byId !== byName) keyPairMismatch++;
+});
+check("Độ thạo ghi cùng giá trị cho cả khóa mã và khóa tên", keyPairMismatch === 0,
+  keyPairMismatch ? `${keyPairMismatch} khái niệm lệch giá trị giữa hai khóa` : `${graphNodes.length} khái niệm đồng nhất`);
+
+// Khái niệm chưa có câu nào được làm phải nằm ở mốc "chưa có căn cứ" là 50, không phải 0.
+const answeredIds = new Set(cmExam.questions);
+const untouched = graphNodes.filter(n =>
+  !questions.some(q => q.topicId === n.topic && answeredIds.has(q.id))
+);
+const untouchedZero = untouched.filter(n => (cmAfter[n.concept] ?? cmAfter[n.id]) === 0);
+check("Khái niệm chưa học không bị chấm 0% như học trượt", untouchedZero.length === 0,
+  `${untouched.length} khái niệm chưa đụng tới, ${untouchedZero.length} bị chấm 0`);
+
+// Khái niệm vừa làm đúng vài câu phải NHÍCH LÊN trên 50 nhưng CHƯA chạm 100, vì bằng chứng
+// còn mỏng. Đây chính là điểm khác biệt giữa "đúng 3/3 câu" và "đúng 40/40 câu".
+const touched = graphNodes.filter(n =>
+  questions.some(q => q.topicId === n.topic && answeredIds.has(q.id))
+);
+const touchedVals = touched.map(n => cmAfter[n.concept] ?? cmAfter[n.id] ?? -1).filter(v => v >= 0);
+if (touchedVals.length > 0) {
+  const allInRange = touchedVals.every(v => v > 50 && v < 100);
+  check("Làm đúng ít câu thì độ thạo tăng vừa phải, không vọt lên 100", allInRange,
+    `giá trị: ${touchedVals.join(", ")}`);
+} else {
+  info("Bỏ qua phép kiểm co giãn bằng chứng: không có khái niệm nào được đụng tới trong đề mẫu.");
+}
+
+// --- F8. Chấm ưu tiên là thao tác ĐỌC, không được ghi đè dữ liệu học ---------
+const beforeKeys = Object.keys(dbService.getStatistics().incorrectQuestionHistory || {}).length;
+learningEngine.scoreQuestions(questions.slice(0, 50));
+const afterKeys = Object.keys(dbService.getStatistics().incorrectQuestionHistory || {}).length;
+check("Chấm ưu tiên không làm thay đổi thống kê học tập", beforeKeys === afterKeys,
+  `trước ${beforeKeys}, sau ${afterKeys}`);
 
 // ===========================================================================
 // Kết quả

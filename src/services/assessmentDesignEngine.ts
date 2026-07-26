@@ -145,22 +145,30 @@ export const assessmentDesignEngine = {
 
     const mastery = stats.conceptMastery || {};
 
+    // Độ thạo đã cân theo lượng bằng chứng: một khái niệm mới làm đúng 1 câu không được coi
+    // là đã thạo bằng khái niệm làm đúng 20 câu. Không có bước này thì đề ôn tập sẽ loại
+    // ngay những khái niệm mới chỉ gặp một lần và tình cờ làm đúng, đúng vào lúc chúng cần
+    // được kiểm tra lại nhất. Cùng công thức co về tiên nghiệm dùng ở learningEngine.
+    const evidenceMastery = (node: KnowledgeNode): number => {
+      const raw = mastery[node.concept] ?? mastery[node.id] ?? 50;
+      const attempts = (stats.accuracyByTopic?.[node.topic]?.total) ?? 0;
+      const w = 1 - Math.exp(-Math.max(0, attempts) / 8);
+      return w * raw + (1 - w) * 50;
+    };
+
     if (options.examType === "revision") {
-      // Prioritize unmastered concepts -> previously incorrect concepts -> lower mastery
-      filteredNodes.sort((a, b) => {
-        const scoreA = mastery[a.concept] ?? 50;
-        const scoreB = mastery[b.concept] ?? 50;
-        return scoreA - scoreB;
-      });
+      // Ưu tiên khái niệm còn yếu nhất. Mốc phân giải hòa theo id để thứ tự luôn xác định,
+      // không phụ thuộc vào thuật toán sắp xếp của môi trường chạy.
+      filteredNodes.sort((a, b) => (evidenceMastery(a) - evidenceMastery(b)) || a.id.localeCompare(b.id));
     } else if (options.examType === "adaptive") {
-      // Sort by mastery gap & importance
-      filteredNodes.sort((a, b) => {
-        const scoreA = mastery[a.concept] ?? 50;
-        const scoreB = mastery[b.concept] ?? 50;
-        const importanceWeightA = (a.importance || 3) * (100 - scoreA);
-        const importanceWeightB = (b.importance || 3) * (100 - scoreB);
-        return importanceWeightB - importanceWeightA;
-      });
+      // Nhu cầu ôn = độ quan trọng nhân khoảng hụt kiến thức. Độ quan trọng được CHUẨN HÓA
+      // theo thang lớn nhất của chính đồ thị; nếu nhân thẳng giá trị thô thì một bộ dữ liệu
+      // chấm importance theo thang 1..10 sẽ lấn át hoàn toàn khoảng hụt kiến thức, còn thang
+      // 1..3 lại làm độ quan trọng gần như vô nghĩa.
+      const maxImp = filteredNodes.reduce((m, n) => Math.max(m, n.importance || 0), 0) || 1;
+      const needScore = (n: KnowledgeNode) =>
+        ((n.importance || maxImp * 0.5) / maxImp) * (100 - evidenceMastery(n));
+      filteredNodes.sort((a, b) => (needScore(b) - needScore(a)) || a.id.localeCompare(b.id));
     } else if (options.examType === "mock") {
       // Proportional distribution across all chapters
       const chapterList = chapters.map(c => c.id);
@@ -216,12 +224,35 @@ export const assessmentDesignEngine = {
       if (selected.length > 0) return selected;
     }
 
-    // Default: Pick balanced set up to `count`
-    const pool = [...filteredNodes];
+    // Mặc định: rải đều theo vòng tròn qua các chương, mỗi khái niệm chỉ lấy MỘT lần.
+    //
+    // Bản cũ dùng pool[i % pool.length]. Khi số câu cần nhiều hơn số khái niệm, vòng lặp
+    // quay lại từ đầu và ĐẶT HÀNG TRÙNG cùng một khái niệm nhiều lần; bộ dựng đề phía sau
+    // lại loại trùng, nên đề bị hụt câu so với yêu cầu. Nghiêm trọng hơn, khi số khái niệm
+    // dư dả thì thứ tự cố định khiến đề luôn bám vào những khái niệm ĐỨNG ĐẦU danh sách,
+    // tức là các chương đầu, còn chương cuối gần như không bao giờ được hỏi tới.
+    const byChapter = new Map<number, KnowledgeNode[]>();
+    filteredNodes.forEach(n => {
+      const list = byChapter.get(n.chapter || 1) || [];
+      list.push(n);
+      byChapter.set(n.chapter || 1, list);
+    });
+    const chapterKeys = [...byChapter.keys()].sort((a, b) => a - b);
+
     const selected: KnowledgeNode[] = [];
-    for (let i = 0; i < count; i++) {
-      const node = pool[i % pool.length];
-      selected.push(node);
+    let round = 0;
+    while (selected.length < count && selected.length < filteredNodes.length) {
+      let addedThisRound = false;
+      for (const cId of chapterKeys) {
+        const list = byChapter.get(cId) || [];
+        if (round < list.length) {
+          selected.push(list[round]);
+          addedThisRound = true;
+          if (selected.length >= count) break;
+        }
+      }
+      if (!addedThisRound) break; // đã vét hết khái niệm, dừng thay vì lặp vô hạn
+      round++;
     }
     return selected;
   },

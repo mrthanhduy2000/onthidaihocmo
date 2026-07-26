@@ -88,6 +88,51 @@ export interface ConceptMemoryUpdate {
 
 const STORAGE_PREFIX = "poly_econ_concept_memory_";
 
+/**
+ * Độ bền trí nhớ của một khái niệm, tính bằng ngày. Đây là NGUỒN DUY NHẤT của công thức này.
+ *
+ * Trước đây công thức bị chép làm hai bản giống hệt nhau ở calculateRetentionScore và
+ * generateForgetCurve. Hai bản chép tay như vậy chắc chắn sẽ lệch nhau khi ai đó chỉ sửa một
+ * chỗ, và khi đó đường cong quên vẽ ra màn hình sẽ mâu thuẫn với điểm trí nhớ dùng để xếp
+ * lịch ôn. Nay cả hai đều gọi hàm này.
+ *
+ *     S = S_nen * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh
+ *     S_nen = max(1, 1,8*log2(soLanHoc + 1) + dinhCaoLichSu/25)
+ */
+function memoryStrengthDays(profile: ConceptMemoryProfile): number {
+  const logStudied = Math.log2(Math.max(1, profile.timesStudied) + 1);
+  const baseStrength = Math.max(1.0, (logStudied * 1.8) + (profile.historicalPeak / 25));
+  const recoveryFactor = 1.0 + 0.35 * Math.min(5, profile.recoveryCount || 0);
+  const regressionPenalty = 1.0 / (1.0 + 0.40 * Math.min(5, profile.regressionCount || 0));
+  const difficultyFactor = Math.max(0.6, 8.0 / Math.max(4.0, profile.difficultyScore || 5.0));
+  const stableBonus = profile.isStableMastered ? 2.2 : 1.0;
+  return baseStrength * recoveryFactor * regressionPenalty * difficultyFactor * stableBonus;
+}
+
+/**
+ * Độ dốc hồi quy tuyến tính bình phương tối thiểu của một dãy điểm, đơn vị: điểm mỗi lần làm.
+ *
+ * Vì sao cần: bản cũ đo đà học bằng hiệu hai đầu mút (điểm cuối trừ điểm đầu) và bỏ qua mọi
+ * điểm ở giữa. Dãy 50, 90, 52 và dãy 50, 51, 52 đều cho ra cùng một con số là 2, dù dãy đầu
+ * đang dao động dữ dội còn dãy sau tiến đều. Chỉ cần một lần trả lời may rủi ở đúng đầu hoặc
+ * cuối cửa sổ là kết luận "đang tiến bộ" hay "đang tụt" bị lật ngược. Hồi quy dùng toàn bộ
+ * số liệu nên bền với nhiễu hơn hẳn, và vẫn hoàn toàn tất định.
+ */
+function leastSquaresSlope(values: number[]): number {
+  const n = values.length;
+  if (n < 2) return 0;
+  const meanX = (n - 1) / 2;
+  const meanY = values.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = i - meanX;
+    num += dx * (values[i] - meanY);
+    den += dx * dx;
+  }
+  return den === 0 ? 0 : num / den;
+}
+
 export const conceptMemoryService = {
   /**
    * Retrieves all Concept Memory Profiles for a given subject.
@@ -183,29 +228,34 @@ export const conceptMemoryService = {
     const history = profile.scoreHistory || [];
     const N = profile.timesStudied || 0;
 
-    // 1. Learning Momentum
-    let shortTermMomentum = 0;
-    let mediumTermMomentum = 0;
-    let longTermMomentum = 0;
-    if (history.length >= 2) {
-      const recent3 = history.slice(-3);
-      shortTermMomentum = recent3[recent3.length - 1].score - recent3[0].score;
+    // 1. Đà học, đo bằng độ dốc hồi quy trên toàn cửa sổ (điểm mỗi lần làm).
+    //    Cả ba mốc ngắn/vừa/dài nay cùng một đơn vị nên so sánh được với nhau, khác bản cũ
+    //    trong đó đà ngắn hạn là HIỆU hai đầu mút còn đà trung hạn lại là hiệu CHIA cho số
+    //    bước; so hai đại lượng khác đơn vị với nhau (dòng "shortTerm > mediumTerm + 1,5")
+    //    là phép so sai bản chất, khiến nhãn "đang tăng tốc" bật lên gần như tùy tiện.
+    const shortTermMomentum = Number(leastSquaresSlope(history.slice(-3).map(h => h.score)).toFixed(2));
+    const mediumTermMomentum = Number(leastSquaresSlope(history.slice(-7).map(h => h.score)).toFixed(2));
+    const longTermMomentum = Number(leastSquaresSlope(history.slice(-15).map(h => h.score)).toFixed(2));
+
+    // Ngưỡng phân loại xu hướng lấy theo ĐỘ NHIỄU của chính người học, không phải hằng số cứng.
+    // Bản cũ chốt cứng 1,0 và -2,0 điểm. Với người có kết quả dao động mạnh thì hai mốc đó
+    // bị vượt liên tục nên hệ thống lúc nào cũng hô "tiến bộ" rồi "tụt lùi"; với người rất
+    // ổn định thì không bao giờ chạm tới nên lúc nào cũng báo "đi ngang". Nay ngưỡng tỉ lệ
+    // với độ lệch chuẩn gần đây, tức là "đáng kể" được hiểu theo thước đo của từng người.
+    const recentScores = history.slice(-10).map(h => h.score);
+    let sd = 0;
+    if (recentScores.length >= 2) {
+      const m = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
+      sd = Math.sqrt(recentScores.reduce((a, b) => a + (b - m) * (b - m), 0) / (recentScores.length - 1));
     }
-    if (history.length >= 4) {
-      const recent7 = history.slice(-7);
-      mediumTermMomentum = (recent7[recent7.length - 1].score - recent7[0].score) / Math.max(1, recent7.length - 1);
-    }
-    if (history.length >= 8) {
-      const recent15 = history.slice(-15);
-      longTermMomentum = (recent15[recent15.length - 1].score - recent15[0].score) / Math.max(1, recent15.length - 1);
-    }
+    const noiseBand = Math.max(0.8, 0.35 * sd); // sàn 0,8 để dữ liệu quá ít không tạo nhãn ảo
 
     let momentumTrend: ConceptMemoryProfile["momentumTrend"] = "plateau";
-    if (shortTermMomentum > mediumTermMomentum + 1.5 && shortTermMomentum > 0) {
-      momentumTrend = "accelerating";
-    } else if (shortTermMomentum < -2.0) {
+    if (shortTermMomentum < -noiseBand) {
       momentumTrend = "regression";
-    } else if (shortTermMomentum > 1.0) {
+    } else if (shortTermMomentum > noiseBand && shortTermMomentum > mediumTermMomentum + noiseBand) {
+      momentumTrend = "accelerating";
+    } else if (shortTermMomentum > noiseBand) {
       momentumTrend = "improving";
     } else {
       momentumTrend = "plateau";
@@ -239,20 +289,40 @@ export const conceptMemoryService = {
     const evidenceStrength = Number((0.4 * obsWeight + 0.3 * questionVariety + 0.3 * bloomDiversity).toFixed(2));
     const fragilityScore = Number(Math.max(0, 1.0 - (evidenceStrength * (profile.currentMastery / 100))).toFixed(2));
 
-    // 5. Knowledge Transfer Quality (Cross-Bloom cognitive transfer)
-    let lowerAcc = 0;
-    let higherAcc = 0;
-    const remU = (bloomPerf["Remember"]?.accuracy || 0) + (bloomPerf["Understand"]?.accuracy || 0);
-    const lowCount = (bloomPerf["Remember"]?.attempts || 0) + (bloomPerf["Understand"]?.attempts || 0);
-    if (lowCount > 0) lowerAcc = remU / (bloomPerf["Remember"]?.attempts && bloomPerf["Understand"]?.attempts ? 2 : 1);
+    // 5. Chất lượng chuyển giao kiến thức giữa các nấc Bloom.
+    //
+    // LỖI CỦA BẢN CŨ: công thức là min(1, higherAcc / max(1, lowerAcc)). Nhưng lowerAcc là tỷ
+    // lệ đúng nên luôn nằm trong [0, 1], khiến max(1, lowerAcc) LUÔN BẰNG 1. Phép chia bị vô
+    // hiệu, và chỉ số "chuyển giao" thực chất chỉ còn là độ chính xác ở nấc cao, không hề so
+    // với nấc thấp như tên gọi và như ý đồ thiết kế. Người học đúng 90% ở nấc nhớ mà chỉ 60%
+    // ở nấc vận dụng (chuyển giao KÉM) lại được chấm 0,60, ngang với người đúng 60% ở cả hai
+    // nấc (chuyển giao TỐT). Hai tình huống sư phạm trái ngược nhau bị gộp thành một điểm số.
+    //
+    // BẢN MỚI: gộp theo tổng số lượt thay vì trung bình cộng các tỷ lệ, để một nấc chỉ làm 1
+    // câu không nặng ngang nấc đã làm 20 câu. Sau đó lấy tỷ số có làm trơn Laplace và quy về
+    // [0, 1] quanh mốc 1,0 (giữ nguyên phong độ khi lên nấc cao = 0,5 điểm chuyển giao).
+    const sumBloom = (keys: string[]) => keys.reduce(
+      (acc, k) => ({
+        attempts: acc.attempts + (bloomPerf[k]?.attempts || 0),
+        correct: acc.correct + (bloomPerf[k]?.correct || 0)
+      }),
+      { attempts: 0, correct: 0 }
+    );
+    const low = sumBloom(["Remember", "Understand"]);
+    const high = sumBloom(["Apply", "Analyze", "Evaluate", "Create"]);
 
-    const highAttempts = (bloomPerf["Apply"]?.attempts || 0) + (bloomPerf["Analyze"]?.attempts || 0) + (bloomPerf["Evaluate"]?.attempts || 0);
-    if (highAttempts > 0) {
-      higherAcc = ((bloomPerf["Apply"]?.accuracy || 0) + (bloomPerf["Analyze"]?.accuracy || 0) + (bloomPerf["Evaluate"]?.accuracy || 0)) / Math.max(1, (bloomPerf["Apply"] ? 1 : 0) + (bloomPerf["Analyze"] ? 1 : 0) + (bloomPerf["Evaluate"] ? 1 : 0));
+    let transferQualityScore: number;
+    if (low.attempts > 0 && high.attempts > 0) {
+      // Làm trơn Laplace: cộng 1 thành công và 2 lượt vào mỗi bên, tránh chia cho 0 và tránh
+      // kết luận cực đoan khi mới chỉ có một vài quan sát.
+      const lowAcc = (low.correct + 1) / (low.attempts + 2);
+      const highAcc = (high.correct + 1) / (high.attempts + 2);
+      const ratio = highAcc / lowAcc; // > 1: lên nấc cao vẫn vững; < 1: tụt khi phải vận dụng
+      transferQualityScore = Number(Math.max(0, Math.min(1, ratio / 2)).toFixed(2));
+    } else {
+      // Chưa đủ bằng chứng ở cả hai phía thì giữ mốc trung tính, không suy đoán.
+      transferQualityScore = N >= 3 ? 0.5 : 0.5;
     }
-    const transferQualityScore = lowCount > 0 && highAttempts > 0
-      ? Number(Math.min(1.0, higherAcc / Math.max(1, lowerAcc)).toFixed(2))
-      : (N >= 3 ? 0.75 : 0.50);
 
     // 6. Concept Maturity Lifecycle
     let maturityStage: ConceptMemoryProfile["maturityStage"] = "New";
@@ -331,20 +401,8 @@ export const conceptMemoryService = {
     const diffMs = now.getTime() - last.getTime();
     const daysElapsed = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
 
-    // Base memory strength S derived non-linearly from study frequency and historical peak
-    const logStudied = Math.log2(Math.max(1, profile.timesStudied) + 1);
-    const baseStrength = Math.max(1.0, (logStudied * 1.8) + (profile.historicalPeak / 25));
-
-    // Context-aware multipliers
-    const recoveryFactor = 1.0 + 0.35 * Math.min(5, profile.recoveryCount || 0); // Repeated recoveries strengthen memory
-    const regressionPenalty = 1.0 / (1.0 + 0.40 * Math.min(5, profile.regressionCount || 0)); // Frequent regressions accelerate decay
-    const difficultyFactor = Math.max(0.6, 8.0 / Math.max(4.0, profile.difficultyScore || 5.0)); // Harder concepts decay faster
-    const stableBonus = profile.isStableMastered ? 2.2 : 1.0; // Stable mastery grants 2.2x decay resistance
-
-    const effectiveMemoryStrength = baseStrength * recoveryFactor * regressionPenalty * difficultyFactor * stableBonus;
-
-    // Exponential Decay factor
-    const retention = Math.max(0.08, Math.exp(-daysElapsed / effectiveMemoryStrength));
+    // Dùng chung công thức độ bền trí nhớ, không chép lại (xem memoryStrengthDays ở đầu file).
+    const retention = Math.max(0.08, Math.exp(-daysElapsed / memoryStrengthDays(profile)));
     return Number(retention.toFixed(2));
   },
 
@@ -374,14 +432,9 @@ export const conceptMemoryService = {
    * Generates projected future forgetting curve points for visualization.
    */
   generateForgetCurve(profile: ConceptMemoryProfile): Array<{ daysAhead: number; retention: number }> {
-    const logStudied = Math.log2(Math.max(1, profile.timesStudied) + 1);
-    const baseStrength = Math.max(1.0, (logStudied * 1.8) + (profile.historicalPeak / 25));
-    const recoveryFactor = 1.0 + 0.35 * Math.min(5, profile.recoveryCount || 0);
-    const regressionPenalty = 1.0 / (1.0 + 0.40 * Math.min(5, profile.regressionCount || 0));
-    const difficultyFactor = Math.max(0.6, 8.0 / Math.max(4.0, profile.difficultyScore || 5.0));
-    const stableBonus = profile.isStableMastered ? 2.2 : 1.0;
-
-    const memoryStrength = baseStrength * recoveryFactor * regressionPenalty * difficultyFactor * stableBonus;
+    // Dùng chung đúng công thức với calculateRetentionScore, nên đường cong vẽ ra màn hình
+    // luôn khớp với điểm trí nhớ dùng để xếp lịch ôn tập.
+    const memoryStrength = memoryStrengthDays(profile);
     const days = [0, 1, 3, 7, 14, 30];
     return days.map(d => ({
       daysAhead: d,

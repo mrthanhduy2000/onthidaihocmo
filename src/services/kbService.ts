@@ -19,6 +19,44 @@ import { Question } from "../types";
 // Re-export core types
 export type { KnowledgeNode, DistractorItem, BlueprintItem, AdaptiveMetadata };
 
+/**
+ * Hư từ tiếng Việt và vài từ nối tiếng Anh hay xuất hiện trong tên khái niệm. Loại chúng đi
+ * để hai chuỗi không bị coi là giống nhau chỉ vì cùng chứa "của", "và", "các".
+ */
+const STOPWORDS = new Set([
+  "và", "của", "các", "những", "trong", "cho", "với", "là", "một", "có", "được", "về",
+  "theo", "khi", "này", "đó", "hay", "hoặc", "tới", "đến", "từ", "ở", "trên", "dưới",
+  "the", "of", "and", "in", "for", "to", "a", "an"
+]);
+
+/**
+ * Tách chuỗi thành tập từ đã chuẩn hóa để so khớp từ vựng.
+ * Bỏ phần chú thích tiếng Anh trong ngoặc đơn, bỏ dấu câu, bỏ hư từ, bỏ từ quá ngắn.
+ * Ví dụ: "Hành vi khách hàng (Consumer Behavior)" cho ra {hành, vi, khách, hàng}.
+ */
+function tokenize(text: string): Set<string> {
+  const cleaned = String(text || "")
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const out = new Set<string>();
+  cleaned.split(" ").forEach(w => {
+    if (w.length >= 2 && !STOPWORDS.has(w)) out.add(w);
+  });
+  return out;
+}
+
+/** Hệ số Jaccard giữa hai tập từ: cỡ phần giao chia cho cỡ phần hợp. Trả về 0 khi một bên rỗng. */
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+  let inter = 0;
+  a.forEach(w => { if (b.has(w)) inter++; });
+  const union = a.size + b.size - inter;
+  return union === 0 ? 0 : inter / union;
+}
+
 export const kbService = {
   /**
    * Returns the knowledge graph nodes for the active subject.
@@ -107,7 +145,14 @@ export const kbService = {
         },
         
         dependencies: {
-          requires: idx > 3 ? [`synth_${subjectId}_N${idx - 2}`] : [],
+          // KHÔNG bịa quan hệ tiên quyết. Bản cũ ghi requires = [`synth_N{idx-2}`], nghĩa là
+          // khái niệm thứ n bị coi là cần khái niệm thứ n-2 làm nền, chỉ vì chúng tình cờ
+          // đứng cạnh nhau trong thứ tự duyệt Map. Đó là cấu trúc tri thức HOÀN TOÀN BỊA,
+          // mà nó lại điều khiển những quyết định thật: learningEngine nhân chìm điểm ưu
+          // tiên của câu hỏi, còn lộ trình học dán nhãn "bị khóa" cho khái niệm. Người học
+          // bị chặn khỏi một bài học vì một liên hệ không hề tồn tại. Thà không biết quan hệ
+          // tiên quyết còn hơn khẳng định sai, nên để rỗng cho tới khi có dữ liệu thật.
+          requires: [],
           requiredBy: [],
           relatedConcepts: meta.questions.flatMap(q => q.knowledgeMapping || []).filter(t => t !== conceptName).slice(0, 3),
           oppositeConcepts: [],
@@ -187,22 +232,68 @@ export const kbService = {
   /**
    * Map question to concept node
    */
-  getConceptForQuestion(subjectId: string, question: Question): KnowledgeNode | null {
+  /**
+   * Tra khái niệm cho một câu hỏi, có CHẤM ĐỘ GẦN GŨI và XẾP HẠNG.
+   *
+   * BỐI CẢNH: trước đây có hai bộ tra cứu riêng biệt và cả hai đều hỏng, theo hai hướng
+   * ngược nhau.
+   *
+   *   - learningEngine đòi nhãn của câu hỏi TRÙNG TUYỆT ĐỐI với tên khái niệm. Đo thực tế:
+   *     0 trên 292 câu tra được, vì nhãn câu hỏi thuộc một bộ từ vựng khác hẳn tên khái
+   *     niệm trong đồ thị (ví dụ nhãn "Khái niệm" so với tên "Hành vi khách hàng (Consumer
+   *     Behavior)"). Hệ quả: toàn bộ mô hình chấm thích ứng chưa từng chạy thật, mọi câu
+   *     đều rơi vào nhánh dự phòng.
+   *   - kbService lại dùng `node.concept.includes(tag)` và lấy kết quả ĐẦU TIÊN tìm thấy.
+   *     Một nhãn ngắn và phổ biến như "Khái niệm" khớp với gần như mọi thứ, nên phần giảng
+   *     giải trả về nội dung của một khái niệm không liên quan tới câu hỏi.
+   *
+   * CÁCH LÀM: một hàm duy nhất, chấm điểm cộng dồn trên ba nguồn bằng chứng độc lập, rồi
+   * xếp hạng. Toàn bộ tất định và giải thích được, không dùng mô hình ngôn ngữ.
+   *
+   *     doGanGui = 0,50*trungChuDe + 0,20*trungChuong + 0,30*tuongDongTuVung
+   *
+   * trong đó tuongDongTuVung là hệ số Jaccard trên tập từ đã chuẩn hóa, lấy giá trị lớn
+   * nhất trên mọi nhãn của câu hỏi. Ngưỡng nhận 0,20 để thà không gán còn hơn gán bừa.
+   */
+  resolveConceptsForQuestion(
+    subjectId: string,
+    question: Question,
+    limit: number = 3
+  ): Array<{ node: KnowledgeNode; affinity: number }> {
     const graph = this.getKnowledgeGraph(subjectId);
-    if (subjectId === "customer_behavior") {
-      // Direct mapping by topic/chapter or match string
-      const matched = graph.find(node => 
-        node.topic === question.topicId || 
-        question.knowledgeMapping?.some(tag => node.concept.toLowerCase().includes(tag.toLowerCase()))
-      );
-      return matched || null;
-    } else {
-      // Matches synthesized concept node based on knowledgeMapping tag
-      const matched = graph.find(node => 
-        question.knowledgeMapping?.some(tag => tag.trim() === node.concept)
-      );
-      return matched || null;
-    }
+    if (graph.length === 0) return [];
+
+    const qTokenSets = (question.knowledgeMapping || [])
+      .map(tag => tokenize(tag))
+      .filter(s => s.size > 0);
+
+    const scored = graph.map(node => {
+      let affinity = 0;
+      if (node.topic && question.topicId && node.topic === question.topicId) affinity += 0.5;
+      if (node.chapter && node.chapter === question.chapterId) affinity += 0.2;
+
+      const nodeTokens = tokenize(node.concept);
+      let bestLex = 0;
+      qTokenSets.forEach(tagTokens => {
+        bestLex = Math.max(bestLex, jaccard(tagTokens, nodeTokens));
+      });
+      affinity += 0.3 * bestLex;
+
+      return { node, affinity: Number(affinity.toFixed(4)) };
+    });
+
+    return scored
+      .filter(s => s.affinity >= 0.2)
+      .sort((a, b) => (b.affinity - a.affinity) || a.node.id.localeCompare(b.node.id))
+      .slice(0, Math.max(1, limit));
+  },
+
+  getConceptForQuestion(subjectId: string, question: Question): KnowledgeNode | null {
+    // Dùng chung bộ tra cứu có xếp hạng ở trên, lấy khái niệm gần gũi nhất. Nhờ vậy phần
+    // giảng giải và phần chấm ưu tiên luôn nói về cùng một khái niệm, thay vì mỗi nơi suy
+    // luận một kiểu như trước.
+    const ranked = this.resolveConceptsForQuestion(subjectId, question, 1);
+    return ranked.length > 0 ? ranked[0].node : null;
   },
 
   /**

@@ -15,7 +15,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
   };
 }
 
-import { dbService } from "./db";
+import { dbService, setConceptMasteryBothKeys } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
 import { TimeService } from "./time";
 
@@ -300,7 +300,9 @@ export const studentModelService = {
     if (!stats.conceptMastery) {
       stats.conceptMastery = {};
     }
-    stats.conceptMastery[conceptName] = mastery;
+    // Ghi đồng thời khóa mã và khóa tên để hai nguồn cập nhật độ thạo không bao giờ lệch
+    // nhau (xem chú thích tại setConceptMasteryBothKeys trong db.ts).
+    setConceptMasteryBothKeys(stats, conceptName, mastery);
     dbService.saveStatistics(stats);
   }
 };

@@ -175,6 +175,26 @@ export function loadSubject(subjectId: string) {
 // Initial subject load
 loadSubject(activeSubjectId);
 
+/**
+ * Ghi độ thành thạo của một khái niệm dưới CẢ HAI khóa: mã khái niệm (ví dụ CB_C1_N1) và tên
+ * khái niệm (ví dụ "Hành vi khách hàng (Consumer Behavior)").
+ *
+ * Vì sao phải làm vậy: bảng độ thạo có hai nơi ghi độc lập. recomputeStatistics dựng lại từ
+ * lịch sử làm bài, còn mô hình người học cập nhật sau mỗi câu trả lời; trước đây một bên ghi
+ * theo mã, bên kia ghi theo tên. Các nơi đọc thì tra một khóa rồi mới tới khóa kia, nên tùy
+ * thứ tự mà đọc trúng con số đã cũ. Hai nguồn cùng mô tả một đại lượng mà lưu ở hai chỗ khác
+ * nhau là mầm mống sai lệch chắc chắn xảy ra. Đồng bộ ngay tại chỗ ghi sẽ triệt tiêu nó.
+ */
+export function setConceptMasteryBothKeys(stats: Statistics, key: string, value: number): void {
+  if (!stats.conceptMastery) stats.conceptMastery = {};
+  stats.conceptMastery[key] = value;
+  if (activeSubjectId !== "customer_behavior") return;
+  const node = cbKnowledgeGraph.find(n => n.id === key || n.concept === key);
+  if (!node) return;
+  stats.conceptMastery[node.id] = value;
+  stats.conceptMastery[node.concept] = value;
+}
+
 export const dbService = {
   getSubjects(): Subject[] {
     // Môn Kinh tế chính trị Mác - Lênin đã đóng (đã thi xong) nên gỡ khỏi danh sách hiển thị.
@@ -484,8 +504,12 @@ export const dbService = {
   boostConceptMastery(conceptId: string, amount: number = 10): void {
     const stats = this.getStatistics();
     if (!stats.conceptMastery) stats.conceptMastery = {};
-    const current = stats.conceptMastery[conceptId] || 0;
-    stats.conceptMastery[conceptId] = Math.min(100, current + amount);
+    // Mốc xuất phát 50 nghĩa là "chưa có căn cứ", đồng bộ với recomputeStatistics. Bản cũ
+    // lấy 0, khiến lần cộng điểm đầu tiên xuất phát từ mức "trượt sạch" thay vì mức trung
+    // tính, và một lần trả lời sai đầu tiên đẩy khái niệm xuống âm.
+    const current = stats.conceptMastery[conceptId] ?? 50;
+    const next = Math.max(0, Math.min(100, current + amount));
+    setConceptMasteryBothKeys(stats, conceptId, next);
     this.saveStatistics(stats);
   },
 
@@ -584,37 +608,62 @@ export const dbService = {
     stats.totalCorrect = totalCorrectSet.size;
     stats.totalTimeSpent = totalTime;
 
-    // Compute concept masteries dynamically based on active subject
+    // ===================== ĐỘ THÀNH THẠO THEO KHÁI NIỆM =====================
+    //
+    // Ba khiếm khuyết của bản cũ, đều ảnh hưởng trực tiếp tới việc chọn câu hỏi:
+    //
+    // 1. HAI KHÔNG GIAN KHÓA SONG SONG. Chỗ này ghi theo MÃ khái niệm (node.id), còn mô
+    //    hình người học (learnerModel.updateConceptMastery, dbService.boostConceptMastery)
+    //    lại ghi theo TÊN khái niệm. Các nơi đọc thì tra mã trước rồi mới tra tên, nên luôn
+    //    đọc trúng giá trị dựng ở đây và không bao giờ thấy giá trị của mô hình người học.
+    //    Nay ghi CÙNG MỘT giá trị dưới cả hai khóa để mọi nơi đọc đều nhất quán.
+    //
+    // 2. "CHƯA HỌC" BỊ CHẤM THÀNH "HỌC TRƯỢT". Khái niệm chưa làm câu nào nhận 0%, y hệt
+    //    khái niệm làm sai toàn bộ. Không biết và biết chắc là sai là hai trạng thái khác
+    //    nhau về bản chất; gộp chúng làm một khiến hệ thống dồn câu hỏi vào những khái
+    //    niệm chỉ đơn giản là chưa từng xuất hiện, và bỏ qua chỗ người học thật sự yếu.
+    //
+    // 3. MẪU SỐ SAI. Bản cũ chia cho TỔNG số câu thuộc khái niệm, kể cả câu chưa làm bao
+    //    giờ. Làm đúng 3/3 câu đã gặp mà khái niệm có 20 câu thì bị chấm 15%. Nay mẫu số
+    //    chỉ tính những câu ĐÃ LÀM, còn mức độ tin cậy do trọng số bằng chứng đảm nhiệm.
+    //
+    //        p = soCauDung / soCauDaLam
+    //        w = 1 - e^(-soCauDaLam / 6)
+    //        doThao = round(100 * (w * p + (1 - w) * 0,5))
+    //
+    // Chưa làm câu nào cho w = 0 nên ra đúng 50, nghĩa là "chưa có căn cứ", không phải 0.
+    const masteryFromCounts = (answered: number, correct: number): number => {
+      if (answered <= 0) return 50;
+      const p = correct / answered;
+      const w = 1 - Math.exp(-answered / 6);
+      return Math.round(100 * (w * p + (1 - w) * 0.5));
+    };
+
     stats.conceptMastery = {};
     if (activeSubjectId === "customer_behavior") {
       cbKnowledgeGraph.forEach(node => {
-        // Find questions that belong to this concept
-        const conceptQs = questions.filter(q => 
-          q.topicId === node.topic || 
-          q.knowledgeMapping?.some(tag => node.concept.toLowerCase().includes(tag.toLowerCase()) || tag.toLowerCase().includes(node.concept.toLowerCase()))
-        );
-        const total = conceptQs.length;
-        if (total > 0) {
-          const correct = conceptQs.filter(q => totalCorrectSet.has(q.id)).length;
-          stats.conceptMastery![node.id] = Math.round((correct / total) * 100);
-        } else {
-          stats.conceptMastery![node.id] = 0;
-        }
+        // Quy câu hỏi về khái niệm theo CHỦ ĐỀ, tiêu chí mạnh nhất và cũng là tiêu chí mà
+        // bộ tra cứu dùng chung trong kbService đặt trọng số cao nhất. Bản cũ còn dùng thêm
+        // phép `includes` hai chiều giữa tên khái niệm và nhãn câu hỏi; với nhãn ngắn và phổ
+        // biến như "Khái niệm" thì phép đó khớp gần như toàn bộ ngân hàng câu hỏi, làm độ
+        // thạo của các khái niệm nhòe hết vào nhau.
+        const conceptQs = questions.filter(q => q.topicId === node.topic);
+        const answered = conceptQs.filter(q => totalSolvedSet.has(q.id)).length;
+        const correct = conceptQs.filter(q => totalCorrectSet.has(q.id)).length;
+        const value = masteryFromCounts(answered, correct);
+        // Ghi cả hai khóa cùng một giá trị: xóa hẳn nguy cơ đọc lệch nguồn.
+        stats.conceptMastery![node.id] = value;
+        stats.conceptMastery![node.concept] = value;
       });
     } else {
-      // Find all unique tags for other subjects
       const uniqueTags = Array.from(new Set(questions.flatMap(q => q.knowledgeMapping || [])));
       uniqueTags.forEach(tag => {
         const trimmed = tag.trim();
         if (!trimmed) return;
         const conceptQs = questions.filter(q => q.knowledgeMapping?.includes(trimmed));
-        const total = conceptQs.length;
-        if (total > 0) {
-          const correct = conceptQs.filter(q => totalCorrectSet.has(q.id)).length;
-          stats.conceptMastery![trimmed] = Math.round((correct / total) * 100);
-        } else {
-          stats.conceptMastery![trimmed] = 0;
-        }
+        const answered = conceptQs.filter(q => totalSolvedSet.has(q.id)).length;
+        const correct = conceptQs.filter(q => totalCorrectSet.has(q.id)).length;
+        stats.conceptMastery![trimmed] = masteryFromCounts(answered, correct);
       });
     }
 

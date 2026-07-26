@@ -124,7 +124,37 @@ giãn cách chúng ra khoảng 4 đề rồi mới cho gặp lại, đúng tinh 
 Nếu ai đó thấy "câu sai không quay lại ngay" rồi tưởng là lỗi và gỡ cơ chế chống lặp, người đó vừa
 phá một tính năng đang chạy đúng. Bộ tự kiểm chứng in cả hai con số để tránh hiểu nhầm này.
 
-### 4.5. Khóa câu đã trả lời ở chế độ gia sư
+### 4.5. Một bộ tra cứu khái niệm duy nhất
+
+`kbService.resolveConceptsForQuestion` là nơi DUY NHẤT quy câu hỏi về khái niệm trong đồ thị
+tri thức. Nó chấm độ gần gũi bằng chủ đề (0,50) cộng chương (0,20) cộng tương đồng từ vựng
+Jaccard (0,30), rồi xếp hạng và cắt ngưỡng 0,20.
+
+Trước đây có ba bản tra cứu khác nhau và cả ba đều sai theo kiểu riêng: bản khớp tuyệt đối
+trong `learningEngine` cho 0/292 câu, bản dùng `includes` trong `kbService` khớp bừa, bản
+trong `db.recomputeStatistics` khớp hai chiều làm nhòe mọi khái niệm vào nhau. **Đừng viết
+bản thứ tư.** Cần logic khác thì sửa hàm này và chạy lại `npm run check`.
+
+### 4.6. Độ thành thạo khái niệm: một giá trị, hai khóa
+
+Bảng `stats.conceptMastery` lưu mỗi khái niệm dưới CẢ HAI khóa (mã `CB_C1_N1` và tên đầy đủ)
+với cùng một giá trị. Mọi chỗ ghi phải đi qua `setConceptMasteryBothKeys` trong `db.ts`.
+Nếu chỉ ghi một khóa, nơi đọc sẽ lấy trúng con số cũ của khóa kia và mô hình học sai lệch âm
+thầm. Bộ tự kiểm chứng canh bất biến này.
+
+Quy ước giá trị: **50 nghĩa là chưa có căn cứ**, không phải học kém. Khái niệm chưa làm câu
+nào phải là 50, và độ thạo được co về 50 theo lượng bằng chứng
+(`w = 1 - e^(-soCauDaLam/6)`), nên đúng 3/3 câu cho khoảng 73 chứ không phải 100. Việc co này
+chỉ được làm ĐÚNG MỘT LẦN tại nguồn; co thêm ở nơi đọc sẽ nén phẳng tín hiệu.
+
+### 4.7. Xếp hạng phải tất định
+
+Không bao giờ gọi `Math.random()` bên trong hàm so sánh của `sort`. Hàm so sánh phải phản
+đối xứng và bắc cầu; rút ngẫu nhiên trong lúc so vi phạm cả hai, làm kết quả tùy tiện và
+không tái lập được. Muốn có biến thiên thì rút nhiễu MỘT lần cho mỗi phần tử (xem `jitter01`
+và `adaptiveSeed` trong `ai.ts`), rồi sắp xếp bằng hàm thuần túy có mốc phân giải hòa theo id.
+
+### 4.8. Khóa câu đã trả lời ở chế độ gia sư
 
 `PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,
 kể cả khi người dùng tắt công tắc gia sư. Không có nó thì có thể xem đáp án đúng rồi tắt công tắc,

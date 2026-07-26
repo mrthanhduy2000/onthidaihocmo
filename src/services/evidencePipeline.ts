@@ -196,7 +196,7 @@ export const ReasoningEngine = {
       node.dependencies.requires.forEach(reqNameOrId => {
         const reqNode = nodeMap.get(reqNameOrId.toLowerCase());
         if (reqNode) {
-          const reqMastery = stats.conceptMastery?.[reqNode.id] || stats.conceptMastery?.[reqNode.concept] || 0;
+          const reqMastery = stats.conceptMastery?.[reqNode.concept] ?? stats.conceptMastery?.[reqNode.id] ?? 50;
           if (reqMastery < 50) {
             unmasteredPrerequisites.push(reqNode.concept);
           }

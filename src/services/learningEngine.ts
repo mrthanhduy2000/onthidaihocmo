@@ -37,16 +37,50 @@ export interface CoachDiagnostic {
   };
 }
 
+/** Thứ tự nấc thang nhận thức Bloom, dùng để đo khoảng cách giữa hai nấc. */
+const BLOOM_ORDER = ["remember", "understand", "apply", "analyze", "evaluate", "create"];
+
+function bloomIndex(level?: string): number {
+  const i = BLOOM_ORDER.indexOf(String(level || "understand").toLowerCase());
+  return i < 0 ? 1 : i;
+}
+
+function clamp01(x: number): number {
+  return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+
 export const learningEngine = {
   /**
-   * Adaptive Question Chooser Algorithm
-   * Computes composite score for all candidate questions based on detailed learner model
+   * Bộ chấm ưu tiên câu hỏi (Adaptive Question Chooser).
+   *
+   * THIẾT KẾ: mọi thành phần đều là hàm LIÊN TỤC nhận giá trị trong [0, 1], rồi tổ hợp
+   * tuyến tính theo bộ trọng số cộng lại bằng 1, cuối cùng nhân đúng MỘT cổng tiên quyết.
+   *
+   *     Uu tien = ( 0,30*Thieu + 0,25*Quen + 0,15*QuaHan + 0,10*ThieuTuTin
+   *               + 0,10*QuanTrong + 0,10*HopBloom ) * CongTienQuyet + 0,50*TungSai
+   *
+   * Ba khác biệt cốt lõi so với bản cũ, mỗi khác biệt sửa một khiếm khuyết đo được:
+   *
+   * 1. KHÔNG CÒN NGƯỠNG BẬC THANG. Bản cũ cộng +3,5 khi thành thạo dưới 40 và trừ 2,0 khi
+   *    trên 85, còn khoảng giữa không có gì; hai câu ở mức 41 và 84 bị đối xử y hệt nhau,
+   *    trong khi 39 và 41 lại lệch nhau 3,5 điểm. Tương tự với mốc trí nhớ 0,6: chênh lệch
+   *    0,002 gây đảo 4,4 điểm. Nay dùng hàm liên tục nên thứ hạng không nhảy đột ngột.
+   *
+   * 2. GỘP THEO TRUNG BÌNH, KHÔNG CỘNG DỒN. Bản cũ cộng điểm cho TỪNG khái niệm gắn với câu
+   *    hỏi, nên câu gắn 3 nhãn tự động được ưu tiên hơn câu gắn 1 nhãn dù người học yếu như
+   *    nhau. Đó là thiên lệch theo số nhãn, không phải theo nhu cầu học. Nay lấy trung bình.
+   *
+   * 3. CỔNG TIÊN QUYẾT CHỈ NHÂN MỘT LẦN. Bản cũ nhân 0,15 cho mỗi khái niệm tiên quyết chưa
+   *    đạt, nên câu có 3 khái niệm bị nhân 0,003 và biến mất khỏi mọi đề. Nay lấy cổng chặt
+   *    nhất rồi nhân đúng một lần, và cổng cũng liên tục theo độ thạo của kiến thức nền.
+   *
+   * Toàn bộ đều tất định: cùng dữ liệu học thì cùng thứ hạng, không gọi Math.random.
    */
   scoreQuestions(pool: Question[]): { q: Question; score: number; reasons: string[] }[] {
     const stats = dbService.getStatistics();
     const activeSubjectId = dbService.getActiveSubjectId();
     const graph = kbService.getKnowledgeGraph(activeSubjectId);
-    
+
     const now = TimeService.now().getTime();
 
     // Map graph nodes for rapid lookup
@@ -56,111 +90,147 @@ export const learningEngine = {
       nodeMap.set(node.id.toLowerCase(), node);
     });
 
+    // Chuẩn hóa độ quan trọng theo thang lớn nhất của chính đồ thị đang dùng. Bản cũ nhân
+    // thẳng importance * 0,4, nên một đồ thị chấm importance theo thang 1..10 sẽ áp đảo mọi
+    // thành phần khác, còn thang 1..3 thì gần như vô hiệu. Chuẩn hóa xong, ý nghĩa của
+    // "quan trọng nhất trong môn" là như nhau ở mọi bộ dữ liệu.
+    const maxImportance = graph.reduce((m, n) => Math.max(m, n.importance || 0), 0) || 1;
+
+    // Đọc hồ sơ khái niệm MỘT LẦN. Bản cũ gọi getOrCreateProfile trong vòng lặp, mà hàm đó
+    // ghi lại localStorage mỗi lần gọi, nên chấm điểm cho 292 câu kéo theo hàng trăm lượt
+    // tuần tự hóa JSON toàn bộ hồ sơ. Chấm điểm là thao tác ĐỌC, không được ghi.
+    const profileCache = new Map<string, ReturnType<typeof learnerModelService.getOrCreateProfile>>();
+    const profileOf = (conceptName: string) => {
+      const key = conceptName.toLowerCase();
+      let p = profileCache.get(key);
+      if (!p) {
+        p = learnerModelService.getOrCreateProfile(conceptName);
+        profileCache.set(key, p);
+      }
+      return p;
+    };
+
+    // Độ thạo đọc thẳng từ thống kê, KHÔNG co thêm lần nữa. Việc co theo lượng bằng chứng
+    // đã được thực hiện đúng một lần tại nguồn (dbService.recomputeStatistics), nên co lại ở
+    // đây sẽ là co hai lần: tín hiệu bị nén phẳng về quanh 50 và độ thạo gần như mất tác dụng
+    // lên thứ hạng. Đọc theo TÊN khái niệm trước rồi mới tới mã, và dùng `??` chứ không dùng
+    // `||` vì 0 là một giá trị hợp lệ chứ không phải "thiếu dữ liệu".
+    const masteryOf = (node: KnowledgeNode): number => {
+      return stats.conceptMastery?.[node.concept] ?? stats.conceptMastery?.[node.id] ?? 50;
+    };
+
     return pool.map(q => {
-      let score = 1.0;
       const reasons: string[] = [];
 
-      // Find concept mapped to this question
-      const conceptTags = q.knowledgeMapping || [];
-      const matchedNodes = conceptTags
-        .map(tag => nodeMap.get(tag.trim().toLowerCase()))
-        .filter((node): node is KnowledgeNode => !!node);
+      // Câu hỏi từng làm sai: hàm bão hòa thay cho cộng tuyến tính không chặn trên.
+      // Bản cũ cộng 1,5 điểm cho mỗi lần sai, nên một câu sai 10 lần được +15 và nhấn chìm
+      // toàn bộ tín hiệu còn lại. Thực tế sai lần thứ 10 không cấp bách gấp 10 lần thứ nhất.
+      const wrongCount = stats.incorrectQuestionHistory[q.id] || 0;
+      const wrongSignal = 1 - Math.exp(-wrongCount / 2); // 1 lần: 0,39; 3 lần: 0,78; 6 lần: 0,95
+      if (wrongCount > 0) {
+        reasons.push(`Từng làm sai ${wrongCount} lần (+${(0.5 * wrongSignal).toFixed(2)})`);
+      }
+
+      // Tra khái niệm bằng bộ tra cứu có xếp hạng dùng chung (chủ đề + chương + từ vựng).
+      // Bản cũ đòi nhãn câu hỏi trùng TUYỆT ĐỐI tên khái niệm, đo được 0/292 câu tra ra
+      // kết quả, nghĩa là mọi thành phần suy luận bên dưới chưa từng được kích hoạt.
+      const resolved = kbService.resolveConceptsForQuestion(activeSubjectId, q, 3);
+      const matchedNodes = resolved.map(r => r.node);
+      const affinityOf = new Map(resolved.map(r => [r.node.id, r.affinity]));
 
       if (matchedNodes.length === 0) {
-        // Fallback standard weights
-        const incorrectCount = stats.incorrectQuestionHistory[q.id] || 0;
-        if (incorrectCount > 0) {
-          score += incorrectCount * 2.0;
-          reasons.push(`Lịch sử làm sai (+${incorrectCount * 2.0})`);
-        }
-        return { q, score: Math.max(0.1, score), reasons };
+        // Không tra được khái niệm: chỉ còn bằng chứng ở mức câu hỏi. Đặt nền 0,5 để những
+        // câu này không bị loại hẳn khỏi đề, nhưng cũng không vượt mặt câu có bằng chứng rõ.
+        const score = 0.5 + 0.5 * wrongSignal;
+        return { q, score, reasons };
       }
 
-      // Aggregate weights over mapped concepts
+      // Gộp các thành phần theo TRUNG BÌNH CÓ TRỌNG SỐ trên những khái niệm gắn với câu hỏi,
+      // trọng số chính là độ gần gũi. Khái niệm chỉ liên quan mờ nhạt thì góp tiếng nói nhỏ,
+      // thay vì được tính ngang hàng với khái niệm trùng khớp chủ đề.
+      let sumNeed = 0, sumForget = 0, sumOverdue = 0, sumConf = 0, sumImp = 0, sumBloom = 0;
+      let weightTotal = 0;
+      let prereqGate = 1.0; // cổng chặt nhất, chỉ nhân một lần ở cuối
+      let gateReason = "";
+
       matchedNodes.forEach(node => {
-        const profile = learnerModelService.getOrCreateProfile(node.concept);
+        const profile = profileOf(node.concept);
+        const w = affinityOf.get(node.id) ?? 0.2;
+        weightTotal += w;
 
-        // 1. Mastery Multiplier
-        // Low mastery increases weight, high mastery reduces weight
-        const mastery = stats.conceptMastery?.[node.id] || stats.conceptMastery?.[node.concept] || 0;
-        if (mastery < 40) {
-          score += 3.5;
-          reasons.push(`Khái niệm chưa vững "${node.concept}" (+3.5)`);
-        } else if (mastery > 85) {
-          score -= 2.0;
-          reasons.push(`Khái niệm đã tinh thông "${node.concept}" (-2.0)`);
+        // 1. Mức thiếu hụt kiến thức, liên tục theo độ thạo đã cân bằng chứng.
+        const mastery = masteryOf(node);
+        sumNeed += w * clamp01(1 - mastery / 100);
+
+        // 2. Mức quên, liên tục. forgettingScore = 1 nghĩa là còn nhớ nguyên.
+        sumForget += w * clamp01(1 - (profile.forgettingScore ?? 1));
+
+        // 3. Quá hạn ôn tập: dốc tuyến tính bão hòa sau 7 ngày, thay cho bậc nhảy +3,0.
+        //    Quá hạn 1 ngày và quá hạn 30 ngày trước đây được coi là như nhau.
+        if (profile.nextReviewAt) {
+          const overdueDays = (now - new Date(profile.nextReviewAt).getTime()) / 86400000;
+          sumOverdue += w * clamp01(overdueDays / 7);
         }
 
-        // 2. Spaced Repetition (Forgetting Curve Score)
-        // If forgetting curve score is low, we must review immediately!
-        const retention = profile.forgettingScore; // 0.0 to 1.0
-        if (retention < 0.6) {
-          const boost = (1.0 - retention) * 6.0;
-          score += boost;
-          reasons.push(`Suy giảm trí nhớ (Retention: ${Math.round(retention * 100)}%) (+${boost.toFixed(1)})`);
-        } else {
-          // If retention is high (freshly studied), reduce probability
-          score -= 1.5;
-        }
+        // 4. Thiếu tự tin, liên tục thay cho ngưỡng cứng 0,4.
+        sumConf += w * clamp01(1 - (profile.confidence ?? 0.5));
 
-        // 3. Prerequisite Checking (Concept Dependency Graph)
-        // If Concept X requires Prerequisite Concept Y, and Y is NOT mastered (mastery < 50),
-        // we lock or heavily suppress Concept X, and prioritize Concept Y!
-        if (node.dependencies && node.dependencies.requires) {
-          node.dependencies.requires.forEach(reqNameOrId => {
-            const reqNode = nodeMap.get(reqNameOrId.toLowerCase());
-            if (reqNode) {
-              const reqMastery = stats.conceptMastery?.[reqNode.id] || stats.conceptMastery?.[reqNode.concept] || 0;
-              if (reqMastery < 50) {
-                // Suppress this question because prerequisite is unmastered
-                score *= 0.15;
-                reasons.push(`Khóa do rỗng tiên quyết "${reqNode.concept}" (x0.15)`);
-              }
-            }
-          });
-        }
+        // 5. Độ quan trọng của khái niệm, đã chuẩn hóa về [0, 1].
+        sumImp += w * clamp01((node.importance || 0) / maxImportance);
 
-        // 4. Overdue Spaced Repetition Priority
-        if (profile.nextReviewAt && new Date(profile.nextReviewAt).getTime() < now) {
-          score += 3.0;
-          reasons.push(`Quá hạn ôn tập Spaced Repetition (+3.0)`);
-        }
+        // 6. Độ hợp nấc thang Bloom: khoảng cách CÓ CẤP ĐỘ thay cho đúng/sai nhị phân.
+        //    Bản cũ hoặc cộng 2,0 khi khớp tuyệt đối, hoặc nhân 0,8 khi lệch, nên lệch một
+        //    nấc bị phạt ngang lệch bốn nấc, trái với cách dạy thực tế là nâng dần từng nấc.
+        const dist = Math.abs(bloomIndex(q.bloomLevel) - bloomIndex(profile.difficultyPreference));
+        sumBloom += w * clamp01(1 - dist / 5);
 
-        // 5. Confidence Gap
-        if (profile.confidence < 0.4) {
-          const gapBoost = (1.0 - profile.confidence) * 2.5;
-          score += gapBoost;
-          reasons.push(`Độ tự tin thấp (${Math.round(profile.confidence * 100)}%) (+${gapBoost.toFixed(1)})`);
-        }
+        // 7. Cổng tiên quyết liên tục: kiến thức nền càng yếu thì càng chặn mạnh, nhưng
+        //    không bao giờ chặn tuyệt đối để người học vẫn có đường chạm tới khái niệm.
+        const requires = node.dependencies?.requires || [];
+        requires.forEach(reqNameOrId => {
+          const reqNode = nodeMap.get(String(reqNameOrId).toLowerCase());
+          if (!reqNode) return;
 
-        // 6. Importance of Concept
-        if (node.importance) {
-          score += node.importance * 0.4;
-          reasons.push(`Độ quan trọng khái niệm (+${(node.importance * 0.4).toFixed(1)})`);
-        }
-
-        // 7. Dynamic Bloom Level Matching
-        // Match question's bloom level with learner's dynamic progress
-        const targetBloom = profile.difficultyPreference; // Remember, Understand, Apply, etc.
-        const questionBloom = q.bloomLevel || "Understand";
-        if (questionBloom.toLowerCase() === targetBloom.toLowerCase()) {
-          score += 2.0;
-          reasons.push(`Khớp nấc thang Bloom: ${targetBloom} (+2.0)`);
-        } else {
-          // Softly discourage mismatch
-          score *= 0.8;
-        }
+          // KHÔNG chặn câu hỏi bằng chính khái niệm mà nó đang dạy. Một câu hỏi có thể gắn
+          // với nhiều khái niệm, trong đó khái niệm này lại là nền tảng của khái niệm kia.
+          // Nếu vẫn áp cổng thì càng yếu nền tảng, câu hỏi rèn đúng nền tảng đó lại càng bị
+          // đẩy ra xa, tức là chặn người học khỏi đúng thứ họ cần luyện. Đây là kiểu suy
+          // luận ngược với cách một giảng viên xử lý: thấy hổng nền thì cho làm bài về nền.
+          if (matchedNodes.some(m => m.id === reqNode.id)) return;
+          const reqMastery = masteryOf(reqNode);
+          // reqMastery 0 cho cổng 0,15; 70 trở lên cho cổng 1,0; ở giữa nội suy tuyến tính.
+          const gate = 0.15 + 0.85 * clamp01(reqMastery / 70);
+          if (gate < prereqGate) {
+            prereqGate = gate;
+            gateReason = `Nền tảng "${reqNode.concept}" mới đạt ${Math.round(reqMastery)}% (cổng x${gate.toFixed(2)})`;
+          }
+        });
       });
 
-      // 8. Individual Question Wrong History boost
-      const wrongCount = stats.incorrectQuestionHistory[q.id] || 0;
-      if (wrongCount > 0) {
-        score += wrongCount * 1.5;
-        reasons.push(`Lịch sử sai ở câu này (+${wrongCount * 1.5})`);
-      }
+      const wt = weightTotal > 0 ? weightTotal : 1;
+      const need = sumNeed / wt;
+      const forget = sumForget / wt;
+      const overdue = sumOverdue / wt;
+      const confGap = sumConf / wt;
+      const importance = sumImp / wt;
+      const bloomFit = sumBloom / wt;
 
-      // Ensure score is always positive
-      score = Math.max(0.1, score);
+      const base =
+        0.30 * need +
+        0.25 * forget +
+        0.15 * overdue +
+        0.10 * confGap +
+        0.10 * importance +
+        0.10 * bloomFit;
+
+      const score = Math.max(0.01, base * prereqGate + 0.5 * wrongSignal);
+
+      if (need > 0.5) reasons.push(`Khái niệm còn yếu (${Math.round(need * 100)}% thiếu hụt)`);
+      if (forget > 0.4) reasons.push(`Đang quên dần (còn nhớ ${Math.round((1 - forget) * 100)}%)`);
+      if (overdue > 0.2) reasons.push(`Quá hạn ôn tập`);
+      if (importance > 0.7) reasons.push(`Khái niệm trọng tâm của môn`);
+      if (gateReason) reasons.push(gateReason);
+
       return { q, score, reasons };
     });
   },
@@ -169,15 +239,20 @@ export const learningEngine = {
    * Generates a fully adaptive exam attempt using scored weight distribution.
    */
   generateAdaptiveExam(count: number = 10): ExamAttempt {
-    const pool = [...dbService.getDashboardOverview().lastExam?.questions === undefined ? [] : [], ...dbService.getSubjects().length > 0 ? (dbService as any).questions || [] : []];
+    // Bản cũ dựng nguồn câu hỏi bằng biểu thức luôn cho ra mảng RỖNG:
+    //   [...(overview.lastExam?.questions === undefined ? [] : []), ...((dbService as any).questions || [])]
+    // Nhánh điều kiện trả về mảng rỗng ở cả hai chiều, còn dbService không hề có thuộc tính
+    // `questions`, nên hàm này luôn sinh ra đề 0 câu. Nay lấy đúng ngân hàng câu hỏi.
+    const pool = dbService.getQuestions();
     const scored = this.scoreQuestions(pool);
-    
-    // Sort scored questions by score descending, adding moderate randomness to avoid deterministic repeats
-    const sorted = scored.sort((a, b) => {
-      const randFactorA = Math.random() * 2.5;
-      const randFactorB = Math.random() * 2.5;
-      return (b.score + randFactorB) - (a.score + randFactorA);
-    });
+
+    // Sắp xếp bằng hàm so sánh THUẦN TÚY. Bản cũ rút Math.random ngay trong hàm so sánh nên
+    // vi phạm hợp đồng sắp xếp (so cùng một cặp hai lần có thể ra hai kết quả ngược nhau).
+    // Nhiễu nay được rút một lần cho mỗi câu và nhân vào điểm, giữ được tín hiệu ưu tiên.
+    const sorted = scored
+      .map(s => ({ s, key: s.score * (0.85 + 0.3 * ((Math.imul(s.q.id, 2654435761) >>> 8) / 16777216)) }))
+      .sort((a, b) => (b.key - a.key) || (a.s.q.id - b.s.q.id))
+      .map(x => x.s);
 
     const selectedQs = sorted.slice(0, count).map(s => s.q);
 
@@ -215,7 +290,7 @@ export const learningEngine = {
 
     graph.forEach(node => {
       const profile = learnerModelService.getOrCreateProfile(node.concept);
-      const mastery = stats.conceptMastery?.[node.id] || stats.conceptMastery?.[node.concept] || 0;
+      const mastery = stats.conceptMastery?.[node.concept] ?? stats.conceptMastery?.[node.id] ?? 50;
 
       let status: LearningRoadmapStep["status"] = "available";
       let reason = "Khái niệm đã mở khóa, sẵn sàng luyện tập.";
@@ -232,7 +307,7 @@ export const learningEngine = {
           node.dependencies.requires.forEach(reqNameOrId => {
             const reqNode = nodeMap.get(reqNameOrId.toLowerCase());
             if (reqNode) {
-              const reqMastery = stats.conceptMastery?.[reqNode.id] || stats.conceptMastery?.[reqNode.concept] || 0;
+              const reqMastery = stats.conceptMastery?.[reqNode.concept] ?? stats.conceptMastery?.[reqNode.id] ?? 50;
               if (reqMastery < 50) {
                 blockedBy.push(reqNode.concept);
               }

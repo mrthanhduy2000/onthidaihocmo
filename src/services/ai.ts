@@ -58,6 +58,36 @@ function shuffleInPlace<T>(arr: T[]): T[] {
   return arr;
 }
 
+/**
+ * Nhiễu tất định trong [0, 1) sinh từ (id câu hỏi, hạt giống). Cùng cặp đầu vào luôn cho cùng
+ * kết quả, nên thứ hạng tái lập được và có thể kiểm chứng, khác hẳn việc gọi Math.random
+ * ngay trong hàm so sánh (vừa phá hợp đồng sắp xếp vừa không tái lập được).
+ */
+function jitter01(id: number, seed: number): number {
+  let h = (id * 2654435761 + seed * 40503) >>> 0;
+  h ^= h >>> 15;
+  h = Math.imul(h, 2246822519) >>> 0;
+  h ^= h >>> 13;
+  h = Math.imul(h, 3266489917) >>> 0;
+  h ^= h >>> 16;
+  return h / 4294967296;
+}
+
+/**
+ * Hạt giống cho đề thích ứng, lấy từ chính danh sách câu vừa ra gần đây. Danh sách này đổi
+ * sau mỗi lần tạo đề, nên mỗi đề có nhiễu khác nhau; đồng thời nó là trạng thái đã lưu, nên
+ * cùng một trạng thái sẽ dựng lại đúng thứ hạng cũ, phục vụ việc kiểm chứng và truy vết.
+ */
+function adaptiveSeed(): number {
+  const recent = workspaceService.getRecentlyServedQuestionIds();
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < recent.length; i++) {
+    h ^= recent[i] & 0xff;
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return (h ^ recent.length) >>> 0;
+}
+
 /** Chuẩn hóa đề bài để so trùng lặp (bỏ hoa/thường, dấu câu, khoảng trắng thừa). */
 function normalizeQuestionText(s: string): string {
   return String(s).toLowerCase().replace(/[.,;:?!"'“”()\-]/g, "").replace(/\s+/g, " ").trim();
@@ -533,9 +563,25 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
       const stats = dbService.getStatistics();
       pool = pool.filter(q => stats.bookmarks.includes(q.id));
     } else if (config.type === "adaptive") {
+      // Xếp hạng theo điểm ưu tiên, có nhiễu NHÂN nhẹ để hai đề liên tiếp không giống hệt nhau.
+      //
+      // Bản cũ viết: sort((a, b) => (b.score + Math.random()*2) - (a.score + Math.random()*2)).
+      // Đó là lỗi thuật toán thật sự, không phải chuyện thẩm mỹ:
+      //   - Hàm so sánh gọi Math.random NGAY TRONG lúc so, nên so cùng một cặp hai lần có thể
+      //     ra hai kết quả trái ngược. Điều này vi phạm hợp đồng của Array.prototype.sort
+      //     (phải phản đối xứng và bắc cầu), và với thuật toán sắp xếp thật thì kết quả trở
+      //     nên tùy tiện, không tái lập được, thậm chí đánh mất phần lớn tín hiệu điểm số.
+      //   - Nhiễu CỘNG biên độ 2,0 còn lớn hơn cả khoảng biến thiên của điểm ưu tiên, nên
+      //     thứ hạng gần như do may rủi quyết định chứ không do nhu cầu học.
+      // Cách sửa: rút thăm MỘT lần cho mỗi câu, nhân vào điểm ở biên độ +/-15%, rồi mới sắp
+      // xếp bằng hàm so sánh thuần túy có mốc phân giải hòa theo id để kết quả luôn xác định.
       const scored = learningEngine.scoreQuestions(pool);
-      scored.sort((a, b) => (b.score + Math.random() * 2) - (a.score + Math.random() * 2));
-      pool = scored.map(s => s.q);
+      const jittered = scored.map(s => ({
+        s,
+        key: s.score * (0.85 + 0.3 * jitter01(s.q.id, adaptiveSeed()))
+      }));
+      jittered.sort((a, b) => (b.key - a.key) || (a.s.q.id - b.s.q.id));
+      pool = jittered.map(j => j.s.q);
     }
 
     // Chống lặp câu cũ + ôn tập thông minh.
