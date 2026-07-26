@@ -191,7 +191,11 @@ export const studentModelService = {
       preferredRetryPattern: "socratic_prompt",
       preferredSessionLength: 10,
       preferredQuestionStyle: "concept_focused",
-      learningVelocity: 2.5,
+      // Tốc độ học của một hồ sơ CHƯA HỌC GÌ phải là 0, không phải 2,5. Bản cũ đặt 2,5, và con
+      // số đó chảy thẳng ra màn hình Phân tích giảng dạy ở ô "Tốc độ Học tập" như thể đã đo
+      // được. Các trường sở thích phía trên là mặc định về HÀNH VI DẠY (chọn kiểu giải thích
+      // nào khi chưa biết gì về người học), khác hẳn về bản chất với một chỉ số đo lường.
+      learningVelocity: 0,
       fatigueTrend: 0,
       engagementTrend: "stable",
       strategyPerformance: {},

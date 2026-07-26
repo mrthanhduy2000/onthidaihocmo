@@ -287,6 +287,20 @@ Hai dạng hỏng này **không kêu một tiếng nào**, không có lỗi ki�
 Cách phát hiện: viết một vòng lặp đếm số **giá trị khác nhau** của trường (hoặc của chỉ số) trên
 toàn bộ dữ liệu thật. Bằng 1 là hỏng. Đây là phép thử rẻ và nên chạy mỗi lần rà một engine mới.
 
+**Bản quét dùng lại được** (đã tìm ra 6 con số bịa ngày 27/07/2026): cho engine chạy trên 5 hồ
+sơ học khác hẳn nhau (làm đúng 0%, 25%, 50%, 75%, 100%), trải phẳng đầu ra thành cặp
+đường-dẫn/giá-trị, rồi lọc ra trường **số** nào không đổi qua cả 5 lượt.
+
+Đọc kết quả quét phải tỉnh táo: **không phải hằng số nào cũng là lỗi.** Chỉ số về NGÂN HÀNG CÂU
+HỎI (độ phủ, cân bằng Bloom của ngân hàng, nợ kỹ thuật) đứng yên khi đổi hồ sơ người học là
+đúng, vì ngân hàng có đổi đâu. Chỉ chỉ số nói về NGƯỜI HỌC mà đứng yên mới là lỗi. Nhóm kiểm
+**M** canh 5 chỗ đã sửa.
+
+**Bộ quét không thay được việc mở màn hình ra xem.** Trong cùng một ngày, hai lỗi lọt qua toàn
+bộ 90+ phép kiểm và chỉ lộ ra khi nhìn giao diện thật: sổ nợ xếp chương ngược từ 7 về 1, và câu
+"tăng Retention từ 63% lên 89%" nằm cứng trong `StatsView`. Sửa thứ gì có màn hình thì chạy
+`npm run dev` và đọc bằng mắt.
+
 Hiện `bloomLevel` được điền tự động trong `db.loadSubject` qua `suyRaMucBloom`, suy từ động từ
 **đứng đầu** trong `learningObjective`. Đừng đổi thành "lấy bậc Bloom cao nhất tìm thấy": đã
 thử và sai, vì mục tiêu học tập viết theo lối "động-từ-tư-duy + nội dung + mục đích nghiệp vụ",

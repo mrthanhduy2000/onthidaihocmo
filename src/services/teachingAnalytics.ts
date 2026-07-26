@@ -8,6 +8,15 @@ import { pedagogicalEvaluationEngine, PedagogicalEvaluation, StrategyStats } fro
 import { adaptiveTeachingPolicy, PolicyAuditEntry } from "./adaptiveTeachingPolicy";
 
 export interface TeachingAnalyticsReport {
+  /**
+   * Số lượt gia sư AI đã chấm. Bằng 0 nghĩa là **CHƯA CÓ DỮ LIỆU NÀO**, và khi đó mọi chỉ số
+   * bên dưới đều bằng 0 chứ không phải "kết quả đo được thấp". Màn hình phải nói rõ điều này,
+   * đừng vẽ số 0 ra như một thành tích kém.
+   *
+   * Trường này thêm ngày 27/07/2026, khi phát hiện báo cáo trả về hiệu quả giảng dạy 85% và
+   * mức tăng thông thạo +5,5 điểm/câu cho một hồ sơ chưa từng hỏi gia sư AI lần nào.
+   */
+  totalInteractions: number;
   overallTeachingEffectiveness: number; // 0.0 to 100.0 %
   averageMasteryGrowth: number; // e.g. +6.2 points
   averageBloomProgression: number; // e.g. 1.4 levels
@@ -57,13 +66,16 @@ export const teachingAnalytics = {
       }
     });
 
+    // Chưa có lượt tương tác nào thì trả 0, KHÔNG bịa (bất biến 4.9). Bản cũ trả 85,0 và 5,5,
+    // nghĩa là màn hình Phân tích giảng dạy khoe "Hiệu quả Giảng dạy 85%, +5,5 điểm/câu" cho
+    // một hồ sơ chưa từng hỏi gia sư AI lần nào. Con số đó không đến từ bất kỳ phép đo nào.
     const overallTeachingEffectiveness = totalInteractions > 0
       ? parseFloat(((totalScoreSum / totalInteractions) * 100).toFixed(1))
-      : 85.0;
+      : 0;
 
     const averageMasteryGrowth = totalInteractions > 0
       ? parseFloat((totalMasteryGainSum / totalInteractions).toFixed(1))
-      : 5.5;
+      : 0;
 
     // 2. Strategy Effectiveness Analysis
     const strategyStatsList = Object.values(strategyStatsMap);
@@ -156,16 +168,53 @@ export const teachingAnalytics = {
     const allConfidenceVals = Object.values(studentModel.confidenceHistory).flat();
     const averageConfidence = allConfidenceVals.length > 0
       ? parseFloat((allConfidenceVals.reduce((a, b) => a + b, 0) / allConfidenceVals.length).toFixed(2))
-      : 0.82;
+      : 0;
 
-    const learningVelocity = parseFloat((studentModel.adaptiveMemory.learningVelocity || 2.5).toFixed(1));
-    const averageRecoveryTime = 1.4; // average attempts to recover
+    const learningVelocity = parseFloat((studentModel.adaptiveMemory.learningVelocity || 0).toFixed(1));
+
+    // Ba con số dưới đây trước kia là hằng số viết thẳng trong mã (1,4 và 1,4), hiển thị như
+    // thể đo được từ quá trình học của người dùng. Nay tính từ chính lịch sử chấm của gia sư,
+    // và bằng 0 khi chưa có lượt nào.
+    //
+    // Số lượt cần để gỡ một khái niệm: đếm lượt cho tới khi khái niệm đó lần đầu được chấm đạt.
+    const lanTheoKhaiNiem = new Map<string, number>();
+    const daGoXong = new Set<string>();
+    const soLuotDeGo: number[] = [];
+    [...evalHistory].reverse().forEach(ev => {
+      const ten = ev.conceptName;
+      const dem = (lanTheoKhaiNiem.get(ten) || 0) + 1;
+      lanTheoKhaiNiem.set(ten, dem);
+      if ((ev.teachingWorked || ev.misconceptionResolved) && !daGoXong.has(ten)) {
+        soLuotDeGo.push(dem);
+        daGoXong.add(ten);
+      }
+    });
+    const averageRecoveryTime = soLuotDeGo.length > 0
+      ? parseFloat((soLuotDeGo.reduce((a, b) => a + b, 0) / soLuotDeGo.length).toFixed(1))
+      : 0;
+
+    // Bước tiến trên thang Bloom: chênh lệch bậc giữa lượt đầu và lượt cuối của mỗi khái niệm.
+    const BAC: Record<string, number> = { Remember: 1, Understand: 2, Apply: 3, Analyze: 4, Evaluate: 5, Create: 6 };
+    const dauCuoi = new Map<string, { dau: number; cuoi: number }>();
+    [...evalHistory].reverse().forEach(ev => {
+      const b = BAC[String(ev.bloomLevel)] || 0;
+      if (b === 0) return;
+      const cu = dauCuoi.get(ev.conceptName);
+      if (!cu) dauCuoi.set(ev.conceptName, { dau: b, cuoi: b });
+      else cu.cuoi = b;
+    });
+    const buocBloom = [...dauCuoi.values()].map(v => v.cuoi - v.dau);
+    const averageBloomProgression = buocBloom.length > 0
+      ? parseFloat((buocBloom.reduce((a, b) => a + b, 0) / buocBloom.length).toFixed(1))
+      : 0;
+
     const teachingEfficiency = parseFloat((overallTeachingEffectiveness / 1.2).toFixed(1));
 
     return {
+      totalInteractions,
       overallTeachingEffectiveness,
       averageMasteryGrowth,
-      averageBloomProgression: 1.4,
+      averageBloomProgression,
       mostEffectiveTeachingStyle: mostEffectiveStyle,
       leastEffectiveTeachingStyle: leastEffectiveStyle,
       hardestConcepts,

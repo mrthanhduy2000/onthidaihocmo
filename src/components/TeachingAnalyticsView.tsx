@@ -68,12 +68,22 @@ export default function TeachingAnalyticsView() {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-text-primary">{report.overallTeachingEffectiveness}%</span>
-            <span className="text-xs font-medium text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-              +{report.averageMasteryGrowth} điểm/câu
-            </span>
+            {report.totalInteractions > 0 ? (
+              <>
+                <span className="text-2xl font-bold text-text-primary">{report.overallTeachingEffectiveness}%</span>
+                <span className="text-xs font-medium text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                  +{report.averageMasteryGrowth} điểm/câu
+                </span>
+              </>
+            ) : (
+              <span className="text-lg font-semibold text-text-muted">Chưa đủ dữ liệu</span>
+            )}
           </div>
-          <p className="text-xs text-text-muted">Đo lường mức độ tiếp thu khái niệm sau giải thích</p>
+          <p className="text-xs text-text-muted">
+            {report.totalInteractions > 0
+              ? `Đo lường mức độ tiếp thu khái niệm sau giải thích, trên ${report.totalInteractions} lượt hỏi gia sư AI`
+              : "Hãy hỏi gia sư AI vài lần để bảng này có căn cứ mà đo"}
+          </p>
         </div>
 
         {/* Metric 2 */}

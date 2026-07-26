@@ -667,7 +667,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
             <h3 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-info" />
-              Kịch bản Giả định (What-if Scenarios)
+              Kịch bản giả định
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

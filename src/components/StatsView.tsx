@@ -199,6 +199,30 @@ export default function StatsView() {
   ).length;
   const progressPercent = wrongQuestionIds.length > 0 ? Math.round((reviewedWrongCount / wrongQuestionIds.length) * 100) : 0;
 
+  // Ba con số cho khối "Bạn tiến bộ gì / yếu gì / nên làm gì", tính THẬT thay vì viết cứng.
+  //
+  // Bản cũ có ba chỗ sai cùng một khối:
+  //   1. Gọi `stats.totalCorrect` là "khái niệm đã đắc thụ". Đó là SỐ CÂU trả lời đúng, không
+  //      phải số khái niệm. Làm đúng 40 câu về cùng một khái niệm không phải là thạo 40 khái niệm.
+  //   2. Lấy `totalSolved / tổng số câu` làm "độ bao phủ tri thức". `totalSolved` đếm lượt làm,
+  //      nên làm lại nhiều lần là con số vượt quá 100%.
+  //   3. Hứa "tăng Retention từ 63% lên 89%" bằng hai số viết cứng, giống nhau với mọi người học,
+  //      kể cả người chưa làm câu nào. Kèm theo là chữ tiếng Anh trong giao diện tiếng Việt.
+  const soKhaiNiemThao = Object.values<number>(stats.conceptMastery || {}).filter(v => v >= 70).length;
+  const idDaLam = new Set<number>();
+  dbService.getHistory().forEach(a => (a.questions || []).forEach(id => idDaLam.add(id)));
+  const doBaoPhu = questions.length > 0
+    ? Math.min(100, Math.round((idDaLam.size / questions.length) * 100))
+    : 0;
+  const chuongChuaLam = chapters.filter(c => !(stats.accuracyByChapter?.[c.id]?.total));
+  const viecNenLamTiep = wrongQuestionIds.length > 0
+    ? `Dứt điểm ${wrongQuestionIds.length} câu trong sổ tay câu sai trước, đó là chỗ mất điểm chắc chắn nhất.`
+    : chuongChuaLam.length > 0
+      ? `Mở bài tập ${chuongChuaLam[0].title} để phủ nốt ${chuongChuaLam.length} chương chưa từng luyện.`
+      : idDaLam.size < questions.length
+        ? `Luyện tiếp ${questions.length - idDaLam.size} câu chưa gặp lần nào để phủ kín ngân hàng.`
+        : "Đã phủ hết ngân hàng câu hỏi và sổ tay đang sạch. Chuyển sang thi thử để rèn phản xạ thời gian.";
+
   const filteredWrongQuestions = questions.filter(q => {
     if (!wrongQuestionIds.includes(q.id)) return false;
     
@@ -244,7 +268,7 @@ export default function StatsView() {
             1. Bạn tiến bộ gì?
           </div>
           <p className="text-xs text-text-muted leading-relaxed">
-            Đã đắc thụ <strong className="text-text-primary font-medium">{stats.totalCorrect} khái niệm</strong> cốt lõi. Độ bao phủ tri thức đạt {Math.round((stats.totalSolved / questions.length) * 100)}%.
+            Đã thạo <strong className="text-text-primary font-medium">{soKhaiNiemThao} khái niệm</strong> ở mức từ 70% trở lên. Đã chạm <strong className="text-text-primary font-medium">{idDaLam.size}/{questions.length} câu</strong> trong ngân hàng, tức {doBaoPhu}% độ phủ.
           </p>
         </div>
 
@@ -265,7 +289,7 @@ export default function StatsView() {
               3. Bạn nên làm gì tiếp?
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
-              Thực hiện phiên rèn luyện Adaptive AI 15 câu để tăng Retention từ 63% lên 89%.
+              {viecNenLamTiep}
             </p>
           </div>
         </div>

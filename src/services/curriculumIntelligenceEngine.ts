@@ -425,7 +425,24 @@ export const curriculumIntelligenceEngine = {
       currentStage: stage,
       nextStage,
       recommendedConcepts: studyDebt.slice(0, 3).map(d => d.concept),
-      recommendedChapters: [1, 2, 3],
+      // Chương nên học tiếp phải suy ra từ độ thạo ĐO ĐƯỢC, không phải danh sách viết cứng.
+      //
+      // Bản cũ ghi thẳng `[1, 2, 3]`. Mà `CurriculumDashboard` dùng `recommendedChapters[0]` để
+      // sinh đề khi người học bấm nút gợi ý, nên nút đó LUÔN sinh đề Chương 1, dù người học
+      // đang yếu ở chương nào. Một nút mang danh "gợi ý thông minh" mà làm đúng một việc cố định.
+      //
+      // Thứ tự: chương đã làm mà còn yếu xếp trước (cần chữa gấp), rồi tới chương chưa mở ra
+      // lần nào (cần phủ), cuối cùng mới tới chương đã kha khá. Hòa nhau thì so số hiệu chương
+      // để kết quả tất định (bất biến 4.7).
+      recommendedChapters: [...chapterStatuses]
+        .filter(c => c.status !== "COMPLETED" && c.status !== "LOCKED")
+        .sort((a, b) => {
+          const chuaLamA = a.masteryScore === 0 ? 1 : 0;
+          const chuaLamB = b.masteryScore === 0 ? 1 : 0;
+          return chuaLamA - chuaLamB || a.masteryScore - b.masteryScore || a.chapterId - b.chapterId;
+        })
+        .slice(0, 3)
+        .map(c => c.chapterId),
       recommendedExamType,
       estimatedStudyTime: stage === "FINAL_REVIEW" ? 35 : 20,
       expectedRetentionGain: 15,

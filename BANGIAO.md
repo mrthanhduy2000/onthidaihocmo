@@ -59,6 +59,51 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Quét rộng tìm "chỉ số hằng số trá hình", ra thêm sáu con số bịa
+
+**Objective**: đem đúng nguyên tắc vừa rút ra ở lượt trước (mục 4.9b trong AGENTS.md) áp ở quy
+mô lớn, thay vì soi từng engine một.
+
+**Cách làm, có thể tái sử dụng**: cho engine chạy trên **5 hồ sơ học khác hẳn nhau** (làm đúng
+0%, 25%, 50%, 75%, 100%), trải phẳng toàn bộ đầu ra thành cặp đường-dẫn/giá-trị, rồi đếm xem
+trường nào **không bao giờ đổi**. Trường số mà đứng yên qua cả năm hồ sơ thì gần như chắc chắn
+là hằng số viết cứng đội lốt kết quả đo.
+
+**Đọc kết quả quét phải tỉnh táo, không phải hằng số nào cũng là lỗi.** Chỉ số về NGÂN HÀNG CÂU
+HỎI (độ phủ, cân bằng Bloom của ngân hàng, nợ kỹ thuật) đứng yên khi đổi hồ sơ người học là
+ĐÚNG, vì ngân hàng có đổi đâu. Tôi suýt báo nhầm bốn chỉ số của Đài quan sát vì lý do này. Chỉ
+những chỉ số nói về NGƯỜI HỌC mà đứng yên mới là lỗi.
+
+**Sáu con số bịa tìm được, tất cả đều đang hiển thị**:
+
+| Chỗ | Bịa cái gì |
+|---|---|
+| `teachingAnalytics` | Hồ sơ chưa từng hỏi gia sư AI vẫn được báo "Hiệu quả Giảng dạy 85%, +5,5 điểm/câu" |
+| `teachingAnalytics` | `averageBloomProgression` và `averageRecoveryTime` là hằng số 1,4 viết thẳng trong mã |
+| `learnerModel` | Mô hình người học khởi tạo `learningVelocity: 2.5`, số này chảy ra ô "Tốc độ Học tập" |
+| `examQualityReport` | Chia độ phủ chương cho hằng số 6 kèm chú thích "assuming 6 standard chapters", môn đang học có 7 chương nên đề phủ đủ bị báo **117%** |
+| `curriculumIntelligenceEngine` | `recommendedChapters: [1, 2, 3]` viết cứng, mà `CurriculumDashboard` dùng phần tử đầu để sinh đề, nên nút gợi ý LUÔN sinh đề Chương 1 |
+| `StatsView` | Hứa "tăng Retention từ 63% lên 89%" bằng hai số viết cứng, giống hệt nhau với mọi người học |
+
+**Ca cuối cùng không do bộ quét tìm ra, mà do mở màn hình xem.** Sau khi sửa xong năm ca trên,
+tôi mở màn Báo cáo trên trình duyệt và đọc thấy dòng "tăng Retention từ 63% lên 89%" trên một
+hồ sơ 0% độ phủ. Cùng khối đó còn hai lỗi nữa: gọi `stats.totalCorrect` (số CÂU đúng) là "khái
+niệm đã đắc thụ", và lấy `totalSolved / tổng số câu` làm độ bao phủ, mà `totalSolved` đếm lượt
+làm nên làm lại nhiều lần là vượt quá 100%. Đây là lần thứ hai trong ngày một lỗi chỉ lộ ra khi
+nhìn màn hình. **Kết luận: bộ quét và con mắt bắt được hai loại lỗi khác nhau, cần cả hai.**
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, 92 phép kiểm. Thêm nhóm **M** (5 phép). Đã mở
+`npm run dev` và đọc lại màn Báo cáo: nay hiện "Đã thạo 0 khái niệm ở mức từ 70% trở lên. Đã
+chạm 0/292 câu trong ngân hàng, tức 0% độ phủ", và lời khuyên đổi thành "Mở bài tập Chương 1
+để phủ nốt 7 chương chưa từng luyện", suy từ dữ liệu thật.
+
+**Còn nợ**: `getCurriculumPlan` vẫn còn `estimatedStudyTime = 20`, `expectedRetentionGain = 15`
+và bộ `weeklyPlan` chỉ đổi theo giai đoạn chứ không theo người học. Những số này là **chỉ tiêu
+kế hoạch** chứ không phải kết quả đo, nên mức độ sai lệch nhẹ hơn hẳn sáu ca trên, nhưng
+`expectedRetentionGain` vẫn đang là một lời hứa không có căn cứ. Đáng làm ở lượt sau.
+
+---
+
 ### 27/07/2026 — Gỡ mã môn học cắm cứng ở ba chỗ chỉ sai khi có từ hai môn trở lên
 
 **Objective**: Đàm xác nhận đây là trung tâm luyện thi **đa môn** và sẽ còn nạp thêm nhiều môn.

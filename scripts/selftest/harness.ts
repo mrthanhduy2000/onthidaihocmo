@@ -30,6 +30,8 @@ import { kbService } from "../../src/services/kbService";
 import { learnerModelService } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
+import { teachingAnalytics } from "../../src/services/teachingAnalytics";
+import { examQualityReportService } from "../../src/services/examQualityReport";
 import { Question } from "../../src/types";
 
 type Result = { group: string; name: string; ok: boolean; detail: string };
@@ -1035,6 +1037,65 @@ dbService.setActiveSubjectId(monCu);
 loadSubject(monCu);
 [`poly_econ_custom_chapters_${monThuL}`, `poly_econ_custom_topics_${monThuL}`, `poly_econ_custom_questions_${monThuL}`]
   .forEach(k => localStorage.removeItem(k));
+
+// ===========================================================================
+g("M. Chỉ số hằng số trá hình");
+// ===========================================================================
+// Nhóm này sinh ra ngày 27/07/2026 từ một phép quét rộng: cho engine chạy trên 5 hồ sơ học
+// khác hẳn nhau (làm đúng 0%, 25%, 50%, 75%, 100%) rồi đếm xem đầu ra nào KHÔNG BAO GIỜ đổi.
+// Cách này tìm ra bốn con số được trình bày như kết quả đo nhưng thực chất viết cứng.
+//
+// Lưu ý khi đọc kết quả quét: KHÔNG phải hằng số nào cũng là lỗi. Chỉ số về NGÂN HÀNG CÂU HỎI
+// (độ phủ, cân bằng Bloom của ngân hàng, nợ kỹ thuật) đứng yên khi đổi hồ sơ người học là
+// ĐÚNG, vì ngân hàng có đổi đâu. Chỉ những chỉ số về NGƯỜI HỌC mà đứng yên mới là lỗi.
+
+// --- M1. Báo cáo giảng dạy không được khoe số khi chưa có lượt nào ---
+// Bản cũ trả về hiệu quả giảng dạy 85,0% và mức tăng thông thạo +5,5 điểm/câu cho hồ sơ chưa
+// từng hỏi gia sư AI lần nào. Con số đó không đến từ phép đo nào cả.
+localStorage.removeItem("poly_econ_pedagogical_evaluations");
+const baoCaoDay = teachingAnalytics.generateAnalyticsReport();
+check("Chưa hỏi gia sư lần nào thì báo cáo giảng dạy trả 0",
+  baoCaoDay.totalInteractions === 0 &&
+  baoCaoDay.overallTeachingEffectiveness === 0 &&
+  baoCaoDay.averageMasteryGrowth === 0 &&
+  baoCaoDay.averageBloomProgression === 0 &&
+  baoCaoDay.averageRecoveryTime === 0,
+  `hiệu quả ${baoCaoDay.overallTeachingEffectiveness}%, tăng thông thạo ${baoCaoDay.averageMasteryGrowth}, bước Bloom ${baoCaoDay.averageBloomProgression}, số lượt gỡ ${baoCaoDay.averageRecoveryTime}`);
+
+check("Tốc độ học của hồ sơ chưa học gì phải bằng 0", baoCaoDay.learningVelocity === 0,
+  `đo được ${baoCaoDay.learningVelocity}, bản cũ luôn cho 2,5 vì mô hình người học khởi tạo sẵn con số đó`);
+
+// --- M2. Độ phủ chương của một đề không được vượt quá 100% ---
+// Bản cũ chia cho hằng số 6 kèm chú thích "assuming 6 standard chapters", trong khi môn đang
+// học có 7 chương, nên đề phủ đủ cả 7 chương bị báo là 117%.
+const deDayDuChuong = chapters.map(c => questions.find(q => q.chapterId === c.id)).filter(Boolean) as Question[];
+const baoCaoDe = examQualityReportService.generateReport(deDayDuChuong, "KIEM-M2");
+check("Độ phủ chương của đề không vượt quá 100%",
+  baoCaoDe.chapterCoveragePct === 100,
+  `đề chạm đủ ${chapters.length}/${chapters.length} chương, báo cáo nói ${baoCaoDe.chapterCoveragePct}%`);
+
+// --- M3. Chương được gợi ý phải bám độ thạo đo được ---
+// Bản cũ ghi thẳng [1, 2, 3], mà CurriculumDashboard dùng phần tử đầu để sinh đề, nên nút gợi ý
+// LUÔN sinh đề Chương 1 dù người học yếu ở chương nào.
+playAndForecast(0.6, 5);
+const statsM = dbService.getStatistics();
+const chuongYeuNhat = chapters[chapters.length - 1].id;
+statsM.accuracyByChapter = {} as any;
+chapters.forEach(c => { statsM.accuracyByChapter[c.id] = { correct: 9, total: 10 }; });
+statsM.accuracyByChapter[chuongYeuNhat] = { correct: 1, total: 10 };
+dbService.saveStatistics(statsM);
+const goiYChuong = curriculumIntelligenceEngine.getCurriculumPlan().recommendedChapters;
+check("Chương gợi ý bám đúng chương yếu nhất",
+  goiYChuong[0] === chuongYeuNhat,
+  `chương ${chuongYeuNhat} chỉ đúng 1/10 câu còn các chương khác 9/10, engine gợi ý: ${goiYChuong.join(", ")}`);
+
+// Gọi lại phải ra đúng thứ tự cũ (bất biến 4.7).
+const goiYLanHai = curriculumIntelligenceEngine.getCurriculumPlan().recommendedChapters;
+check("Danh sách chương gợi ý tái lập được",
+  goiYChuong.join(",") === goiYLanHai.join(","),
+  `hai lần gọi: [${goiYChuong.join(", ")}] và [${goiYLanHai.join(", ")}]`);
+
+dbService.clearAllHistory();
 
 // ===========================================================================
 // Kết quả

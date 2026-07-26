@@ -5,6 +5,7 @@
 
 import { Question, ExamSpecification, ExamAttempt } from "../types";
 import { contentQualityAssurance, QuestionQualityProfile } from "./contentQualityAssurance";
+import { chapters } from "./db";
 
 export interface AcademicRiskCallout {
   level: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
@@ -102,7 +103,11 @@ export const examQualityReportService = {
 
     // 4. Balance Scores & Reliability
     const uniqueChaptersCount = Object.keys(chapterCounts).length;
-    const chapterCoveragePct = Math.round((uniqueChaptersCount / 6) * 100); // assuming 6 standard chapters
+    // Mẫu số phải là SỐ CHƯƠNG THẬT của môn đang mở. Bản cũ chia cho 6 kèm chú thích "assuming
+    // 6 standard chapters", trong khi môn đang học có 7 chương, nên một đề phủ đủ cả 7 chương
+    // được báo là **117% độ phủ**. Sang môn khác thì con số còn lệch tùy tiện hơn nữa.
+    const tongSoChuong = Math.max(1, chapters.length);
+    const chapterCoveragePct = Math.min(100, Math.round((uniqueChaptersCount / tongSoChuong) * 100));
     const chapterBalanceScore = Math.min(100, Math.round(chapterCoveragePct * 0.9 + (uniqueChaptersCount > 2 ? 10 : 0)));
 
     const conceptBalanceScore = Math.min(100, Math.round((conceptSet.size / Math.max(1, questions.length * 0.7)) * 100));
