@@ -1,7 +1,13 @@
 # Hướng dẫn cho Claude Code trong dự án này
 
-**Đọc [AGENTS.md](AGENTS.md) trước khi sửa bất cứ thứ gì.** File đó chứa bản đồ mã nguồn,
-các bất biến không được phá, và những cái bẫy đã từng làm hỏng bản deploy.
+**Đọc [WORKSTATE.md](WORKSTATE.md) trước tiên** để biết dự án đang dở việc gì, rồi đọc
+[AGENTS.md](AGENTS.md) để nắm bản đồ mã nguồn, các bất biến không được phá, và những cái bẫy
+đã từng làm hỏng bản deploy.
+
+Ba file nói ba việc khác nhau, đừng nhầm:
+- `WORKSTATE.md`: đang làm tới đâu, còn nợ gì, bước tiếp theo là gì
+- `AGENTS.md`: quy tắc kỹ thuật, bất biến, bẫy
+- `BANGIAO.md`: lịch sử quyết định, vì sao từng chọn như vậy
 
 Ba điều cần nhớ ngay:
 

@@ -1,7 +1,10 @@
-# AGENTS.md, đọc file này trước khi sửa bất cứ thứ gì
+# AGENTS.md, quy tắc kỹ thuật của dự án
 
 Tài liệu dành cho AI (hoặc lập trình viên) mới vào dự án. Mục tiêu: sửa được và **tự kiểm chứng được**
 mà không cần hỏi chủ dự án, không cần đăng nhập, không cần khóa API.
+
+**Trước file này, hãy đọc [WORKSTATE.md](WORKSTATE.md)** để biết dự án đang dở việc gì và bước
+tiếp theo là gì. File AGENTS.md chỉ nói quy tắc kỹ thuật, không nói trạng thái công việc.
 
 Mọi con số trong file này đều đo bằng `npm run check` tại thời điểm 26/07/2026, không phải ước lượng.
 

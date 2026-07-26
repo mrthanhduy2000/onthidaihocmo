@@ -45,6 +45,40 @@ sao, và còn nợ gì.
 
 ---
 
+### 26/07/2026 — Khảo sát toàn dự án và lập WORKSTATE.md
+
+**Mục tiêu**: khôi phục và ghi lại chính xác trạng thái dự án theo giao thức tiếp nối, để phiên
+sau không phải dò lại từ đầu. Không sửa một dòng mã nguồn nào.
+
+**Vấn đề**: dự án đã qua nhiều giai đoạn, tài liệu nhiều nhưng phần lớn lạc hậu, và không có
+chỗ nào ghi "đang làm tới đâu". BANGIAO ghi lịch sử, AGENTS ghi quy tắc, nhưng thiếu ảnh chụp
+trạng thái hiện tại.
+
+**Quyết định**: tách vai trò ba file thay vì nhồi thêm vào file cũ. `WORKSTATE.md` giữ trạng
+thái sống, `AGENTS.md` giữ quy tắc kỹ thuật, `BANGIAO.md` giữ lịch sử quyết định. Đã nối tham
+chiếu chéo trong CLAUDE.md và AGENTS.md để AI sau không bỏ sót file mới.
+
+**Đã khảo sát và ghi nhận** (không xử lý, đúng nguyên tắc không tự mở rộng phạm vi):
+
+- **0 dấu vết TODO/FIXME/HACK/TEMP** trong toàn bộ mã nguồn, không có việc dở dang.
+- **Khoảng 1.180 dòng mã chết**: 2 service mồ côi (`importPipeline`, `validation`), 3 component
+  không được render (`AssessmentDesignDashboard`, `Dashboard2Widgets`, `DashboardClock`).
+  Đã kiểm chứng bằng cách dò tham chiếu trên cả 100 file, không có nạp động.
+- **8 engine trong `evidencePipeline.ts` (839 dòng) chưa bao giờ được đấu nối**, bên ngoài chỉ
+  dùng đúng hai kiểu dữ liệu. Nhiều khả năng là một tầng kiến trúc dựng sẵn rồi bỏ dở.
+- **Ngưỡng cứng còn dày** ở `examForecaster` (34) và `productObservabilityService` (39), cùng
+  loại khiếm khuyết đã sửa ở các engine khác nhưng chưa rà tới.
+- **Xác nhận không còn `Math.random` trong hàm so sánh** nào trên toàn dự án.
+
+**Bài học phương pháp**: trong lúc khảo sát, phép tìm bằng shell cho ra kết quả sai hoàn toàn
+do vấn đề dấu nháy trong zsh, suýt nữa ghi 46 service đều mồ côi vào tài liệu. Với những phép
+đếm mà kết quả sẽ đi vào tài liệu, **hãy viết script Node đàng hoàng thay vì ghép lệnh shell**,
+và luôn kiểm chứng ngược một vài trường hợp đã biết chắc trước khi tin con số.
+
+**Kiểm chứng**: `npm run check` đạt toàn bộ 5 chặng.
+
+---
+
 ### 26/07/2026 — `f58a0a2` — Tối ưu suy luận toàn bộ tầng engine
 
 **Đã làm**: rà soát 46 service, tìm và sửa các khiếm khuyết thuật toán. Không thêm tính năng
