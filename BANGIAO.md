@@ -101,7 +101,13 @@ lại ở mọi cổng mới.
 **Nghiệm thu trên bản deploy sau khi push** (không suy đoán từ mã nguồn): câu id 2001 và 3279
 trả HTTP 200 với `offlineMode: false`, lời giải dài 2769 và 3297 ký tự, không chứa dấu hiệu
 ngoại tuyến. Câu id 999 và 2050 trả 404 đúng, vì hai id đó thật sự không có trong ngân hàng.
-Đây là lần đầu tiên chức năng gia sư AI chạy thật trên bản deploy.
+Nói cho chính xác: chức năng này **từng chạy được** ở thời kỳ môn Kinh tế chính trị còn mở, vì
+khi đó ngân hàng mà handler tra và ngân hàng mà pipeline đọc tình cờ là một. Nó chết đúng lúc
+đổi sang môn Hành vi khách hàng, và không ai thấy vì lỗi 401 che mất. Đây là lần đầu nó chạy
+được với môn đang học.
+
+Đã kiểm luôn `/api/ai/generate` bằng một đoạn tài liệu thật: HTTP 200, sinh đúng 2 câu hỏi, mỗi
+câu đủ 4 phương án, có đáp án, có giải thích, gán đúng chương 1 theo yêu cầu.
 
 **Còn nợ**: `/api/ai/generate` trả 400 khi thiếu trường `text` là hành vi ĐÚNG, đã kiểm lại mã
 nguồn, không phải lỗi. Nhưng còn một giới hạn thật chưa xử lý: máy chủ luôn nạp môn dựng sẵn
