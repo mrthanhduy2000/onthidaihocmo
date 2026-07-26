@@ -45,6 +45,88 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Nâng cấp bộ dự báo điểm thi
+
+**Objective**: rà soát và nâng trí thông minh của `examForecaster.ts` (984 dòng), engine chưa
+được đụng tới trong đợt tối ưu trước. Không thêm tính năng, giao diện, service hay engine nào.
+
+**Problem** (đo trên engine thật, không suy đoán): bộ dự báo **hạ điểm người học một cách hệ
+thống**, và mức hạ càng lớn khi người học càng giỏi.
+
+| Tỷ lệ đúng thật | Dự báo cũ | Lệch |
+|---|---|---|
+| 20% | 1,4 | -0,6 |
+| 60% | 4,5 | -1,5 |
+| 80% | 6,0 | **-2,0** |
+| 100% | 8,1 | -1,9 |
+
+Ba khoản cắt chồng lên nhau trong công thức độ thạo ổn định:
+
+1. **Trọng số chỉ cộng lại 0,80** (`mastery*0.50 + accuracy*0.30`), tạo khoản cắt 20% âm thầm.
+2. **`consistencyFactor` luôn rơi về sàn 0,4**. Nó lọc câu hỏi bằng
+   `q.concept === key || q.topicId === key`, nhưng `q.concept` là chuỗi tự do kiểu "Khái niệm
+   hành vi khách hàng" còn `key` là "CB_C1_N1". Đo được **0 trên 277 giá trị khớp nhau**.
+3. **`streakRetention` sàn 0,75**: người chưa có chuỗi ngày học nào bị cắt thẳng 25% năng lực,
+   kể cả khi vừa làm đúng 95% số câu.
+
+Kết quả: một người học **hoàn hảo** chỉ đạt **24/100** ở thành phần được đánh trọng số cao nhất.
+
+Hai lỗi độc lập khác:
+
+4. **Bảng tiên quyết là đồ trang trí**: `PREREQUISITE_MAP` viết cứng với khóa `GiaCanBang`,
+   `PricingStrategy`, `ThiTruongDocQuyen`, tức khái niệm **kinh tế vi mô** còn sót từ môn khác.
+   Đo được 0 khóa khớp. Cả tầng lan truyền phụ thuộc và vector `dependencyUncertainty` chưa
+   từng chạy.
+5. **Điểm dự báo tự tăng theo số lần mở màn hình**. Bộ lọc trơn trộn 35% giá trị mới với 65%
+   giá trị đã lưu rồi **ghi đè giá trị đã lưu**. Trên một hồ sơ đứng yên, gọi 6 lần liên tiếp
+   cho ra `3,8 → 5,1 → 6,0 → 6,6 → 7,0 → 7,2`. Con số phụ thuộc vào việc người dùng nhìn bao
+   nhiêu lần, không phụ thuộc vào việc họ học được gì.
+
+**Decision và Reason**:
+
+- Trọng số đổi thành 0,65 và 0,35 để **cộng đúng bằng 1,0**.
+- `consistencyFactor` **bỏ hẳn chứ không sửa**, vì việc cân theo lượng bằng chứng đã được làm
+  đúng một lần tại nguồn trong `recomputeStatistics` (`w = 1 - e^(-n/6)`). Sửa nó thành ra co
+  hai lần, đúng loại lỗi đã gặp ở `learningEngine` đợt trước.
+- `streakRetention` giới hạn trong [0,95; 1,05]: chuỗi ngày học là tín hiệu thật nhưng yếu,
+  được phép nhích nhẹ chứ không định đoạt kết quả.
+- Bảng tiên quyết đọc thẳng `dependencies.requires` từ đồ thị tri thức, dùng dữ liệu đã có sẵn
+  mà trước nay bỏ phí.
+- Bộ lọc trơn **neo theo dấu vân tay dữ liệu**. Dữ liệu chưa đổi thì trả lại đúng giá trị cũ;
+  chỉ khi người học làm thêm bài mới trộn một bước. Giữ nguyên tác dụng chống nhảy số.
+- Khử trùng khóa độ thạo trước khi tính trung bình, vì bảng lưu mỗi khái niệm dưới hai khóa.
+
+**Verification Result** (cùng kịch bản mô phỏng, OLD so với NEW):
+
+| Tỷ lệ đúng | Lệch CŨ | Lệch MỚI |
+|---|---|---|
+| 20% | -0,6 | -0,3 |
+| 40% | -1,2 | -0,6 |
+| 60% | -1,5 | -0,7 |
+| 80% | -2,0 | -0,7 |
+| 100% | -1,9 | -0,5 |
+
+Lệch trung bình giảm từ **1,44 xuống 0,56 điểm**, tức giảm 61%. Lệch không còn phình to theo
+năng lực. Gọi 6 lần liên tiếp nay cho cùng một con số. Thêm 5 phép tự kiểm chứng, tổng 50/50.
+
+**Backward Compatibility**: giữ nguyên chữ ký `calculatePrediction`, giữ nguyên kiểu
+`ExamPrediction`. Khóa lưu trữ đổi từ chuỗi số sang JSON nhưng **có nhánh đọc định dạng cũ**,
+không cần di trú dữ liệu.
+
+**Architecture Impact**: `examForecaster` nay phụ thuộc thêm `kbService` (không tạo vòng lặp
+import). Không đổi Product Flow, giao diện hay API.
+
+**Technical Debt còn lại**: `productObservabilityService.ts` (39 ngưỡng cứng) và
+`curriculumIntelligenceEngine.ts` (18) **chưa rà tới**. Trong `examForecaster` còn các phần ROI,
+what-if, study debt chưa soi kỹ.
+
+**Lessons Learned**: một giả thuyết của tôi sai giữa chừng. Tôi kết luận engine "tất định" sau
+khi gọi ba lần liên tiếp thấy cùng kết quả, nhưng đó là vì đã đo tại điểm hội tụ. Chỉ khi đo
+**sau một thay đổi trạng thái lớn** mới lộ ra hiện tượng trôi giá trị. Bài học: kiểm tính tái
+lập phải đo ngay sau khi dữ liệu vừa đổi, không đo ở trạng thái đứng yên lâu ngày.
+
+---
+
 ### 26/07/2026 — Khảo sát toàn dự án và lập WORKSTATE.md
 
 **Mục tiêu**: khôi phục và ghi lại chính xác trạng thái dự án theo giao thức tiếp nối, để phiên

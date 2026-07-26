@@ -4,6 +4,7 @@
  */
 
 import { dbService, questions, chapters } from "./db";
+import { kbService, KnowledgeNode } from "./kbService";
 import { 
   SubjectGoal, 
   ExamPrediction, 
@@ -34,15 +35,38 @@ import { TimeService } from "./time";
  */
 
 // Prerequisite Knowledge Graph mapping (Concept Prerequisite Relationships)
-const PREREQUISITE_MAP: Record<string, string[]> = {
-  "GiaCanBang": ["CoDiem"],
-  "DoanhThuToiDa": ["DoCoCoSo"],
-  "PricingStrategy": ["DoCoCoSo", "GiaCanBang"],
-  "ChiPhiDaiHan": ["ChiPhiNganHan"],
-  "LoiNhuanToiDa": ["ChiPhiDaiHan", "GiaCanBang"],
-  "ThiTruongDocQuyen": ["LoiNhuanToiDa"],
-  "OligopolyEquilibrium": ["ThiTruongDocQuyen"]
-};
+/**
+ * Quan hệ tiên quyết giữa các khái niệm, LẤY TỪ ĐỒ THỊ TRI THỨC THẬT của môn đang học.
+ *
+ * Trước đây chỗ này là một bảng cứng viết tay với các khóa "GiaCanBang", "PricingStrategy",
+ * "ThiTruongDocQuyen"... tức là khái niệm KINH TẾ VI MÔ còn sót lại từ một môn khác. Môn đang
+ * chạy là Hành vi khách hàng, khóa độ thạo có dạng "CB_C1_N1" hoặc "Hành vi khách hàng
+ * (Consumer Behavior)". Đo thực tế: 0 khóa nào khớp bảng đó. Hệ quả là toàn bộ tầng "lan
+ * truyền phụ thuộc" của bộ dự báo chưa từng kích hoạt một lần nào, và biến
+ * dependencyUncertainty luôn bằng 0 nên một trong bảy vector bất định là đồ trang trí.
+ *
+ * Nay đọc thẳng `dependencies.requires` có sẵn trong đồ thị tri thức. Trả về bảng tra cứu
+ * chấp nhận cả mã lẫn tên khái niệm, vì bảng độ thạo lưu cả hai khóa cho cùng một giá trị.
+ */
+function buildPrerequisiteMap(subjectId: string): Record<string, string[]> {
+  const map: Record<string, string[]> = {};
+  const graph = kbService.getKnowledgeGraph(subjectId);
+  const byKey = new Map<string, KnowledgeNode>();
+  graph.forEach(n => {
+    byKey.set(n.id.toLowerCase(), n);
+    byKey.set(n.concept.toLowerCase(), n);
+  });
+  graph.forEach(node => {
+    const reqs = (node.dependencies?.requires || [])
+      .map(r => byKey.get(String(r).toLowerCase()))
+      .filter((n): n is KnowledgeNode => !!n)
+      .map(n => n.concept);
+    if (reqs.length === 0) return;
+    map[node.id] = reqs;
+    map[node.concept] = reqs;
+  });
+  return map;
+}
 
 // Ánh xạ tên giai đoạn ôn tập (khóa nội bộ tiếng Anh) sang nhãn hiển thị tiếng Việt cho người học.
 const STAGE_LABEL_VN: Record<string, string> = {
@@ -246,28 +270,46 @@ export const examForecaster = {
     // LAYER 1: Dependency Propagation & Stable Mastery
     // -------------------------------------------------------------
     const conceptMasteries = stats.conceptMastery || {};
-    const conceptKeys = Object.keys(conceptMasteries);
-    const totalConcepts = Math.max(1, conceptKeys.length);
+    const prerequisiteMap = buildPrerequisiteMap(activeSub);
+
+    // Bảng độ thạo lưu CÙNG MỘT giá trị dưới hai khóa (mã và tên khái niệm), nên duyệt thẳng
+    // Object.keys sẽ đếm mỗi khái niệm hai lần. Gom về danh sách khái niệm duy nhất trước.
+    const graphNodes = kbService.getKnowledgeGraph(activeSub);
+    const uniqueConcepts: Array<{ key: string; mastery: number }> = [];
+    const seenConcept = new Set<string>();
+    graphNodes.forEach(n => {
+      if (seenConcept.has(n.id)) return;
+      seenConcept.add(n.id);
+      const m = conceptMasteries[n.concept] ?? conceptMasteries[n.id];
+      if (m === undefined) return;
+      uniqueConcepts.push({ key: n.concept, mastery: m });
+    });
+    // Môn không có đồ thị tri thức: quay về duyệt khóa thô, vẫn khử trùng theo giá trị khóa.
+    if (uniqueConcepts.length === 0) {
+      Object.keys(conceptMasteries).forEach(k => uniqueConcepts.push({ key: k, mastery: conceptMasteries[k] || 0 }));
+    }
+
+    const totalConcepts = Math.max(1, uniqueConcepts.length);
+
+    // Chuỗi ngày học đều là tín hiệu THẬT nhưng YẾU, chỉ được phép nhích nhẹ chứ không định
+    // đoạt kết quả. Bản cũ dùng (0,75 + streak*0,05) nên người chưa có chuỗi ngày nào bị cắt
+    // thẳng 25% năng lực, dù họ có thể vừa làm đúng 95% số câu. Nay giới hạn trong [0,95; 1,05].
+    const streakModifier = Math.min(1.05, 0.95 + Math.min(10, stats.studyStreak || 0) * 0.01);
 
     let sumStableMastery = 0;
     let totalDependencyPenalty = 0;
 
-    conceptKeys.forEach(key => {
-      let rawVal = conceptMasteries[key] || 0;
-
-      // Dependency propagation check
-      const prereqs = PREREQUISITE_MAP[key] || [];
+    uniqueConcepts.forEach(({ key, mastery: rawVal }) => {
+      // Lan truyền phụ thuộc: nền tảng yếu thì làm giảm độ tin cậy của khái niệm xây trên nó.
+      const prereqs = prerequisiteMap[key] || [];
       let prereqDecayMultiplier = 1.0;
-      if (prereqs.length > 0) {
-        prereqs.forEach(prereqKey => {
-          const prereqMastery = conceptMasteries[prereqKey] || 50;
-          if (prereqMastery < 70) {
-            // Prerequisite weakness propagates 20% decay per missing mastery
-            const deficit = (70 - prereqMastery) / 70;
-            prereqDecayMultiplier *= (1.0 - 0.20 * deficit);
-          }
-        });
-      }
+      prereqs.forEach(prereqKey => {
+        const prereqMastery = conceptMasteries[prereqKey] ?? 50;
+        if (prereqMastery < 70) {
+          const deficit = (70 - prereqMastery) / 70;
+          prereqDecayMultiplier *= (1.0 - 0.20 * deficit);
+        }
+      });
 
       if (prereqDecayMultiplier < 1.0) {
         totalDependencyPenalty += (1.0 - prereqDecayMultiplier);
@@ -275,19 +317,26 @@ export const examForecaster = {
 
       const effectiveMastery = rawVal * prereqDecayMultiplier;
 
-      // Question count consistency weight
-      const conceptQs = questions.filter(q => q.concept === key || q.topicId === key || q.learningObjective === key);
-      const totalAttempts = conceptQs.reduce((acc, q) => acc + (stats.incorrectQuestionHistory?.[q.id] ? stats.incorrectQuestionHistory[q.id] + 1 : 1), 0);
-      
-      const consistencyFactor = Math.min(1.0, Math.max(0.4, totalAttempts / 4));
-      const streakRetention = Math.min(1.0, 0.75 + (stats.studyStreak || 0) * 0.05);
-
-      const stableConceptScore = (effectiveMastery * 0.50 + overallAccuracy * 100 * 0.30) * consistencyFactor * streakRetention;
+      // Tổ hợp hai nguồn bằng chứng, TRỌNG SỐ CỘNG LẠI ĐÚNG BẰNG 1,0.
+      //
+      // Bản cũ dùng 0,50 và 0,30, cộng lại chỉ 0,80, tạo ra khoản cắt 20% âm thầm mà không ai
+      // chủ ý. Kèm theo đó là hệ số consistencyFactor tính từ
+      // `questions.filter(q => q.concept === key || q.topicId === key)`, nhưng `q.concept` là
+      // chuỗi tự do kiểu "Khái niệm hành vi khách hàng" còn `key` là "CB_C1_N1", đo thực tế
+      // 0 trên 277 giá trị khớp nhau, nên hệ số đó LUÔN rơi về sàn 0,4. Ba khoản cắt chồng
+      // nhau khiến một người học hoàn hảo chỉ đạt 24/100 ở thành phần quan trọng nhất, tức
+      // dự báo bị kéo xuống một cách hệ thống.
+      //
+      // Hệ số consistencyFactor nay được BỎ HẲN chứ không sửa: việc cân theo lượng bằng chứng
+      // đã được làm đúng một lần tại nguồn trong dbService.recomputeStatistics
+      // (w = 1 - e^(-n/6)). Cân lần nữa ở đây là co hai lần, đúng loại lỗi đã gặp ở
+      // learningEngine.
+      const stableConceptScore = (effectiveMastery * 0.65 + overallAccuracy * 100 * 0.35) * streakModifier;
       sumStableMastery += stableConceptScore;
     });
 
-    const averageStableMastery = conceptKeys.length > 0 
-      ? Math.round(sumStableMastery / totalConcepts) 
+    const averageStableMastery = uniqueConcepts.length > 0
+      ? Math.round(sumStableMastery / totalConcepts)
       : Math.round(overallAccuracy * 100);
 
     const avgDependencyDecay = totalConcepts > 0 ? Math.round((totalDependencyPenalty / totalConcepts) * 100) / 100 : 0;
@@ -317,7 +366,9 @@ export const examForecaster = {
     const totalChapCount = Math.max(1, chapters.length);
     const chapterCoverage = Math.round((attemptedChapters / totalChapCount) * 100);
 
-    const masteredConceptsCount = conceptKeys.filter(k => (conceptMasteries[k] || 0) >= 70).length;
+    // Đếm trên danh sách khái niệm ĐÃ KHỬ TRÙNG. Bản cũ duyệt thẳng khóa của bảng độ thạo,
+    // mà bảng đó lưu mỗi khái niệm dưới hai khóa, nên mẫu số bị nhân đôi.
+    const masteredConceptsCount = uniqueConcepts.filter(c => c.mastery >= 70).length;
     const conceptCoverage = Math.round((masteredConceptsCount / totalConcepts) * 100);
 
     // -------------------------------------------------------------
@@ -421,17 +472,44 @@ export const examForecaster = {
     // -------------------------------------------------------------
     // LAYER 9: Forecast Smoothing & EMA Filter
     // -------------------------------------------------------------
+    // Làm trơn NEO THEO DỮ LIỆU, không neo theo số lần gọi hàm.
+    //
+    // LỖI CỦA BẢN CŨ: mỗi lần gọi đều lấy giá trị đã lưu, trộn 35% giá trị mới với 65% giá trị
+    // cũ, RỒI GHI ĐÈ giá trị đã lưu. Nghĩa là chỉ cần mở lại màn hình nhiều lần là con số tự
+    // bò dần lên, dù người học không làm thêm câu nào. Đo thực tế trên một hồ sơ đứng yên:
+    // gọi 6 lần liên tiếp cho ra 3,8 rồi 5,1 rồi 6,0 rồi 6,6 rồi 7,0 rồi 7,2. Điểm dự báo phụ
+    // thuộc vào SỐ LẦN NGƯỜI DÙNG NHÌN chứ không phụ thuộc vào việc họ học được gì. Điều này
+    // vừa phá tính tái lập, vừa khiến con số hiển thị sai lệch theo hướng lạc quan giả tạo.
+    //
+    // CÁCH SỬA: lưu kèm một dấu vân tay của dữ liệu học. Chỉ khi dấu vân tay ĐỔI, tức là người
+    // học thật sự làm thêm bài, mới trộn một bước làm trơn. Gọi lại với cùng dữ liệu luôn trả
+    // về đúng con số cũ. Vẫn giữ nguyên tác dụng chống nhảy số giữa các phiên học.
     const storageKey = `poly_econ_last_prediction_${activeSub}`;
-    const previousSaved = localStorage.getItem(storageKey);
+    const fingerprint = `${totalSolved}:${totalCorrect}:${history.length}:${goal.targetScore}`;
     let smoothedPrediction = boundedPredicted;
 
-    if (previousSaved && totalSolved > 0) {
-      const prevVal = parseFloat(previousSaved);
-      if (!isNaN(prevVal)) {
-        smoothedPrediction = Math.round((0.35 * boundedPredicted + 0.65 * prevVal) * 10) / 10;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const saved = raw ? JSON.parse(raw) : null;
+      if (saved && typeof saved === "object" && typeof saved.value === "number") {
+        if (saved.fingerprint === fingerprint) {
+          // Dữ liệu chưa đổi: trả lại đúng giá trị đã chốt, không trộn thêm lần nào nữa.
+          smoothedPrediction = saved.value;
+        } else if (totalSolved > 0) {
+          smoothedPrediction = Math.round((0.35 * boundedPredicted + 0.65 * saved.value) * 10) / 10;
+        }
+      } else if (raw && totalSolved > 0) {
+        // Tương thích ngược với định dạng cũ (chỉ là một con số dạng chuỗi).
+        const prevVal = parseFloat(raw);
+        if (!isNaN(prevVal)) {
+          smoothedPrediction = Math.round((0.35 * boundedPredicted + 0.65 * prevVal) * 10) / 10;
+        }
       }
+    } catch {
+      smoothedPrediction = boundedPredicted;
     }
-    localStorage.setItem(storageKey, String(smoothedPrediction));
+
+    localStorage.setItem(storageKey, JSON.stringify({ value: smoothedPrediction, fingerprint }));
 
     const finalPredictedScore = Math.min(10.0, Math.max(1.0, smoothedPrediction));
 

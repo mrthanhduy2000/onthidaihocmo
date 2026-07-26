@@ -21,6 +21,7 @@ import { conceptMemoryService } from "../../src/services/conceptMemoryService";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
 import { kbService } from "../../src/services/kbService";
 import { learnerModelService } from "../../src/services/learnerModel";
+import { examForecaster } from "../../src/services/examForecaster";
 import { Question } from "../../src/types";
 
 type Result = { group: string; name: string; ok: boolean; detail: string };
@@ -498,6 +499,88 @@ learningEngine.scoreQuestions(questions.slice(0, 50));
 const afterKeys = Object.keys(dbService.getStatistics().incorrectQuestionHistory || {}).length;
 check("Chấm ưu tiên không làm thay đổi thống kê học tập", beforeKeys === afterKeys,
   `trước ${beforeKeys}, sau ${afterKeys}`);
+
+// ===========================================================================
+// G. Bộ dự báo điểm thi
+// ===========================================================================
+g("G. Dự báo điểm thi");
+
+const PRED_KEY = `poly_econ_last_prediction_${dbService.getActiveSubjectId()}`;
+
+/** Cho một hồ sơ học giả lập trả lời đúng theo tỷ lệ cho trước, rồi trả về dự báo. */
+function playAndForecast(correctRatio: number, numExams: number) {
+  dbService.clearAllHistory();
+  localStorage.removeItem(PRED_KEY);
+  for (let e = 0; e < numExams; e++) {
+    const exam = aiService.generateExam({ type: "random", count: 20 });
+    exam.answers = {};
+    exam.questions.forEach((id, i) => {
+      const qq = questionMap.get(id);
+      if (!qq) return;
+      const beCorrect = (i / exam.questions.length) < correctRatio;
+      exam.answers[id] = beCorrect ? qq.correctAnswer : LETTERS.find(k => k !== qq.correctAnswer)!;
+    });
+    exam.isSubmitted = true;
+    exam.score = exam.questions.filter(id => questionMap.get(id)?.correctAnswer === exam.answers[id]).length;
+    dbService.saveAttempt(exam);
+  }
+  const st = dbService.getStatistics();
+  const realAccuracy = st.totalSolved > 0 ? st.totalCorrect / st.totalSolved : 0;
+  return { realAccuracy, predicted: examForecaster.calculatePrediction().predictedScore };
+}
+
+// --- G1. Dự báo phải TÁI LẬP khi dữ liệu không đổi ---------------------------
+// Bản cũ trộn 35% giá trị mới với 65% giá trị đã lưu RỒI GHI ĐÈ giá trị đã lưu, nên chỉ cần
+// mở lại màn hình nhiều lần là điểm dự báo tự bò lên. Đo được: 3,8 rồi 5,1 rồi 6,0 rồi 6,6
+// rồi 7,0 rồi 7,2 trên một hồ sơ ĐỨNG YÊN. Điểm phụ thuộc số lần nhìn, không phụ thuộc việc học.
+playAndForecast(0.9, 4);
+const repeated: number[] = [];
+for (let i = 0; i < 6; i++) repeated.push(examForecaster.calculatePrediction().predictedScore);
+check("Dự báo không đổi khi gọi lại với cùng dữ liệu", new Set(repeated).size === 1,
+  `6 lần gọi liên tiếp: ${repeated.join(" -> ")}`);
+
+// --- G2. Dự báo phải ĐƠN ĐIỆU theo năng lực thật -----------------------------
+const curveF = [0.2, 0.4, 0.6, 0.8, 1.0].map(r => playAndForecast(r, 5));
+let monotoneOk = true;
+for (let i = 1; i < curveF.length; i++) {
+  if (curveF[i].predicted <= curveF[i - 1].predicted) monotoneOk = false;
+}
+check("Học tốt hơn thì dự báo phải cao hơn", monotoneOk,
+  curveF.map(c => `${(c.realAccuracy * 100).toFixed(0)}%→${c.predicted.toFixed(1)}`).join("  "));
+
+// --- G3. Sai lệch hệ thống phải nằm trong giới hạn chấp nhận được ------------
+// Dự báo thấp hơn tỷ lệ đúng khi luyện tập là HỢP LÝ (đi thi có áp lực, có quên). Nhưng lệch
+// quá xa thì con số mất ý nghĩa. Bản cũ lệch tới -2,0 điểm ở nhóm học giỏi, và mức lệch càng
+// lớn khi người học càng giỏi, tức là toàn thang điểm bị nén lại chứ không phải thận trọng.
+const errors = curveF.map(c => c.predicted - c.realAccuracy * 10);
+const maxAbsErr = Math.max(...errors.map(Math.abs));
+const meanAbsErr = errors.reduce((a, b) => a + Math.abs(b), 0) / errors.length;
+check("Sai lệch dự báo nằm trong giới hạn", maxAbsErr <= 1.2,
+  `lệch lớn nhất ${maxAbsErr.toFixed(1)} điểm, lệch trung bình ${meanAbsErr.toFixed(2)} điểm`);
+
+// Sai lệch không được PHÌNH TO theo năng lực: đó là dấu hiệu thang điểm bị nén.
+const errLow = Math.abs(errors[0]);
+const errHigh = Math.abs(errors[errors.length - 1]);
+check("Sai lệch không phình to theo năng lực người học", errHigh <= errLow + 0.8,
+  `nhóm yếu lệch ${errLow.toFixed(1)}, nhóm giỏi lệch ${errHigh.toFixed(1)}`);
+
+// --- G4. Tầng lan truyền phụ thuộc phải THẬT SỰ hoạt động --------------------
+// Bản cũ dùng bảng tiên quyết viết tay chứa khái niệm KINH TẾ VI MÔ ("GiaCanBang",
+// "PricingStrategy") còn sót từ môn khác, trong khi môn đang chạy là Hành vi khách hàng.
+// Đo được 0 khóa khớp, nên cả tầng này chưa từng chạy một lần nào.
+const graphForPrereq = kbService.getKnowledgeGraph(dbService.getActiveSubjectId());
+const nodesWithPrereq = graphForPrereq.filter(n => (n.dependencies?.requires || []).length > 0);
+const cmNow = dbService.getStatistics().conceptMastery || {};
+const prereqReachable = nodesWithPrereq.filter(n =>
+  (n.dependencies?.requires || []).some(r => {
+    const target = graphForPrereq.find(x => x.id.toLowerCase() === String(r).toLowerCase() || x.concept.toLowerCase() === String(r).toLowerCase());
+    return target && (cmNow[target.concept] !== undefined || cmNow[target.id] !== undefined);
+  })
+);
+check("Quan hệ tiên quyết tra được về khái niệm có thật", nodesWithPrereq.length === 0 || prereqReachable.length > 0,
+  `${nodesWithPrereq.length} khái niệm có tiên quyết, ${prereqReachable.length} tra được sang khái niệm đang theo dõi`);
+
+info(`Sai lệch dự báo theo từng mức năng lực: ${curveF.map(c => `${(c.realAccuracy * 100).toFixed(0)}%: ${(c.predicted - c.realAccuracy * 10).toFixed(1)}`).join("  |  ")}`);
 
 // ===========================================================================
 // Kết quả

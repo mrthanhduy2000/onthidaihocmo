@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 26/07/2026, sau khi khảo sát lại toàn bộ dự án theo giao thức khôi phục.
+**Cập nhật lần cuối**: 27/07/2026, sau khi nâng cấp bộ dự báo điểm thi.
 
 ---
 
@@ -15,7 +15,7 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở. Dự án ở trạng thái ổn định, chờ yêu cầu mới. |
-| **Current Milestone** | Tối ưu trí thông minh nội tại của tầng engine, **ĐÃ HOÀN THÀNH** |
+| **Current Milestone** | Nâng trí thông minh của bộ dự báo điểm thi, **ĐÃ HOÀN THÀNH** |
 | **Current Phase** | Rảnh, sẵn sàng nhận việc |
 | **Current Task** | Không có |
 | **Completed %** | 100% cho cột mốc gần nhất |
@@ -39,7 +39,7 @@ không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì 
 | Component | 30 file |
 | Service | 46 file |
 | Tổng dòng TypeScript | khoảng 37.400 |
-| Phép tự kiểm chứng | 45, đạt toàn bộ |
+| Phép tự kiểm chứng | 50, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -94,14 +94,14 @@ về hành vi hệ thống. Đây là rủi ro hiểu nhầm, không phải rủ
 `assessmentDesignEngine`, `kbService`, `db`. Hai engine sau vẫn còn nhiều ngưỡng cứng, cùng
 loại khiếm khuyết đã sửa ở nơi khác (bậc nhảy, hằng số ma thuật, chấm tuyến tính):
 
-| Service | Số ngưỡng cứng đếm được |
-|---|---|
-| `productObservabilityService.ts` | 39 |
-| `examForecaster.ts` | 34 |
-| `curriculumIntelligenceEngine.ts` | 18 |
+| Service | Số ngưỡng cứng | Tình trạng |
+|---|---|---|
+| `productObservabilityService.ts` | 39 | **chưa rà** |
+| `curriculumIntelligenceEngine.ts` | 18 | **chưa rà** |
+| `examForecaster.ts` | 34 | đã rà phần lõi dự báo ngày 27/07/2026 |
 
-`examForecaster.ts` (984 dòng) là chỗ đáng rà nhất vì nó dự báo điểm thi và có phần hiệu chỉnh
-sai lệch, đúng loại nơi mà ngưỡng cứng gây kết luận không ổn định.
+Trong `examForecaster`, phần lõi dự báo đã sửa xong (xem BANGIAO.md). Còn các phần **ROI,
+what-if, study debt, stress test chưa soi kỹ**, vẫn nhiều ngưỡng cứng.
 
 ### Nợ 3: Gói giao diện lớn
 
@@ -141,8 +141,8 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
 
 1. Có bật lại AI trên bản chạy thật không, và theo hướng nào trong ba hướng đã nêu?
 2. Có dọn khoảng 1.180 dòng mã chết không? Dọn thì gọn nhưng là thay đổi diện rộng.
-3. Có rà tiếp `examForecaster` và `productObservabilityService` theo cùng cách đã làm với các
-   engine khác không?
+3. Có rà tiếp `productObservabilityService` và `curriculumIntelligenceEngine` theo cùng cách
+   đã làm với các engine khác không?
 
 ---
 
@@ -156,11 +156,13 @@ WORKSTATE.md này.
 
 ## Next Major Step
 
-Ba việc ở mục Open Questions, xếp theo mức đáng làm:
+Xếp theo mức đáng làm:
 
-1. Rà tiếp `examForecaster.ts`, giá trị cao nhất vì nó dự báo điểm thi và đang nhiều ngưỡng cứng
-2. Bật lại AI trên bản chạy thật
-3. Dọn mã chết
+1. Rà `productObservabilityService.ts` (1205 dòng, 39 ngưỡng cứng), engine lớn nhất còn lại
+2. Rà nốt phần ROI, what-if, study debt trong `examForecaster` (phần lõi dự báo đã xong)
+3. Rà `curriculumIntelligenceEngine.ts` (390 dòng, 18 ngưỡng cứng)
+4. Bật lại AI trên bản chạy thật
+5. Dọn mã chết
 
 ---
 
@@ -171,7 +173,7 @@ xác nhận bản triển khai thật đang phục vụ đúng mã nguồn mới
 
 ## Expected Commit Scope
 
-Lần commit tiếp theo dự kiến chỉ gồm file `WORKSTATE.md` này. Không đụng vào mã nguồn.
+Chưa xác định, phụ thuộc việc được giao tiếp theo.
 
 ---
 
@@ -188,3 +190,14 @@ Tóm tắt để không phải đọc lại toàn bộ BANGIAO:
   nguồn, hiện không còn chỗ nào vi phạm.
 - Không phá tương thích ngược: không đổi chữ ký hàm công khai, không đổi cấu trúc lưu trữ,
   không cần di trú dữ liệu.
+
+Bổ sung ngày 27/07/2026 cho bộ dự báo điểm thi:
+
+- **Dự báo tái lập được**: gọi lại với cùng dữ liệu luôn trả về đúng con số cũ. Trước đó con số
+  tự bò lên theo số lần mở màn hình (đo được 3,8 lên 7,2 trên hồ sơ đứng yên).
+- **Hết hạ điểm hệ thống**: lệch trung bình so với năng lực thật giảm từ 1,44 xuống 0,56 điểm,
+  và không còn phình to theo năng lực người học.
+- **Tầng lan truyền phụ thuộc nay chạy thật**, đọc `dependencies.requires` từ đồ thị tri thức
+  thay cho bảng cứng chứa khái niệm kinh tế vi mô của môn khác.
+- Quy tắc chung rút ra: **cân theo lượng bằng chứng chỉ được làm đúng một lần tại nguồn**
+  (`recomputeStatistics`). Mọi engine phía sau đọc thẳng giá trị đó, không co lại lần nữa.
