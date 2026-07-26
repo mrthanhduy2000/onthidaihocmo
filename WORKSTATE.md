@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau ba lượt rà liên tiếp về cùng một họ lỗi.
+**Cập nhật lần cuối**: 27/07/2026, sau lượt nối bốn mạch dữ liệu đang bị bỏ không.
 
 ---
 
@@ -15,17 +15,51 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Truy quét "con số bịa" trên toàn ứng dụng, **ĐÃ HOÀN THÀNH** ba lượt |
-| **Current Phase** | Rảnh, sẵn sàng nhận việc |
-| **Completed %** | 100% phạm vi đã nhận, kiểm chứng cả trong Node lẫn trên trình duyệt |
+| **Current Milestone** | Nối bốn mạch dữ liệu đang bị bỏ không, **ĐÃ HOÀN THÀNH 4/8 nhiệm vụ** được giao |
+| **Current Phase** | Dừng ở ranh giới commit sạch, còn 4 nhiệm vụ chưa làm (xem Next Major Step) |
+| **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Đã triển khai qua ba lượt push: `282a408`, `ab0a041`, `7a83a8d` |
+| **Bản đang chạy thật** | Đã triển khai qua bốn lượt push: `1cb3787`, `c409520`, `9d6eb3a`, `ade2809` |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
 ---
 
-## Ba lượt vừa xong nói về cùng MỘT họ lỗi
+## Lượt mới nhất đổi hướng: nối mạch dữ liệu bị bỏ không
+
+Ba lượt trước hỏi "chỗ nào đang bịa số". Lượt này hỏi câu khác: **ứng dụng đang ghi dữ liệu gì mà
+không engine nào đọc?** Bốn mạch đã nối, mỗi mạch một commit riêng:
+
+| Mạch | Dữ liệu vốn nằm không | Trước | Sau |
+|---|---|---|---|
+| Cảnh báo bẫy hiểu sai (nhóm **N**) | `commonMistakes` và `teaching.misconception`, 16/16 khái niệm | Khi trả lời ĐÚNG, 0/30 câu mẫu có cảnh báo riêng | **30/30**, 15 nội dung khác nhau |
+| Cờ nghi vấn (nhóm **O**) | `attempt.flags`, 0 nơi đọc | `behaviorUncertainty` chỉ là hàm của số câu đã làm | Cùng 80 câu cùng tỷ lệ đúng: **0,240 so với 0,120** tùy chỗ đặt cờ |
+| Nhịp làm bài (nhóm **P**) | `estimatedTime` 292/292 câu, `attempt.timeSpent` | `guessingFrequency` luôn bằng 0 | Nhanh mà đúng **5,0%**, nhanh mà sai **70,0%** |
+| Tiên nghiệm lịch ôn (nhóm **Q**) | `estimatedRetentionDifficulty`, `firstReviewDays` | Mọi khái niệm chưa học đều **6,15 ngày** | **6 giá trị**, dải 4,24 đến 7,82 ngày |
+
+**Nguyên tắc đã dùng, giữ cho lượt sau:**
+
+1. **Đo độ dày dữ liệu TRƯỚC khi viết code.** Dữ liệu rỗng thì dừng và ghi lại, không xây tầng
+   suy luận trên hư không. Cả bốn mạch đều đo trước, và mạch nào cũng có số đo trong BANGIAO.
+2. **Thiếu dữ liệu thì trả "chưa đủ dữ liệu", không trả một con số cho đẹp.** Ba tầng mới đều có
+   cờ `duDuLieu` và có phép kiểm canh đúng trạng thái đó.
+3. **Chỉ một cách co theo lượng bằng chứng trong cả dự án**: `w = 1 - e^(-n/6)`. Cùng hằng số 6 ở
+   `db.recomputeStatistics`, `learnerModelService` và `conceptMemoryService`.
+4. **Chuỗi mẫu sinh tự động KHÔNG phải kiến thức.** Nút tổng hợp của môn tự tạo có đủ trường chữ
+   nhưng chỉ là mẫu ghép tên khái niệm, nên bị loại khỏi mọi chỗ dùng làm bằng chứng học thuật.
+   Cờ nhận dạng là `laNutTongHop`.
+
+**Hai bài học về chính bộ kiểm, đáng đọc:**
+
+- **Một phép kiểm ngừng chạy cũng nguy hiểm như một phép kiểm sai.** Tổng số từng tụt từ 103 xuống
+  102 mà không ai báo gì, vì phép kiểm bất biến 4.1 nằm trong `if` chỉ đúng khi câu đầu tiên của
+  đề tình cờ bị trộn đổi đáp án. Nên **so danh sách TÊN phép kiểm trước và sau mỗi lượt sửa**.
+- **Phép kiểm dựa vào trạng thái tích lũy của cả chuỗi nhóm trước là mong manh.** J5 từng đỏ chỉ
+  vì thành phần đề đổi. Nay nó dựng thẳng hồ sơ đảm bảo phân hóa.
+
+---
+
+## Ba lượt trước đó nói về cùng MỘT họ lỗi
 
 Đáng đọc kỹ, vì đây là họ lỗi phổ biến nhất trong dự án này và gần như chắc chắn còn chỗ chưa
 tìm ra: **trình bày một hằng số viết tay như thể đó là kết quả đo được.**
@@ -59,7 +93,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **92**, chia 13 nhóm A đến M, đạt toàn bộ |
+| Phép tự kiểm chứng | **118**, chia 17 nhóm A đến Q, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -120,7 +154,8 @@ hiểu nhầm, không phải rủi ro chạy sai.
 | Chỗ | Còn gì |
 |---|---|
 | `getCurriculumPlan` | `estimatedStudyTime = 20` và `expectedRetentionGain = 15`, `weeklyPlan` chỉ đổi theo giai đoạn chứ không theo người học |
-| Ngân hàng câu hỏi | Trường `misconception` rỗng **292/292** câu, nên `contextWindowBuilder` luôn gửi cho gia sư AI một câu cảnh báo chung chung |
+| Ngân hàng câu hỏi | Trường `misconception` rỗng **292/292** câu. Từ 27/07/2026 **không còn gây hại**: đã có nguồn thay thế ở tầng khái niệm (nhóm kiểm **N**). Chỉ còn thiếu nếu muốn cảnh báo riêng cho TỪNG CÂU thay vì từng khái niệm |
+| Khối `review` biên soạn tay | `secondReviewDays` và `thirdReviewDays` vẫn chưa ai đọc. Chúng chỉ có nghĩa khi xếp lịch ôn nhiều mốc, mà hiện lịch ôn suy từ một con số độ bền duy nhất |
 | `productObservabilityService` | 39 ngưỡng cứng, đã rà và sửa 3 lỗi nặng, phần ngưỡng thuần túy chưa đụng |
 | `curriculumIntelligenceEngine` | 18 ngưỡng cứng, đã rà và sửa 5 lỗi nặng cộng 1 lỗi ở lượt 3 |
 
@@ -170,8 +205,12 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
 
 1. Có dọn khoảng 1.180 dòng mã chết không? Dọn thì gọn nhưng là thay đổi diện rộng.
 2. Có tách gói giao diện theo màn hình để giảm 1,0 MB không? Xem cảnh báo ở Nợ 3.
-3. Trường `misconception` rỗng toàn tập: có muốn bổ sung dữ liệu thật, hay chấp nhận gia sư AI
-   dùng câu cảnh báo chung?
+3. Trường `misconception` của **từng câu hỏi** vẫn rỗng 292/292. Từ 27/07/2026 gia sư AI đã có
+   cảnh báo bẫy riêng lấy từ tầng KHÁI NIỆM, nên câu hỏi này bớt gấp. Chỉ còn đáng làm nếu chủ dự
+   án muốn cảnh báo riêng cho từng câu chứ không phải từng khái niệm.
+4. Có muốn hiển thị bảy vector bất định của bộ dự báo không? Hiện chúng **không xuất hiện ở màn
+   hình nào**, chỉ chảy vào con số tổng rồi ra biên độ tin cậy. Nếu chủ dự án muốn biết "vì sao dự
+   báo không chắc" thì cần một chỗ hiển thị.
 
 ---
 
@@ -185,20 +224,44 @@ WORKSTATE.md này, rồi push.
 
 ## Next Major Step
 
-Xếp theo mức đáng làm:
+**Bốn nhiệm vụ còn lại trong danh sách tám đã giao**, xếp theo đúng thứ tự chủ dự án đề nghị.
+Cả bốn đều đã được xác minh là mạch dữ liệu có thật, nhưng **vẫn phải đo độ dày trước khi viết
+code**, đúng như bốn mạch vừa làm.
 
-1. **Quét tiếp họ lỗi "con số bịa"** ở các engine chưa soi: `studentEvolutionEngine` (565 dòng),
-   `questionGenerationEngine` (718 dòng), `pedagogicalEvaluationEngine` (344 dòng),
-   `teachingDecisionEngine` (222 dòng). Dùng đúng bộ quét ở AGENTS.md mục 4.9b, và nhớ mở màn
-   hình tương ứng ra xem.
-2. Bổ sung dữ liệu cho trường `misconception` (Nợ 2)
-3. Tách gói giao diện để giảm 1,0 MB (Nợ 3, đọc cảnh báo trước khi làm)
-4. Dọn mã chết (Nợ 1)
+1. **Hiệu ứng vị trí câu trong đề, tức đường cong mỏi mệt.** `attempt.questions` là mảng CÓ THỨ
+   TỰ, `answers` tra theo id, nên tỷ lệ đúng theo vị trí tính được ngay. Nối vào `fatigueTrend`
+   đã có trong `learnerModel`. **Cẩn thận**: phải khử ảnh hưởng của độ khó theo vị trí trước, nếu
+   không sẽ nhầm độ khó thành mỏi mệt.
+2. **Khung giờ học hiệu quả.** `attempt.startTime` là chuỗi ISO đầy đủ trên mọi lượt. Gom theo
+   khung rộng (sáng, chiều, tối, khuya) chứ đừng chia 24 ô, và phải nói rõ số lượt làm căn cứ.
+3. **Rà `studentEvolutionEngine`** (565 dòng, chưa ai soi, có màn hình `LearningEvolutionView`).
+   Dùng bộ quét ở AGENTS.md mục 4.9b. Ba engine chưa soi còn lại không có màn hình riêng nên để
+   sau: `questionGenerationEngine` (718 dòng), `pedagogicalEvaluationEngine` (344),
+   `teachingDecisionEngine` (222).
+4. **Trường `examReviewResult`** được ghi vào mọi lượt ở `ai.ts` nhưng **không nơi nào đọc**. Đọc
+   xem nó chứa gì rồi quyết: nối vào đâu đó, hoặc ghi vào sổ nợ là mã chết.
+
+Tin tốt đã kiểm chứng, khỏi mất công dò lại: **8 khóa localStorage được ghi thì cả 8 đều có nơi
+đọc.** Không có dữ liệu lưu trữ chết ở tầng đó.
+
+Sau đó mới tới các khoản nợ cũ:
+
+5. Tách gói giao diện để giảm 1,0 MB (Nợ 3, đọc cảnh báo trước khi làm)
+6. Dọn mã chết (Nợ 1)
 
 ---
 
 ## Verification Pending
 
-Không có. Ba lượt vừa rồi đều nghiệm thu hai tầng: `npm run check` đủ 6 chặng với 92 phép kiểm,
-**và** mở `npm run dev` soi tận mắt các màn hình bị đụng tới (Kế hoạch học đủ bốn tab, Báo cáo),
-không lỗi nào trên bảng điều khiển trình duyệt.
+Không có. Bốn commit vừa rồi đều nghiệm thu hai tầng: `npm run check` đủ 6 chặng với **118** phép
+kiểm, **và** mở `npm run dev` soi tận mắt màn hình bị đụng tới (bài giảng gia sư AI, Kế hoạch học,
+Phân tích giảng dạy, tab Trí nhớ), không lỗi nào trên bảng điều khiển trình duyệt.
+
+**Một giới hạn nghiệm thu phải nói rõ**: với nhiệm vụ nhịp làm bài, tôi **không** quan sát được
+con số khác 0 trên giao diện. Lý do là để tạo nhịp nhanh thật thì phải bấm trong vài giây, mà lượt
+bấm bằng script cho `timeSpent` bằng 0 nên bị loại đúng theo thiết kế. Việc con số khác 0 chảy tới
+nơi tiêu thụ được chứng minh bằng phép kiểm P7, không bằng mắt.
+
+Ngoài ra dữ liệu học thật của chủ dự án nằm trong trình duyệt của chính chủ dự án, không nằm trong
+repo. Nên **không đo được chủ dự án dùng nút cờ nghi vấn nhiều hay ít**. Ba tầng mới vì thế đều
+thiết kế theo hướng dữ liệu thưa: thiếu thì trả "chưa đủ dữ liệu" chứ không đoán.
