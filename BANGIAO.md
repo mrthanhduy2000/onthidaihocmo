@@ -59,6 +59,55 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Gỡ mã môn học cắm cứng ở ba chỗ chỉ sai khi có từ hai môn trở lên
+
+**Objective**: Đàm xác nhận đây là trung tâm luyện thi **đa môn** và sẽ còn nạp thêm nhiều môn.
+Khoản nợ "gắn cứng mã môn học" vì thế chuyển từ chuyện dọn dẹp thành chuyện đúng sai.
+
+**Đặc điểm chung của loại lỗi này**: chạy đúng y như thường với môn Hành vi khách hàng, và chỉ
+sai khi có môn thứ hai. Nghĩa là nó nằm im cho tới đúng lúc Đàm cần nó nhất, và khi sai thì
+không có dấu hiệu gì cả, chỉ là số liệu của môn khác.
+
+| Chỗ | Hỏng thế nào |
+|---|---|
+| `evidenceCoverageAudit.auditSubject` | Mặc định cứng `"customer_behavior"`, mà cả **ba** nơi gọi trong `AcademicQualityDashboard` đều gọi không tham số. Đang mở môn nào cũng chấm điểm môn Hành vi khách hàng |
+| `setConceptMasteryBothKeys` | Thoát sớm với mọi môn khác, nên bất biến 4.6 "một giá trị, hai khóa" chỉ đúng cho đúng một môn |
+| `recomputeStatistics` nhánh dự phòng | Ghi độ thạo dưới một khóa duy nhất, lệch không gian khóa với đường ghi kia |
+
+**Nói rõ để khỏi phóng đại**: bảng độ thạo của các môn khác **không rỗng**. Ban đầu tôi định
+viết như vậy vào chú thích, đọc kỹ lại thì thấy `recomputeStatistics` có nhánh dự phòng ghi
+theo nhãn `knowledgeMapping`. Vấn đề là hai đường ghi dùng hai không gian khóa khác nhau, chứ
+không phải mất trắng dữ liệu.
+
+**Vướng mắc kỹ thuật đáng ghi lại**: `db.ts` cần biết đồ thị tri thức của môn đang mở, nhưng
+`kbService.ts` **đã** nhập `db.ts`. Nhập ngược lại là tạo vòng nhập, mà `db.ts` gọi
+`loadSubject` ngay ở mức module, nên thứ tự nạp có thể rơi vào trường hợp `kbService` chưa khởi
+tạo xong đã bị gọi, tức lỗi "Cannot access before initialization" ngay lúc mở ứng dụng. Đúng
+loại lỗi mà build xanh không bắt được. Cách làm: `db.ts` mở một ô đăng ký, `kbService.ts` tự
+cắm vào ở cuối file. Có phép kiểm canh việc đăng ký thật sự xảy ra, vì nếu không ai đăng ký thì
+hàm rơi về hành vi cũ **một cách im lặng**.
+
+**Một lỗi chỉ lộ ra khi mở màn hình thật**: sổ nợ học tập xếp nợ chương theo `1000 + số hiệu
+chương`, mà danh sách xếp giảm dần, nên trên hồ sơ trắng màn hình dựng ngược: Chương 7 trên
+cùng, Chương 1 dưới đáy. Chưa học gì thì phải bắt đầu từ chương đầu. Toàn bộ 87 phép kiểm lúc
+đó đều xanh, không phép nào canh thứ tự này. Đã sửa thành `1000 - số hiệu chương` và thêm phép
+kiểm. **Bài học**: chạy engine trong Node chứng minh được logic, nhưng có những thứ chỉ nhìn
+màn hình mới thấy. Sau khi sửa thứ gì có màn hình, hãy mở `npm run dev` xem tận mắt.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, 88 phép kiểm. Thêm nhóm **L** (6 phép), trong
+đó có một phép dựng hẳn một môn tự tạo giả rồi kiểm độ thạo có ghi đủ hai khóa không. Ngoài ra
+đã mở `npm run dev` và soi tận mắt cả bốn tab của màn Kế hoạch học: ngân sách 11+23+11 = 45
+phút đúng bằng ngân sách và ba tỷ lệ cộng lại 100%, mục Sổ tay hiện "Ưu tiên Thấp, +0.00 điểm,
+sổ tay đang sạch", what-if hiện "chưa đo được chương nào yếu" thay cho "-0,8 điểm". Không lỗi
+nào trên bảng điều khiển trình duyệt.
+
+**Còn nợ**: `kbService.getDistractors`, `getBlueprints`, `getAdaptiveMetadata` vẫn trả mảng rỗng
+cho mọi môn ngoài Hành vi khách hàng, vì chúng gắn với ba file dữ liệu chỉ có cho môn đó. Đây là
+suy giảm êm, không phải khẳng định sai, nên để lại. Muốn dọn thì phải làm sổ đăng ký dữ liệu
+theo môn, là việc lớn hơn hẳn.
+
+---
+
 ### 27/07/2026 — Màn Kế hoạch học nói 7 con số không bám dữ liệu, và trường Bloom chết 292/292
 
 **Objective**: tiếp tục danh sách "chưa rà" trong WORKSTATE. Hai hạng mục còn lại là phần

@@ -79,10 +79,23 @@ môn và nhiều tài liệu khác trong tương lai. Hệ quả bắt buộc v�
   môn đầu tiên, không phải giới hạn của sản phẩm.
 - Khi thiết kế, ưu tiên phương án **thêm môn mới mà không phải sửa mã**. Giải pháp nhanh gắn
   cứng cho môn đang mở sẽ phải trả giá ở môn thứ ba, thứ tư.
-- Hiện còn **26 chỗ gắn cứng mã môn học** ngoài `src/data/` (`db.ts` 15, `kbService.ts` 6,
-  `evidencePipeline.ts` 2, `curriculumIntelligenceEngine.ts` 2, `evidenceCoverageAudit.ts` 1).
-  Hai môn thì còn chịu được, nhưng mỗi lần đụng vào các chỗ đó là một cơ hội chuyển dần sang
-  khai báo môn bằng dữ liệu. Đo ngày 27/07/2026.
+- Hiện còn khoảng **22 chỗ gắn cứng mã môn học** ngoài `src/data/`. Hai môn thì còn chịu được,
+  nhưng mỗi lần đụng vào các chỗ đó là một cơ hội chuyển dần sang khai báo môn bằng dữ liệu.
+
+  Ba chỗ **nguy hiểm nhất đã xử lý ngày 27/07/2026**, vì chúng không suy giảm êm mà cho ra số
+  liệu của môn khác: `evidenceCoverageAudit.auditSubject` (mặc định cứng, mà cả ba nơi gọi đều
+  gọi không tham số), `setConceptMasteryBothKeys` (thoát sớm nên bất biến 4.6 chỉ đúng cho một
+  môn), và nhánh dự phòng trong `recomputeStatistics` (ghi lệch không gian khóa). Nhóm kiểm
+  **L** canh cả ba.
+
+  **Cách phân loại khi gặp một chỗ gắn cứng mới**: hỏi xem với môn khác nó *trả về ít hơn* hay
+  *trả về của môn sai*. Loại thứ nhất (ví dụ `kbService.getDistractors` trả mảng rỗng) là suy
+  giảm êm, ghi nợ được. Loại thứ hai phải sửa ngay, vì nó nói dối mà không có dấu hiệu gì.
+
+- **Không được cho `db.ts` nhập `kbService.ts`.** Chiều nhập là một chiều: `kbService` nhập
+  `db`, không bao giờ ngược lại. `db.ts` gọi `loadSubject` ngay ở mức module, nên vòng nhập sẽ
+  thành lỗi "Cannot access before initialization" ngay lúc mở ứng dụng, thứ mà build xanh không
+  bắt được. Khi `db.ts` cần đồ thị tri thức, hãy dùng ô đăng ký `dangKyDoThiTriThuc` đã có sẵn.
 - **Đừng đề xuất gỡ bỏ hay thu hẹp hạ tầng chỉ vì "môn này thi xong rồi".** Đường nhập tài liệu
   và sinh câu hỏi từ tài liệu là chức năng cốt lõi lâu dài, không phải phụ trợ.
 

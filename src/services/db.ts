@@ -250,6 +250,44 @@ export function loadSubject(subjectId: string) {
 // Initial subject load
 loadSubject(activeSubjectId);
 
+// ===========================================================================
+// ĐỒ THỊ TRI THỨC CỦA MÔN ĐANG MỞ, LẤY QUA ĐĂNG KÝ MUỘN
+//
+// VẤN ĐỀ ĐÃ SỬA (27/07/2026): hai chỗ trong file này dùng thẳng `cbKnowledgeGraph` kèm một cái
+// cổng `if (activeSubjectId === "customer_behavior")`. Nặng nhất là `setConceptMasteryBothKeys`:
+// nó THOÁT SỚM với mọi môn khác, nên bất biến 4.6 ("một giá trị, hai khóa") chỉ đúng cho đúng
+// một môn. Với các môn còn lại, độ thạo chỉ được ghi dưới một khóa, và nơi đọc nào tra khóa
+// kia trước sẽ trượt. Đây là đường ghi chạy sau MỖI câu trả lời, nên sai lệch tích lũy dần.
+//
+// Nói rõ để khỏi phóng đại: `recomputeStatistics` vẫn có nhánh dự phòng ghi độ thạo theo nhãn
+// `knowledgeMapping` cho các môn khác, nên bảng độ thạo KHÔNG rỗng. Vấn đề nằm ở chỗ hai đường
+// ghi dùng hai không gian khóa khác nhau, chứ không phải mất trắng dữ liệu.
+//
+// VÌ SAO PHẢI ĐĂNG KÝ MUỘN chứ không `import { kbService }`: `kbService.ts` ĐÃ nhập file này
+// (dòng 16 của nó). Nhập ngược lại sẽ tạo vòng nhập, và vì `db.ts` gọi `loadSubject` ngay ở mức
+// module, thứ tự nạp có thể rơi vào trường hợp `kbService` chưa khởi tạo xong đã bị gọi, tức
+// lỗi "Cannot access before initialization" ngay lúc mở ứng dụng. Đúng loại lỗi mà build xanh
+// không hề bắt được (xem Bẫy 1 và Bẫy 5 trong AGENTS.md).
+//
+// Nếu vì lý do nào đó không ai đăng ký, hàm rơi về đúng hành vi cũ nên không bao giờ tệ hơn
+// trước. Nhóm kiểm **L** canh việc đăng ký có thật sự xảy ra.
+// ===========================================================================
+type NutTriThucToiThieu = { id: string; concept: string; topic: string };
+let layDoThiTriThuc: ((subjectId: string) => NutTriThucToiThieu[]) | null = null;
+
+export function dangKyDoThiTriThuc(fn: (subjectId: string) => NutTriThucToiThieu[]): void {
+  layDoThiTriThuc = fn;
+}
+
+export function daDangKyDoThiTriThuc(): boolean {
+  return layDoThiTriThuc !== null;
+}
+
+function doThiCuaMon(subjectId: string): NutTriThucToiThieu[] {
+  if (layDoThiTriThuc) return layDoThiTriThuc(subjectId);
+  return subjectId === "customer_behavior" ? cbKnowledgeGraph : [];
+}
+
 /**
  * Ghi độ thành thạo của một khái niệm dưới CẢ HAI khóa: mã khái niệm (ví dụ CB_C1_N1) và tên
  * khái niệm (ví dụ "Hành vi khách hàng (Consumer Behavior)").
@@ -263,8 +301,7 @@ loadSubject(activeSubjectId);
 export function setConceptMasteryBothKeys(stats: Statistics, key: string, value: number): void {
   if (!stats.conceptMastery) stats.conceptMastery = {};
   stats.conceptMastery[key] = value;
-  if (activeSubjectId !== "customer_behavior") return;
-  const node = cbKnowledgeGraph.find(n => n.id === key || n.concept === key);
+  const node = doThiCuaMon(activeSubjectId).find(n => n.id === key || n.concept === key);
   if (!node) return;
   stats.conceptMastery[node.id] = value;
   stats.conceptMastery[node.concept] = value;
@@ -731,6 +768,14 @@ export const dbService = {
         stats.conceptMastery![node.concept] = value;
       });
     } else {
+      // Môn không có đồ thị tri thức viết tay: quy câu hỏi về khái niệm theo nhãn
+      // `knowledgeMapping`, đúng tiêu chí mà kbService dùng khi tổng hợp đồ thị ảo cho môn đó.
+      // Cố ý KHÔNG dùng `q.topicId === node.topic` như nhánh trên: nút ảo lấy `topic` của câu
+      // đầu tiên gặp được, nên so theo chủ đề sẽ gom nhầm cả những câu không mang nhãn đó.
+      //
+      // Ghi thêm khóa mã nút để bất biến 4.6 ("một giá trị, hai khóa") đúng cho MỌI môn, không
+      // riêng môn có đồ thị viết tay.
+      const maNutTheoTen = new Map(doThiCuaMon(activeSubjectId).map(n => [n.concept, n.id]));
       const uniqueTags = Array.from(new Set(questions.flatMap(q => q.knowledgeMapping || [])));
       uniqueTags.forEach(tag => {
         const trimmed = tag.trim();
@@ -738,7 +783,10 @@ export const dbService = {
         const conceptQs = questions.filter(q => q.knowledgeMapping?.includes(trimmed));
         const answered = conceptQs.filter(q => totalSolvedSet.has(q.id)).length;
         const correct = conceptQs.filter(q => totalCorrectSet.has(q.id)).length;
-        stats.conceptMastery![trimmed] = masteryFromCounts(answered, correct);
+        const giaTri = masteryFromCounts(answered, correct);
+        stats.conceptMastery![trimmed] = giaTri;
+        const maNut = maNutTheoTen.get(trimmed);
+        if (maNut) stats.conceptMastery![maNut] = giaTri;
       });
     }
 

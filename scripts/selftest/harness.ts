@@ -15,7 +15,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { dbService, loadSubject, questions, questionMap, chapters, topics, suyRaMucBloom } from "../../src/services/db";
+import { dbService, loadSubject, questions, questionMap, chapters, topics, suyRaMucBloom, daDangKyDoThiTriThuc, setConceptMasteryBothKeys } from "../../src/services/db";
 import { EvidenceBasedPipeline } from "../../src/services/evidencePipeline";
 import { productObservabilityService } from "../../src/services/productObservabilityService";
 import { curriculumIntelligenceEngine } from "../../src/services/curriculumIntelligenceEngine";
@@ -29,6 +29,7 @@ import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngin
 import { kbService } from "../../src/services/kbService";
 import { learnerModelService } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
+import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { Question } from "../../src/types";
 
 type Result = { group: string; name: string; ok: boolean; detail: string };
@@ -931,6 +932,14 @@ check("Khoản nợ chương không bịa ra mã chủ đề không tồn tại"
     ? "không sinh ra khoản nợ chương nào nên phép kiểm không nói lên điều gì"
     : `${noChuong.length} khoản nợ chương, ${maBia.length} khoản dùng mã chủ đề không có thật`);
 
+// Chưa học chương nào thì phải bắt đầu từ chương ĐẦU. Bản đầu tiên của lượt sửa này cộng số
+// hiệu chương vào điểm xếp hạng, nên màn hình dựng ngược: Chương 7 trên cùng, Chương 1 dưới đáy.
+// Lỗi chỉ lộ ra khi mở màn hình thật xem, bộ kiểm lúc đó không có phép nào canh thứ tự này.
+const thuTuChuong = noChuong.map(i => i.chapterId);
+check("Nợ chương xếp từ chương đầu trở đi",
+  thuTuChuong.length < 2 || thuTuChuong.every((v, i) => i === 0 || v > thuTuChuong[i - 1]),
+  `thứ tự chương hiện ra: ${thuTuChuong.join(", ")}`);
+
 // --- J6. Hai bảng phải nói cùng một chuyện về chương yếu nhất ---------------
 playAndForecast(0.6, 4);
 const duBaoW = examForecaster.calculatePrediction();
@@ -943,6 +952,89 @@ check("Mức mất khi bỏ chương yếu nhất khớp với bảng kịch b�
   `what-if trừ ${(duBaoW.predictedScore - (mucBoChuong?.projectedScore ?? 0)).toFixed(2)}, kịch bản cộng ${kbChuong?.deltaFromBaseline}`);
 
 dbService.clearAllHistory();
+
+// ===========================================================================
+g("L. Không gắn cứng mã môn học");
+// ===========================================================================
+// Nhóm này sinh ra ngày 27/07/2026, sau khi Đàm xác nhận đây là trung tâm luyện thi ĐA MÔN và
+// sẽ còn nạp thêm nhiều môn nữa. Loại lỗi ở đây có đặc điểm chung: chạy đúng y như thường với
+// môn Hành vi khách hàng, và chỉ sai khi có từ hai môn trở lên. Nghĩa là nó nằm im cho tới
+// đúng lúc Đàm cần nó nhất.
+
+check("Đồ thị tri thức đã được đăng ký vào db", daDangKyDoThiTriThuc(),
+  daDangKyDoThiTriThuc()
+    ? "kbService đã cắm vào ô đăng ký của db, nên độ thạo ghi được cả hai khóa cho mọi môn"
+    : "CHƯA đăng ký: db sẽ rơi về hành vi cũ, chỉ môn customer_behavior có hai khóa");
+
+// `auditSubject()` gọi không tham số phải bám MÔN ĐANG MỞ. Bản cũ mặc định cứng
+// "customer_behavior", mà cả ba nơi gọi trong AcademicQualityDashboard đều gọi không tham số.
+const monDangMo = dbService.getActiveSubjectId();
+const baoCaoSoat = evidenceCoverageAuditService.auditSubject();
+check("Soát chất lượng học thuật bám môn đang mở",
+  baoCaoSoat.healthOverview.subjectId === monDangMo,
+  `môn đang mở "${monDangMo}", báo cáo nói về "${baoCaoSoat.healthOverview.subjectId}"`);
+
+// Lộ trình học cũng vậy.
+const loTrinhMon = curriculumIntelligenceEngine.getCurriculumPlan();
+check("Lộ trình học tính được cho môn đang mở", loTrinhMon.chapterStatuses.length === chapters.length,
+  `môn đang mở có ${chapters.length} chương, lộ trình dựng ${loTrinhMon.chapterStatuses.length} chương`);
+
+// Bất biến 4.6 phải đúng với MỌI môn, không riêng môn có đồ thị viết tay. Dựng một môn tự tạo
+// rồi kiểm xem độ thạo có được ghi dưới cả hai khóa không.
+const monThuL = "custom_selftest_dachu";
+localStorage.setItem(`poly_econ_custom_chapters_${monThuL}`, JSON.stringify([
+  { id: 1, code: "CH1", title: "Chương 1: Thử", description: "Chương thử cho phép kiểm." }
+]));
+localStorage.setItem(`poly_econ_custom_topics_${monThuL}`, JSON.stringify([
+  { id: `${monThuL}_T1.1`, chapterId: 1, title: "Chủ đề 1.1", description: "Chủ đề thử." }
+]));
+localStorage.setItem(`poly_econ_custom_questions_${monThuL}`, JSON.stringify(
+  [1, 2, 3, 4, 5, 6].map(i => ({
+    id: 90000 + i,
+    question: `Câu thử số ${i} về khái niệm thử nghiệm đa môn?`,
+    options: { a: "Phương án A", b: "Phương án B", c: "Phương án C", d: "Phương án D" },
+    correctAnswer: "a",
+    chapterId: 1,
+    topicId: `${monThuL}_T1.1`,
+    difficulty: "Trung bình",
+    difficultyRating: 3,
+    explanation: "Giải thích đủ dài để bộ tổng hợp đồ thị tri thức dựng được định nghĩa cho khái niệm.",
+    knowledgeMapping: ["Khái niệm thử đa môn"],
+    learningObjective: "Nắm vững khái niệm thử đa môn",
+    questionType: "multiple-choice",
+    estimatedTime: 40,
+    sourcePdf: "TaiLieuThu.pdf",
+    sourcePage: "trang 1"
+  }))
+));
+
+const monCu = dbService.getActiveSubjectId();
+loadSubject(monThuL);
+dbService.setActiveSubjectId(monThuL);
+
+const doThiMonThu = kbService.getKnowledgeGraph(monThuL);
+check("Môn tự tạo vẫn dựng được đồ thị tri thức", doThiMonThu.length > 0,
+  `${doThiMonThu.length} khái niệm tổng hợp từ ${questions.length} câu`);
+
+const statsMonThu = dbService.getStatistics();
+setConceptMasteryBothKeys(statsMonThu, "Khái niệm thử đa môn", 77);
+const nutThu = doThiMonThu.find(n => n.concept === "Khái niệm thử đa môn");
+check("Độ thạo ghi đủ hai khóa kể cả với môn tự tạo",
+  !!nutThu && statsMonThu.conceptMastery?.[nutThu.id] === 77 && statsMonThu.conceptMastery?.[nutThu.concept] === 77,
+  nutThu
+    ? `khóa tên = ${statsMonThu.conceptMastery?.[nutThu.concept]}, khóa mã (${nutThu.id}) = ${statsMonThu.conceptMastery?.[nutThu.id]}`
+    : "không tìm thấy nút khái niệm trong đồ thị tổng hợp");
+
+const soatMonThu = evidenceCoverageAuditService.auditSubject();
+check("Soát chất lượng chuyển theo môn khi đổi môn",
+  soatMonThu.healthOverview.subjectId === monThuL,
+  `đã đổi sang "${monThuL}", báo cáo nói về "${soatMonThu.healthOverview.subjectId}"`);
+
+// Trả lại môn cũ, không để phép kiểm này làm bẩn trạng thái của các nhóm khác.
+dbService.setActiveSubjectId(monCu);
+loadSubject(monCu);
+[`poly_econ_custom_chapters_${monThuL}`, `poly_econ_custom_topics_${monThuL}`, `poly_econ_custom_questions_${monThuL}`]
+  .forEach(k => localStorage.removeItem(k));
 
 // ===========================================================================
 // Kết quả

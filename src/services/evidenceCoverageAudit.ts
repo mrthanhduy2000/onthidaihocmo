@@ -49,14 +49,22 @@ export interface SubjectHealthOverview {
 
 export const evidenceCoverageAuditService = {
   /**
-   * Performs an in-depth Subject Evidence & Knowledge Coverage Audit.
+   * Soát độ phủ bằng chứng và tri thức của một môn.
+   *
+   * Mặc định phải là MÔN ĐANG MỞ, không phải một mã môn viết cứng.
+   *
+   * Bản cũ đặt `subjectId: string = "customer_behavior"`, mà cả ba nơi gọi trong
+   * `AcademicQualityDashboard.tsx` đều gọi không kèm tham số. Nghĩa là dù Đàm đang mở môn nào,
+   * màn Chất lượng học thuật cũng chấm điểm cho môn Hành vi khách hàng, và không có dấu hiệu
+   * nào cho thấy nó đang nói về môn khác. Lỗi này chỉ lộ ra khi có từ hai môn trở lên.
    */
-  auditSubject(subjectId: string = "customer_behavior"): {
+  auditSubject(subjectId?: string): {
     healthOverview: SubjectHealthOverview;
     conceptDetails: ConceptCoverageDetail[];
     coverageMatrix: CoverageMatrixEntry[];
   } {
-    const knowledgeNodes: KnowledgeNode[] = kbService.getKnowledgeGraph(subjectId);
+    const monDangMo = subjectId || dbService.getActiveSubjectId();
+    const knowledgeNodes: KnowledgeNode[] = kbService.getKnowledgeGraph(monDangMo);
     const pool: Question[] = questions.filter(q => q.questionType === "multiple-choice" || !q.questionType);
 
     const allBloomLevels = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
@@ -158,7 +166,7 @@ export const evidenceCoverageAuditService = {
       : 0;
 
     const healthOverview: SubjectHealthOverview = {
-      subjectId,
+      subjectId: monDangMo,
       coveragePct,
       totalQuestions: pool.length,
       totalConcepts: knowledgeNodes.length,

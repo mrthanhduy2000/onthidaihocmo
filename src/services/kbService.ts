@@ -13,7 +13,7 @@ import {
   BlueprintItem,
   AdaptiveMetadata
 } from "../data/customer_behavior_kb";
-import { questions, topics, chapters, questionMap, dbService } from "./db";
+import { questions, topics, chapters, questionMap, dbService, dangKyDoThiTriThuc } from "./db";
 import { Question } from "../types";
 
 // Re-export core types
@@ -343,3 +343,11 @@ export const kbService = {
     };
   }
 };
+
+// Nối `db.ts` với đồ thị tri thức mà KHÔNG tạo vòng nhập.
+//
+// `db.ts` cần biết đồ thị của môn đang mở để ghi độ thạo dưới cả hai khóa (bất biến 4.6), nhưng
+// file này đã nhập `db.ts` ở đầu, nên `db.ts` tuyệt đối không được nhập ngược lại. Thay vào đó
+// `db.ts` mở một ô đăng ký, và file này tự cắm vào ngay khi được nạp. Xem chú thích dài trong
+// `db.ts`, phần ĐỒ THỊ TRI THỨC CỦA MÔN ĐANG MỞ.
+dangKyDoThiTriThuc((subjectId: string) => kbService.getKnowledgeGraph(subjectId));

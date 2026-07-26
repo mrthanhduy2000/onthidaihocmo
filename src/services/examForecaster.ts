@@ -1387,7 +1387,10 @@ export const examForecaster = {
       const chuDeDau = topics.find(t => t.chapterId === c.id);
       dsNo.push({
         // Cả một chương chưa làm bài nào là khoản nợ lớn hơn mọi câu sai lẻ, nên đặt trên đầu.
-        diem: 1000 + c.id,
+        // TRỪ số hiệu chương chứ không cộng: danh sách xếp giảm dần, mà chương chưa học thì
+        // phải học từ chương đầu trở đi. Bản đầu cộng vào nên màn hình dựng ngược, Chương 7
+        // nằm trên cùng còn Chương 1 rơi xuống đáy.
+        diem: 1000 - c.id,
         item: {
           id: `debt_chap_${c.id}`,
           conceptName: `Chưa bao phủ bài tập ${c.title}`,
