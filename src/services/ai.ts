@@ -12,15 +12,21 @@ import { assessmentDesignEngine } from "./assessmentDesignEngine";
 import { examReviewEngine } from "./examReviewEngine";
 import { workspaceService } from "./workspaceService";
 import { AIRecommendation, ExamAttempt, Question, DifficultyLevel } from "../types";
-import { supabase } from "./supabaseClient";
+import { ensureSession, supabase } from "./supabaseClient";
 
-/** Header cho lời gọi API: JSON + token đăng nhập Supabase (nếu có) để máy chủ xác thực. */
+/**
+ * Header cho lời gọi API: JSON + token Supabase để máy chủ xác thực.
+ *
+ * Dùng `ensureSession` chứ không phải `getSession`: ứng dụng không còn màn đăng nhập nên bình
+ * thường sẽ chẳng có phiên nào sẵn, và `getSession` trả rỗng khiến mọi cổng AI nhận 401.
+ * `ensureSession` tự dựng phiên ẩn danh khi cần, người dùng không phải nhập gì.
+ */
 async function apiHeaders(): Promise<Record<string, string>> {
   const base: Record<string, string> = { "Content-Type": "application/json" };
   try {
     if (!supabase) return base;
-    const { data } = await supabase.auth.getSession();
-    const token = data?.session?.access_token;
+    const session = await ensureSession();
+    const token = session?.access_token;
     return token ? { ...base, Authorization: `Bearer ${token}` } : base;
   } catch {
     return base;

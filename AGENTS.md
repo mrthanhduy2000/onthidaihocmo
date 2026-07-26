@@ -192,6 +192,26 @@ Hệ quả trần trụi:
 - Máy cục bộ thường không đặt hai biến này, nên AI **luôn chạy được**.
 - Trên Vercel hai biến này có, mà giao diện thì đã gỡ đăng nhập, nên **không gửi token** và mọi cổng AI trả **401**.
 
+**Cập nhật 27/07/2026: đã vá bằng phiên ẩn danh, nhưng cần một công tắc phía Supabase.**
+
+Chủ dự án chọn hướng 1 trong ba hướng bên dưới. `src/services/supabaseClient.ts` nay có
+`ensureSession()`: chưa có phiên thì tự đăng nhập ẩn danh để lấy token, người dùng không phải
+nhập gì. `ai.ts` gọi hàm này thay cho `getSession()`, `main.tsx` dựng sẵn phiên lúc mở app.
+
+**Điều kiện bắt buộc, chưa xong thì vá vô nghĩa**: bật "Anonymous sign-ins" trong Supabase
+(Authentication, mục Sign In / Providers). Chưa bật thì Supabase trả thẳng
+`Anonymous sign-ins are disabled`, `ensureSession()` trả null và ứng dụng chạy ngoại tuyến
+đúng như trước, không vỡ nhưng cũng không có AI. Đo lúc 27/07/2026: công tắc **đang tắt**.
+
+Hai điều người sau phải nhớ:
+
+- **Phiên ẩn danh KHÔNG được dùng làm danh tính đồng bộ đám mây.** `main.tsx` chặn bằng
+  `!session.user.is_anonymous`. Bỏ chốt đó là đẩy lịch sử học lên một tài khoản vô danh mới
+  mỗi lần trình duyệt bị xóa dữ liệu.
+- **401 khi gọi không kèm token là ĐÚNG, không phải hỏng.** `npm run check:prod` nay chạy hai
+  lượt: không token phải 401 (hàng rào còn sống), có token ẩn danh phải khác 401 (ứng dụng
+  dùng được). Chỉ nhìn lượt đầu rồi kết luận là sai lầm đã từng mắc.
+
 Trạng thái đo ngày 26/07/2026 trên https://onthidaihocmo.vercel.app: cả 4 cổng `/api/ai/*` đều trả 401.
 Giao diện **không báo lỗi**, nó âm thầm rơi về chế độ ngoại tuyến:
 

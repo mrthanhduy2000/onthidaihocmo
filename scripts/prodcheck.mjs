@@ -6,24 +6,41 @@
  * mọi tính năng AI trên bản thật trả 401 mà giao diện lại âm thầm rơi về chế độ ngoại tuyến,
  * nhìn ngoài không thấy hỏng. Script này phơi bày đúng loại lỗi im lặng đó.
  *
- * Đọc kết quả:
- *   - /api/health phải 200. Sai là bản deploy hỏng.
- *   - Các /api/ai/* trả 401 nghĩa là máy chủ đang BẮT BUỘC đăng nhập (functions-src/_lib/auth.ts).
- *     Nếu giao diện không còn màn đăng nhập thì đây là mâu thuẫn cần xử lý, không phải chuyện nhỏ.
- *   - Trả 200 hoặc 4xx khác nghĩa là cổng AI đang MỞ cho mọi người gọi.
+ * Script chạy HAI lượt gọi, và phải đọc cả hai mới kết luận được:
+ *   Lượt 1, KHÔNG kèm token: mong đợi 401. Đây là hàng rào chặn người lạ tiêu quota Gemini.
+ *           Nếu lượt này trả 200 thì cổng AI đang mở toang cho cả thiên hạ.
+ *   Lượt 2, CÓ token phiên ẩn danh: mong đợi KHÁC 401. Đây mới là thứ chứng minh ứng dụng thật
+ *           sự dùng được, vì từ 27/07/2026 giao diện tự tạo phiên ẩn danh để lấy token
+ *           (`src/services/supabaseClient.ts`).
+ *
+ * Chỉ nhìn lượt 1 rồi kết luận là sai lầm đã từng mắc: 401 khi không có token là ĐÚNG, không
+ * phải hỏng.
+ *
+ * Lưu ý: lượt 2 gọi thật vào Gemini nên tiêu một ít quota. Đó là cái giá để biết chắc, thay vì
+ * đoán từ mã nguồn.
+ *
+ * Cần `.env` có VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY thì mới chạy được lượt 2.
  *
  * Đổi địa chỉ kiểm tra: `node scripts/prodcheck.mjs https://ten-mien-khac`
  */
+import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
+
+dotenv.config({ quiet: true });
+
 const BASE = process.argv[2] || "https://onthidaihocmo.vercel.app";
 const TIMEOUT_MS = 25000;
 
-async function hit(method, urlPath, body) {
+async function hit(method, urlPath, body, token) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
+    const headers = {};
+    if (body) headers["Content-Type"] = "application/json";
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(BASE + urlPath, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
+      headers: Object.keys(headers).length ? headers : undefined,
       body: body ? JSON.stringify(body) : undefined,
       signal: ctrl.signal,
     });
@@ -68,18 +85,67 @@ for (const [route, payload] of aiRoutes) {
   console.log(`  ${route}  HTTP ${r.status}  ${state}`);
 }
 
-console.log("");
-if (locked === aiRoutes.length) {
-  console.log("KẾT LUẬN: máy chủ đang BẮT BUỘC đăng nhập cho mọi cổng AI.");
-  console.log("  Giao diện hiện KHÔNG còn màn đăng nhập (src/main.tsx), nên trên bản thật:");
-  console.log("  hỏi đáp AI, gợi ý AI và giải thích sâu đều rơi về chế độ ngoại tuyến trong im lặng,");
-  console.log("  còn chức năng sinh câu hỏi từ tài liệu sẽ báo lỗi thẳng.");
-  console.log("  Cách xử lý xem mục 'Bẫy đã biết' trong AGENTS.md.");
-} else if (open === aiRoutes.length) {
-  console.log("KẾT LUẬN: cổng AI đang MỞ, ai biết địa chỉ cũng gọi được và tiêu quota Gemini.");
-  console.log("  Chấp nhận được nếu đó là lựa chọn có chủ đích, nhưng phải biết mình đang chấp nhận rủi ro gì.");
+// ===== Lượt 2: gọi lại đúng các cổng đó, lần này KÈM token phiên ẩn danh =====
+
+console.log("\nTrạng thái các cổng AI (gọi KÈM token phiên ẩn danh, giống hệt giao diện thật):");
+
+const sbUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const sbAnon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+let token = "";
+let tokenNote = "";
+
+if (!sbUrl || !sbAnon) {
+  tokenNote = "BO QUA: thiếu VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY trong .env, không tạo được phiên.";
 } else {
-  console.log("KẾT LUẬN: các cổng AI không đồng nhất trạng thái, cần xem lại từng cổng.");
+  try {
+    const sb = createClient(sbUrl, sbAnon, { auth: { persistSession: false } });
+    const { data, error } = await sb.auth.signInAnonymously();
+    if (error) {
+      tokenNote = `HONG: không tạo được phiên ẩn danh. Lý do Supabase trả về: ${error.message}`;
+      bad = true;
+    } else {
+      token = data?.session?.access_token || "";
+      if (!token) {
+        tokenNote = "HONG: Supabase nhận đăng nhập nhưng không trả token.";
+        bad = true;
+      }
+    }
+  } catch (e) {
+    tokenNote = `HONG: lỗi khi gọi Supabase: ${e.message}`;
+    bad = true;
+  }
+}
+
+let usable = 0;
+if (token) {
+  for (const [route, payload] of aiRoutes) {
+    const r = await hit("POST", route, payload, token);
+    // Chỉ quan tâm một điều: có qua được cửa xác thực không. 401 là chưa qua.
+    // Các mã khác (200, 400, 500) đều chứng tỏ đã qua cửa và đang chạy logic thật bên trong.
+    const passed = r.status !== 401 && r.status !== 0;
+    if (passed) usable++;
+    console.log(`  ${passed ? "DAT " : "HONG"}  ${route}  HTTP ${r.status}${passed ? "" : "  VAN BI CHAN"}`);
+    if (!passed) bad = true;
+  }
+} else {
+  console.log(`  ${tokenNote}`);
+}
+
+console.log("");
+if (token && usable === aiRoutes.length && locked === aiRoutes.length) {
+  console.log("KẾT LUẬN: đúng trạng thái mong muốn.");
+  console.log("  Người lạ không token bị chặn (401), còn giao diện thật có token thì dùng được đủ 4 cổng.");
+} else if (locked !== aiRoutes.length && open === aiRoutes.length) {
+  console.log("KẾT LUẬN: cổng AI đang MỞ cho mọi người, không cần token.");
+  console.log("  Ai biết địa chỉ cũng gọi được và tiêu quota Gemini. Chấp nhận được nếu là chủ ý,");
+  console.log("  nhưng phải biết mình đang chấp nhận rủi ro gì.");
+} else if (!token) {
+  console.log("KẾT LUẬN: chưa xác minh được đường có token, nên CHƯA biết ứng dụng thật có dùng được AI không.");
+  console.log("  Nếu Supabase báo anonymous sign-ins bị tắt: vào Supabase > Authentication > Sign In / Providers");
+  console.log("  và bật 'Anonymous sign-ins'. Đó là điều kiện bắt buộc của cách vá hiện tại.");
+} else {
+  console.log("KẾT LUẬN: trạng thái không nhất quán, phải xem lại từng cổng ở hai lượt gọi bên trên.");
   bad = true;
 }
 
