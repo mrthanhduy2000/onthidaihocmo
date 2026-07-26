@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau khi nâng cấp bộ dự báo điểm thi.
+**Cập nhật lần cuối**: 27/07/2026, sau khi ghi nhận phạm vi dài hạn đa môn của dự án.
 
 ---
 
@@ -42,6 +42,25 @@ không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì 
 | Phép tự kiểm chứng | 50, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
+
+---
+
+## Phạm vi dài hạn của dự án
+
+Chủ dự án xác nhận ngày 27/07/2026: đây là **trung tâm luyện thi và học tập đa môn dùng lâu
+dài**, sẽ còn nạp thêm nhiều môn và nhiều tài liệu khác. Hai môn hiện có chỉ là điểm khởi đầu,
+không phải toàn bộ phạm vi. Tên thư mục là di sản của môn đầu tiên.
+
+Đọc mục 3 trong [AGENTS.md](AGENTS.md) cho phần quy tắc kỹ thuật đi kèm (26 chỗ gắn cứng mã môn
+học cần chuyển dần sang khai báo bằng dữ liệu).
+
+Hai điều này đổi cách xếp mức ưu tiên, cần chủ dự án quyết chứ AI không tự quyết:
+
+- **Rủi ro 1 nặng hơn vẻ ngoài của nó.** Chức năng sinh câu hỏi từ tài liệu chính là đường nạp
+  môn mới, mà nó đang báo lỗi thẳng trên bản chạy thật. Với định hướng đa môn thì đây là thứ
+  chặn đường, không phải một khiếm khuyết bên lề.
+- **Nợ kỹ thuật gắn cứng mã môn học chưa được ghi thành một khoản riêng** vì trước nay dự án chỉ
+  phục vụ một môn tại một thời điểm. Nay nó là nợ thật, chi phí trả tăng theo số môn được thêm.
 
 ---
 

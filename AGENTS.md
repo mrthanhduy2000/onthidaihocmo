@@ -65,6 +65,21 @@ Nếu chỉ chạy Vite thì mọi lời gọi AI sẽ hỏng, và đó là hỏ
 
 Ứng dụng luyện thi trắc nghiệm cho một người dùng duy nhất (chủ dự án).
 
+**Phạm vi lâu dài, chủ dự án xác nhận ngày 27/07/2026:** đây là **trung tâm luyện thi và học
+tập đa môn**, không phải công cụ dùng một lần cho một kỳ thi. Chủ dự án sẽ còn nạp thêm nhiều
+môn và nhiều tài liệu khác trong tương lai. Hệ quả bắt buộc với người sửa mã:
+
+- **Đừng suy ra phạm vi dự án từ tên thư mục.** Tên "luyện thi kinh tế chính trị" là di sản của
+  môn đầu tiên, không phải giới hạn của sản phẩm.
+- Khi thiết kế, ưu tiên phương án **thêm môn mới mà không phải sửa mã**. Giải pháp nhanh gắn
+  cứng cho môn đang mở sẽ phải trả giá ở môn thứ ba, thứ tư.
+- Hiện còn **26 chỗ gắn cứng mã môn học** ngoài `src/data/` (`db.ts` 15, `kbService.ts` 6,
+  `evidencePipeline.ts` 2, `curriculumIntelligenceEngine.ts` 2, `evidenceCoverageAudit.ts` 1).
+  Hai môn thì còn chịu được, nhưng mỗi lần đụng vào các chỗ đó là một cơ hội chuyển dần sang
+  khai báo môn bằng dữ liệu. Đo ngày 27/07/2026.
+- **Đừng đề xuất gỡ bỏ hay thu hẹp hạ tầng chỉ vì "môn này thi xong rồi".** Đường nhập tài liệu
+  và sinh câu hỏi từ tài liệu là chức năng cốt lõi lâu dài, không phải phụ trợ.
+
 - Môn đang hoạt động: **Hành vi khách hàng**, 292 câu hỏi, 7 chương, 22 chủ đề.
 - Môn Kinh tế chính trị Mác Lênin **đã đóng vì đã thi xong**. Dữ liệu còn trong `src/data/questions.ts`
   nhưng bị gỡ khỏi danh sách chọn tại `dbService.getSubjects()` ([db.ts:179](src/services/db.ts:179)),
