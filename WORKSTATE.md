@@ -6,7 +6,8 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau khi vá đường xác thực cho 4 cổng AI bằng phiên ẩn danh.
+**Cập nhật lần cuối**: 27/07/2026, sau khi hồi sinh và nghiệm thu toàn bộ đường AI trên bản
+chạy thật.
 
 ---
 
@@ -14,11 +15,11 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Mở lại 4 cổng AI trên bản chạy thật bằng phiên ẩn danh |
-| **Current Milestone** | Vá đường xác thực AI, **XONG PHẦN MÃ NGUỒN**, chờ một thao tác của chủ dự án |
-| **Current Phase** | Chờ chủ dự án bật Anonymous sign-ins trong Supabase |
-| **Current Task** | Không còn việc mã nguồn nào cần làm cho hạng mục này |
-| **Completed %** | Khoảng 90%. Phần còn lại là một công tắc AI không bấm thay được |
+| **Current Objective** | Không có việc đang làm dở |
+| **Current Milestone** | Hồi sinh toàn bộ đường AI trên bản chạy thật, **ĐÃ HOÀN THÀNH VÀ NGHIỆM THU** |
+| **Current Phase** | Rảnh, sẵn sàng nhận việc |
+| **Current Task** | Không có |
+| **Completed %** | 100%, đã kiểm chứng bằng lời gọi thật lên bản deploy |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch, không file nào chờ |
 | **Bản đang chạy thật** | Đã triển khai, website phục vụ đúng mã nguồn mới nhất |
 
@@ -131,22 +132,25 @@ Không ảnh hưởng đúng sai, chỉ ảnh hưởng tốc độ tải lần �
 
 ## Known Risks
 
-### Rủi ro 1: Bốn cổng AI trên bản chạy thật, đã vá phía mã nguồn, CHỜ MỘT CÔNG TẮC
+### ~~Rủi ro 1: Bốn cổng AI trên bản chạy thật trả 401~~ ĐÃ XỬ LÝ XONG 27/07/2026
 
-Máy chủ vẫn bắt buộc token đăng nhập Supabase, trong khi giao diện đã gỡ đăng nhập nên không
-gửi token. Hệ quả: "Nhờ gia sư AI phân tích sâu", "Hỏi AI", gợi ý AI đều **âm thầm** rơi về
-chế độ ngoại tuyến; riêng chức năng sinh câu hỏi từ tài liệu báo lỗi thẳng.
+Giữ lại phần ghi chép vì đây là bài học đắt nhất của dự án cho tới nay.
 
-**Ngày 27/07/2026 chủ dự án chọn hướng 1 (phiên ẩn danh) và phần mã nguồn đã làm xong**:
-`ensureSession()` trong `src/services/supabaseClient.ts` tự tạo phiên ẩn danh để lấy token.
+Có **hai lỗi chồng lên nhau**, và lỗi thứ nhất che mất lỗi thứ hai:
 
-**Việc còn lại nằm ngoài tầm AI, chỉ chủ dự án làm được**: vào Supabase, mục Authentication,
-phần Sign In / Providers, bật **Anonymous sign-ins**. Đo lúc 27/07/2026 công tắc **đang tắt**,
-Supabase trả nguyên văn `Anonymous sign-ins are disabled`. Chừng nào chưa bật thì bản chạy thật
-vẫn y như cũ: không AI, nhưng không vỡ.
+1. **Cửa xác thực**: máy chủ đòi token Supabase, giao diện đã gỡ đăng nhập nên không có token.
+   Vá bằng `ensureSession()` (phiên ẩn danh) cộng với việc chủ dự án bật Anonymous sign-ins
+   bên Supabase.
+2. **Tra nhầm ngân hàng câu hỏi**: `/api/ai/explain` tra trong ngân hàng môn đã đóng
+   (id 1 đến 60) còn pipeline đọc môn đang học (id 2001 đến 3279), hai dải không giao nhau nên
+   **mọi** lời gọi đều hỏng. Xem AGENTS.md mục 4.8.
 
-Bật xong chạy `npm run check:prod` là biết ngay. Script nay kiểm hai lượt và **401 ở lượt không
-token là đúng**, đừng nhầm thành hỏng.
+Chỉ sửa lỗi 1 rồi dừng lại là vẫn hỏng, mà nhìn bên ngoài **không thể phân biệt được**, vì giao
+diện nuốt lỗi và hiện lời giải ngoại tuyến trông y như thật.
+
+**Bằng chứng nghiệm thu** (gọi thật lên bản deploy, ngày 27/07/2026): câu id 2001 và 3279 trả
+HTTP 200, `offlineMode: false`, lời giải dài 2769 và 3297 ký tự, không chứa dấu hiệu ngoại
+tuyến. Lượt gọi không kèm token vẫn trả 401 đúng như thiết kế.
 
 ### Rủi ro 2: Dữ liệu học chỉ nằm trên một trình duyệt
 
@@ -176,9 +180,13 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
 
 ## Next Immediate Step
 
-**Chờ chủ dự án bật Anonymous sign-ins trong Supabase**, rồi chạy `npm run check:prod` để
-nghiệm thu đường AI. Đây là việc dở dang duy nhất hiện nay, và nó **không nằm trong tầm sửa
-của AI**, đừng tìm cách vá tiếp bằng mã.
+**Chờ yêu cầu mới.** Không tự khởi động việc gì.
+
+Một giới hạn đã biết, chưa xử lý, cần chủ dự án quyết trước khi làm: máy chủ luôn nạp môn dựng
+sẵn `customer_behavior`, nên **các môn do chủ dự án tự nhập sau này sẽ không giải thích AI
+được**, vì dữ liệu của chúng chỉ nằm trong localStorage của trình duyệt. Muốn chạy đúng thì
+giao diện phải gửi kèm nội dung câu hỏi thay vì chỉ gửi id. Đây là việc lớn, đụng vào
+`evidencePipeline`.
 
 Nếu được giao việc, theo đúng trình tự trong AGENTS.md mục 9: chạy `npm run check` phải đạt,
 soát `git status`, commit nêu rõ đổi gì và vì sao, ghi mục mới vào BANGIAO.md, cập nhật file
@@ -198,12 +206,13 @@ Xếp theo mức đáng làm:
 
 ## Verification Pending
 
-**Có một khoản chưa nghiệm thu được**: đường AI có token trên bản chạy thật. `npm run check`
-đạt cả 5 chặng, nhưng bộ kiểm cục bộ **về bản chất không chứng minh được** hạng mục này, vì máy
-nhà không đặt biến Supabase nên cổng AI luôn xanh ở đây (đúng cơ chế Bẫy 1).
+Không có. Đường AI đã nghiệm thu bằng lời gọi thật lên bản deploy, không phải suy đoán từ mã
+nguồn: 55/55 phép tự kiểm chứng đạt, `npm run check:prod` đủ 4 cổng đạt ở lượt có token, và
+lời giải trả về có `offlineMode: false`.
 
-Bằng chứng duy nhất được chấp nhận là `npm run check:prod` báo đủ 4 cổng DAT ở lượt có token.
-Chạy được ngay sau khi chủ dự án bật công tắc Supabase.
+Nhắc cho phiên sau: **bộ kiểm cục bộ không bao giờ chứng minh được hạng mục này**, vì máy nhà
+không đặt biến Supabase nên cổng AI luôn xanh ở đây (đúng cơ chế Bẫy 1). Đụng vào xác thực hay
+hàm serverless thì bắt buộc `npm run check:prod`.
 
 ## Expected Commit Scope
 
