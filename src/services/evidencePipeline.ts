@@ -209,7 +209,12 @@ export const ReasoningEngine = {
     let description = "";
     if (q && selectedAnswer && selectedAnswer !== q.correctAnswer) {
       hasMisconception = true;
-      description = q.misconception || node?.teaching?.misconception || "Sinh viên chưa phân biệt rõ bản chất học thuật của khái niệm.";
+      // Đi qua `layCanhBaoBayHocThuat` thay vì đọc thẳng `node.teaching.misconception`, để nút
+      // TỔNG HỢP TỰ ĐỘNG của môn tự tạo không lọt chuỗi mẫu vào đây. Chuỗi đó đúng với mọi khái
+      // niệm nên không nói lên gì, mà lại được trình bày như một bẫy đã biết.
+      description = q.misconception
+        || kbService.layCanhBaoBayHocThuat(subjectId, q)
+        || "Sinh viên chưa phân biệt rõ bản chất học thuật của khái niệm.";
       
       // Look up specific distractor details if available
       const distractors = kbService.getDistractors(subjectId, node?.id || "");
@@ -683,6 +688,7 @@ export const EvidenceBasedPipeline = {
     // 7. Context Window Builder (Deduplication & Token Compression)
     const compressedContext = contextWindowBuilder.buildCompressedContext({
       subjectName: params.subjectName,
+      subjectId: params.subjectId,
       question: q,
       selectedAnswer: params.selectedAnswer,
       evidence,

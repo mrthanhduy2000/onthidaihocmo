@@ -133,6 +133,11 @@ export const kbService = {
         type: "Definition",
         details: `Nội dung cốt lõi về ${conceptName}. Bao gồm các câu hỏi ứng dụng thực tế và bài tập kiểm tra trong hệ thống.`,
         marketingApplication: `Vận dụng lý luận ${conceptName} để phân tích, đánh giá các tình huống và giải quyết các bài tập liên quan.`,
+        // Cờ này phân biệt nút TỔNG HỢP TỰ ĐỘNG với nút BIÊN SOẠN TAY trong
+        // `customer_behavior_kb.ts`. Cần thiết vì mọi trường chữ ở nhánh này đều là chuỗi mẫu
+        // ghép tên khái niệm vào, không phải kiến thức được ai đó soạn ra. Nơi nào định dùng
+        // chúng như bằng chứng học thuật thì phải kiểm cờ này trước, xem `layCanhBaoBayHocThuat`.
+        laNutTongHop: true,
         commonMistakes: `Sinh viên hay nhầm lẫn định nghĩa ${conceptName} hoặc áp dụng sai quy luật lý thuyết.`,
         
         teaching: {
@@ -294,6 +299,35 @@ export const kbService = {
     // luận một kiểu như trước.
     const ranked = this.resolveConceptsForQuestion(subjectId, question, 1);
     return ranked.length > 0 ? ranked[0].node : null;
+  },
+
+  /**
+   * Cảnh báo bẫy hiểu sai ở tầng KHÁI NIỆM cho một câu hỏi, hoặc null nếu không có dữ liệu thật.
+   *
+   * Vì sao cần: trường `misconception` của câu hỏi rỗng ở **292/292** câu, nên
+   * `contextWindowBuilder` luôn gửi cho gia sư AI đúng một câu chung chung "Cần phân biệt rõ bản
+   * chất khái niệm với các biểu hiện bề ngoài". Trong khi đó `customer_behavior_kb.ts` có sẵn
+   * dữ liệu hiểu sai biên soạn tay cho **16/16** khái niệm. Đây là dữ liệu nằm không, còn chỗ
+   * tiêu thụ thì đang đói.
+   *
+   * Hai quy tắc, cả hai đều quan trọng:
+   *
+   * 1. Chỉ đi qua `resolveConceptsForQuestion`, bộ tra cứu DUY NHẤT (bất biến 4.5). Tuyệt đối
+   *    không viết bộ so khớp thứ hai.
+   * 2. **Bỏ qua nút tổng hợp tự động.** Chúng có đủ trường chữ nhưng chỉ là chuỗi mẫu kiểu
+   *    "Sinh viên hay nhầm lẫn định nghĩa X", đúng với mọi khái niệm nên không nói lên gì.
+   *    Đưa nó vào lời nhắc dưới nhãn "bẫy phổ biến" là dựng chuỗi mẫu thành bằng chứng học
+   *    thuật, đúng họ lỗi mà bất biến 4.9 cấm. Thà trả null để nơi gọi dùng câu chung chung.
+   */
+  layCanhBaoBayHocThuat(subjectId: string, question: Question): string | null {
+    const node = this.getConceptForQuestion(subjectId, question);
+    if (!node || node.laNutTongHop) return null;
+
+    const ungVien = [node.teaching?.misconception, node.commonMistakes]
+      .map(s => String(s || "").trim())
+      .filter(s => s.length > 0);
+
+    return ungVien.length > 0 ? ungVien[0] : null;
   },
 
   /**

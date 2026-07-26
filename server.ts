@@ -19,7 +19,9 @@ import recommend from "./functions-src/ai/recommend";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+// Cổng lấy từ biến môi trường để chạy được nhiều phiên song song. Không đặt biến thì vẫn là
+// 3000 như cũ, nên mọi tài liệu và thói quen cũ không đổi.
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: "4mb" }));
 

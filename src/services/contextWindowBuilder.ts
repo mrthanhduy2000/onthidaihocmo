@@ -8,6 +8,8 @@ import { StudentModel } from "./learnerModel";
 import { LearningPlan } from "./learningPlanner";
 import { Question } from "../types";
 import { conceptMemoryService } from "./conceptMemoryService";
+import { kbService } from "./kbService";
+import { dbService } from "./db";
 
 export interface CompressedContext {
   conceptName: string;
@@ -29,6 +31,8 @@ export const contextWindowBuilder = {
    */
   buildCompressedContext(params: {
     subjectName: string;
+    /** Mã môn, để tra đồ thị tri thức đúng môn. Thiếu thì rơi về môn đang mở. */
+    subjectId?: string;
     question: Question;
     selectedAnswer: string;
     evidence: EvidenceSet;
@@ -37,7 +41,7 @@ export const contextWindowBuilder = {
     studentModel: StudentModel;
     crossSubject?: { connectedSubject: string; topic: string; explanation: string } | null;
   }): CompressedContext {
-    const { question, selectedAnswer, evidence, reasoning, learningPlan, studentModel, crossSubject } = params;
+    const { question, selectedAnswer, evidence, reasoning, learningPlan, studentModel, crossSubject, subjectId } = params;
 
     // 1. Deduplicate & compress Knowledge Base Evidence
     const evidenceItems: string[] = [];
@@ -100,10 +104,27 @@ export const contextWindowBuilder = {
     const selectedAnswerText = `${selectedAnswer.toUpperCase()} - ${question.options[selKey as keyof typeof question.options] || ""}`;
     const correctAnswerText = `${question.correctAnswer.toUpperCase()} - ${question.options[corrKey as keyof typeof question.options] || ""}`;
 
-    // 5. Compress Misconception context
+    // 5. Compress Misconception context.
+    //
+    // Thứ tự ưu tiên, từ cụ thể nhất tới chung nhất:
+    //   1. Hiểu sai phát hiện được từ chính lựa chọn của người học.
+    //   2. Bẫy hiểu sai của câu hỏi, nếu ngân hàng có điền.
+    //   3. Bẫy hiểu sai BIÊN SOẠN TAY ở tầng khái niệm, tra qua đồ thị tri thức.
+    //   4. Câu chung chung, chỉ dùng khi ba nguồn trên đều không có.
+    //
+    // Trước 27/07/2026 chỉ có bước 1, 2 và 4. Mà bước 2 rỗng ở 292/292 câu, nên thực tế gia sư
+    // AI luôn nhận đúng một câu chung chung. Bổ sung bước 3 lấy được dữ liệu thật cho toàn bộ
+    // ngân hàng. Xem `kbService.layCanhBaoBayHocThuat` để biết vì sao nút tổng hợp bị loại.
+    const bayTheoCauHoi = String(question.misconception || "").trim();
+    const bayTheoKhaiNiem = bayTheoCauHoi
+      ? ""
+      : (kbService.layCanhBaoBayHocThuat(subjectId || dbService.getActiveSubjectId(), question) || "");
+    const bayPhoBien = bayTheoCauHoi || bayTheoKhaiNiem
+      || "Cần phân biệt rõ bản chất khái niệm với các biểu hiện bề ngoài.";
+
     const misconceptionsSummary = reasoning.detectedMisconception.hasMisconception
       ? `Phát hiện hiểu sai: ${reasoning.detectedMisconception.description}`
-      : `Cảnh báo bẫy phổ biến: ${question.misconception || "Cần phân biệt rõ bản chất khái niệm với các biểu hiện bề ngoài."}`;
+      : `Cảnh báo bẫy phổ biến: ${bayPhoBien}`;
 
     // 6. Compress Citation Metadata
     const pdfName = evidence.slideSource?.pdf || "Giáo trình và Slide Bài Giảng";

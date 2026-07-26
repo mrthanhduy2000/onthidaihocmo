@@ -1098,6 +1098,59 @@ check("Danh sách chương gợi ý tái lập được",
 dbService.clearAllHistory();
 
 // ===========================================================================
+g("N. Cảnh báo bẫy hiểu sai gửi cho gia sư AI");
+// ===========================================================================
+// Bối cảnh: trường `misconception` của câu hỏi rỗng 292/292, nên `contextWindowBuilder` từng
+// luôn gửi cho gia sư AI đúng một câu chung chung, trong khi đồ thị tri thức có sẵn dữ liệu
+// hiểu sai biên soạn tay cho 16/16 khái niệm.
+
+const monN = dbService.getActiveSubjectId();
+
+let coCanhBao = 0;
+const canhBaoKhacNhau = new Set<string>();
+for (const q of questions) {
+  const s = kbService.layCanhBaoBayHocThuat(monN, q);
+  if (s) { coCanhBao++; canhBaoKhacNhau.add(s); }
+}
+check("Mọi câu tra ra được cảnh báo bẫy biên soạn tay",
+  coCanhBao === questions.length,
+  `${coCanhBao}/${questions.length} câu, ${canhBaoKhacNhau.size} nội dung khác nhau`);
+
+check("Cảnh báo bẫy phải phân hóa, không phải một chuỗi dùng chung",
+  canhBaoKhacNhau.size >= 10,
+  `${canhBaoKhacNhau.size} nội dung khác nhau trên ${coCanhBao} câu`);
+
+// Chốt chặn quan trọng nhất của nhóm này: nút TỔNG HỢP TỰ ĐỘNG chỉ chứa chuỗi mẫu ghép tên
+// khái niệm, đúng với mọi khái niệm nên không nói lên gì. Đưa nó vào lời nhắc dưới nhãn "bẫy
+// phổ biến" là dựng chuỗi mẫu thành bằng chứng học thuật, đúng họ lỗi mà bất biến 4.9 cấm.
+const monTuTaoN = "custom_kiem_bay";
+localStorage.setItem(`poly_econ_custom_questions_${monTuTaoN}`, JSON.stringify([
+  { ...questions[0], id: 990701, topicId: `${monTuTaoN}_T1.1`, chapterId: 1 },
+]));
+localStorage.setItem(`poly_econ_custom_topics_${monTuTaoN}`, JSON.stringify([
+  { id: `${monTuTaoN}_T1.1`, chapterId: 1, title: "Chủ đề 1.1", description: "Tự kiểm chứng." },
+]));
+localStorage.setItem(`poly_econ_custom_chapters_${monTuTaoN}`, JSON.stringify([
+  { id: 1, code: "CH1", title: "Chương 1", description: "Tự kiểm chứng." },
+]));
+
+const monTruocN = dbService.getActiveSubjectId();
+loadSubject(monTuTaoN);
+const nutTongHop = kbService.getKnowledgeGraph(monTuTaoN);
+const canhBaoTuTao = kbService.layCanhBaoBayHocThuat(monTuTaoN, questionMap.get(990701)!);
+check("Không lấy chuỗi mẫu của nút tổng hợp làm cảnh báo bẫy",
+  canhBaoTuTao === null,
+  canhBaoTuTao === null
+    ? `${nutTongHop.length} nút tổng hợp đều bị loại, sẽ rơi về câu chung chung`
+    : `lọt chuỗi mẫu: ${canhBaoTuTao.slice(0, 60)}`);
+check("Nút tổng hợp có gắn cờ nhận dạng",
+  nutTongHop.length > 0 && nutTongHop.every(n => n.laNutTongHop === true),
+  `${nutTongHop.filter(n => n.laNutTongHop).length}/${nutTongHop.length} nút có cờ`);
+loadSubject(monTruocN);
+
+info(`Cảnh báo bẫy: ${coCanhBao}/${questions.length} câu nhận nội dung biên soạn tay, ${canhBaoKhacNhau.size} nội dung khác nhau. Trước 27/07/2026 con số này là 0 vì trường misconception của câu hỏi rỗng toàn tập.`);
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

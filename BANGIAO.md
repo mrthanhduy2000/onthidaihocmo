@@ -59,6 +59,64 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Nối dữ liệu hiểu sai biên soạn tay vào lời nhắc gửi gia sư AI
+
+**Objective**: đổi hướng khỏi việc truy "con số bịa". Câu hỏi mới là **ứng dụng đang ghi dữ
+liệu gì mà không engine nào đọc**. Đây là mạch thứ nhất trong tám mạch được giao.
+
+**Đo trước khi viết code** (cổng chặn bắt buộc, chạy trong Node qua esbuild):
+
+| Hạng mục | Số đo |
+|---|---|
+| Khái niệm có `commonMistakes` biên soạn tay | 16/16 |
+| Khái niệm có `teaching.misconception` | 16/16 |
+| Câu tra ra được khái niệm có dữ liệu | **292/292** |
+| Số nội dung hiểu sai khác nhau | 15 |
+
+Dữ liệu đủ dày nên làm tiếp. Trường `misconception` của **câu hỏi** vẫn rỗng 292/292, nhưng
+tầng **khái niệm** thì đầy đủ.
+
+**Phát hiện quan trọng làm đổi thiết kế**: đo xong thấy môn tự tạo cũng báo "3/3 khái niệm có
+dữ liệu hiểu sai", điều vô lý vì môn đó không có ai biên soạn. Dò ra `kbService` dòng 136 và 140
+sinh chuỗi mẫu `Sinh viên hay nhầm lẫn định nghĩa ${tên} hoặc áp dụng sai quy luật lý thuyết`.
+Chuỗi này đúng với **mọi** khái niệm nên không nói lên gì, mà lại sắp được đưa vào lời nhắc dưới
+nhãn "bẫy phổ biến". Đó đúng là họ lỗi bốn lượt trước đang truy, chỉ khác là bịa chữ thay vì bịa
+số. Tiền lệ trong repo đã xử lý y hệt với `dependencies.requires` (chú thích dài ở
+`kbService.ts`), nên theo đúng lối đó: **thà nói chung chung còn hơn nói sai**.
+
+**Đã làm**:
+
+- `KnowledgeNode` thêm cờ `laNutTongHop`, đánh dấu nút do máy tổng hợp.
+- `kbService.layCanhBaoBayHocThuat` tra qua `resolveConceptsForQuestion` (bất biến 4.5, không
+  viết bộ tra cứu thứ hai), và **loại thẳng nút tổng hợp**, trả null để nơi gọi dùng câu chung.
+- `contextWindowBuilder` xếp bốn mức ưu tiên: hiểu sai phát hiện được từ lựa chọn, bẫy của câu
+  hỏi, bẫy biên soạn tay ở tầng khái niệm, rồi mới tới câu chung chung.
+- `evidencePipeline.analyzeReasoning` cũng đi qua hàm mới, vì bản cũ đọc thẳng
+  `node.teaching.misconception` nên môn tự tạo bị lọt chuỗi mẫu.
+- `server.ts` đọc `process.env.PORT`, `.claude/launch.json` bật `autoPort`. Cần thiết để chạy
+  được nhiều phiên song song mà vẫn mở được giao diện lên xem.
+
+**Chênh lệch thật, nói cho chính xác chứ không thổi phồng**: nhánh cũ chỉ bắn khi người học trả
+lời **SAI**, và nhánh đó vốn đã đọc dữ liệu biên soạn. Chỗ thật sự được cải thiện là khi trả lời
+**ĐÚNG**, vốn luôn nhận câu chung chung vì `question.misconception` rỗng toàn tập.
+
+| Tình huống | Trước | Sau (đo trên 30 câu mẫu) |
+|---|---|---|
+| Trả lời ĐÚNG | 0/30 có cảnh báo riêng | **30/30** |
+| Trả lời SAI | đã có sẵn | 30/30, thêm chốt chặn chuỗi mẫu cho môn tự tạo |
+
+**Nghiệm thu hai tầng**: nhóm kiểm **N** thêm 4 phép, tổng lên **97**, `npm run check` đủ 6
+chặng. Đã **thử phá**: bỏ chốt `laNutTongHop` thì phép kiểm đỏ đúng chỗ và in ra chuỗi mẫu bị
+lọt. Và mở `npm run dev` làm sai một câu thật, đọc mục "BẪY HIỂU SAI CẦN TRÁNH" trong bài giảng
+AI: nay là *"Nghĩ rằng nhu cầu mua sắm luôn bắt đầu từ việc đồ cũ bị hỏng, phủ nhận trường hợp
+mua vì ham muốn nâng cấp"*, gắn đúng khái niệm Nhận thức vấn đề, không còn câu chung chung.
+
+**Còn nợ**: trường `misconception` của câu hỏi vẫn rỗng 292/292. Nay nó không còn gây hại vì đã
+có nguồn thay thế ở tầng khái niệm, nhưng nếu Đàm muốn cảnh báo riêng cho từng câu chứ không
+phải từng khái niệm thì vẫn phải bổ sung dữ liệu. Đây là Câu hỏi mở số 3 trong WORKSTATE.
+
+---
+
 ### 27/07/2026 — Quét rộng tìm "chỉ số hằng số trá hình", ra thêm sáu con số bịa
 
 **Objective**: đem đúng nguyên tắc vừa rút ra ở lượt trước (mục 4.9b trong AGENTS.md) áp ở quy

@@ -65,6 +65,12 @@ export interface KnowledgeNode {
   details?: string;
   marketingApplication?: string;
   commonMistakes?: string;
+  /**
+   * Đúng khi nút này do `kbService` tổng hợp tự động cho môn không có đồ thị biên soạn tay.
+   * Các nút đó có đủ trường chữ, nhưng toàn bộ là chuỗi mẫu ghép tên khái niệm vào, không phải
+   * kiến thức do người soạn viết ra. Đừng dùng chúng làm bằng chứng học thuật.
+   */
+  laNutTongHop?: boolean;
   
   // Expanded Learning Engine Metadata
   teaching?: TeachingMetadata;
