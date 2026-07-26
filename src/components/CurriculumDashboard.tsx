@@ -103,8 +103,8 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
 
           <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
             <div className="text-[10px] font-mono text-text-muted uppercase">Đếm ngược kỳ thi</div>
-            <div className="text-2xl font-mono font-bold text-brand-warning">12 Ngày</div>
-            <div className="text-[10px] text-text-muted">Đang theo đúng tiến độ</div>
+            <div className="text-2xl font-mono font-bold text-brand-warning">{plan.examDaysRemaining} Ngày</div>
+            <div className="text-[10px] text-text-muted">Tính từ ngày thi trong mục tiêu môn học</div>
           </div>
         </div>
 

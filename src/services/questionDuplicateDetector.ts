@@ -19,25 +19,52 @@ export interface DuplicateDetectionResult {
   matches: DuplicateMatch[];
 }
 
+/**
+ * Đệm kết quả chuẩn hóa chuỗi.
+ *
+ * Dò trùng lặp so mỗi câu với toàn bộ ngân hàng, nên cùng một câu bị chuẩn hóa lại hàng trăm
+ * lần. Với 292 câu, đó là khoảng 85 nghìn lượt chuẩn hóa cho đúng 292 chuỗi khác nhau.
+ */
+const demChuanHoa = new Map<string, string>();
+
 export const questionDuplicateDetector = {
   /**
    * Normalizes a string for clean comparisons by stripping punctuation and lowercasing.
    */
   normalizeText(str: string): string {
-    return (str || "")
+    const raw = str || "";
+    const daCo = demChuanHoa.get(raw);
+    if (daCo !== undefined) return daCo;
+
+    const ketQua = raw
       .toLowerCase()
       .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'<>]/g, "")
       .replace(/\s+/g, " ")
       .trim();
+
+    // Chặn phình bộ nhớ khi có nhiều chuỗi lạ (ví dụ nhập tài liệu dài). Ngân hàng thật chỉ
+    // khoảng vài nghìn chuỗi riêng biệt nên gần như không bao giờ chạm trần.
+    if (demChuanHoa.size > 20000) demChuanHoa.clear();
+    demChuanHoa.set(raw, ketQua);
+    return ketQua;
   },
 
   /**
    * Calculates Jaccard word-set similarity score (0 - 100).
    */
   calculateSimilarity(text1: string, text2: string): number {
-    const norm1 = this.normalizeText(text1);
-    const norm2 = this.normalizeText(text2);
+    return this.similarityTuTapTu(this.normalizeText(text1), this.normalizeText(text2));
+  },
 
+  /**
+   * Bản dùng chung của phép Jaccard, nhận vào chuỗi ĐÃ chuẩn hóa.
+   *
+   * Vì sao tách ra: `checkQuestionDuplicates` quét câu đang xét với toàn bộ ngân hàng, và bản cũ
+   * chuẩn hóa lại chính câu đang xét ở MỖI vòng lặp. Với 292 câu, đó là 292 × 292 lần chuẩn hóa
+   * thừa cho cùng một chuỗi. Đo được: một lượt quét cả ngân hàng mất khoảng 4 giây, đủ để treo
+   * giao diện khi mở màn hình Đài quan sát.
+   */
+  similarityTuTapTu(norm1: string, norm2: string): number {
     if (norm1 === norm2 && norm1.length > 0) return 100;
     if (!norm1 || !norm2) return 0;
 
@@ -45,13 +72,13 @@ export const questionDuplicateDetector = {
     const words2 = new Set(norm2.split(" "));
 
     let intersectionCount = 0;
-    words1.forEach(w => {
-      if (words2.has(w)) intersectionCount++;
+    let unionCount = words1.size;
+    words2.forEach(w => {
+      if (words1.has(w)) intersectionCount++;
+      else unionCount++;
     });
 
-    const unionCount = new Set([...words1, ...words2]).size;
     if (unionCount === 0) return 0;
-
     return Math.round((intersectionCount / unionCount) * 100);
   },
 
@@ -61,7 +88,12 @@ export const questionDuplicateDetector = {
   checkQuestionDuplicates(target: Question, pool: Question[]): DuplicateDetectionResult {
     const matches: DuplicateMatch[] = [];
 
+    // Chuẩn hóa câu đang xét ĐÚNG MỘT LẦN, ngoài vòng lặp.
     const normTargetQ = this.normalizeText(target.question);
+    const normTargetOpts = Object.values(target.options || {})
+      .map(o => this.normalizeText(o))
+      .sort()
+      .join("|");
 
     for (const existing of pool) {
       if (existing.id === target.id) continue;
@@ -79,13 +111,12 @@ export const questionDuplicateDetector = {
         continue;
       }
 
-      // 2. Similarity analysis
-      const textSimilarity = this.calculateSimilarity(target.question, existing.question);
+      // 2. Similarity analysis (dùng lại chuỗi đã chuẩn hóa, không chuẩn hóa lại)
+      const textSimilarity = this.similarityTuTapTu(normTargetQ, normExistingQ);
 
       // Option set overlap check
-      const optionsTarget = Object.values(target.options || {}).map(o => this.normalizeText(o)).sort().join("|");
       const optionsExisting = Object.values(existing.options || {}).map(o => this.normalizeText(o)).sort().join("|");
-      const optionSimilarity = this.calculateSimilarity(optionsTarget, optionsExisting);
+      const optionSimilarity = this.similarityTuTapTu(normTargetOpts, optionsExisting);
 
       const combinedScore = Math.round(textSimilarity * 0.7 + optionSimilarity * 0.3);
 

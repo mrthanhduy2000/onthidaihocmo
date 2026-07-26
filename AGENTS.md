@@ -22,7 +22,7 @@ Chạy 6 chặng, hỏng chặng nào dừng ngay tại đó:
 |---|---|---|
 | 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
 | 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
-| 3 | **55 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 3 | **63 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
 | 6 | **Nạp thật từng gói hàm serverless trong Node** | vài giây |
@@ -159,6 +159,19 @@ trong `learningEngine` cho 0/292 câu, bản dùng `includes` trong `kbService` 
 trong `db.recomputeStatistics` khớp hai chiều làm nhòe mọi khái niệm vào nhau. **Đừng viết
 bản thứ tư.** Cần logic khác thì sửa hàm này và chạy lại `npm run check`.
 
+### 4.5b. Tầng quan sát cũng phải đi qua bộ tra cứu đó
+
+Ngày 27/07/2026 phát hiện `productObservabilityService` tự khớp khái niệm bằng
+`q.concept === node.concept`. Đo được: **0 trên 292 câu khớp**, dù 280 câu có điền trường
+`concept`. Hệ quả là bảng điều khiển báo **16/16 khái niệm đã chết** và độ phủ khái niệm luôn
+**0%**, tức toàn bộ màn hình nói sai sự thật một cách trơn tru.
+
+Nay mọi phép đếm câu theo khái niệm ở file đó đi qua hàm `demCauTheoKhaiNiem`, và hàm này gọi
+`kbService.resolveConceptsForQuestion`. Sau khi sửa: 0/16 khái niệm chết, độ phủ 100%.
+
+Đây là **bản tra cứu thứ tư** bị phát hiện. Ba bản trước đã nêu ở mục 4.5. Nếu thấy ở đâu đó
+một phép so khái niệm tự chế, gần như chắc chắn nó sai.
+
 ### 4.6. Độ thành thạo khái niệm: một giá trị, hai khóa
 
 Bảng `stats.conceptMastery` lưu mỗi khái niệm dưới CẢ HAI khóa (mã `CB_C1_N1` và tên đầy đủ)
@@ -215,7 +228,24 @@ Cạm bẫy đã ghi nhận: tham số `aiEngineExecutor` của `executePipeline
 không hề gọi nó mà gọi thẳng `aiProviderRegistry` ở bước 9. Đừng tin vào tên tham số, hãy dò
 đường đi thật.
 
-### 4.9. Khóa câu đã trả lời ở chế độ gia sư
+### 4.9. Không hiển thị con số chưa đo
+
+Ngày 27/07/2026 tìm thấy bốn chỗ nói với người học một con số chưa từng được tính:
+
+| Chỗ | Bịa cái gì |
+|---|---|
+| `curriculumIntelligenceEngine` khoản nợ Bloom | Khẳng định "tỷ lệ Vận dụng chưa đạt 30%" mà không hề đo, đẩy ra cho mọi người học có hơn 30 câu |
+| `curriculumIntelligenceEngine.studyBalance` | Trả về cứng 45/35/20 phần trăm như thể đó là phân bố của chính người học |
+| `CurriculumDashboard` đếm ngược kỳ thi | Ghi cứng "12 Ngày" trong giao diện, trong khi Bàn học hiện 14 ngày từ ngày thi thật |
+| `detectStudyDebt` nợ theo chương | Đọc `stats.solvedQuestionIds`, trường KHÔNG tồn tại, nên luôn báo mọi chương "chưa từng luyện tập" |
+
+Quy tắc: **thiếu dữ liệu thì hiện 0, hiện "chưa đủ dữ liệu", hoặc không hiện gì cả.** Tuyệt đối
+không điền số cho đẹp bảng. Nhóm kiểm **I** canh bốn chỗ này.
+
+Kèm theo: khi đọc một trường trên `Statistics`, hãy kiểm tra nó có thật trong `src/types.ts`
+không. `(stats as any).tenTruong` là dấu hiệu điển hình của trường ma.
+
+### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 
 `PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,
 kể cả khi người dùng tắt công tắc gia sư. Không có nó thì có thể xem đáp án đúng rồi tắt công tắc,
@@ -285,11 +315,18 @@ Cách xử lý: đóng gói bằng esbuild với `define: { "import.meta.env": "
 `scripts/check.mjs` **và** `scripts/build-vercel.mjs`. Cứ theo đó cho mọi script chạy engine
 ngoài trình duyệt.
 
-**Bẫy này đã cắn thật ngày 27/07/2026, đọc kỹ.** `build-vercel.mjs` khi đó **chưa** có dòng
-`define`. Chỉ cần một thay đổi khiến `aiProvider.ts` nhập gián tiếp tới `supabaseClient` là ba
-hàm `chat`, `recommend`, `complete` nổ ngay lúc nạp và trả 500 trên bản thật, trong khi
-`npm run check` vẫn xanh toàn bộ và `vercel build` vẫn báo đóng gói thành công. Chặng 6 sinh ra
-từ sự cố này. Đừng gỡ dòng `define`, và đừng gỡ chặng 6.
+**Bẫy này đã cắn BA LẦN trong đúng một ngày (27/07/2026), đọc kỹ.** `build-vercel.mjs` khi đó
+**chưa** có dòng `define`. Chỉ cần một thay đổi khiến `aiProvider.ts` nhập gián tiếp tới
+`supabaseClient` là ba hàm `chat`, `recommend`, `complete` nổ ngay lúc nạp và trả 500 trên bản
+thật, trong khi `npm run check` vẫn xanh toàn bộ và `vercel build` vẫn báo đóng gói thành công.
+Lần thứ ba nó giết luôn `npm run dev`, vì `tsx` cũng không có `import.meta.env`.
+
+**Đã vá tận gốc**: `src/services/supabaseClient.ts` nay đọc qua
+`const bienMoiTruong = (import.meta as any)?.env ?? {}`. Nhờ vậy file này an toàn ở mọi môi
+trường và mọi nơi nhập về sau không phải nhớ đặt `define` nữa.
+
+Ba thứ đừng gỡ: dòng `define` trong `build-vercel.mjs`, chặng 6, và optional chaining trong
+`supabaseClient.ts`. Cả ba sinh ra từ cùng một sự cố có thật.
 
 ### Bẫy 3: localStorage ngoài trình duyệt
 
@@ -303,7 +340,20 @@ một trình duyệt, tiền tố khóa là `poly_econ_*`. Xóa dữ liệu duy�
 Có nút sao lưu thủ công trong Cài đặt (`src/components/ProductSettingsModal.tsx`). Chủ dự án đã chọn
 giữ cách bấm tay, **đừng tự ý thêm đồng bộ hay đăng nhập trở lại nếu không được yêu cầu**.
 
-### Bẫy 5: không bao giờ đặt khóa thật vào `.env.example`
+### Bẫy 5: hai hàm gọi vòng nhau, build vẫn xanh, màn hình vẫn chết
+
+`productObservabilityService.getSystemHealthOverview` từng gọi `getReleaseReadinessReport`, còn
+hàm đó gọi ngược lại `getSystemHealthOverview`. Vòng gọi vô hạn, nên **mọi lần mở màn hình Đài
+quan sát đều tràn ngăn xếp**. Không chặng kiểm nào bắt được: kiểu dữ liệu đúng, build đúng, và
+bộ tự kiểm chứng khi đó không hề gọi tới engine này.
+
+Cách đã dùng để cắt vòng: tách phần lõi ra thành `getCoreHealthScores`, hàm không phụ thuộc vào
+mức sẵn sàng phát hành. Bên nào cần chấm sức khỏe thì gọi phần lõi.
+
+Bài học chung: **một engine không có phép kiểm nào chạm tới thì coi như chưa từng được chạy.**
+Trước khi tin một engine còn sống, hãy gọi thử nó trong `harness.ts`.
+
+### Bẫy 6: không bao giờ đặt khóa thật vào `.env.example`
 
 File đó bị commit. Đã từng lộ một khóa Gemini theo đúng cách này. Chặng 1 của `npm run check`
 canh mẫu khóa Google AI, JWT Supabase và khóa OpenAI trong mọi file đã commit.

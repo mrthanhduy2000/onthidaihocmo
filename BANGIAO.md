@@ -59,6 +59,62 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Rà soát toàn diện: 9 lỗi thật ở hai engine chưa từng được soi
+
+**Objective**: Đàm yêu cầu "rà soát mọi thứ, fix toàn bộ, nâng cấp trí tuệ". Hai engine
+`productObservabilityService` (1205 dòng) và `curriculumIntelligenceEngine` (390 dòng) nằm
+trong danh sách "chưa rà" của WORKSTATE, và cả hai đều có màn hình thật trong ứng dụng.
+
+**Cách làm**: đo bằng script chạy trên engine thật trước, không đọc lướt rồi đoán. Chính việc
+bấm giờ và in số đã lôi ra những lỗi mà đọc mã không thấy.
+
+**Chín lỗi đã sửa**:
+
+| # | Lỗi | Hậu quả đo được |
+|---|---|---|
+| 1 | Hai hàm gọi vòng nhau vô hạn | Màn hình Đài quan sát **luôn tràn ngăn xếp** khi mở |
+| 2 | Khớp khái niệm bằng so chuỗi tuyệt đối | 0/292 câu khớp, báo 16/16 khái niệm "chết", độ phủ 0% |
+| 3 | Đọc trường ma `solvedQuestionIds` | Mọi chương luôn báo "chưa từng luyện tập", độ thạo luôn 0% |
+| 4 | Khoản nợ Bloom khẳng định số chưa đo | Đẩy ra cho mọi người học có hơn 30 câu, bất kể thực tế |
+| 5 | `studyBalance` trả hằng số 45/35/20 | Hiển thị như phân bố của chính người học |
+| 6 | Đếm ngược kỳ thi ghi cứng trong giao diện | Màn Chương trình hiện 12 ngày, màn Bàn học hiện 14 ngày |
+| 7 | Hàm so sánh không phản đối xứng khi xếp nợ | Vi phạm bất biến 4.7, thứ tự tùy thuật toán sắp xếp |
+| 8 | Chuẩn hóa chuỗi lặp 85 nghìn lần | Một lượt quét ngân hàng mất 4,0 giây |
+| 9 | `new Date()` thay vì `TimeService` | Lệch đồng hồ chung, kết quả không tái lập |
+
+**Số đo trước và sau**:
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Mở màn hình Đài quan sát | tràn ngăn xếp | 84/100, hiện đủ, không lỗi console |
+| Khái niệm bị coi là chết | 16/16 | 0/16 |
+| Độ phủ khái niệm | 0% | 100% |
+| Quét chất lượng cả ngân hàng | 4,0 giây | 1,56 giây |
+| Gọi lại chỉ số sức khỏe | không chạy được | 41 ms, cùng kết quả |
+
+**Cách cắt vòng đệ quy**: tách `getCoreHealthScores` ra khỏi `getSystemHealthOverview`. Cổng
+"sức khỏe hệ thống" trong báo cáo phát hành chấm bằng phần lõi; tự chấm bằng chính kết quả của
+mình vốn dĩ vô nghĩa, nên tách ra vừa đúng logic vừa hết vòng.
+
+**Bẫy 2 cắn lần thứ ba trong ngày**, lần này giết `npm run dev`: `aiProvider` nhập
+`supabaseClient`, mà file đó đọc thẳng `import.meta.env`, thứ `tsx` không có. Lần này **vá tận
+gốc** bằng optional chaining ngay trong `supabaseClient.ts`, nên mọi nơi nhập về sau đều an
+toàn, không phải nhớ đặt `define` ở từng công cụ nữa.
+
+**Bộ kiểm**: thêm nhóm **I** với 8 phép kiểm, tổng lên 63. Nhóm này canh đúng chín lỗi trên,
+trong đó phép kiểm "chỉ số sức khỏe tính được" sẽ đỏ ngay nếu ai đó dựng lại vòng đệ quy.
+
+**Bài học chung, ghi vào AGENTS.md mục 4.9**: không hiển thị con số chưa đo. Thiếu dữ liệu thì
+hiện 0 hoặc không hiện, tuyệt đối không điền số cho đẹp bảng. Và khi đọc một trường trên
+`Statistics`, phải kiểm nó có thật trong `types.ts` không; `(stats as any).x` là dấu hiệu điển
+hình của trường ma.
+
+**Còn nợ**: ngưỡng cứng thuần túy ở hai engine vẫn còn (39 và 18 chỗ), nhưng đó là chuyện tinh
+chỉnh chứ không còn là sai sự thật. Lần quét chất lượng đầu tiên vẫn mất 1,56 giây do bản chất
+so từng cặp câu hỏi; muốn nhanh hơn nữa phải đổi thuật toán dò trùng.
+
+---
+
 ### 27/07/2026 — Tôi làm chết 3 cổng AI trên bản thật, và chặng kiểm số 6 ra đời từ đó
 
 **Chuyện gì đã xảy ra**: ngay sau khi push lượt "đưa tầng suy luận về trình duyệt", tôi dò lại

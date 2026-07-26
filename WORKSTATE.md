@@ -6,8 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau khi chuyển tầng suy luận về trình duyệt để môn tự tạo
-cũng dùng được AI.
+**Cập nhật lần cuối**: 27/07/2026, sau đợt rà soát toàn diện hai engine chưa từng được soi.
 
 ---
 
@@ -16,7 +15,7 @@ cũng dùng được AI.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Đưa tầng suy luận về trình duyệt cho mọi môn, **ĐÃ HOÀN THÀNH VÀ NGHIỆM THU** |
+| **Current Milestone** | Rà soát toàn diện và sửa 9 lỗi thật ở hai engine chưa từng được soi, **ĐÃ HOÀN THÀNH** |
 | **Current Phase** | Rảnh, sẵn sàng nhận việc |
 | **Current Task** | Không có |
 | **Completed %** | 100%, đã kiểm chứng bằng lời gọi thật lên bản deploy |
@@ -40,7 +39,7 @@ không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì 
 | Component | 30 file |
 | Service | 46 file |
 | Tổng dòng TypeScript | khoảng 37.400 |
-| Phép tự kiểm chứng | 55, đạt toàn bộ |
+| Phép tự kiểm chứng | 63, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -55,13 +54,11 @@ không phải toàn bộ phạm vi. Tên thư mục là di sản của môn đ�
 Đọc mục 3 trong [AGENTS.md](AGENTS.md) cho phần quy tắc kỹ thuật đi kèm (26 chỗ gắn cứng mã môn
 học cần chuyển dần sang khai báo bằng dữ liệu).
 
-Hai điều này đổi cách xếp mức ưu tiên, cần chủ dự án quyết chứ AI không tự quyết:
+Trạng thái đường nạp môn mới, cập nhật 27/07/2026: **đã thông**. Sinh câu hỏi từ tài liệu chạy
+được, và môn tự tạo trong ứng dụng cũng dùng được gia sư AI (AGENTS.md mục 4.8).
 
-- **Rủi ro 1 nặng hơn vẻ ngoài của nó.** Chức năng sinh câu hỏi từ tài liệu chính là đường nạp
-  môn mới, mà nó đang báo lỗi thẳng trên bản chạy thật. Với định hướng đa môn thì đây là thứ
-  chặn đường, không phải một khiếm khuyết bên lề.
-- **Nợ kỹ thuật gắn cứng mã môn học chưa được ghi thành một khoản riêng** vì trước nay dự án chỉ
-  phục vụ một môn tại một thời điểm. Nay nó là nợ thật, chi phí trả tăng theo số môn được thêm.
+**Nợ gắn cứng mã môn học** vẫn còn và chi phí trả tăng theo số môn được thêm. Đây là khoản nợ
+đáng dọn tiếp nếu Đàm bắt đầu nạp môn thứ ba.
 
 ---
 
@@ -114,20 +111,19 @@ sẵn rồi chưa bao giờ đấu nối.
 **Rủi ro nếu để nguyên**: người sau đọc code sẽ tưởng các engine này đang chạy và suy luận sai
 về hành vi hệ thống. Đây là rủi ro hiểu nhầm, không phải rủi ro chạy sai.
 
-### Nợ 2: Ngưỡng cứng còn dày ở hai engine chưa rà tới
-
-Đợt tối ưu vừa rồi chỉ đụng tới `learningEngine`, `conceptMemoryService`,
-`assessmentDesignEngine`, `kbService`, `db`. Hai engine sau vẫn còn nhiều ngưỡng cứng, cùng
-loại khiếm khuyết đã sửa ở nơi khác (bậc nhảy, hằng số ma thuật, chấm tuyến tính):
+### Nợ 2: Ngưỡng cứng ở các engine
 
 | Service | Số ngưỡng cứng | Tình trạng |
 |---|---|---|
-| `productObservabilityService.ts` | 39 | **chưa rà** |
-| `curriculumIntelligenceEngine.ts` | 18 | **chưa rà** |
-| `examForecaster.ts` | 34 | đã rà phần lõi dự báo ngày 27/07/2026 |
+| `productObservabilityService.ts` | 39 | **đã rà 27/07/2026**, sửa 3 lỗi nặng, ngưỡng cứng còn lại chưa đụng |
+| `curriculumIntelligenceEngine.ts` | 18 | **đã rà 27/07/2026**, sửa 5 lỗi nặng, ngưỡng cứng còn lại chưa đụng |
+| `examForecaster.ts` | 34 | đã rà phần lõi dự báo |
 
-Trong `examForecaster`, phần lõi dự báo đã sửa xong (xem BANGIAO.md). Còn các phần **ROI,
-what-if, study debt, stress test chưa soi kỹ**, vẫn nhiều ngưỡng cứng.
+Cả hai engine trên nay có nhóm kiểm **I** canh. Phần ngưỡng cứng thuần túy (bậc nhảy, hằng số
+ma thuật) vẫn còn, nhưng đó là chuyện tinh chỉnh chứ không còn là sai sự thật.
+
+Trong `examForecaster`, phần lõi dự báo đã sửa xong. Còn các phần **ROI, what-if, study debt,
+stress test chưa soi kỹ**, vẫn nhiều ngưỡng cứng.
 
 ### Nợ 3: Gói giao diện lớn
 

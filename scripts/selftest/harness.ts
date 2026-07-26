@@ -17,6 +17,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { dbService, loadSubject, questions, questionMap, chapters, topics } from "../../src/services/db";
 import { EvidenceBasedPipeline } from "../../src/services/evidencePipeline";
+import { productObservabilityService } from "../../src/services/productObservabilityService";
+import { curriculumIntelligenceEngine } from "../../src/services/curriculumIntelligenceEngine";
 // Ngân hàng của môn ĐÃ ĐÓNG, nhập vào đây chỉ để đối chiếu dải id trong nhóm kiểm H.
 import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
@@ -673,6 +675,86 @@ const closedBankIds = new Set(closedSubjectQuestions.map(q => q.id));
 const activeIds = [...questionMap.keys()];
 const overlappingIds = activeIds.filter(id => closedBankIds.has(id));
 info(`Hai dải id rời nhau hoàn toàn (${overlappingIds.length} id trùng): môn đang học ${Math.min(...activeIds)} đến ${Math.max(...activeIds)}, ngân hàng môn đã đóng 1 đến ${Math.max(...closedBankIds)}. Nên bản cũ tra nhầm ngân hàng thì KHÔNG câu nào giải thích được, chứ không phải chỉ sai lác đác.`);
+
+// ===========================================================================
+g("I. Đài quan sát và lộ trình học");
+// ===========================================================================
+// Nhóm này sinh ra ngày 27/07/2026 sau đợt rà soát toàn diện. Cả hai engine dưới đây chưa từng
+// được soi, và mỗi cái đều chứa lỗi khiến màn hình tương ứng hiển thị số liệu vô nghĩa.
+
+// --- Đài quan sát ---
+
+// Lỗi nặng nhất: `getSystemHealthOverview` và `getReleaseReadinessReport` gọi vòng nhau vô hạn,
+// nên MỌI lần mở màn hình Đài quan sát đều làm tràn ngăn xếp. Phép kiểm này chỉ cần chạy được
+// là đã chứng minh vòng lặp đã bị cắt.
+let sucKhoe: any = null;
+let loiSucKhoe = "";
+try {
+  sucKhoe = productObservabilityService.getSystemHealthOverview();
+} catch (e: any) {
+  loiSucKhoe = e?.message || String(e);
+}
+check("Chỉ số sức khỏe hệ thống tính được, không đệ quy vô hạn", sucKhoe !== null,
+  loiSucKhoe || `điểm ${sucKhoe?.systemHealthScore}/100, trạng thái ${sucKhoe?.status}`);
+
+if (sucKhoe) {
+  const lanHai = productObservabilityService.getSystemHealthOverview();
+  check("Chỉ số sức khỏe tái lập được", sucKhoe.systemHealthScore === lanHai.systemHealthScore,
+    `gọi hai lần cùng dữ liệu: ${sucKhoe.systemHealthScore} và ${lanHai.systemHealthScore}`);
+}
+
+// Khớp câu hỏi với khái niệm phải đi qua bộ tra cứu chính thống. Bản cũ so chuỗi tuyệt đối và
+// khớp 0/292 câu, khiến toàn bộ 16/16 khái niệm bị báo là "chết".
+const soKhaiNiem = kbService.getKnowledgeGraph(dbService.getActiveSubjectId()).length;
+const khaiNiemChet = productObservabilityService.getDeadConcepts().length;
+check("Không phải mọi khái niệm đều bị coi là chết", khaiNiemChet < soKhaiNiem,
+  `${khaiNiemChet}/${soKhaiNiem} khái niệm bị coi là chết; bản cũ cho ${soKhaiNiem}/${soKhaiNiem}`);
+
+const doPhu = productObservabilityService.getSubjectCompleteness().conceptCoveragePct;
+check("Độ phủ khái niệm khác 0", doPhu > 0, `độ phủ đo được ${doPhu}%, bản cũ luôn cho 0%`);
+
+// --- Lộ trình học ---
+
+const statsGoc = dbService.getStatistics();
+
+// Hồ sơ trắng sinh ra nhiều khoản nợ đủ mọi mức ưu tiên, nên đây là chỗ kiểm thứ tự xếp hạng
+// có ý nghĩa nhất. Bản cũ dùng hàm so sánh trả -1 bất kể vế còn lại, không phản đối xứng, vi
+// phạm bất biến 4.7.
+dbService.clearAllHistory();
+const noKhiTrang = curriculumIntelligenceEngine.detectStudyDebt(dbService.getStatistics());
+const hang: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+let xepDung = noKhiTrang.length >= 2;
+for (let i = 1; i < noKhiTrang.length; i++) {
+  if ((hang[noKhiTrang[i - 1].priority] ?? 9) > (hang[noKhiTrang[i].priority] ?? 9)) xepDung = false;
+}
+check("Khoản nợ học tập xếp đúng thứ tự ưu tiên", xepDung,
+  noKhiTrang.length < 2
+    ? "chỉ có dưới 2 khoản nợ nên phép kiểm không nói lên điều gì"
+    : `${noKhiTrang.length} khoản, thứ tự: ${noKhiTrang.map(n => n.priority).join(", ")}`);
+
+// Không được khẳng định điều chưa đo. Hồ sơ trắng thì không có bằng chứng nào về phân bố Bloom,
+// nên tuyệt đối không được đẩy ra khoản nợ "thiếu câu vận dụng cao".
+check("Không bịa khoản nợ Bloom khi chưa có dữ liệu",
+  !noKhiTrang.some(n => n.concept.includes("phân tích & vận dụng")),
+  `hồ sơ trắng sinh ra ${noKhiTrang.length} khoản nợ, không khoản nào được nói về Bloom`);
+
+// Độ thạo từng chương phải phản ánh dữ liệu thật. Bản cũ đọc trường ma `solvedQuestionIds` nên
+// mọi chương luôn 0%.
+const statsThu = dbService.getStatistics();
+const chuongThu = chapters[0]?.id ?? 1;
+statsThu.accuracyByChapter = { ...(statsThu.accuracyByChapter || {}), [chuongThu]: { correct: 8, total: 10 } };
+dbService.saveStatistics(statsThu);
+const loTrinh = curriculumIntelligenceEngine.getCurriculumPlan();
+const chuongDo = loTrinh.chapterStatuses.find(c => c.chapterId === chuongThu);
+check("Độ thạo chương đọc từ dữ liệu thật", (chuongDo?.masteryScore ?? 0) === 80,
+  `chương ${chuongThu} có 8/10 câu đúng, engine báo ${chuongDo?.masteryScore}%`);
+
+check("Cân bằng Bloom không phải hằng số cứng",
+  !(loTrinh.studyBalance.rememberPercentage === 45 && loTrinh.studyBalance.applyPercentage === 35 && loTrinh.studyBalance.analyzePercentage === 20),
+  `đo được nhớ/hiểu ${loTrinh.studyBalance.rememberPercentage}%, vận dụng ${loTrinh.studyBalance.applyPercentage}%, phân tích ${loTrinh.studyBalance.analyzePercentage}%`);
+
+dbService.clearAllHistory();
+dbService.saveStatistics(statsGoc);
 
 // ===========================================================================
 // Kết quả

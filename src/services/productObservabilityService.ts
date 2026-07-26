@@ -10,6 +10,12 @@ import { questionDuplicateDetector } from "./questionDuplicateDetector";
 import { assessmentDesignEngine } from "./assessmentDesignEngine";
 import { curriculumIntelligenceEngine } from "./curriculumIntelligenceEngine";
 import { Question, ExamAttempt } from "../types";
+import { TimeService } from "./time";
+
+/** Dấu thời gian dạng "YYYY-MM-DD HH:mm:ss" theo đồng hồ chung của dự án, không dùng `new Date()`. */
+function dauThoiGian(): string {
+  return TimeService.now().toISOString().replace("T", " ").substring(0, 19);
+}
 
 export interface SystemHealthOverview {
   systemHealthScore: number; // 0 - 100
@@ -307,28 +313,77 @@ const improvementQueueStore: ContinuousImprovementTask[] = [
   }
 ];
 
+/**
+ * Đếm số câu hỏi thuộc về từng khái niệm trong đồ thị tri thức.
+ *
+ * BẮT BUỘC đi qua `kbService.resolveConceptsForQuestion`, bộ tra cứu DUY NHẤT của dự án
+ * (bất biến 4.5 trong AGENTS.md). Bản cũ so khớp tuyệt đối `q.concept === node.concept`, và đo
+ * được ngày 27/07/2026: **0 trên 292 câu khớp**, dù 280 câu có điền trường `concept`. Hệ quả là
+ * cả tầng quan sát báo sai toàn diện, cụ thể là 16/16 khái niệm bị coi là "chết" và độ phủ
+ * khái niệm luôn 0%. Đây đúng loại lỗi mà bất biến 4.5 sinh ra để ngăn.
+ *
+ * Một câu có thể chạm nhiều khái niệm, nên tổng các đếm có thể lớn hơn số câu.
+ */
+function demCauTheoKhaiNiem(subjectId: string, pool: Question[]): Map<string, number> {
+  const dem = new Map<string, number>();
+  pool.forEach(q => {
+    kbService.resolveConceptsForQuestion(subjectId, q).forEach(r => {
+      const key = r.node.concept;
+      dem.set(key, (dem.get(key) || 0) + 1);
+    });
+  });
+  return dem;
+}
+
+/**
+ * Bộ nhớ đệm cho kết quả thẩm định chất lượng câu hỏi.
+ *
+ * Vì sao cần: `contentQualityAssurance.auditQuestion(q, pool)` so câu đang xét với TOÀN BỘ ngân
+ * hàng để dò trùng lặp, tức O(n) mỗi câu và O(n²) cho cả ngân hàng. Màn hình Đài quan sát gọi
+ * lại đúng vòng lặp đó ở nhiều hàm khác nhau trong một lần mở, đo được 3,0 giây cho mỗi lượt
+ * quét 292 câu. Đệm lại theo chữ ký ngân hàng để mỗi lần mở chỉ quét một lần.
+ */
+let demCacheChuKy = "";
+let demCacheKetQua: Map<number, ReturnType<typeof contentQualityAssurance.auditQuestion>> | null = null;
+
+function thamDinhCoDem(pool: Question[]) {
+  const chuKy = `${pool.length}:${pool[0]?.id ?? 0}:${pool[pool.length - 1]?.id ?? 0}`;
+  if (demCacheChuKy !== chuKy || !demCacheKetQua) {
+    demCacheChuKy = chuKy;
+    demCacheKetQua = new Map();
+    pool.forEach(q => demCacheKetQua!.set(q.id, contentQualityAssurance.auditQuestion(q, pool)));
+  }
+  return demCacheKetQua;
+}
+
 export const productObservabilityService = {
   /**
-   * 1. Calculates System Health Overview with clear mathematical composite formula
+   * Sáu thành phần lõi của chỉ số sức khỏe, KHÔNG bao gồm mức sẵn sàng phát hành.
+   *
+   * Vì sao phải tách ra: trước đây `getSystemHealthOverview` gọi `getReleaseReadinessReport`,
+   * còn hàm đó lại gọi ngược `getSystemHealthOverview`. Hai hàm gọi vòng nhau vô hạn nên **mọi
+   * lần mở màn hình Đài quan sát đều làm tràn ngăn xếp**, không phải chậm mà là chết hẳn. Tách
+   * phần lõi ra là cách cắt vòng mà vẫn giữ nguyên ý nghĩa: cổng "sức khỏe hệ thống" trong báo
+   * cáo phát hành phải chấm bằng phần lõi, chứ tự chấm bằng chính kết quả của mình thì vô nghĩa.
    */
-  getSystemHealthOverview(subjectId?: string): SystemHealthOverview {
+  getCoreHealthScores(subjectId?: string) {
     const activeSubject = subjectId || dbService.getActiveSubjectId();
     const nodes = kbService.getKnowledgeGraph(activeSubject);
     const pool = dbService.getQuestions();
-    const attempts = dbService.getHistory();
 
     // 1. Content Quality Score
+    const thamDinh = thamDinhCoDem(pool);
     let totalQuality = 0;
     pool.forEach(q => {
-      const profile = contentQualityAssurance.auditQuestion(q, pool);
-      totalQuality += profile.metrics.overallScore;
+      totalQuality += thamDinh.get(q.id)?.metrics.overallScore ?? 0;
     });
     const contentQualityScore = pool.length > 0 ? Math.round(totalQuality / pool.length) : 75;
 
-    // 2. Coverage Score
-    const coveredConcepts = new Set(pool.map(q => q.concept).filter(Boolean));
+    // 2. Coverage Score: bao nhiêu khái niệm trong đồ thị đã có câu hỏi chạm tới.
+    const demTheoKhaiNiem = demCauTheoKhaiNiem(activeSubject, pool);
     const totalConcepts = nodes.length || 1;
-    const coverageScore = Math.min(100, Math.round((coveredConcepts.size / totalConcepts) * 100));
+    const soKhaiNiemDaPhu = nodes.filter(n => (demTheoKhaiNiem.get(n.concept) || 0) > 0).length;
+    const coverageScore = Math.min(100, Math.round((soKhaiNiemDaPhu / totalConcepts) * 100));
 
     // 3. Distractor Health Score
     const distractorHealth = this.getDistractorHealthReports();
@@ -349,12 +404,8 @@ export const productObservabilityService = {
     const totalDebtPoints = debts.reduce((acc, curr) => acc + curr.debtPoints, 0);
     const technicalDebtScore = Math.max(0, 100 - totalDebtPoints);
 
-    // 7. Release Readiness Score
-    const readiness = this.getReleaseReadinessReport();
-    const releaseReadinessScore = readiness.overallReadinessScore;
-
     // Composite Formula:
-    // S_health = 0.25*Quality + 0.20*Coverage + 0.15*Distractor + 0.15*Bloom + 0.15*Difficulty + 0.10*(100-TechDebt)
+    // S_health = 0.25*Quality + 0.20*Coverage + 0.15*Distractor + 0.15*Bloom + 0.15*Difficulty + 0.10*TechDebt
     const systemHealthScore = Math.round(
       0.25 * contentQualityScore +
       0.20 * coverageScore +
@@ -364,7 +415,7 @@ export const productObservabilityService = {
       0.10 * technicalDebtScore
     );
 
-    const status: "OPTIMAL" | "ATTENTION" | "CRITICAL" = 
+    const status: "OPTIMAL" | "ATTENTION" | "CRITICAL" =
       systemHealthScore >= 80 ? "OPTIMAL" : systemHealthScore >= 65 ? "ATTENTION" : "CRITICAL";
 
     const formulaDetails = `SystemHealth = 0.25 × Quality(${contentQualityScore}) + 0.20 × Coverage(${coverageScore}%) + 0.15 × Distractor(${distractorHealthScore}%) + 0.15 × Bloom(${bloomBalanceScore}%) + 0.15 × Difficulty(${difficultyDriftScore}%) + 0.10 × TechDebt(${technicalDebtScore}%) = ${systemHealthScore}/100`;
@@ -377,10 +428,23 @@ export const productObservabilityService = {
       bloomBalanceScore,
       difficultyDriftScore,
       technicalDebtScore,
-      releaseReadinessScore,
       status,
-      lastAuditedAt: new Date().toISOString().replace("T", " ").substring(0, 19),
       formulaDetails
+    };
+  },
+
+  /**
+   * 1. Calculates System Health Overview with clear mathematical composite formula
+   */
+  getSystemHealthOverview(subjectId?: string): SystemHealthOverview {
+    const activeSubject = subjectId || dbService.getActiveSubjectId();
+    const loi = this.getCoreHealthScores(activeSubject);
+    const releaseReadinessScore = this.getReleaseReadinessReport(activeSubject).overallReadinessScore;
+
+    return {
+      ...loi,
+      releaseReadinessScore,
+      lastAuditedAt: dauThoiGian()
     };
   },
 
@@ -392,12 +456,7 @@ export const productObservabilityService = {
     const nodes = kbService.getKnowledgeGraph(activeSubject);
     const pool = dbService.getQuestions();
 
-    const conceptCounts = new Map<string, number>();
-    pool.forEach(q => {
-      if (q.concept) {
-        conceptCounts.set(q.concept, (conceptCounts.get(q.concept) || 0) + 1);
-      }
-    });
+    const conceptCounts = demCauTheoKhaiNiem(activeSubject, pool);
 
     const deadItems: DeadConceptItem[] = [];
 
@@ -440,12 +499,7 @@ export const productObservabilityService = {
     const pool = dbService.getQuestions();
     const total = pool.length || 1;
 
-    const conceptCounts = new Map<string, number>();
-    pool.forEach(q => {
-      if (q.concept) {
-        conceptCounts.set(q.concept, (conceptCounts.get(q.concept) || 0) + 1);
-      }
-    });
+    const conceptCounts = demCauTheoKhaiNiem(activeSubject, pool);
 
     const expectedRatioPct = Math.round((1 / (nodes.length || 1)) * 100);
     const items: OverusedConceptItem[] = [];
@@ -886,8 +940,9 @@ export const productObservabilityService = {
     const nodes = kbService.getKnowledgeGraph(activeSubject);
     const pool = dbService.getQuestions();
 
-    const coveredConcepts = new Set(pool.map(q => q.concept).filter(Boolean));
-    const conceptCoveragePct = Math.min(100, Math.round((coveredConcepts.size / (nodes.length || 1)) * 100));
+    const demTheoKhaiNiem = demCauTheoKhaiNiem(activeSubject, pool);
+    const soKhaiNiemDaPhu = nodes.filter(n => (demTheoKhaiNiem.get(n.concept) || 0) > 0).length;
+    const conceptCoveragePct = Math.min(100, Math.round((soKhaiNiemDaPhu / (nodes.length || 1)) * 100));
 
     const linkedEvidenceCount = pool.filter(q => q.sourcePdf && q.sourcePage).length;
     const evidenceLinkagePct = Math.min(100, Math.round((linkedEvidenceCount / (pool.length || 1)) * 100));
@@ -898,7 +953,8 @@ export const productObservabilityService = {
     const bpPerf = this.getBlueprintPerformance();
     const blueprintCoveragePct = Math.round(bpPerf.reduce((acc, curr) => acc + curr.alignmentScore, 0) / bpPerf.length);
 
-    const qaPasses = pool.filter(q => contentQualityAssurance.auditQuestion(q, pool).gatePassed).length;
+    const thamDinh = thamDinhCoDem(pool);
+    const qaPasses = pool.filter(q => thamDinh.get(q.id)?.gatePassed).length;
     const qaPassRatePct = Math.round((qaPasses / (pool.length || 1)) * 100);
 
     const overallReadinessPct = Math.round(
@@ -995,7 +1051,7 @@ export const productObservabilityService = {
   addChangelogItem(type: AcademicChangelogItem["type"], author: string, details: string, impactScoreDelta: number = 0): AcademicChangelogItem {
     const item: AcademicChangelogItem = {
       id: `log-${Date.now()}`,
-      timestamp: new Date().toISOString().replace("T", " ").substring(0, 19),
+      timestamp: dauThoiGian(),
       type,
       author,
       details,
@@ -1085,7 +1141,9 @@ export const productObservabilityService = {
     const activeSubject = subjectId || dbService.getActiveSubjectId();
     const activeSubjectName = dbService.getActiveSubjectName();
     const completeness = this.getSubjectCompleteness(activeSubject);
-    const health = this.getSystemHealthOverview(activeSubject);
+    // Dùng phần LÕI, không gọi `getSystemHealthOverview`. Gọi hàm đó ở đây tạo vòng gọi vô hạn
+    // giữa hai hàm và làm tràn ngăn xếp mỗi lần mở màn hình Đài quan sát.
+    const health = this.getCoreHealthScores(activeSubject);
 
     const gates: ReleaseReadinessGate[] = [
       {
@@ -1136,14 +1194,11 @@ export const productObservabilityService = {
   runAutomaticMaintenanceJob(jobType: "FULL_AUDIT" | "DUPLICATE_SCAN" | "COVERAGE_CHECK" | "HEALTH_REPORT"): MaintenanceJobResult {
     const pool = dbService.getQuestions();
     const jobId = `job-${Date.now()}`;
-    const executedAt = new Date().toISOString().replace("T", " ").substring(0, 19);
+    const executedAt = dauThoiGian();
 
     if (jobType === "FULL_AUDIT") {
-      let issues = 0;
-      pool.forEach(q => {
-        const audit = contentQualityAssurance.auditQuestion(q, pool);
-        if (!audit.gatePassed) issues++;
-      });
+      const thamDinh = thamDinhCoDem(pool);
+      const issues = pool.filter(q => !thamDinh.get(q.id)?.gatePassed).length;
 
       this.addChangelogItem("AUDIT_RUN", "System Maintenance Job", `Thực thi Full System Audit trên ${pool.length} câu hỏi. Phát hiện ${issues} vi phạm gate.`, +2);
 

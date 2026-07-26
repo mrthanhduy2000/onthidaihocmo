@@ -6,8 +6,16 @@
  */
 import { createClient, Session, SupabaseClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+// Đọc cấu hình PHẢI dùng optional chaining. `import.meta.env` chỉ tồn tại khi mã chạy qua Vite;
+// dưới `tsx` (máy chủ dev `npm run dev`) và trong gói serverless thì nó là undefined, và đọc
+// thẳng `.VITE_SUPABASE_URL` sẽ ném lỗi ngay lúc nạp module, giết chết cả tiến trình.
+//
+// Đây chính là Bẫy 2 trong AGENTS.md. Trong ngày 27/07/2026 nó cắn ba lần liên tiếp, mỗi lần vì
+// một file khác lỡ nhập gián tiếp tới file này. Vá tại gốc ở đây thì mọi nơi nhập về sau đều an
+// toàn, không phải nhớ đặt `define` ở từng công cụ đóng gói nữa.
+const bienMoiTruong = (import.meta as any)?.env ?? {};
+const url = bienMoiTruong.VITE_SUPABASE_URL as string | undefined;
+const anon = bienMoiTruong.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 export const isSupabaseConfigured = Boolean(url && anon);
 
