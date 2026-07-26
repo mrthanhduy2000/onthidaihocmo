@@ -1371,6 +1371,115 @@ check("Mức đoán mò tái lập được, không bò lên theo số lần g�
 dbService.clearAllHistory();
 
 // ===========================================================================
+g("Q. Tiên nghiệm lịch ôn từ dữ liệu biên soạn tay");
+// ===========================================================================
+// Bối cảnh: `customer_behavior_kb.ts` biên soạn tay `review.estimatedRetentionDifficulty` và
+// `review.firstReviewDays` cho 16/16 khái niệm, nhưng KHÔNG dòng suy luận nào đọc chúng. Hệ quả
+// đo được: khái niệm chưa học câu nào cho ra độ bền trí nhớ **6,15 ngày y hệt nhau cho mọi khái
+// niệm**, tức bài toán khởi đầu nguội, dù lời giải nằm sẵn trong dữ liệu.
+
+const monQ = dbService.getActiveSubjectId();
+const nodesQ = kbService.getKnowledgeGraph(monQ);
+
+/** Suy độ bền trí nhớ từ đường cong quên: retention(1 ngày) = e^(-1/S) nên S = -1/ln(r). */
+function doBenTriNho(conceptName: string): number {
+  const p = conceptMemoryService.getConceptProfile(conceptName);
+  const r1 = conceptMemoryService.generateForgetCurve(p).find(c => c.daysAhead === 1)?.retention ?? 0;
+  if (r1 <= 0 || r1 >= 1) return NaN;
+  return -1 / Math.log(r1);
+}
+
+// Q1. Dữ liệu biên soạn phải có thật và phân hóa, nếu không cả nhiệm vụ này vô nghĩa.
+const mucDoKho = new Set(nodesQ.map(n => n.review?.estimatedRetentionDifficulty).filter(Boolean));
+const mucNgayDau = new Set(nodesQ.map(n => n.review?.firstReviewDays).filter(v => typeof v === "number"));
+check("Đồ thị có dữ liệu lịch ôn biên soạn tay và có phân hóa",
+  nodesQ.every(n => !!n.review) && mucDoKho.size >= 2 && mucNgayDau.size >= 2,
+  `${nodesQ.filter(n => n.review).length}/${nodesQ.length} khái niệm có khối review, ${mucDoKho.size} mức độ khó (${[...mucDoKho].join(", ")}), ${mucNgayDau.size} mức ngày ôn đầu`);
+
+// Q2. Khởi đầu nguội phải phân hóa. Đây là phép kiểm chính của nhóm.
+localStorage.removeItem(`poly_econ_concept_memory_${monQ}`);
+const doBenBanDau = nodesQ.map(n => doBenTriNho(n.concept)).filter(v => !Number.isNaN(v));
+const soGiaTriKhacNhau = new Set(doBenBanDau.map(v => v.toFixed(2))).size;
+check("Khái niệm chưa học vẫn có lịch ôn phân hóa theo dữ liệu biên soạn",
+  soGiaTriKhacNhau >= 3,
+  `${nodesQ.length} khái niệm chưa học cho ${soGiaTriKhacNhau} giá trị độ bền khác nhau, dải ${Math.min(...doBenBanDau).toFixed(2)} đến ${Math.max(...doBenBanDau).toFixed(2)} ngày (bản cũ cho đúng 1 giá trị)`);
+
+// Q3. Chiều phải đúng: khái niệm người soạn ghi DỄ nhớ phải bền hơn khái niệm ghi KHÓ nhớ.
+const nutDe = nodesQ.filter(n => n.review?.estimatedRetentionDifficulty === "easy");
+const nutKho = nodesQ.filter(n => n.review?.estimatedRetentionDifficulty === "hard");
+if (nutDe.length > 0 && nutKho.length > 0) {
+  const tbDe = nutDe.map(n => doBenTriNho(n.concept)).reduce((a, b) => a + b, 0) / nutDe.length;
+  const tbKho = nutKho.map(n => doBenTriNho(n.concept)).reduce((a, b) => a + b, 0) / nutKho.length;
+  check("Khái niệm được soạn là dễ nhớ thì bền hơn khái niệm khó nhớ",
+    tbDe > tbKho,
+    `${nutDe.length} khái niệm "easy" trung bình ${tbDe.toFixed(2)} ngày, ${nutKho.length} khái niệm "hard" trung bình ${tbKho.toFixed(2)} ngày`);
+} else {
+  check("Khái niệm được soạn là dễ nhớ thì bền hơn khái niệm khó nhớ", false,
+    `không đủ mẫu để so: ${nutDe.length} easy và ${nutKho.length} hard`);
+}
+
+// Q4. Tiên nghiệm phải NHƯỜNG CHỖ cho dữ liệu đo được khi đã học nhiều.
+//
+// Cách cô lập: lấy một khái niệm "easy" và một khái niệm "hard". Chưa học thì hai bên lệch nhau
+// vì tiên nghiệm khác nhau (Q3 đã chứng minh). Nay cho CẢ HAI cùng một lịch sử học y hệt, gồm
+// cùng số lần học và cùng độ khó đo được. Nếu tiên nghiệm đã nhường chỗ thì khoảng lệch phải co
+// lại gần bằng 0.
+//
+// Vì sao không so "trước và sau" trên cùng một khái niệm: tăng số lần học cũng làm phần nền
+// `1,8*log2(soLanHoc + 1)` tăng theo, nên hai tác động lẫn vào nhau và phép kiểm mất ý nghĩa.
+// Đây là lỗi thiết kế phép kiểm mà tôi mắc lần đầu, ghi lại để người sau khỏi lặp.
+if (nutDe.length > 0 && nutKho.length > 0) {
+  const tenDe = nutDe[0].concept;
+  const tenKho = nutKho[0].concept;
+
+  localStorage.removeItem(`poly_econ_concept_memory_${monQ}`);
+  const lechKhiChuaHoc = Math.abs(doBenTriNho(tenDe) - doBenTriNho(tenKho));
+
+  const bang = conceptMemoryService.getAllConceptProfiles(monQ);
+  for (const ten of [tenDe, tenKho]) {
+    bang[ten] = { ...conceptMemoryService.getConceptProfile(ten), timesStudied: 60, difficultyScore: 6.0 };
+  }
+  conceptMemoryService.saveAllConceptProfiles(bang, monQ);
+  const lechKhiHocNhieu = Math.abs(doBenTriNho(tenDe) - doBenTriNho(tenKho));
+
+  check("Tiên nghiệm nhường chỗ cho dữ liệu đo được khi đã học nhiều",
+    lechKhiHocNhieu < lechKhiChuaHoc * 0.2,
+    `khoảng lệch giữa một khái niệm "easy" và một "hard": chưa học ${lechKhiChuaHoc.toFixed(2)} ngày, sau 60 lần học cùng độ khó đo được còn ${lechKhiHocNhieu.toFixed(2)} ngày`);
+  localStorage.removeItem(`poly_econ_concept_memory_${monQ}`);
+}
+
+// Q5. Môn tự tạo KHÔNG được nhận tiên nghiệm, vì khối review của nút tổng hợp là hằng số mặc
+// định 3/7/14 và "medium" cho mọi khái niệm, tức không mang thông tin gì.
+const monTuTaoQ = "custom_kiem_tien_nghiem";
+localStorage.setItem(`poly_econ_custom_questions_${monTuTaoQ}`, JSON.stringify(
+  questions.slice(0, 6).map((q, i) => ({ ...q, id: 991001 + i, topicId: `${monTuTaoQ}_T1.1`, chapterId: 1 }))
+));
+localStorage.setItem(`poly_econ_custom_topics_${monTuTaoQ}`, JSON.stringify([
+  { id: `${monTuTaoQ}_T1.1`, chapterId: 1, title: "Chủ đề 1.1", description: "Tự kiểm chứng." },
+]));
+localStorage.setItem(`poly_econ_custom_chapters_${monTuTaoQ}`, JSON.stringify([
+  { id: 1, code: "CH1", title: "Chương 1", description: "Tự kiểm chứng." },
+]));
+const monTruocQ = dbService.getActiveSubjectId();
+loadSubject(monTuTaoQ);
+localStorage.removeItem(`poly_econ_concept_memory_${monTuTaoQ}`);
+const nodeTuTaoQ = kbService.getKnowledgeGraph(monTuTaoQ);
+const doBenTuTao = nodeTuTaoQ.map(n => doBenTriNho(n.concept)).filter(v => !Number.isNaN(v));
+check("Môn tự tạo giữ nguyên hành vi cũ, không nhận tiên nghiệm giả",
+  doBenTuTao.length > 0 && new Set(doBenTuTao.map(v => v.toFixed(2))).size === 1,
+  `${nodeTuTaoQ.length} nút tổng hợp cho ${new Set(doBenTuTao.map(v => v.toFixed(2))).size} giá trị, đều bằng ${doBenTuTao[0]?.toFixed(2)} ngày`);
+loadSubject(monTruocQ);
+
+// Q6. Tái lập được.
+localStorage.removeItem(`poly_econ_concept_memory_${monQ}`);
+const tenQ = nodesQ[0].concept;
+const q1 = doBenTriNho(tenQ);
+const q2 = doBenTriNho(tenQ);
+check("Độ bền trí nhớ tái lập được",
+  q1 === q2,
+  `hai lần đọc cho ${q1.toFixed(4)} và ${q2.toFixed(4)}`);
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

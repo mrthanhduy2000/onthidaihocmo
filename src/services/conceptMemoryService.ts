@@ -4,6 +4,7 @@
  */
 
 import { dbService } from "./db";
+import { kbService } from "./kbService";
 import { TimeService } from "./time";
 
 export interface ConceptMemoryProfile {
@@ -89,6 +90,47 @@ export interface ConceptMemoryUpdate {
 const STORAGE_PREFIX = "poly_econ_concept_memory_";
 
 /**
+ * Mốc bằng chứng cho phép co. Dùng CÙNG hằng số 6 với `db.recomputeStatistics` và
+ * `learnerModelService`, để cả dự án chỉ có một cách co theo lượng bằng chứng.
+ */
+const MOC_BANG_CHUNG_CO = 6;
+
+/**
+ * Độ khó ghi nhớ TIÊN NGHIỆM, suy từ dữ liệu người soạn nội dung viết tay trong đồ thị tri thức.
+ *
+ * Vì sao cần: `customer_behavior_kb.ts` có `review.estimatedRetentionDifficulty` và
+ * `review.firstReviewDays` cho **16/16** khái niệm, với ba mức độ khó (easy 5, medium 9, hard 2)
+ * và ba mức ngày ôn đầu (1, 2, 3). Người soạn đã nói rõ khái niệm nào khó nhớ. Nhưng **không một
+ * dòng suy luận nào đọc chúng**: `firstReviewDays` chỉ xuất hiện ở chỗ `kbService` GHI giá trị
+ * mặc định cho nút tổng hợp, còn `estimatedRetentionDifficulty` chỉ được đọc một lần trong
+ * `evidencePipeline`, mà phần lớn file đó là mã chết.
+ *
+ * Hệ quả đo được ngày 27/07/2026: khái niệm chưa học câu nào có `timesStudied` bằng 0 và
+ * `difficultyScore` mặc định 5,0, nên độ bền trí nhớ ra đúng **6,15 ngày cho MỌI khái niệm**,
+ * không phân biệt gì cả. Đây là bài toán khởi đầu nguội, mà lời giải nằm sẵn trong dữ liệu.
+ *
+ * Trả về null khi không có dữ liệu biên soạn, để nơi gọi giữ nguyên hành vi cũ. Nút TỔNG HỢP tự
+ * động cũng bị loại, vì `review` của chúng là hằng số mặc định 3/7/14 và "medium" cho mọi khái
+ * niệm, tức không mang thông tin gì.
+ */
+function doKhoTienNghiem(conceptName: string): number | null {
+  const subjectId = dbService.getActiveSubjectId();
+  const node = kbService.getKnowledgeGraph(subjectId).find(n => n.concept === conceptName);
+  if (!node || node.laNutTongHop || !node.review) return null;
+
+  const theoNhan: Record<string, number> = { easy: 4.0, medium: 5.0, hard: 7.0 };
+  const nen = theoNhan[String(node.review.estimatedRetentionDifficulty || "").toLowerCase()];
+  if (nen === undefined) return null;
+
+  // Ngày ôn đầu càng sớm thì người soạn càng cho rằng khái niệm dễ trôi. Chỉ dùng làm điều chỉnh
+  // nhẹ quanh mức nền, tối đa nửa bậc, để nhãn độ khó vẫn là tín hiệu chính.
+  const ngayDau = typeof node.review.firstReviewDays === "number" ? node.review.firstReviewDays : 2;
+  const dieuChinh = Math.max(-0.5, Math.min(0.5, (2 - ngayDau) * 0.25));
+
+  return Math.max(1, Math.min(10, nen + dieuChinh));
+}
+
+/**
  * Độ bền trí nhớ của một khái niệm, tính bằng ngày. Đây là NGUỒN DUY NHẤT của công thức này.
  *
  * Trước đây công thức bị chép làm hai bản giống hệt nhau ở calculateRetentionScore và
@@ -98,13 +140,27 @@ const STORAGE_PREFIX = "poly_econ_concept_memory_";
  *
  *     S = S_nen * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh
  *     S_nen = max(1, 1,8*log2(soLanHoc + 1) + dinhCaoLichSu/25)
+ *
+ * Từ 27/07/2026 `heSoDoKho` không còn đọc thẳng `difficultyScore` nữa mà pha với tiên nghiệm
+ * biên soạn tay, xem `doKhoTienNghiem` ngay trên.
  */
 function memoryStrengthDays(profile: ConceptMemoryProfile): number {
   const logStudied = Math.log2(Math.max(1, profile.timesStudied) + 1);
   const baseStrength = Math.max(1.0, (logStudied * 1.8) + (profile.historicalPeak / 25));
   const recoveryFactor = 1.0 + 0.35 * Math.min(5, profile.recoveryCount || 0);
   const regressionPenalty = 1.0 / (1.0 + 0.40 * Math.min(5, profile.regressionCount || 0));
-  const difficultyFactor = Math.max(0.6, 8.0 / Math.max(4.0, profile.difficultyScore || 5.0));
+
+  // Độ khó dùng để chấm: pha giữa TIÊN NGHIỆM biên soạn tay và số ĐO ĐƯỢC từ lịch sử học, theo
+  // đúng công thức co của dự án `w = 1 - e^(-n/6)`. Chưa học lần nào thì w bằng 0 nên tin hoàn
+  // toàn vào tiên nghiệm; học nhiều rồi thì tiên nghiệm nhường chỗ cho dữ liệu thật.
+  const doKhoDoDuoc = profile.difficultyScore || 5.0;
+  const tienNghiem = doKhoTienNghiem(profile.conceptName);
+  const w = 1 - Math.exp(-Math.max(0, profile.timesStudied) / MOC_BANG_CHUNG_CO);
+  const doKhoHieuDung = tienNghiem === null
+    ? doKhoDoDuoc
+    : tienNghiem * (1 - w) + doKhoDoDuoc * w;
+
+  const difficultyFactor = Math.max(0.6, 8.0 / Math.max(4.0, doKhoHieuDung));
   const stableBonus = profile.isStableMastered ? 2.2 : 1.0;
   return baseStrength * recoveryFactor * regressionPenalty * difficultyFactor * stableBonus;
 }

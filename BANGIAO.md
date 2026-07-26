@@ -59,6 +59,64 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Tiên nghiệm lịch ôn từ dữ liệu biên soạn tay, gỡ bài toán khởi đầu nguội
+
+**Objective**: mạch thứ tư. `customer_behavior_kb.ts` biên soạn tay
+`review.estimatedRetentionDifficulty` và `review.firstReviewDays`, tức người soạn nội dung đã nói
+rõ khái niệm nào khó nhớ và cần ôn dày hơn. **Không một dòng suy luận nào đọc chúng.**
+
+**Đo trước khi viết code**:
+
+| Hạng mục | Số đo |
+|---|---|
+| Khái niệm có khối `review` | **16/16** |
+| Mức độ khó ghi nhớ | 3 mức: easy 5, medium 9, hard 2 |
+| Mức ngày ôn đầu | 3 mức: 1, 2, 3 ngày |
+| Độ bền trí nhớ của khái niệm CHƯA HỌC | **đúng 1 giá trị: 6,15 ngày cho cả 16 khái niệm** |
+
+**Một chỗ bản giao việc ghi khác số đo của tôi, nói cho rõ**: bản giao việc ước lượng khởi đầu
+nguội cho ra 1,6 ngày. Tôi đo được **6,15 ngày**. Chênh vì `historicalPeak` mặc định là 50, cộng
+thêm 50/25 = 2 vào phần nền, nên nền là 3,8 chứ không phải 1,8. Kết luận cốt lõi không đổi và
+đó mới là điều đáng quan tâm: **mọi khái niệm cho đúng một con số**, không phân biệt gì cả.
+
+**Đã làm**: `doKhoTienNghiem` trong `conceptMemoryService` suy độ khó tiên nghiệm từ nhãn biên
+soạn (easy 4,0 / medium 5,0 / hard 7,0), điều chỉnh nhẹ tối đa nửa bậc theo `firstReviewDays`
+(ôn đầu càng sớm thì người soạn càng cho là dễ trôi). `memoryStrengthDays` pha tiên nghiệm với
+độ khó đo được theo **đúng công thức co của dự án** `w = 1 - e^(-soLanHoc/6)`, cùng hằng số 6 với
+`db.recomputeStatistics` và `learnerModelService`.
+
+**Đo được sau khi sửa**:
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Số giá trị độ bền khác nhau (16 khái niệm chưa học) | **1** | **6** |
+| Dải độ bền | 6,15 đến 6,15 ngày | **4,24 đến 7,82 ngày** |
+| Khái niệm "easy" so với "hard" | bằng nhau | 7,69 so với 4,24 ngày |
+| Khoảng lệch easy và hard sau 60 lần học cùng độ khó đo được | không có khái niệm lệch | 2,94 ngày co về **0,00** |
+
+Cột cuối là điều quan trọng nhất: tiên nghiệm **nhường chỗ hoàn toàn** cho dữ liệu thật khi đã
+có bằng chứng, chứ không neo mãi vào ý kiến người soạn.
+
+**Môn tự tạo giữ nguyên hành vi cũ**: 19 nút tổng hợp vẫn cho đúng một giá trị 6,15 ngày, vì
+khối `review` của chúng là hằng số mặc định 3/7/14 và "medium" cho mọi khái niệm, tức không mang
+thông tin gì. Loại chúng ra là đúng, không phải bỏ sót.
+
+**Tôi thiết kế sai một phép kiểm, ghi lại để người sau khỏi lặp**: phép kiểm "tiên nghiệm nhường
+chỗ" bản đầu so độ bền TRƯỚC và SAU khi bơm lịch sử học vào cùng một khái niệm. Nó báo đỏ, mà mã
+nguồn đúng: tăng số lần học cũng làm phần nền `1,8*log2(soLanHoc + 1)` tăng theo, nên hai tác
+động lẫn vào nhau. Cách cô lập đúng là so KHOẢNG LỆCH giữa một khái niệm "easy" và một "hard" khi
+cả hai nhận cùng một lịch sử học.
+
+**Nghiệm thu**: nhóm kiểm **Q** thêm 6 phép, tổng lên **118**, `npm run check` đủ 6 chặng. Đã
+**thử phá**: bỏ phép pha tiên nghiệm ra thì cả 16 khái niệm về lại đúng 6,15 ngày và 3 phép kiểm
+đỏ. Mở `npm run dev` xem tab Trí nhớ trong Trợ lý học tập, hiện dữ liệu độ ghi nhớ theo từng khái
+niệm, không lỗi trên bảng điều khiển.
+
+**Còn nợ**: `secondReviewDays` và `thirdReviewDays` vẫn chưa ai đọc. Chúng chỉ có nghĩa khi hệ
+thống xếp lịch ôn nhiều mốc, mà hiện nay lịch ôn suy ra từ một con số độ bền duy nhất.
+
+---
+
 ### 27/07/2026 — Đọc nhịp làm bài để phát hiện đoán mò trong lúc thi
 
 **Objective**: mạch thứ ba. Hai đầu dữ liệu đã có sẵn mà chưa ai bắc cầu.
