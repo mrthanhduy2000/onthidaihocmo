@@ -59,6 +59,72 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Màn Kế hoạch học nói 7 con số không bám dữ liệu, và trường Bloom chết 292/292
+
+**Objective**: tiếp tục danh sách "chưa rà" trong WORKSTATE. Hai hạng mục còn lại là phần
+ROI/what-if/nợ học tập/kịch bản sức ép của `examForecaster`, và các ngưỡng cứng còn sót.
+
+**Vấn đề tìm được**: bảy lỗi, tất cả đều đang hiển thị cho Đàm xem trên màn Kế hoạch học, và
+tất cả đều thuộc cùng một họ: **trình bày hằng số viết tay như thể đó là kết quả đo được.**
+
+| Lỗi | Đo được trước khi sửa |
+|---|---|
+| Kịch bản sức ép là hằng số | 4/5 kịch bản không đổi một ly giữa hồ sơ đầy và hồ sơ trắng |
+| Hứa lợi ích cho việc không thể làm | Hồ sơ trắng vẫn được hứa "làm chủ chương khó nhất: +0,5 điểm" |
+| Bảng ROI chép công thức rồi trôi lệch | Cùng một hoạt động: bảng ROI +0,55 điểm, bảng độ nhạy +0,33 điểm |
+| Sổ tay rỗng vẫn hứa thêm điểm | +0,10 điểm cho việc chữa câu sai khi không còn câu sai nào |
+| Kế hoạch chia phút vỡ ở ngân sách nhỏ | Xin 15 phút, nhận về 20 phút, ba tỷ lệ cộng lại 133% |
+| Sổ nợ không hề xếp hạng | Điểm ưu tiên tính xong rồi vứt; 44/45 mục cùng nhãn "Cao" |
+| Bộ mô phỏng neo sai chỗ | Neo cứng 45 phút và 14 ngày thay vì kế hoạch thật của Đàm |
+
+**Phát hiện lớn nhất, ngoài dự kiến**: soát độ đầy của từng trường trong ngân hàng câu hỏi thì
+thấy **`bloomLevel` rỗng ở 292/292 câu** (và `misconception` cũng rỗng 292/292). Sáu chỗ trong
+mã nguồn đọc `bloomLevel`. Không chỗ nào báo lỗi, tất cả lặng lẽ rơi về mặc định:
+
+- `examQualityReport` báo mọi đề thi 100% mức "Nhớ"
+- `evidenceCoverageAudit` báo mọi khái niệm chỉ được kiểm ở mức "Nhớ"
+- `curriculumIntelligenceEngine` cho cân bằng Bloom 0%/0%/0% trên mọi hồ sơ
+- `contentQualityAssurance` cho điểm khớp Bloom cố định 75 với mọi câu
+- `evidencePipeline` nói với gia sư AI rằng MỌI câu đều ở mức "Understand"
+
+**Cách sửa**: trường `learningObjective` có đủ ở 292/292 câu và mở đầu bằng đúng động từ của
+thang Bloom ("Nắm vững...", "Thấu hiểu...", "Phân loại...", "Ứng dụng..."). Đây là thông tin
+đang nằm không. Thêm `suyRaMucBloom` trong `db.ts`, chạy ngay lúc nạp môn nên cả sáu chỗ đọc
+đều nhận giá trị thật mà **không phải sửa một dòng nào ở sáu file kia**.
+
+**Một cái bẫy đã sập ngay trong lúc làm, ghi lại để người sau khỏi vấp**: bản đầu tiên của bộ
+suy luận chọn bậc Bloom CAO NHẤT tìm thấy trong câu. Đo ra thì "Phân tích ảnh hưởng của yếu tố
+văn hóa ... nhằm thiết kế thông điệp" bị gán nhãn "Create", chỉ vì chữ "thiết kế" nằm ở cuối
+câu. Mục tiêu học tập viết theo lối "động-từ-tư-duy + nội dung + mục đích nghiệp vụ", mà phần
+mục đích nghiệp vụ cũng chứa động từ mạnh. Sửa thành lấy **động từ đứng đầu**. Số câu bị chấm
+là lệch nhãn giảm từ 63/292 xuống 7/292, và 7 ca còn lại đều là lệch thật (câu gán "Khó" nhưng
+mục tiêu chỉ đòi nhớ định nghĩa).
+
+**Một sai lầm nữa của chính tôi, đã sửa**: lần đầu chia bậc ưu tiên sổ nợ, tôi chỉ dùng số lần
+sai, kết quả là **45/45 mục đều rơi vào bậc "Thấp"**. Tôi vừa đổi một nhãn vô nghĩa lấy một
+nhãn vô nghĩa khác. Nguyên nhân: hồ sơ thật gồm rất nhiều câu mới sai đúng một lần. Phải thêm
+tín hiệu thứ hai độc lập là độ yếu của chương chứa câu đó. Sau khi thêm: 19 Cao / 23 Trung
+bình / 3 Thấp.
+
+**Phép kiểm cũ đạt mà không nói lên gì**: phép "Cân bằng Bloom không phải hằng số cứng" trong
+nhóm I chạy trên hồ sơ vừa bị xóa sạch, nên luôn đo được 0%/0%/0%, mà 0/0/0 thì đương nhiên
+khác 45/35/20. Đã viết lại: bắt buộc phải có lịch sử làm bài thật và tổng ba tỷ lệ phải xấp xỉ
+100%.
+
+**Nguyên tắc rút ra, đã ghi vào AGENTS.md**: trước khi tin một trường dữ liệu, hãy đếm xem nó
+có bao nhiêu giá trị khác nhau trên toàn bộ dữ liệu thật. Trường rỗng và chỉ số hằng số đều
+không kêu một tiếng nào, chúng chỉ lặng lẽ làm mọi kết luận phía sau thành vô nghĩa.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng. Thêm nhóm kiểm **J** (12 phép, canh đúng bảy
+lỗi trên) và nhóm **K** (5 phép, canh nhãn Bloom). Mỗi phép đều được thử ngược: sửa xong đo
+lại bằng chính bản dò đã phát hiện ra lỗi.
+
+**Còn nợ**: `misconception` vẫn rỗng 292/292, `contextWindowBuilder` vì thế luôn gửi cho AI một
+câu cảnh báo chung chung. Không phải khẳng định sai nên để lại. 25 chỗ gắn cứng mã môn học vẫn
+đợi. Gói giao diện vẫn khoảng 1 MB.
+
+---
+
 ### 27/07/2026 — Rà soát toàn diện: 9 lỗi thật ở hai engine chưa từng được soi
 
 **Objective**: Đàm yêu cầu "rà soát mọi thứ, fix toàn bộ, nâng cấp trí tuệ". Hai engine

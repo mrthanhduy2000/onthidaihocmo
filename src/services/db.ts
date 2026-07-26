@@ -93,6 +93,76 @@ const initStatsStructure = (): Statistics => {
   return stats;
 };
 
+// ===========================================================================
+// SUY RA MỨC BLOOM TỪ DỮ LIỆU ĐANG CÓ
+//
+// VÌ SAO CẦN: đo ngày 27/07/2026 trên ngân hàng môn đang học, trường `bloomLevel` RỖNG ở
+// 292/292 câu. Sáu chỗ trong mã nguồn đọc trường này, và vì nó rỗng nên cả sáu đều âm thầm
+// rơi về giá trị mặc định, tạo ra những khẳng định sai mà nhìn ngoài không thấy:
+//
+//   - `examQualityReport` báo mọi đề thi 100% mức "Nhớ" (dùng `q.bloomLevel || "Remember"`)
+//   - `evidenceCoverageAudit` báo mọi khái niệm chỉ được kiểm ở mức "Nhớ"
+//   - `curriculumIntelligenceEngine` cho cân bằng Bloom 0%/0%/0% trên mọi hồ sơ
+//   - `contentQualityAssurance` cho điểm khớp Bloom cố định 75
+//   - `evidencePipeline` nói với gia sư AI rằng MỌI câu đều ở mức "Understand"
+//
+// THÔNG TIN CHƯA DÙNG: trường `learningObjective` có đủ ở 292/292 câu và mở đầu bằng đúng
+// động từ của thang Bloom ("Nắm vững...", "Thấu hiểu...", "Phân loại...", "Ứng dụng..."), còn
+// `difficulty` cũng đủ 292/292. Bộ suy luận dưới đây đọc hai trường đó. Hoàn toàn tất định,
+// giải thích được, không dùng AI, và KHÔNG ghi đè nhãn có sẵn nếu câu hỏi đã tự khai.
+//
+// GIỚI HẠN PHẢI NÓI RÕ: đây là nhãn SUY RA, không phải nhãn do người soạn đề gán. Nó tốt hơn
+// hẳn việc coi tất cả là "Nhớ", nhưng đừng trình bày với người học như một sự thật tuyệt đối.
+// ===========================================================================
+
+/** Từ khóa nhận diện, xếp từ bậc CAO xuống bậc THẤP để cụm mạnh hơn được ưu tiên. */
+const DAU_HIEU_BLOOM: Array<{ muc: string; tu: string[] }> = [
+  { muc: "Create", tu: ["thiết kế", "xây dựng kế hoạch", "đề xuất", "sáng tạo", "lập kế hoạch", "soạn thảo"] },
+  { muc: "Evaluate", tu: ["đánh giá", "nhận định", "phê phán", "biện luận", "lựa chọn tối ưu", "phán đoán", "thẩm định"] },
+  { muc: "Analyze", tu: ["phân tích", "phân loại", "so sánh", "phân biệt", "mối quan hệ", "cấu trúc", "chỉ ra sự khác"] },
+  { muc: "Apply", tu: ["ứng dụng", "vận dụng", "áp dụng", "triển khai", "sử dụng", "thực hiện", "trong tình huống", "tính toán"] },
+  { muc: "Understand", tu: ["thấu hiểu", "hiểu", "giải thích", "mô tả", "diễn giải", "tóm tắt", "vì sao", "tại sao", "ý nghĩa"] },
+  { muc: "Remember", tu: ["nắm vững", "định nghĩa", "khái niệm", "liệt kê", "kể tên", "nhận biết", "ghi nhớ", "nêu"] }
+];
+
+/** Không có dấu hiệu nào thì rơi về độ khó, trường này cũng đủ ở mọi câu. */
+const BLOOM_THEO_DO_KHO: Record<string, string> = {
+  "Dễ": "Remember",
+  "Trung bình": "Understand",
+  "Khó": "Apply"
+};
+
+export function suyRaMucBloom(q: Question): string {
+  if (q.bloomLevel) return q.bloomLevel;
+
+  // Chỉ đọc mục tiêu học tập, KHÔNG đọc thân câu hỏi. Thân câu hỏi hay chứa từ "phân tích" hoặc
+  // "đánh giá" như một phần nội dung chuyên môn (ví dụ "phân tích thị trường"), chứ không phải
+  // mô tả thao tác tư duy mà người học phải làm, nên đọc nó vào sẽ đẩy nhãn lên cao giả tạo.
+  const nguon = String(q.learningObjective || "").toLowerCase();
+  if (nguon) {
+    // Lấy động từ ĐỨNG ĐẦU, không lấy bậc Bloom cao nhất. Mục tiêu học tập thường viết theo lối
+    // "động-từ-tư-duy + nội dung + mục đích nghiệp vụ", mà phần mục đích nghiệp vụ cũng chứa
+    // động từ mạnh. Ví dụ đo được: "Phân tích ảnh hưởng của yếu tố văn hóa ... nhằm thiết kế
+    // thông điệp" bị bản đầu tiên của hàm này gán nhãn "Create" chỉ vì thấy chữ "thiết kế" ở
+    // cuối câu, trong khi thao tác người học phải làm là "phân tích".
+    let viTriTotNhat = Infinity;
+    let mucTotNhat = "";
+    for (const { muc, tu } of DAU_HIEU_BLOOM) {
+      for (const t of tu) {
+        const vt = nguon.indexOf(t);
+        // Hòa vị trí thì giữ bậc CAO hơn, vì DAU_HIEU_BLOOM đã xếp từ cao xuống thấp và vòng
+        // lặp gặp bậc cao trước.
+        if (vt !== -1 && vt < viTriTotNhat) {
+          viTriTotNhat = vt;
+          mucTotNhat = muc;
+        }
+      }
+    }
+    if (mucTotNhat) return mucTotNhat;
+  }
+  return BLOOM_THEO_DO_KHO[String(q.difficulty)] || "Understand";
+}
+
 // Load subject data in-place
 export function loadSubject(subjectId: string) {
   questions.length = 0;
@@ -163,6 +233,11 @@ export function loadSubject(subjectId: string) {
       try { questions.push(...JSON.parse(storedQ)); } catch {}
     }
   }
+
+  // Điền mức Bloom còn thiếu NGAY TẠI NGUỒN, trước khi dựng questionMap. Nhờ vậy cả sáu chỗ
+  // đọc `bloomLevel` đều nhận được giá trị thật mà không phải sửa gì, và bản đã trộn phương án
+  // cũng mang đúng nhãn. Phép gán này idempotent: chạy lại cho ra đúng kết quả cũ.
+  questions.forEach(q => { q.bloomLevel = suyRaMucBloom(q); });
 
   // Populate maps.
   // questionMap giữ bản ĐÃ TRỘN thứ tự phương án (tất định theo id) để xóa thiên lệch vị trí đáp án;

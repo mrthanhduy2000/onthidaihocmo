@@ -245,6 +245,40 @@ không điền số cho đẹp bảng. Nhóm kiểm **I** canh bốn chỗ này.
 Kèm theo: khi đọc một trường trên `Statistics`, hãy kiểm tra nó có thật trong `src/types.ts`
 không. `(stats as any).tenTruong` là dấu hiệu điển hình của trường ma.
 
+Bổ sung 27/07/2026, cùng loại lỗi nhưng ở màn Kế hoạch học. Bảy chỗ nữa đang trình bày hằng số
+viết tay như thể là kết quả đo. Nhóm kiểm **J** canh cả bảy:
+
+| Chỗ | Bịa cái gì |
+|---|---|
+| `runForecastStressTest` | Bốn trên năm kịch bản là hằng số, không đổi một ly giữa hồ sơ đầy và hồ sơ trắng |
+| `runForecastStressTest` | Hứa "+0,5 điểm nếu làm chủ chương khó nhất" cho cả người chưa làm câu nào |
+| `getStudyActivitiesROI` | Chép lại công thức của bảng độ nhạy rồi để trôi lệch: +0,55 so với +0,33 cho cùng một việc |
+| `getStudyActivitiesROI` | Hứa +0,10 điểm cho việc chữa câu sai khi sổ tay đang rỗng |
+| `getDailyBudgetPlan` | Ba sàn cứng áp riêng lẻ: xin 15 phút nhận về 20 phút, tỷ lệ cộng lại 133% |
+| `getStudyDebtItems` | Tính điểm ưu tiên rồi vứt đi, không xếp hạng; 44/45 mục cùng một nhãn |
+| `simulateDeadlineOutcome` | Neo cứng 45 phút và 14 ngày thay vì kế hoạch thật của người học |
+
+### 4.9b. Đếm số giá trị khác nhau trước khi tin một trường dữ liệu
+
+Ngày 27/07/2026 soát độ đầy của từng trường trong ngân hàng câu hỏi thì thấy **`bloomLevel`
+rỗng ở 292/292 câu**, `misconception` cũng rỗng 292/292. Sáu chỗ trong mã nguồn đọc
+`bloomLevel` và cả sáu đều lặng lẽ rơi về mặc định `|| "Remember"` hoặc `|| "Understand"`, nên
+màn hình báo mọi đề thi 100% mức "Nhớ" còn gia sư AI được bảo rằng mọi câu đều mức "Understand".
+
+Hai dạng hỏng này **không kêu một tiếng nào**, không có lỗi kiểu dữ liệu, không có ngoại lệ:
+
+1. **Trường rỗng toàn tập.** `q.truong || "mặc định"` biến dữ liệu thiếu thành một khẳng định sai.
+2. **Chỉ số hằng số trá hình.** `q.bloomLevel ? 95 : 75` trông như đo lường nhưng chỉ kiểm tra
+   trường có tồn tại, mà trường thì luôn tồn tại, nên nó luôn trả về đúng một con số.
+
+Cách phát hiện: viết một vòng lặp đếm số **giá trị khác nhau** của trường (hoặc của chỉ số) trên
+toàn bộ dữ liệu thật. Bằng 1 là hỏng. Đây là phép thử rẻ và nên chạy mỗi lần rà một engine mới.
+
+Hiện `bloomLevel` được điền tự động trong `db.loadSubject` qua `suyRaMucBloom`, suy từ động từ
+**đứng đầu** trong `learningObjective`. Đừng đổi thành "lấy bậc Bloom cao nhất tìm thấy": đã
+thử và sai, vì mục tiêu học tập viết theo lối "động-từ-tư-duy + nội dung + mục đích nghiệp vụ",
+mà phần mục đích cũng chứa động từ mạnh. Nhóm kiểm **K** canh chỗ này.
+
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 
 `PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,

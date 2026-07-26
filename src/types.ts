@@ -394,7 +394,9 @@ export interface StudyActivityROI {
   durationMinutes: number;
   forecastPointGain: number; // e.g. +0.42
   roiValue: number; // gain per 10 mins
-  priority: "Rất cao" | "Cao" | "Trung bình";
+  // Có thêm mức "Thấp" từ 27/07/2026: hoạt động đã hết dư địa tăng điểm (ví dụ sổ tay câu sai
+  // đang rỗng) phải nói thẳng là thấp, thay vì bị gán "Trung bình" cho đủ nhãn.
+  priority: "Rất cao" | "Cao" | "Trung bình" | "Thấp";
   reason: string;
 }
 

@@ -504,7 +504,9 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-text-primary">{act.title}</span>
                       <span className={`px-2 py-0.2 text-[10px] font-mono rounded-full ${
-                        act.priority === "Rất cao" ? "bg-brand-success/10 text-brand-success" : "bg-brand-info/10 text-brand-info"
+                        act.priority === "Rất cao" ? "bg-brand-success/10 text-brand-success"
+                          : act.priority === "Thấp" ? "bg-bg-card text-text-muted"
+                          : "bg-brand-info/10 text-brand-info"
                       }`}>
                         Ưu tiên {act.priority}
                       </span>
@@ -561,7 +563,9 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-text-primary">{item.conceptName}</span>
                       <span className={`px-2 py-0.2 text-[10px] font-mono rounded-full ${
-                        item.priority === "Cao" ? "bg-brand-danger/10 text-brand-danger" : "bg-brand-warning/10 text-brand-warning"
+                        item.priority === "Cao" ? "bg-brand-danger/10 text-brand-danger"
+                          : item.priority === "Thấp" ? "bg-bg-card text-text-muted"
+                          : "bg-brand-warning/10 text-brand-warning"
                       }`}>
                         {item.priority}
                       </span>

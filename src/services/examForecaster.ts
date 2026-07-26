@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { dbService, questions, chapters } from "./db";
+import { dbService, questions, chapters, topics } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
 import { 
   SubjectGoal, 
@@ -78,6 +78,80 @@ const STAGE_LABEL_VN: Record<string, string> = {
   "Coverage": "Phủ kiến thức"
 };
 const stageLabelVN = (key: string): string => STAGE_LABEL_VN[key] || key;
+
+// ===========================================================================
+// CÔNG THỨC DÙNG CHUNG
+//
+// Các bảng mô phỏng phía dưới (kịch bản sức ép, ROI, what-if) trước đây tự chép lại công thức
+// của phần lõi dự báo, và những bản chép đó đã trôi lệch khỏi bản gốc. Đo thực tế ngày
+// 27/07/2026: cùng một hoạt động "Luyện tập tự thích ứng" được bảng ROI hứa +0,55 điểm trong
+// khi bảng độ nhạy của chính bản dự báo tính ra +0,33 điểm, hai con số hiện cạnh nhau trên
+// cùng một màn hình. Nay mỗi công thức chỉ tồn tại ĐÚNG MỘT BẢN ở đây, mọi nơi đọc từ đó.
+// ===========================================================================
+
+/** Hình phạt điểm do câu sai chưa chữa. Phần lõi dự báo TRỪ THẲNG số này khỏi điểm. */
+function hinhPhatNoHocTap(soCauNo: number): number {
+  return Math.min(1.0, (Math.max(0, soCauNo) / 12) * 0.9);
+}
+
+/**
+ * Hệ số chuỗi ngày học đều. Là tín hiệu THẬT nhưng YẾU, chỉ được nhích nhẹ trong [0,95; 1,05]
+ * chứ không định đoạt kết quả.
+ */
+function heSoChuoiNgay(chuoiNgay: number): number {
+  return Math.min(1.05, 0.95 + Math.min(10, Math.max(0, chuoiNgay)) * 0.01);
+}
+
+/**
+ * Bốn mức lợi ích ước tính khi bỏ thêm 30 phút vào từng loại hoạt động, theo đường lợi ích
+ * biên giảm dần. Càng ít việc còn tồn thì thêm giờ càng ít tác dụng, đúng như thực tế.
+ */
+function tinhLoiIch30Phut(dl: {
+  soCauNo: number;
+  doPhuKhaiNiem: number;
+  diemThiThuTrungBinh: number;
+  chuoiNgay: number;
+}) {
+  return {
+    // Sổ tay RỖNG thì lợi ích bằng 0. Bản cũ trả về 0,10 nên màn hình vẫn hứa thêm điểm cho
+    // một việc không thể làm (không còn câu sai nào để chữa).
+    soTayCauSai: dl.soCauNo > 0
+      ? Math.round((0.50 * (1 - Math.exp(-0.12 * Math.min(15, dl.soCauNo)))) * 100) / 100
+      : 0,
+    luyenThichUng: Math.round((0.35 * (1 - Math.exp(-0.03 * Math.max(0, 100 - dl.doPhuKhaiNiem)))) * 100) / 100,
+    thiThu: Math.round((0.40 * (1 - Math.exp(-0.25 * Math.max(0, 10 - dl.diemThiThuTrungBinh)))) * 100) / 100,
+    onNgatQuang: Math.round((0.25 * (1 - Math.exp(-0.10 * Math.max(0, 14 - dl.chuoiNgay)))) * 100) / 100
+  };
+}
+
+/**
+ * Lợi ích khi lặp lại cùng một hoạt động nhiều lượt 30 phút. Mỗi lượt sau chỉ còn một nửa
+ * hiệu suất lượt trước, nên tổng không bao giờ vượt quá gấp đôi lượt đầu.
+ * 1 lượt trả về đúng g, 2 lượt trả về 1,5g, vô hạn lượt tiệm cận 2g.
+ */
+function loiIchNhieuLuot(loiIchMotLuot: number, soLuot: number): number {
+  if (soLuot <= 0 || loiIchMotLuot <= 0) return 0;
+  return Math.round(loiIchMotLuot * (2 - Math.pow(0.5, soLuot - 1)) * 100) / 100;
+}
+
+/**
+ * Đạo hàm của điểm dự báo theo tỷ lệ làm đúng tổng thể, suy thẳng từ cách phần lõi cộng điểm.
+ * Tỷ lệ đúng có mặt trong ba thành phần: Bloom (hệ số 11), ghi nhớ (hệ số 8) và phần bằng
+ * chứng chung của độ thạo (hệ số 3,5 nhân hệ số chuỗi ngày). Nhờ số này, câu hỏi "chữa hết
+ * câu sai của chương yếu nhất thì được thêm mấy điểm" trả lời được bằng phép tính chứ không
+ * phải bằng một hằng số viết tay.
+ */
+function doNhayTheoTyLeDung(
+  trongSo: { bloomWeight: number; retentionWeight: number; masteryWeight: number },
+  heSoChuoi: number
+): number {
+  return 11 * trongSo.bloomWeight + 8 * trongSo.retentionWeight + 3.5 * heSoChuoi * trongSo.masteryWeight;
+}
+
+/** Làm tròn về một chữ số thập phân, dùng thống nhất cho mọi con số hiển thị. */
+function tron1(x: number): number {
+  return Math.round(x * 10) / 10;
+}
 
 export const examForecaster = {
   /**
@@ -294,7 +368,7 @@ export const examForecaster = {
     // Chuỗi ngày học đều là tín hiệu THẬT nhưng YẾU, chỉ được phép nhích nhẹ chứ không định
     // đoạt kết quả. Bản cũ dùng (0,75 + streak*0,05) nên người chưa có chuỗi ngày nào bị cắt
     // thẳng 25% năng lực, dù họ có thể vừa làm đúng 95% số câu. Nay giới hạn trong [0,95; 1,05].
-    const streakModifier = Math.min(1.05, 0.95 + Math.min(10, stats.studyStreak || 0) * 0.01);
+    const streakModifier = heSoChuoiNgay(stats.studyStreak || 0);
 
     let sumStableMastery = 0;
     let totalDependencyPenalty = 0;
@@ -387,7 +461,7 @@ export const examForecaster = {
     // LAYER 5: Study Debt Penalty
     // -------------------------------------------------------------
     const studyDebtCount = Object.keys(stats.incorrectQuestionHistory || {}).length;
-    const debtPenalty = Math.min(1.0, (studyDebtCount / 12) * 0.9);
+    const debtPenalty = hinhPhatNoHocTap(studyDebtCount);
 
     // -------------------------------------------------------------
     // LAYER 6: Deadline Proximity & Non-Linear Pressure Curve Stage
@@ -566,12 +640,16 @@ export const examForecaster = {
     // LAYER 11: Local Sensitivity Analysis & Opportunity Cost Engine
     // -------------------------------------------------------------
     // Diminishing returns curve calculation for activities
-    const wrong30Gain = studyDebtCount > 0 
-      ? Math.round((0.50 * (1 - Math.exp(-0.12 * Math.min(15, studyDebtCount)))) * 100) / 100 
-      : 0.10;
-    const practice30Gain = Math.round((0.35 * (1 - Math.exp(-0.03 * (100 - conceptCoverage)))) * 100) / 100;
-    const mock30Gain = Math.round((0.40 * (1 - Math.exp(-0.25 * Math.max(1, 10 - mockExamAverage)))) * 100) / 100;
-    const review30Gain = Math.round((0.25 * (1 - Math.exp(-0.10 * (14 - streak)))) * 100) / 100;
+    const loiIch30 = tinhLoiIch30Phut({
+      soCauNo: studyDebtCount,
+      doPhuKhaiNiem: conceptCoverage,
+      diemThiThuTrungBinh: mockExamAverage,
+      chuoiNgay: streak
+    });
+    const wrong30Gain = loiIch30.soTayCauSai;
+    const practice30Gain = loiIch30.luyenThichUng;
+    const mock30Gain = loiIch30.thiThu;
+    const review30Gain = loiIch30.onNgatQuang;
 
     const sensitivityAnalysis: SensitivityItem[] = [
       {
@@ -784,71 +862,184 @@ export const examForecaster = {
   },
 
   /**
-   * Internal Forecast Stress Test Simulator (Runs 5 key scenarios deterministically)
+   * Năm kịch bản sức ép, mỗi kịch bản là một phép đo trên chính mô hình dự báo.
+   *
+   * CẢNH BÁO CHO NGƯỜI SỬA SAU: hàm này ĐƯỢC GỌI TỪ BÊN TRONG `calculatePrediction`. Tuyệt
+   * đối không gọi ngược `this.calculatePrediction()` ở đây, sẽ thành hai hàm gọi vòng nhau vô
+   * hạn. Mọi dữ liệu cần thiết phải lấy thẳng từ `dbService` hoặc từ tham số truyền vào.
+   *
+   * LỖI CỦA BẢN CŨ: bốn trên năm kịch bản là HẰNG SỐ VIẾT TAY (-0,25 / +0,45 / +0,35 / +0,50),
+   * không hề đọc dữ liệu người học. Đo thực tế ngày 27/07/2026: xóa sạch lịch sử để về hồ sơ
+   * trắng rồi chạy lại, bốn con số đó không đổi một ly. Nghĩa là màn hình hứa "làm chủ chương
+   * khó nhất được thêm 0,5 điểm" ngay cả với người chưa làm câu nào (chưa có chương nào được
+   * đo là khó), và hứa y hệt với người đã thạo tất cả các chương (không còn gì để làm chủ).
+   * Đây đúng loại lỗi "khẳng định điều chưa đo" đã gặp ở phần cân bằng Bloom.
+   *
+   * CÁCH SỬA: mỗi mức chênh lệch nay suy ra từ một đại lượng mô hình thật sự có tính, và bằng
+   * 0 khi kịch bản không thể xảy ra.
    */
   runForecastStressTest(subjectId?: string, baselinePredictedScore?: number): StressTestReport {
-    const baseline = baselinePredictedScore || 7.5;
+    const activeSub = subjectId || dbService.getActiveSubjectId();
     const stats = dbService.getStatistics();
-    const debtCount = Object.keys(stats.incorrectQuestionHistory || {}).length;
+    const baseline = typeof baselinePredictedScore === "number" ? baselinePredictedScore : 5.0;
 
-    // Scenario 1: Rest for 2 days (Decay penalty)
-    const rest2DaysScore = Math.max(1.0, Math.round((baseline - 0.25) * 10) / 10);
-    
-    // Scenario 2: Increase daily study by +60 mins
-    const add60MinsScore = Math.min(10.0, Math.round((baseline + 0.45) * 10) / 10);
+    const soCauNo = Object.keys(stats.incorrectQuestionHistory || {}).length;
+    const chuoiNgay = stats.studyStreak || 0;
+    const daLam = stats.totalSolved || 0;
+    const daDung = stats.totalCorrect || 0;
+    const tyLeDung = daLam > 0 ? daDung / daLam : 0;
+    const trongSo = this.calculateAdaptiveWeights(this.getCalibrationProfile(activeSub));
 
-    // Scenario 3: Resolve 100% of Wrong Notebook debt
-    const resolveDebtScore = Math.min(10.0, Math.round((baseline + Math.min(0.8, debtCount * 0.08)) * 10) / 10);
+    // Độ phủ khái niệm và điểm thi thử: lấy đúng cách phần lõi lấy, nhưng KHÔNG gọi lại phần lõi.
+    const nutDoThi = kbService.getKnowledgeGraph(activeSub);
+    const doThao = stats.conceptMastery || {};
+    const khaiNiemDuyNhat: number[] = [];
+    const daGap = new Set<string>();
+    nutDoThi.forEach(n => {
+      if (daGap.has(n.id)) return;
+      daGap.add(n.id);
+      const m = doThao[n.concept] ?? doThao[n.id];
+      if (m !== undefined) khaiNiemDuyNhat.push(m);
+    });
+    if (khaiNiemDuyNhat.length === 0) Object.values(doThao).forEach(v => khaiNiemDuyNhat.push(v || 0));
+    const doPhuKhaiNiem = khaiNiemDuyNhat.length > 0
+      ? Math.round((khaiNiemDuyNhat.filter(m => m >= 70).length / khaiNiemDuyNhat.length) * 100)
+      : 0;
 
-    // Scenario 4: Complete 2 Full Mock Exams
-    const completeMocksScore = Math.min(10.0, Math.round((baseline + 0.35) * 10) / 10);
+    const lichSu = dbService.getHistory().filter(h => h.isSubmitted && h.questions && h.questions.length >= 5);
+    const diemThiThu = lichSu.length > 0
+      ? (lichSu.slice(-5).reduce((s, m) => s + (m.score / Math.max(1, m.questions.length)), 0) / Math.min(5, lichSu.length)) * 10
+      : tyLeDung * 10;
 
-    // Scenario 5: Master hardest chapter
-    const masterHardestScore = Math.min(10.0, Math.round((baseline + 0.50) * 10) / 10);
+    const loiIch30 = tinhLoiIch30Phut({
+      soCauNo,
+      doPhuKhaiNiem,
+      diemThiThuTrungBinh: diemThiThu,
+      chuoiNgay
+    });
+
+    // --- Kịch bản 1: nghỉ 2 ngày. Suy từ đúng hai chỗ chuỗi ngày có mặt trong công thức điểm:
+    // thành phần ghi nhớ (chuoiNgay / 7 * 2) và hệ số chuỗi ngày nhân vào độ thạo.
+    // Chuỗi đang bằng 0 thì không có gì để mất, nên mức phạt bằng 0 chứ không phải -0,25.
+    const ngayMat = Math.min(2, chuoiNgay);
+    const giamGhiNho = (ngayMat / 7) * 2 * trongSo.retentionWeight;
+    const heSoCu = heSoChuoiNgay(chuoiNgay);
+    const heSoMoi = heSoChuoiNgay(chuoiNgay - ngayMat);
+    // Dựng lại thành phần độ thạo theo đúng công thức phần lõi, có bỏ qua khoản suy giảm do
+    // khái niệm tiên quyết (khoản đó chỉ làm con số nhỏ đi, nên bỏ qua là ước lượng THẬN TRỌNG,
+    // không thổi phồng mức phạt).
+    const doThaoTrungBinh = khaiNiemDuyNhat.length > 0
+      ? khaiNiemDuyNhat.reduce((s, v) => s + v, 0) / khaiNiemDuyNhat.length
+      : tyLeDung * 100;
+    const diemDoThao10 = ((doThaoTrungBinh * 0.65 + tyLeDung * 100 * 0.35) * heSoCu) / 10;
+    const giamDoThao = diemDoThao10 * (1 - heSoMoi / Math.max(0.01, heSoCu)) * trongSo.masteryWeight;
+    const chenhNghi = -tron1(giamGhiNho + giamDoThao);
+
+    // --- Kịch bản 2: thêm 60 phút mỗi ngày, tức hai lượt 30 phút dồn vào việc đáng làm nhất
+    // hiện tại. Mọi việc đều bão hòa thì mức tăng tự về 0.
+    const loiIchTotNhat = Math.max(loiIch30.soTayCauSai, loiIch30.luyenThichUng, loiIch30.thiThu, loiIch30.onNgatQuang);
+    const chenhThem60 = tron1(loiIchNhieuLuot(loiIchTotNhat, 2));
+
+    // --- Kịch bản 3: chữa hết câu sai. Đây là con số CHÍNH XÁC chứ không phải ước lượng: phần
+    // lõi trừ thẳng `hinhPhatNoHocTap(soCauNo)` khỏi điểm, nên chữa hết nợ lấy lại đúng ngần đó.
+    const chenhChuaNo = tron1(hinhPhatNoHocTap(soCauNo));
+
+    // --- Kịch bản 4: làm 2 đề thi thử, tức hai lượt của hoạt động thi thử.
+    const chenhThiThu = tron1(loiIchNhieuLuot(loiIch30.thiThu, 2));
+
+    // --- Kịch bản 5: làm chủ chương yếu nhất. Chữa hết câu sai của chương đó làm tỷ lệ đúng
+    // tổng thể nhích lên, mà tỷ lệ đúng có mặt trong ba thành phần điểm. Chưa chương nào có
+    // dữ liệu, hoặc mọi chương đã đúng hết, thì mức tăng bằng 0.
+    let soCauSaiChuongYeu = 0;
+    let tenChuongYeu = "";
+    chapters.forEach(c => {
+      const acc = stats.accuracyByChapter?.[c.id];
+      if (!acc || acc.total === 0) return;
+      const sai = Math.max(0, acc.total - acc.correct);
+      if (sai > soCauSaiChuongYeu) {
+        soCauSaiChuongYeu = sai;
+        tenChuongYeu = c.title;
+      }
+    });
+    const chenhChuongYeu = daLam > 0
+      ? tron1((soCauSaiChuongYeu / daLam) * doNhayTheoTyLeDung(trongSo, heSoCu))
+      : 0;
+
+    const dung = (x: number) => Math.min(10.0, Math.max(1.0, tron1(baseline + x)));
 
     const scenarios = [
       {
         id: "stress_rest",
         scenarioName: "Nghỉ học 2 ngày liên tiếp",
-        projectedScore: rest2DaysScore,
-        deltaFromBaseline: -0.25,
-        description: "Chỉ số phai mờ trí nhớ giảm làm sụt điểm dự báo."
+        projectedScore: dung(chenhNghi),
+        deltaFromBaseline: chenhNghi,
+        description: chuoiNgay > 0
+          ? `Mất ${ngayMat} ngày trong chuỗi học đều đang có (${chuoiNgay} ngày).`
+          : "Chưa có chuỗi ngày học đều nào để mất, nên nghỉ thêm không làm sụt thêm điểm."
       },
       {
         id: "stress_add_60m",
         scenarioName: "Tăng 60 phút học mỗi ngày",
-        projectedScore: add60MinsScore,
-        deltaFromBaseline: +0.45,
-        description: "Gia tăng tốc độ hoàn thành và độ phủ chương syllabus."
+        projectedScore: dung(chenhThem60),
+        deltaFromBaseline: chenhThem60,
+        description: chenhThem60 > 0
+          ? "Hai lượt 30 phút dồn vào việc đang có lợi ích biên cao nhất, lượt sau giảm nửa hiệu suất."
+          : "Mọi hoạt động đều đã bão hòa, thêm giờ gần như không đổi được điểm."
       },
       {
         id: "stress_resolve_debt",
         scenarioName: "Giải quyết 100% câu sai Sổ tay",
-        projectedScore: resolveDebtScore,
-        deltaFromBaseline: Math.round(Math.min(0.8, debtCount * 0.08) * 10) / 10,
-        description: "Xóa bỏ các bẫy nhận thức trọng yếu."
+        projectedScore: dung(chenhChuaNo),
+        deltaFromBaseline: chenhChuaNo,
+        description: soCauNo > 0
+          ? `Lấy lại đúng khoản điểm đang bị trừ vì ${soCauNo} câu sai chưa chữa.`
+          : "Sổ tay đang sạch, không còn khoản trừ nào để lấy lại."
       },
       {
         id: "stress_mock_exams",
         scenarioName: "Hoàn thành 2 đề thi thử mô phỏng",
-        projectedScore: completeMocksScore,
-        deltaFromBaseline: +0.35,
-        description: "Rèn luyện phản xạ thời gian thực."
+        projectedScore: dung(chenhThiThu),
+        deltaFromBaseline: chenhThiThu,
+        description: chenhThiThu > 0
+          ? `Điểm thi thử trung bình đang ${tron1(diemThiThu)}, còn khoảng trống để cải thiện.`
+          : "Điểm thi thử đã gần kịch trần, làm thêm đề gần như không đổi được dự báo."
       },
       {
         id: "stress_master_hardest",
-        scenarioName: "Làm chủ 100% chương khó nhất",
-        projectedScore: masterHardestScore,
-        deltaFromBaseline: +0.50,
-        description: "Lấp lỗ hổng kiến thức trọng tâm."
+        scenarioName: tenChuongYeu ? `Làm chủ 100% chương yếu nhất (${tenChuongYeu})` : "Làm chủ 100% chương yếu nhất",
+        projectedScore: dung(chenhChuongYeu),
+        deltaFromBaseline: chenhChuongYeu,
+        description: soCauSaiChuongYeu > 0
+          ? `Chữa hết ${soCauSaiChuongYeu} câu sai của chương này, tỷ lệ làm đúng tổng thể tăng theo.`
+          : "Chưa có chương nào bị đo là yếu, nên chưa tính được mức tăng."
       }
     ];
 
+    // Ba kết luận dưới đây trước kia là chuỗi viết sẵn chọn theo ngưỡng số câu nợ. Nay xếp hạng
+    // thẳng trên chính các mức chênh lệch vừa tính, nên chúng luôn khớp với bảng phía trên.
+    const congViec = [
+      { ten: "Giải quyết toàn bộ câu sai trong Sổ tay", loi: chenhChuaNo, phut: Math.max(10, soCauNo * 3) },
+      { ten: "Tăng thời lượng học thêm 60 phút mỗi ngày", loi: chenhThem60, phut: 60 },
+      { ten: "Làm 2 đề thi thử mô phỏng", loi: chenhThiThu, phut: 100 },
+      { ten: tenChuongYeu ? `Làm chủ chương yếu nhất (${tenChuongYeu})` : "Làm chủ chương yếu nhất", loi: chenhChuongYeu, phut: 90 }
+    ];
+    // Xếp hạng TẤT ĐỊNH: hòa lợi ích thì so tên, không phụ thuộc thứ tự mảng đầu vào.
+    const theoHieuSuat = [...congViec].sort((a, b) =>
+      (b.loi / b.phut) - (a.loi / a.phut) || a.ten.localeCompare(b.ten, "vi")
+    );
+    const theoLoiIch = [...congViec].sort((a, b) => b.loi - a.loi || a.ten.localeCompare(b.ten, "vi"));
+
     return {
-      mostSensitiveVariable: debtCount > 5 ? "Tồn đọng bẫy câu sai trong Sổ tay" : "Độ phủ chương syllabus",
-      mostEfficientAction: debtCount > 3 ? "Giải quyết toàn bộ câu sai trong Sổ tay" : "Tăng thời lượng học +60 phút/ngày",
-      leastEfficientAction: "Tập trung giải bài tập mức độ Dễ lặp đi lặp lại",
-      criticalBottleneck: debtCount > 8 ? "Bẫy nhận thức chưa giải quyết" : "Số lượng đề thi thử đã làm chưa đủ",
+      mostSensitiveVariable: theoLoiIch[0].loi > 0
+        ? theoLoiIch[0].ten
+        : "Chưa đủ dữ liệu để xác định biến nhạy nhất",
+      mostEfficientAction: theoHieuSuat[0].loi > 0
+        ? theoHieuSuat[0].ten
+        : "Chưa đủ dữ liệu để xếp hạng hiệu suất",
+      leastEfficientAction: theoHieuSuat[theoHieuSuat.length - 1].ten,
+      criticalBottleneck: theoLoiIch[0].loi > 0
+        ? `${theoLoiIch[0].ten} (chiếm ${Math.round((theoLoiIch[0].loi / Math.max(0.01, theoLoiIch.reduce((s, c) => s + Math.max(0, c.loi), 0))) * 100)}% tổng dư địa cải thiện)`
+        : "Chưa đo được điểm nghẽn nào",
       scenarios
     };
   },
@@ -889,18 +1080,58 @@ export const examForecaster = {
       mockRatio = 0.25 - (reviewRatio - 0.15);
     }
 
-    const reviewMinutes = Math.max(5, Math.round(budgetMinutes * reviewRatio));
-    const practiceMinutes = Math.max(10, Math.round(budgetMinutes * practiceRatio));
-    const mockMinutes = Math.max(5, budgetMinutes - reviewMinutes - practiceMinutes);
+    // Chuẩn hóa cho ba tỷ lệ cộng lại đúng bằng 1. Nhánh "sửa lỗi sai" khi sổ tay sạch cộng lại
+    // chỉ 0,85, phần thiếu trước đây rơi âm thầm hết vào ô thi thử vì ô đó lấy phần dư. Nghĩa là
+    // biến `mockRatio` được gán ở cả năm nhánh nhưng KHÔNG NƠI NÀO ĐỌC, người sửa sau nhìn vào
+    // tưởng nó đang điều khiển tỷ lệ.
+    const tongTyLe = reviewRatio + practiceRatio + mockRatio;
+    const tyLe = [reviewRatio / tongTyLe, practiceRatio / tongTyLe, mockRatio / tongTyLe];
+
+    // Chia phút theo phương pháp phần dư lớn nhất, để tổng ba ô luôn khớp ĐÚNG ngân sách.
+    //
+    // LỖI CỦA BẢN CŨ: ba sàn cứng (5, 10, 5 phút) được áp riêng lẻ rồi mới cộng lại, nên ngân
+    // sách nhỏ bị vỡ. Đo thực tế: xin kế hoạch cho 15 phút thì nhận về 5+10+5 = 20 phút, và ba
+    // tỷ lệ hiển thị cộng lại 133%. Nay sàn chỉ được áp khi ngân sách đủ chỗ cho cả ba.
+    const tongSan = 20; // 5 + 10 + 5
+    const san = budgetMinutes >= tongSan ? [5, 10, 5] : [0, 0, 0];
+    const conLai = budgetMinutes - san.reduce((s, v) => s + v, 0);
+    const tho = tyLe.map(t => conLai * t);
+    const phut = tho.map(Math.floor);
+    let du = conLai - phut.reduce((s, v) => s + v, 0);
+    // Phát phần dư cho ô có phần lẻ lớn nhất; hòa thì ưu tiên ô đứng trước, nên kết quả tất định.
+    const thuTuDu = tho
+      .map((v, i) => ({ i, le: v - Math.floor(v) }))
+      .sort((a, b) => b.le - a.le || a.i - b.i);
+    for (const { i } of thuTuDu) {
+      if (du <= 0) break;
+      phut[i] += 1;
+      du -= 1;
+    }
+    const [reviewMinutes, practiceMinutes, mockMinutes] = phut.map((v, i) => v + san[i]);
+
+    // Ba tỷ lệ hiển thị cũng phải cộng lại đúng 100, dùng lại đúng phương pháp phần dư lớn nhất.
+    // Làm tròn từng ô riêng lẻ cho ra 99% hoặc 101%, người đọc bảng sẽ thấy nó không khớp.
+    const soPhut = [reviewMinutes, practiceMinutes, mockMinutes];
+    const thoTyLe = soPhut.map(p => (budgetMinutes > 0 ? (p / budgetMinutes) * 100 : 0));
+    const tyLeHien = thoTyLe.map(Math.floor);
+    let duTyLe = (budgetMinutes > 0 ? 100 : 0) - tyLeHien.reduce((s, v) => s + v, 0);
+    const thuTuTyLe = thoTyLe
+      .map((v, i) => ({ i, le: v - Math.floor(v) }))
+      .sort((a, b) => b.le - a.le || a.i - b.i);
+    for (const { i } of thuTuTyLe) {
+      if (duTyLe <= 0) break;
+      tyLeHien[i] += 1;
+      duTyLe -= 1;
+    }
 
     return {
       totalMinutes: budgetMinutes,
       stage,
       pressureCurveStage: prediction.pressureCurveStage,
       allocation: [
-        { key: "review", label: `Ôn tập Sổ tay & ôn lại ngắt quãng (${stageLabelVN(stage)})`, minutes: reviewMinutes, ratio: Math.round((reviewMinutes / budgetMinutes) * 100) },
-        { key: "adaptive", label: "Luyện tập tự thích ứng", minutes: practiceMinutes, ratio: Math.round((practiceMinutes / budgetMinutes) * 100) },
-        { key: "mock", label: `Thi thử & mô phỏng giai đoạn ${stageLabelVN(stage)}`, minutes: mockMinutes, ratio: Math.round((mockMinutes / budgetMinutes) * 100) }
+        { key: "review", label: `Ôn tập Sổ tay & ôn lại ngắt quãng (${stageLabelVN(stage)})`, minutes: reviewMinutes, ratio: tyLeHien[0] },
+        { key: "adaptive", label: "Luyện tập tự thích ứng", minutes: practiceMinutes, ratio: tyLeHien[1] },
+        { key: "mock", label: `Thi thử & mô phỏng giai đoạn ${stageLabelVN(stage)}`, minutes: mockMinutes, ratio: tyLeHien[2] }
       ]
     };
   },
@@ -908,34 +1139,58 @@ export const examForecaster = {
   /**
    * Marginal ROI Calculator with Diminishing Returns Model v2
    */
+  /**
+   * Bảng lợi ích trên thời gian bỏ ra.
+   *
+   * LỖI CỦA BẢN CŨ: hàm này tự chép lại công thức thay vì đọc bảng độ nhạy mà chính bản dự báo
+   * đã tính. Bản chép đã trôi lệch: cùng hoạt động "Luyện tập tự thích ứng", bảng này dùng
+   * `0,35 + (100 - độ phủ) * 0,002` cho ra +0,55 điểm, còn bảng độ nhạy dùng
+   * `0,35 * (1 - e^(-0,03 * (100 - độ phủ)))` cho ra +0,33 điểm. Hai con số cùng nói về một
+   * việc, cùng hiện trên màn Kế hoạch học. Ngoài ra mục Sổ tay hứa +0,10 điểm ngay cả khi sổ
+   * tay rỗng, tức mời người học làm một việc không tồn tại.
+   *
+   * CÁCH SỬA: đọc thẳng `sensitivityAnalysis` của bản dự báo. Một công thức, một nguồn.
+   */
   getStudyActivitiesROI(): StudyActivityROI[] {
     const stats = dbService.getStatistics();
     const debtCount = Object.keys(stats.incorrectQuestionHistory || {}).length;
     const prediction = this.calculatePrediction();
     const stage = prediction.metricsBreakdown.stageLabel || "Foundation";
+    const doNhay = prediction.sensitivityAnalysis || [];
+    const layLoiIch = (khoa: string) => doNhay.find(s => s.activityKey === khoa)?.additional30MinGain ?? 0;
 
-    // Exponential diminishing return formula
-    const wrongGain = debtCount > 0 
-      ? Math.round((0.50 * (1 - Math.exp(-0.12 * Math.min(15, debtCount)))) * 100) / 100 
-      : 0.10;
-    const wrongRoi = Math.round((wrongGain / 25 * 10) * 100) / 100;
+    // Thời lượng ghi trên thẻ là thời lượng THẬT của hoạt động, còn bảng độ nhạy tính theo lượt
+    // 30 phút, nên phải quy đổi bằng đúng quy tắc lợi ích biên giảm dần dùng chung.
+    const quyDoi = (loiIch30: number, phut: number) => loiIchNhieuLuot(loiIch30, phut / 30);
 
-    const adaptiveGain = Math.round((0.35 + (100 - prediction.metricsBreakdown.conceptCoverage) * 0.002) * 100) / 100;
-    const adaptiveRoi = Math.round((adaptiveGain / 30 * 10) * 100) / 100;
+    const wrongGain = quyDoi(layLoiIch("wrong_notebook"), 25);
+    const adaptiveGain = quyDoi(layLoiIch("adaptive_practice"), 30);
+    const mockGain = quyDoi(layLoiIch("mock_exam"), 50);
 
-    const mockGain = stage === "Mock Exam" || stage === "Error Review" ? 0.42 : 0.28;
-    const mockRoi = Math.round((mockGain / 50 * 10) * 100) / 100;
+    const tinhRoi = (loiIch: number, phut: number) => Math.round((loiIch / phut * 10) * 100) / 100;
+
+    // Mức ưu tiên xếp theo CHÍNH lợi ích trên thời gian vừa tính, không theo chuỗi viết sẵn.
+    const mocRoi = [tinhRoi(wrongGain, 25), tinhRoi(adaptiveGain, 30), tinhRoi(mockGain, 50)];
+    const roiCaoNhat = Math.max(...mocRoi);
+    const xepMuc = (roi: number): StudyActivityROI["priority"] => {
+      if (roi <= 0) return "Thấp";
+      if (roi >= roiCaoNhat * 0.9) return "Rất cao";
+      if (roi >= roiCaoNhat * 0.5) return "Cao";
+      return "Trung bình";
+    };
 
     const activities: StudyActivityROI[] = [
       {
         id: "roi_wrong_notebook",
-        title: "Sửa câu sai trong Sổ tay (Diminishing Return v2)",
+        title: "Sửa câu sai trong Sổ tay",
         type: "wrong_notebook",
         durationMinutes: 25,
         forecastPointGain: wrongGain,
-        roiValue: wrongRoi,
-        priority: debtCount > 5 ? "Rất cao" : "Cao",
-        reason: debtCount > 0 ? `Xử lý ${debtCount} điểm yếu. ROI biên tự động giảm dần khi bẫy câu sai được triệt phá.` : "Duy trì xem lại các câu đã ghi nhớ."
+        roiValue: tinhRoi(wrongGain, 25),
+        priority: xepMuc(tinhRoi(wrongGain, 25)),
+        reason: debtCount > 0
+          ? `Xử lý ${debtCount} câu đang sai. Lợi ích biên giảm dần khi sổ tay vơi đi.`
+          : "Sổ tay đang sạch, việc này hiện không còn dư địa tăng điểm."
       },
       {
         id: "roi_adaptive_practice",
@@ -943,9 +1198,9 @@ export const examForecaster = {
         type: "adaptive_practice",
         durationMinutes: 30,
         forecastPointGain: adaptiveGain,
-        roiValue: adaptiveRoi,
-        priority: "Cao",
-        reason: "Tự động bù đắp các vùng kiến thức chớm quên theo đường cong lãng quên Ebbinghaus."
+        roiValue: tinhRoi(adaptiveGain, 30),
+        priority: xepMuc(tinhRoi(adaptiveGain, 30)),
+        reason: `Độ phủ khái niệm đang ${prediction.metricsBreakdown.conceptCoverage}%, phần chưa phủ là dư địa của hoạt động này.`
       },
       {
         id: "roi_mock_exam",
@@ -953,34 +1208,60 @@ export const examForecaster = {
         type: "mock_exam",
         durationMinutes: 50,
         forecastPointGain: mockGain,
-        roiValue: mockRoi,
-        priority: stage === "Mock Exam" || stage === "Error Review" ? "Rất cao" : "Trung bình",
-        reason: "Rèn luyện áp lực thời gian và tổng hợp ma trận đề thi trước ngày thi chính thức."
+        roiValue: tinhRoi(mockGain, 50),
+        priority: xepMuc(tinhRoi(mockGain, 50)),
+        reason: `Điểm thi thử trung bình đang ${prediction.metricsBreakdown.mockExamAverage}, khoảng cách tới kịch trần là dư địa.`
       }
     ];
 
-    return activities.sort((a, b) => b.roiValue - a.roiValue);
+    // Hòa ROI thì so mã hoạt động, để thứ tự không đổi giữa hai lần gọi (bất biến 4.7).
+    return activities.sort((a, b) => b.roiValue - a.roiValue || a.id.localeCompare(b.id));
   },
 
   /**
-   * Non-Linear Deadline Outcome Simulator
+   * Mô phỏng kết quả theo thời lượng học và số ngày còn lại.
+   *
+   * LỖI CỦA BẢN CŨ: điểm neo "không đổi gì" bị cắm cứng ở 45 phút và 14 ngày, chứ không phải
+   * kế hoạch thật của người học. Màn Kế hoạch học đặt sẵn hai thanh trượt đúng bằng kế hoạch
+   * hiện tại, nên khi Đàm để 60 phút/ngày hoặc ngày thi cách 30 ngày, màn hình mở ra đã hiện
+   * ngay hai con số khác nhau cho cùng một hiện trạng: ô dự báo nói một đằng, ô mô phỏng
+   * "chưa kéo thanh nào" nói một nẻo. Trùng nhau chỉ khi kế hoạch tình cờ đúng 45 và 14.
+   *
+   * CÁCH SỬA: neo vào chính kế hoạch hiện tại. Kéo thanh về đúng chỗ cũ phải trả lại đúng con
+   * số dự báo, không sai một ly.
    */
   simulateDeadlineOutcome(dailyMinutes: number, daysRemaining: number): number {
     const prediction = this.calculatePrediction();
     const currentPredicted = prediction.predictedScore;
-    
-    const minutesDelta = dailyMinutes - 45;
-    const daysDelta = daysRemaining - 14;
+    const goal = dbService.getSubjectGoal();
 
-    const minutesImpact = (minutesDelta / 30) * 0.35 * Math.exp(-minutesDelta / 300);
-    const daysImpact = (daysDelta / 7) * 0.25;
+    const neoPhut = goal.dailyStudyMinutes || 45;
+    const neoNgay = prediction.metricsBreakdown.remainingDays || 14;
 
-    const simulated = currentPredicted + minutesImpact + daysImpact;
-    return Math.min(10.0, Math.max(1.0, Math.round(simulated * 10) / 10));
+    const lechPhut = dailyMinutes - neoPhut;
+    const lechNgay = daysRemaining - neoNgay;
+
+    // Thêm giờ có ích nhưng lợi ích biên giảm dần, và mức trần lấy từ đúng hoạt động đang có
+    // dư địa cao nhất theo bảng độ nhạy, chứ không phải hằng số 0,35.
+    const doNhay = prediction.sensitivityAnalysis || [];
+    const tranMoiLuot = Math.max(0.05, ...doNhay.map(s => s.additional30MinGain || 0));
+    const anhHuongPhut = lechPhut >= 0
+      ? loiIchNhieuLuot(tranMoiLuot, lechPhut / 30)
+      : -loiIchNhieuLuot(tranMoiLuot, -lechPhut / 30);
+
+    // Thêm ngày cũng cho thêm dư địa, nhưng KHÔNG tuyến tính vô hạn như bản cũ (bản cũ cộng
+    // 0,25 điểm cho mỗi tuần, nên chỉ cần dời ngày thi ra xa là điểm dự báo tự tăng mãi).
+    const anhHuongNgay = lechNgay >= 0
+      ? loiIchNhieuLuot(tranMoiLuot, lechNgay / 7)
+      : -loiIchNhieuLuot(tranMoiLuot, -lechNgay / 7);
+
+    const moPhong = currentPredicted + anhHuongPhut + anhHuongNgay;
+    return Math.min(10.0, Math.max(1.0, tron1(moPhong)));
   },
 
   /**
-   * What-if Sensitivity Analysis Scenarios
+   * Ba tình huống giả định. Cả ba nay đều lấy số từ bản dự báo, kể cả tình huống tiêu cực vốn
+   * bị cắm cứng "-0,8 điểm" bất kể người học đang ở đâu.
    */
   getWhatIfScenarios() {
     const prediction = this.calculatePrediction();
@@ -990,73 +1271,138 @@ export const examForecaster = {
     const wrongItem = sensitivity.find(s => s.activityKey === "wrong_notebook");
     const practiceItem = sensitivity.find(s => s.activityKey === "adaptive_practice");
 
+    const loiSoTay = wrongItem?.additional30MinGain ?? 0;
+    const loiLuyenTap = practiceItem?.additional30MinGain ?? 0;
+
+    // Mức mất khi bỏ chương yếu nhất: lấy đúng kịch bản "làm chủ chương yếu nhất" trong bảng
+    // kịch bản sức ép, đảo dấu. Nhờ vậy hai bảng luôn nói cùng một con số, và khi chưa có
+    // chương nào bị đo là yếu thì mức mất bằng 0 chứ không phải -0,8.
+    const kichBanChuong = (prediction.stressTestReport?.scenarios || [])
+      .find(s => s.id === "stress_master_hardest");
+    const mucMatChuong = tron1(Math.abs(kichBanChuong?.deltaFromBaseline ?? 0));
+
     return [
       {
         title: "Nếu học thêm 30 phút Sổ tay câu sai",
-        impactText: `+${wrongItem ? wrongItem.additional30MinGain : 0.4} điểm`,
-        projectedScore: Math.min(10, Math.round((current + (wrongItem ? wrongItem.additional30MinGain : 0.4)) * 10) / 10),
-        type: "positive"
+        impactText: loiSoTay > 0 ? `+${loiSoTay} điểm` : "không đổi (sổ tay đang sạch)",
+        projectedScore: Math.min(10, tron1(current + loiSoTay)),
+        type: loiSoTay > 0 ? "positive" : "neutral"
       },
       {
         title: "Nếu học thêm 30 phút Luyện tập Tự thích ứng",
-        impactText: `+${practiceItem ? practiceItem.additional30MinGain : 0.3} điểm`,
-        projectedScore: Math.min(10, Math.round((current + (practiceItem ? practiceItem.additional30MinGain : 0.3)) * 10) / 10),
-        type: "positive"
+        impactText: loiLuyenTap > 0 ? `+${loiLuyenTap} điểm` : "không đổi (đã phủ hết khái niệm)",
+        projectedScore: Math.min(10, tron1(current + loiLuyenTap)),
+        type: loiLuyenTap > 0 ? "positive" : "neutral"
       },
       {
-        title: "Nếu bỏ qua không ôn tập chương phức tạp nhất",
-        impactText: "-0.8 điểm",
-        projectedScore: Math.max(1, Math.round((current - 0.8) * 10) / 10),
-        type: "negative"
+        title: "Nếu bỏ qua không ôn tập chương yếu nhất",
+        impactText: mucMatChuong > 0 ? `-${mucMatChuong} điểm` : "chưa đo được chương nào yếu",
+        projectedScore: Math.max(1, tron1(current - mucMatChuong)),
+        type: mucMatChuong > 0 ? "negative" : "neutral"
       }
     ];
   },
 
   /**
-   * Prioritized Study Debt Items with Dependency Weighting
+   * Sổ nợ học tập, xếp theo mức đáng xử lý trước.
+   *
+   * HAI LỖI CỦA BẢN CŨ, đo thực tế ngày 27/07/2026 trên hồ sơ 45 mục nợ:
+   *
+   * 1. KHÔNG HỀ XẾP HẠNG. Tên hàm và chú thích nói "prioritized", điểm ưu tiên có được tính,
+   *    nhưng tính xong thì VỨT ĐI, danh sách trả về theo thứ tự khóa của bảng lịch sử. Câu sai
+   *    ba lần có thể nằm tận cuối, dưới hàng chục câu mới sai một lần.
+   * 2. NHÃN KHÔNG PHÂN LOẠI ĐƯỢC GÌ. Công thức cũ cộng `soCauLienQuan * 0,2`, mà số câu cùng
+   *    chủ đề thường khoảng 13, tức mọi mục đều được cộng sẵn khoảng 2,6 điểm trước khi xét
+   *    ngưỡng 3,0. Kết quả đo được: 44 trên 45 mục cùng mang nhãn "Cao". Một thang đo mà mọi
+   *    thứ đều rơi vào một bậc thì không nói lên điều gì.
+   *
+   * CÁCH SỬA: chuẩn hóa số câu liên quan về [0; 1] để nó không lấn át số lần sai, xếp hạng
+   * thật, và chia ba bậc theo số lần sai (tín hiệu mạnh nhất về việc hiểu sai hệ thống).
    */
   getStudyDebtItems(): StudyDebtItem[] {
     const stats = dbService.getStatistics();
     const wrongHist = stats.incorrectQuestionHistory || {};
 
-    const items: StudyDebtItem[] = [];
+    // Đếm trước một lượt, thay vì quét lại toàn bộ ngân hàng cho từng mục nợ.
+    const demTheoChuDe = new Map<string, number>();
+    const demTheoKhaiNiem = new Map<string, number>();
+    questions.forEach(q => {
+      if (q.topicId) demTheoChuDe.set(q.topicId, (demTheoChuDe.get(q.topicId) || 0) + 1);
+      if (q.concept) demTheoKhaiNiem.set(q.concept, (demTheoKhaiNiem.get(q.concept) || 0) + 1);
+    });
+    const theoId = new Map(questions.map(q => [q.id, q]));
+
+    type MucNo = { item: StudyDebtItem; diem: number };
+    const dsNo: MucNo[] = [];
+
     Object.entries(wrongHist).forEach(([qIdStr, wrongCount]) => {
       const qId = Number(qIdStr);
-      const q = questions.find(item => item.id === qId);
-      if (q) {
-        const relatedCount = questions.filter(other => other.topicId === q.topicId || other.concept === q.concept).length;
-        const priorityScore = (wrongCount as number) * 1.5 + relatedCount * 0.2;
+      const q = theoId.get(qId);
+      if (!q) return;
+      const soLanSai = Number(wrongCount) || 0;
 
-        items.push({
+      const soLienQuan = Math.max(
+        demTheoChuDe.get(q.topicId) || 0,
+        q.concept ? (demTheoKhaiNiem.get(q.concept) || 0) : 0
+      );
+      const lienQuanChuanHoa = questions.length > 0 ? Math.min(1, soLienQuan / questions.length * 10) : 0;
+
+      // Tín hiệu thứ hai, độc lập với số lần sai: câu này nằm trong chương đang vững hay chương
+      // đang yếu. Cần có tín hiệu này vì phần lớn hồ sơ thật đều gồm rất nhiều câu MỚI SAI ĐÚNG
+      // MỘT LẦN, nên nếu chỉ nhìn số lần sai thì cả sổ nợ rơi vào cùng một bậc.
+      const accChuong = stats.accuracyByChapter?.[q.chapterId];
+      const tyLeDungChuong = accChuong && accChuong.total > 0 ? accChuong.correct / accChuong.total : 0.5;
+      const doYeuChuong = 1 - tyLeDungChuong;
+
+      // Sai nhiều lần là tín hiệu mạnh nhất, độ yếu của chương là tín hiệu phụ, số câu liên
+      // quan chỉ là gia trọng nhỏ. Cả ba đều bị chặn trên nên không thành phần nào lấn át.
+      const diem = soLanSai * 1.5 + doYeuChuong * 1.0 + lienQuanChuanHoa * 0.5;
+
+      const mucUuTien: StudyDebtItem["priority"] =
+        soLanSai >= 2 || tyLeDungChuong < 0.5 ? "Cao"
+          : tyLeDungChuong < 0.7 ? "Trung bình"
+          : "Thấp";
+
+      dsNo.push({
+        diem,
+        item: {
           id: `debt_q_${qId}`,
           questionId: qId,
           conceptName: q.concept || q.learningObjective || `Câu hỏi #${qId}`,
           chapterId: q.chapterId,
           topicId: q.topicId,
           debtType: "wrong_attempt",
-          priority: priorityScore >= 3 ? "Cao" : "Trung bình",
-          wrongCount: wrongCount as number,
+          priority: mucUuTien,
+          wrongCount: soLanSai,
           status: "pending"
-        });
-      }
+        }
+      });
     });
 
     chapters.forEach(c => {
       const acc = stats.accuracyByChapter?.[c.id];
-      if (!acc || acc.total === 0) {
-        items.push({
+      if (acc && acc.total > 0) return;
+      // Mã chủ đề phải là mã CÓ THẬT của chương. Bản cũ bịa ra `T{id}.1` theo quy ước đặt tên,
+      // đúng loại lỗi đã gặp ở đồ thị tri thức (khái niệm tiên quyết bịa ra không tồn tại).
+      const chuDeDau = topics.find(t => t.chapterId === c.id);
+      dsNo.push({
+        // Cả một chương chưa làm bài nào là khoản nợ lớn hơn mọi câu sai lẻ, nên đặt trên đầu.
+        diem: 1000 + c.id,
+        item: {
           id: `debt_chap_${c.id}`,
           conceptName: `Chưa bao phủ bài tập ${c.title}`,
           chapterId: c.id,
-          topicId: `T${c.id}.1`,
+          topicId: chuDeDau ? chuDeDau.id : "",
           debtType: "unlearned_chapter",
           priority: "Cao",
           wrongCount: 0,
           status: "pending"
-        });
-      }
+        }
+      });
     });
 
-    return items;
+    // Hòa điểm thì so mã mục, nên hai lần gọi luôn cho ra đúng một thứ tự (bất biến 4.7).
+    dsNo.sort((a, b) => b.diem - a.diem || a.item.id.localeCompare(b.item.id));
+    return dsNo.map(n => n.item);
   }
 };

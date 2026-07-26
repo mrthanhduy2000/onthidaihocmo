@@ -179,8 +179,52 @@ export const contentQualityAssurance = {
     const answerUniqueness = uniqueOptsCount === 4 && ["a", "b", "c", "d"].includes(q.correctAnswer) ? 100 : 0;
 
     const distractorPlausibility = opts.length === 4 && opts.every(o => o.length >= 3) ? 90 : 50;
-    const bloomAlignment = q.bloomLevel ? 95 : 75;
-    const difficultyConsistency = q.estimatedTime > 0 ? 90 : 60;
+
+    // Hai chỉ số dưới đây trước kia chỉ kiểm TRƯỜNG CÓ TỒN TẠI HAY KHÔNG, mà cả hai trường đều
+    // có đủ ở mọi câu, nên chúng luôn trả về đúng một con số: 95 và 90. Một thành phần chấm
+    // điểm không bao giờ đổi giá trị thì không đóng góp gì vào điểm tổng, chỉ làm nó trông có
+    // vẻ nhiều chiều. Nay cả hai đo mức KHỚP NHAU giữa các trường, tức là đo được thật.
+
+    // Mức Bloom phải tương xứng với độ khó. Câu gán "Khó" mà chỉ ở bậc nhớ thuộc lòng, hoặc câu
+    // gán "Dễ" mà đòi sáng tạo, đều là dấu hiệu nhãn bị đặt sai.
+    //
+    // Phép so này KHÔNG vòng quanh, dù mức Bloom của ngân hàng hiện tại là do suy ra: nó suy ra
+    // từ ĐỘNG TỪ trong mục tiêu học tập, còn độ khó là một trường người soạn tự gán riêng. Hai
+    // tín hiệu độc lập nhau, nên chúng lệch nhau là thông tin thật.
+    //
+    // Dải cố ý đặt RỘNG, chỉ bắt những cặp lệch hẳn. Câu ở bậc nhớ vẫn có thể khó (khi dữ kiện
+    // cần nhớ là thứ ít gặp), và câu phân tích vẫn có thể dễ (khi chỉ cần phân biệt hai thứ rõ
+    // ràng), nên phạt những cặp đó là bắt oan.
+    const BAC_BLOOM: Record<string, number> = {
+      Remember: 1, Understand: 2, Apply: 3, Analyze: 4, Evaluate: 5, Create: 6
+    };
+    const VUNG_BLOOM_THEO_KHO: Record<string, [number, number]> = {
+      "Dễ": [1, 4],
+      "Trung bình": [1, 5],
+      "Khó": [2, 6]
+    };
+    const bacHienTai = BAC_BLOOM[String(q.bloomLevel)] || 0;
+    const vung = VUNG_BLOOM_THEO_KHO[String(q.difficulty)];
+    let bloomAlignment = 75; // thiếu một trong hai trường thì không kết luận được
+    if (bacHienTai > 0 && vung) {
+      const lech = bacHienTai < vung[0] ? vung[0] - bacHienTai : bacHienTai > vung[1] ? bacHienTai - vung[1] : 0;
+      bloomAlignment = Math.max(40, 100 - lech * 20);
+    }
+
+    // Độ khó chữ và độ khó số phải nói cùng một chuyện.
+    const VUNG_DIEM_THEO_KHO: Record<string, [number, number]> = {
+      "Dễ": [1, 2],
+      "Trung bình": [2, 4],
+      "Khó": [4, 5]
+    };
+    const vungDiem = VUNG_DIEM_THEO_KHO[String(q.difficulty)];
+    let difficultyConsistency = 60;
+    if (vungDiem && typeof q.difficultyRating === "number" && q.difficultyRating > 0) {
+      const lechDiem = q.difficultyRating < vungDiem[0]
+        ? vungDiem[0] - q.difficultyRating
+        : q.difficultyRating > vungDiem[1] ? q.difficultyRating - vungDiem[1] : 0;
+      difficultyConsistency = Math.max(40, 100 - lechDiem * 25);
+    }
     const citationCompleteness = expAudit.citesEvidence ? 100 : 40;
     const conceptCorrectness = q.concept || (q.knowledgeMapping && q.knowledgeMapping.length > 0) ? 95 : 70;
     const languageClarity = Math.max(20, 100 - (langIssues.length * 20));

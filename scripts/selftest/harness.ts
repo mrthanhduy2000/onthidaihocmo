@@ -15,7 +15,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { dbService, loadSubject, questions, questionMap, chapters, topics } from "../../src/services/db";
+import { dbService, loadSubject, questions, questionMap, chapters, topics, suyRaMucBloom } from "../../src/services/db";
 import { EvidenceBasedPipeline } from "../../src/services/evidencePipeline";
 import { productObservabilityService } from "../../src/services/productObservabilityService";
 import { curriculumIntelligenceEngine } from "../../src/services/curriculumIntelligenceEngine";
@@ -749,12 +749,200 @@ const chuongDo = loTrinh.chapterStatuses.find(c => c.chapterId === chuongThu);
 check("Độ thạo chương đọc từ dữ liệu thật", (chuongDo?.masteryScore ?? 0) === 80,
   `chương ${chuongThu} có 8/10 câu đúng, engine báo ${chuongDo?.masteryScore}%`);
 
-check("Cân bằng Bloom không phải hằng số cứng",
-  !(loTrinh.studyBalance.rememberPercentage === 45 && loTrinh.studyBalance.applyPercentage === 35 && loTrinh.studyBalance.analyzePercentage === 20),
-  `đo được nhớ/hiểu ${loTrinh.studyBalance.rememberPercentage}%, vận dụng ${loTrinh.studyBalance.applyPercentage}%, phân tích ${loTrinh.studyBalance.analyzePercentage}%`);
+// Phép kiểm này TỪNG ĐẠT MÀ KHÔNG NÓI LÊN GÌ: nó chạy trên hồ sơ vừa bị xóa sạch, nên cân bằng
+// Bloom luôn là 0%/0%/0%, và 0/0/0 thì đương nhiên "khác 45/35/20". Nay bắt buộc phải có lịch
+// sử làm bài thật, và tổng ba tỷ lệ phải xấp xỉ 100%, tức là đo được thật chứ không phải trống.
+for (let e = 0; e < 3; e++) {
+  const deBloom = aiService.generateExam({ type: "random", count: 20 });
+  deBloom.answers = {};
+  deBloom.questions.forEach((id, i) => {
+    const qq = questionMap.get(id);
+    if (qq) deBloom.answers[id] = i % 3 === 0 ? LETTERS.find(k => k !== qq.correctAnswer)! : qq.correctAnswer;
+  });
+  deBloom.isSubmitted = true;
+  deBloom.score = deBloom.questions.filter(id => questionMap.get(id)?.correctAnswer === deBloom.answers[id]).length;
+  dbService.saveAttempt(deBloom);
+}
+const loTrinhCoDuLieu = curriculumIntelligenceEngine.getCurriculumPlan();
+const canBang = loTrinhCoDuLieu.studyBalance;
+const tongBloom = canBang.rememberPercentage + canBang.applyPercentage + canBang.analyzePercentage;
+check("Cân bằng Bloom đo được thật từ bài đã làm",
+  tongBloom >= 97 && tongBloom <= 103 &&
+  !(canBang.rememberPercentage === 45 && canBang.applyPercentage === 35 && canBang.analyzePercentage === 20),
+  `nhớ/hiểu ${canBang.rememberPercentage}%, vận dụng ${canBang.applyPercentage}%, phân tích ${canBang.analyzePercentage}%, tổng ${tongBloom}%`);
 
 dbService.clearAllHistory();
 dbService.saveStatistics(statsGoc);
+
+// ===========================================================================
+g("K. Nhãn mức Bloom của ngân hàng câu hỏi");
+// ===========================================================================
+// Đo ngày 27/07/2026: trường `bloomLevel` RỖNG ở 292/292 câu, trong khi sáu chỗ trong mã nguồn
+// đọc nó. Không chỗ nào báo lỗi, tất cả đều lặng lẽ rơi về giá trị mặc định, nên màn hình báo
+// mọi đề thi 100% mức "Nhớ" và gia sư AI được bảo rằng mọi câu đều ở mức "Understand".
+// Xem chú thích đầy đủ trong `db.ts`, phần SUY RA MỨC BLOOM.
+
+const thieuBloom = questions.filter(q => !q.bloomLevel).length;
+check("Mọi câu hỏi đều có mức Bloom", thieuBloom === 0,
+  `${questions.length - thieuBloom}/${questions.length} câu có nhãn; trước 27/07/2026 là 0/${questions.length}`);
+
+const demBloomK: Record<string, number> = {};
+questions.forEach(q => { const b = String(q.bloomLevel); demBloomK[b] = (demBloomK[b] || 0) + 1; });
+const bacBloom = Object.keys(demBloomK);
+const bacDongNhat = Math.max(...Object.values(demBloomK));
+check("Nhãn Bloom phân hóa, không dồn hết vào một bậc",
+  bacBloom.length >= 3 && bacDongNhat < questions.length * 0.75,
+  Object.entries(demBloomK).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", "));
+
+// Suy ra phải TẤT ĐỊNH: cùng câu hỏi, gọi lại phải ra đúng nhãn cũ.
+const mauBloom = questions.slice(0, 30);
+const lanDau = mauBloom.map(q => suyRaMucBloom(q));
+const lanSau = mauBloom.map(q => suyRaMucBloom(q));
+check("Suy ra mức Bloom tất định", lanDau.join(",") === lanSau.join(","),
+  `30 câu mẫu, hai lượt suy ra cho cùng kết quả`);
+
+// Không được ghi đè nhãn do người soạn tự khai.
+const cauThu: Question = { ...questions[0], id: -999, bloomLevel: "Create", learningObjective: "Nắm vững định nghĩa" };
+check("Nhãn do người soạn tự khai được giữ nguyên", suyRaMucBloom(cauThu) === "Create",
+  `mục tiêu học tập ghi "Nắm vững" (đáng lẽ ra Remember) nhưng câu đã tự khai Create, kết quả: ${suyRaMucBloom(cauThu)}`);
+
+// Chỗ đọc thật: báo cáo chất lượng đề không được nói mọi đề đều 100% mức "Nhớ".
+const deKiemBloom = aiService.generateExam({ type: "random", count: 25 });
+const bacTrongDe = new Set(deKiemBloom.questions.map(id => String(questionMap.get(id)?.bloomLevel)));
+check("Một đề 25 câu chạm được nhiều bậc Bloom", bacTrongDe.size >= 3,
+  `đề vừa sinh chạm ${bacTrongDe.size} bậc: ${[...bacTrongDe].join(", ")}`);
+
+// ===========================================================================
+g("J. Màn Kế hoạch học (mô phỏng, ROI, sổ nợ)");
+// ===========================================================================
+// Nhóm này sinh ra ngày 27/07/2026. Phần lõi dự báo đã được nhóm G canh từ trước, nhưng bốn
+// bảng ĂN THEO nó (kịch bản sức ép, ngân sách phút, ROI, sổ nợ) thì chưa ai soi, và cả bốn
+// đều đang trình bày con số không bám dữ liệu.
+
+playAndForecast(0.6, 4);
+const duBaoJ = examForecaster.calculatePrediction();
+
+// --- J1. Bộ mô phỏng phải khớp bản dự báo tại điểm "không đổi gì" ------------
+// Màn hình đặt sẵn hai thanh trượt đúng bằng kế hoạch hiện tại. Bản cũ neo cứng ở 45 phút và
+// 14 ngày, nên chỉ cần Đàm đổi thời lượng học hoặc ngày thi là màn hình mở ra đã hiện hai con
+// số khác nhau cho cùng một hiện trạng.
+const keHoach = dbService.getSubjectGoal();
+const phutHienTai = keHoach.dailyStudyMinutes || 45;
+const ngayHienTai = duBaoJ.metricsBreakdown.remainingDays;
+const moPhongTaiCho = examForecaster.simulateDeadlineOutcome(phutHienTai, ngayHienTai);
+check("Mô phỏng tại đúng kế hoạch hiện tại trùng với dự báo",
+  Math.abs(moPhongTaiCho - duBaoJ.predictedScore) < 0.05,
+  `dự báo ${duBaoJ.predictedScore}, mô phỏng ${moPhongTaiCho} tại ${phutHienTai} phút và ${ngayHienTai} ngày`);
+
+// Kéo thanh nào cũng phải đơn điệu: học nhiều hơn không được ra điểm thấp hơn.
+const theoPhut = [15, 30, 45, 60, 90, 120, 180].map(m => examForecaster.simulateDeadlineOutcome(m, ngayHienTai));
+let donDieuPhut = true;
+for (let i = 1; i < theoPhut.length; i++) if (theoPhut[i] < theoPhut[i - 1]) donDieuPhut = false;
+check("Học thêm phút không bao giờ làm tụt điểm mô phỏng", donDieuPhut, theoPhut.join(" -> "));
+
+// --- J2. Kịch bản sức ép phải BÁM dữ liệu -----------------------------------
+// Bản cũ trả về bốn hằng số viết tay (-0,25 / +0,45 / +0,35 / +0,50), y hệt nhau dù hồ sơ
+// trắng hay hồ sơ đầy. Phép kiểm này so hai hồ sơ trái ngược nhau.
+const epCoDuLieu = examForecaster.runForecastStressTest(undefined, duBaoJ.predictedScore);
+dbService.clearAllHistory();
+const epTrang = examForecaster.runForecastStressTest(undefined, 5.0);
+const khacNhau = epCoDuLieu.scenarios.filter((s, i) => s.deltaFromBaseline !== epTrang.scenarios[i].deltaFromBaseline).length;
+check("Kịch bản sức ép đổi theo dữ liệu người học", khacNhau >= 3,
+  `${khacNhau}/5 kịch bản đổi giữa hồ sơ có dữ liệu và hồ sơ trắng; bản cũ chỉ đổi 1/5`);
+
+// Không được hứa lợi ích cho việc KHÔNG THỂ LÀM. Hồ sơ trắng thì không có câu sai nào để chữa,
+// không có chuỗi ngày nào để mất, chưa chương nào bị đo là yếu.
+const khongTheLam = ["stress_resolve_debt", "stress_rest", "stress_master_hardest"];
+const huaHao = epTrang.scenarios.filter(s => khongTheLam.includes(s.id) && s.deltaFromBaseline !== 0);
+check("Hồ sơ trắng không được hứa lợi ích cho việc không thể làm", huaHao.length === 0,
+  huaHao.length ? huaHao.map(s => `${s.id}=${s.deltaFromBaseline}`).join(", ") : "cả ba kịch bản đều trả về 0 đúng như phải thế");
+
+// --- J3. Ngân sách phút phải cộng lại đúng ----------------------------------
+// Bản cũ áp ba sàn cứng 5, 10, 5 phút riêng lẻ rồi mới cộng, nên xin 15 phút nhận về 20 phút
+// và ba tỷ lệ hiển thị cộng lại 133%.
+const nganSachThu = [10, 15, 20, 25, 30, 45, 60, 90, 120];
+const lechNganSach = nganSachThu.filter(n => {
+  const kh = examForecaster.getDailyBudgetPlan(n);
+  return kh.allocation.reduce((s, a) => s + a.minutes, 0) !== n;
+});
+check("Kế hoạch chia phút luôn khớp đúng ngân sách", lechNganSach.length === 0,
+  lechNganSach.length ? `lệch ở các mức: ${lechNganSach.join(", ")} phút` : `đã thử ${nganSachThu.length} mức, không mức nào lệch`);
+
+const lechTyLe = nganSachThu.filter(n => {
+  const kh = examForecaster.getDailyBudgetPlan(n);
+  return kh.allocation.reduce((s, a) => s + a.ratio, 0) !== 100;
+});
+check("Ba tỷ lệ hiển thị luôn cộng lại đúng 100%", lechTyLe.length === 0,
+  lechTyLe.length ? `lệch ở các mức: ${lechTyLe.join(", ")} phút` : "không mức nào lệch");
+
+// --- J4. Bảng ROI phải nói cùng con số với bảng độ nhạy ----------------------
+// Bản cũ chép lại công thức rồi để nó trôi lệch: cùng hoạt động "Luyện tập tự thích ứng",
+// bảng ROI cho +0,55 điểm còn bảng độ nhạy cho +0,33 điểm, hai số hiện cạnh nhau.
+playAndForecast(0.6, 4);
+const duBaoRoi = examForecaster.calculatePrediction();
+const bangRoi = examForecaster.getStudyActivitiesROI();
+const doNhayRoi = duBaoRoi.sensitivityAnalysis || [];
+const mucLuyenTap = bangRoi.find(r => r.type === "adaptive_practice");
+const nhayLuyenTap = doNhayRoi.find(s => s.activityKey === "adaptive_practice");
+check("Bảng ROI và bảng độ nhạy nói cùng một con số",
+  !!mucLuyenTap && !!nhayLuyenTap && Math.abs(mucLuyenTap.forecastPointGain - nhayLuyenTap.additional30MinGain) < 0.02,
+  `ROI ${mucLuyenTap?.forecastPointGain} và độ nhạy ${nhayLuyenTap?.additional30MinGain} cho cùng hoạt động 30 phút`);
+
+// Sổ tay rỗng thì không được hứa thêm điểm cho việc chữa câu sai.
+dbService.clearAllHistory();
+const roiKhiSach = examForecaster.getStudyActivitiesROI().find(r => r.type === "wrong_notebook");
+check("Sổ tay rỗng thì mục chữa câu sai không hứa thêm điểm",
+  (roiKhiSach?.forecastPointGain ?? 1) === 0,
+  `không còn câu sai nào, mục này báo +${roiKhiSach?.forecastPointGain} điểm (bản cũ luôn báo +0,1)`);
+
+// --- J5. Sổ nợ phải xếp hạng thật và nhãn phải phân loại được ----------------
+// Bản cũ tính điểm ưu tiên rồi VỨT ĐI, trả về theo thứ tự khóa của bảng lịch sử. Nhãn thì cộng
+// sẵn `soCauLienQuan * 0,2` (thường khoảng 2,6) trước khi xét ngưỡng 3,0, nên đo được 44/45 mục
+// cùng mang nhãn "Cao".
+playAndForecast(0.55, 5);
+const soNo = examForecaster.getStudyDebtItems();
+const demNhan = new Set(soNo.map(i => i.priority));
+check("Nhãn ưu tiên trong sổ nợ phân loại được", soNo.length < 5 || demNhan.size >= 2,
+  `${soNo.length} mục, dùng ${demNhan.size} mức nhãn: ${[...demNhan].join(", ")}`);
+
+// Mục ưu tiên cao phải nằm trên. Kiểm bằng cách so vị trí trung bình của hai nhóm nhãn.
+const viTriCao = soNo.map((i, idx) => ({ i, idx })).filter(x => x.i.priority === "Cao").map(x => x.idx);
+const viTriThap = soNo.map((i, idx) => ({ i, idx })).filter(x => x.i.priority === "Thấp").map(x => x.idx);
+const tbCao = viTriCao.length ? viTriCao.reduce((a, b) => a + b, 0) / viTriCao.length : 0;
+const tbThap = viTriThap.length ? viTriThap.reduce((a, b) => a + b, 0) / viTriThap.length : 999;
+check("Sổ nợ xếp mục đáng làm trước lên trên",
+  viTriCao.length === 0 || viTriThap.length === 0 || tbCao < tbThap,
+  `vị trí trung bình nhóm "Cao" là ${tbCao.toFixed(1)}, nhóm "Thấp" là ${tbThap === 999 ? "không có" : tbThap.toFixed(1)}`);
+
+// Gọi hai lần phải ra đúng một thứ tự (bất biến 4.7).
+const soNoLanHai = examForecaster.getStudyDebtItems();
+check("Thứ tự sổ nợ tái lập được",
+  soNo.map(i => i.id).join("|") === soNoLanHai.map(i => i.id).join("|"),
+  `${soNo.length} mục, hai lần gọi cho cùng thứ tự`);
+
+// Mã chủ đề của khoản nợ "chưa học chương" phải CÓ THẬT. Bản cũ bịa ra theo quy ước `T{id}.1`.
+dbService.clearAllHistory();
+const maChuDeThat = new Set(topics.map(t => t.id));
+const noChuong = examForecaster.getStudyDebtItems().filter(i => i.debtType === "unlearned_chapter");
+const maBia = noChuong.filter(i => i.topicId && !maChuDeThat.has(i.topicId));
+check("Khoản nợ chương không bịa ra mã chủ đề không tồn tại",
+  noChuong.length > 0 && maBia.length === 0,
+  noChuong.length === 0
+    ? "không sinh ra khoản nợ chương nào nên phép kiểm không nói lên điều gì"
+    : `${noChuong.length} khoản nợ chương, ${maBia.length} khoản dùng mã chủ đề không có thật`);
+
+// --- J6. Hai bảng phải nói cùng một chuyện về chương yếu nhất ---------------
+playAndForecast(0.6, 4);
+const duBaoW = examForecaster.calculatePrediction();
+const whatIf = examForecaster.getWhatIfScenarios();
+const mucBoChuong = whatIf.find(w => w.title.includes("chương yếu nhất"));
+const kbChuong = (duBaoW.stressTestReport?.scenarios || []).find(s => s.id === "stress_master_hardest");
+check("Mức mất khi bỏ chương yếu nhất khớp với bảng kịch bản",
+  !!mucBoChuong && !!kbChuong &&
+  Math.abs((duBaoW.predictedScore - (mucBoChuong.projectedScore || 0)) - (kbChuong.deltaFromBaseline || 0)) < 0.15,
+  `what-if trừ ${(duBaoW.predictedScore - (mucBoChuong?.projectedScore ?? 0)).toFixed(2)}, kịch bản cộng ${kbChuong?.deltaFromBaseline}`);
+
+dbService.clearAllHistory();
 
 // ===========================================================================
 // Kết quả
