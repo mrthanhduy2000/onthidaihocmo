@@ -59,6 +59,35 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Tôi làm chết 3 cổng AI trên bản thật, và chặng kiểm số 6 ra đời từ đó
+
+**Chuyện gì đã xảy ra**: ngay sau khi push lượt "đưa tầng suy luận về trình duyệt", tôi dò lại
+bản deploy và thấy `chat`, `recommend`, `complete` đều trả **500**. `npm run check` khi đó xanh
+cả 5 chặng, `vercel build` báo đóng gói thành công. Tức là toàn bộ hệ thống kiểm chứng nói
+"ổn" trong khi bản thật đang chết.
+
+**Nguyên nhân**: chính là Bẫy 2 đã ghi trong AGENTS.md. Thay đổi của tôi khiến `aiProvider.ts`
+nhập `supabaseClient`, mà file đó đọc `import.meta.env`, thứ chỉ Vite mới có.
+`scripts/build-vercel.mjs` lúc ấy **không** có `define: { "import.meta.env": "{}" }` như
+`scripts/check.mjs` vẫn có. Gói hàm nổ ngay lúc nạp với
+`Cannot read properties of undefined (reading 'VITE_SUPABASE_URL')`.
+
+Cổng `generate` sống sót đơn giản vì nó không nhập `aiOrchestrator`. Đó là may, không phải giỏi.
+
+**Đã sửa**: thêm dòng `define` vào `build-vercel.mjs`, đồng bộ với `check.mjs`.
+
+**Thêm chặng 6 vào `npm run check`: nạp thật từng gói hàm trong Node.** Đây mới là phần đáng
+giá của mục này. Bài học rút ra: *"đóng gói thành công" không hề đảm bảo gói ấy nạp được*, mà
+cả 5 chặng cũ đều chỉ dừng ở mức đóng gói. Chặng 6 nạp đúng cách Vercel nạp.
+
+**Đã chứng minh chặng 6 bắt được lỗi thật**: gỡ tạm dòng `define` ra rồi chạy lại, chặng 6 báo
+đỏ đúng ba hàm `chat`, `complete`, `recommend` kèm nguyên văn nguyên nhân, rồi khôi phục.
+
+**Cảnh báo cho người sau**: đừng gỡ dòng `define` trong `build-vercel.mjs`, và đừng gỡ chặng 6.
+Cả hai sinh ra từ một sự cố có thật đã đẩy lỗi lên bản người dùng đang chạy.
+
+---
+
 ### 27/07/2026 — Đưa tầng suy luận về trình duyệt để môn tự tạo cũng dùng được AI
 
 **Objective**: Đàm xác nhận sẽ **tự bấm thêm môn ngay trong ứng dụng**, không muốn mỗi lần thêm

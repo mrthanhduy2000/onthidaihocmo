@@ -16,7 +16,7 @@ Mọi con số trong file này đều đo bằng `npm run check` tại thời đ
 npm run check
 ```
 
-Chạy 5 chặng, hỏng chặng nào dừng ngay tại đó:
+Chạy 6 chặng, hỏng chặng nào dừng ngay tại đó:
 
 | Chặng | Nội dung | Thời gian |
 |---|---|---|
@@ -25,6 +25,11 @@ Chạy 5 chặng, hỏng chặng nào dừng ngay tại đó:
 | 3 | **55 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
+| 6 | **Nạp thật từng gói hàm serverless trong Node** | vài giây |
+
+Chặng 6 là bài học phải trả giá: "đóng gói thành công" **không** có nghĩa gói ấy nạp được. Ngày
+27/07/2026 ba cổng AI chết 500 trên bản thật trong khi cả 5 chặng đầu đều xanh, vì gói nổ ngay
+lúc nạp. Chặng 6 nạp đúng cách Vercel nạp nên bắt được loại lỗi đó tại máy.
 
 Các lệnh khác:
 
@@ -276,8 +281,15 @@ Luôn chạy `npm run check:prod` sau khi động vào xác thực hoặc đăng
 `src/services/supabaseClient.ts` đọc `import.meta.env`, thứ chỉ Vite mới có. Vì vậy `tsx some-script.ts`
 sẽ nổ ngay khi lỡ import gián tiếp tới nó (`ai.ts` có import).
 
-Cách xử lý đã dùng trong `scripts/check.mjs`: đóng gói bằng esbuild với `define: { "import.meta.env": "{}" }`.
-Cứ theo cách đó cho mọi script cần chạy engine ngoài trình duyệt.
+Cách xử lý: đóng gói bằng esbuild với `define: { "import.meta.env": "{}" }`. Cách này có trong
+`scripts/check.mjs` **và** `scripts/build-vercel.mjs`. Cứ theo đó cho mọi script chạy engine
+ngoài trình duyệt.
+
+**Bẫy này đã cắn thật ngày 27/07/2026, đọc kỹ.** `build-vercel.mjs` khi đó **chưa** có dòng
+`define`. Chỉ cần một thay đổi khiến `aiProvider.ts` nhập gián tiếp tới `supabaseClient` là ba
+hàm `chat`, `recommend`, `complete` nổ ngay lúc nạp và trả 500 trên bản thật, trong khi
+`npm run check` vẫn xanh toàn bộ và `vercel build` vẫn báo đóng gói thành công. Chặng 6 sinh ra
+từ sự cố này. Đừng gỡ dòng `define`, và đừng gỡ chặng 6.
 
 ### Bẫy 3: localStorage ngoài trình duyệt
 

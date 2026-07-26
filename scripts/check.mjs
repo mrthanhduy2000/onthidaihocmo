@@ -143,6 +143,41 @@ if (!failed && !FAST) {
       record("Build Vercel", false, "build-vercel lỗi");
     }
   }
+
+  // ---------------------------------------------------- 6/6 Nạp thử từng gói hàm
+  //
+  // Vì sao có chặng này: ngày 27/07/2026 bản deploy chết 500 ở ba cổng AI trong khi cả 5 chặng
+  // trên đều xanh. Nguyên nhân là gói hàm nổ NGAY LÚC NẠP (`import.meta.env` không tồn tại
+  // ngoài Vite), thứ mà "đóng gói thành công" không hề nói lên. Chặng này nạp thật từng gói
+  // trong Node, đúng cách Vercel làm, nên bắt được loại lỗi đó trước khi push.
+  if (!failed) {
+    banner("6/6  Nạp thử từng gói hàm serverless");
+    const funcRoot = path.join(root, ".vercel/output/functions");
+    const loi = [];
+    let daKiem = 0;
+    try {
+      const { readdirSync } = await import("node:fs");
+      const goi = readdirSync(funcRoot, { recursive: true, encoding: "utf8" })
+        .filter(f => f.endsWith("index.js"));
+      for (const g of goi) {
+        const duongDan = path.join(funcRoot, g);
+        try {
+          const mod = await import(`file://${duongDan}`);
+          const handler = mod.default?.default ?? mod.default;
+          if (typeof handler !== "function") throw new Error("không xuất ra hàm xử lý");
+          daKiem++;
+          console.log(`  DAT   ${g.replace("/index.js", "")}`);
+        } catch (e) {
+          loi.push(`${g.replace("/index.js", "")}: ${e.message.split("\n")[0]}`);
+          console.log(`  HONG  ${g.replace("/index.js", "")}: ${e.message.split("\n")[0]}`);
+        }
+      }
+      if (loi.length) throw new Error(loi.join(" | "));
+      record("Nạp gói hàm", true, `${daKiem} hàm nạp được`);
+    } catch (e) {
+      record("Nạp gói hàm", false, loi.length ? `${loi.length} hàm nổ lúc nạp` : e.message);
+    }
+  }
 } else if (!failed) {
   console.log("\n(Bỏ qua chặng build vì có --fast)");
 }

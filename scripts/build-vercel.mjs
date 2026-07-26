@@ -62,6 +62,11 @@ async function main() {
       sourcemap: false,
       logLevel: "warning",
       legalComments: "none",
+      // Bẫy 2 trong AGENTS.md, đã làm chết bản deploy ngày 27/07/2026: mã trong `src/services`
+      // đọc `import.meta.env`, thứ chỉ Vite mới có. Chỉ cần một hàm serverless lỡ nhập gián
+      // tiếp tới `supabaseClient` là cả gói nổ ngay lúc nạp, trả 500, dù build vẫn xanh.
+      // Thay bằng object rỗng đúng như `scripts/check.mjs` vẫn làm.
+      define: { "import.meta.env": "{}" },
     });
 
     // Cấu hình runtime cho hàm. shouldAddHelpers=true để có sẵn req.body và res.status().json().
