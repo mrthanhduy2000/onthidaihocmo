@@ -260,4 +260,19 @@ Nguyên tắc:
 - **Không dùng dấu gạch ngang dài** trong văn bản hiển thị cho người dùng.
 - Chú thích nên giải thích **vì sao**, nhất là chỗ trông có vẻ thừa nhưng đang vá một lỗi thật.
   Mã nguồn hiện tại theo phong cách đó, hãy giữ nguyên.
-- Không tự ý commit hay push, chờ chủ dự án yêu cầu.
+
+## 9. Commit và bàn giao
+
+**Làm xong việc thì TỰ COMMIT, không hỏi.** Chủ dự án đã ủy quyền thường trực từ 26/07/2026;
+quyền mở sẵn trong `.claude/settings.json`. Bắt buộc theo đúng thứ tự:
+
+1. `npm run check` phải ĐẠT toàn bộ. Không bao giờ commit khi đang đỏ.
+2. Soát `git status`, không để file rác hay file gỡ rối lọt vào.
+3. Thông điệp commit nêu rõ **đổi gì và vì sao**, không chỉ liệt kê tên file.
+4. Ghi một mục mới vào [BANGIAO.md](BANGIAO.md). Đây là bước dễ quên nhất và cũng là bước
+   giúp phiên sau hiểu được bối cảnh mà lịch sử git không nói ra.
+5. Nếu thay đổi động tới nếp làm việc thì cập nhật luôn file này và `CLAUDE.md`, đừng để
+   ba file hướng dẫn nói ba kiểu khác nhau.
+
+**Riêng `git push` thì PHẢI HỎI.** Đẩy lên `main` là deploy thật lên onthidaihocmo.vercel.app,
+tức là đổi bản người dùng đang chạy.
