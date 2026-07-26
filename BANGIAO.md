@@ -24,11 +24,25 @@ Trình tự bắt buộc mỗi lần commit:
 4. Ghi một mục mới vào "Nhật ký bàn giao" ở cuối file này.
 5. Nếu có thay đổi ảnh hưởng cách làm việc thì cập nhật luôn [CLAUDE.md](CLAUDE.md) và
    [AGENTS.md](AGENTS.md) cho khỏi mâu thuẫn.
+6. **Push lên `main`, không hỏi.** Đàm ủy quyền thường trực từ 27/07/2026.
+
+### Tự động push, và cái giá của nó
+
+Từ 27/07/2026 Đàm bỏ luôn chốt hỏi trước khi push. Trước đó `git push` nằm ở mục "phải hỏi"
+vì đẩy lên `main` là deploy thật lên onthidaihocmo.vercel.app.
+
+Điều đó **không biến việc push thành vô hại**, nó chỉ chuyển toàn bộ gánh nặng sang
+`npm run check`. Sau khi push không còn ai duyệt nữa. Vì vậy:
+
+- Đỏ thì dừng, không có ngoại lệ nào cả.
+- Đừng nới ngưỡng một phép kiểm cho nó xanh. Nếu tin là phép kiểm sai, hãy chứng minh bằng số
+  đo rồi ghi lý do vào nhật ký bàn giao.
+- Động tới xác thực, đăng nhập hay hàm serverless thì chạy `npm run check:prod` **sau khi
+  push** và báo kết quả cho Đàm. Bẫy 1 là loại lỗi xanh ở máy cục bộ nhưng chết trên máy chủ,
+  nay nó lên thẳng bản chạy thật.
 
 ### Việc KHÔNG được tự làm
 
-- **`git push`**: đẩy lên `main` là kích hoạt deploy thật lên onthidaihocmo.vercel.app, tức là
-  đổi bản đang chạy. Phải hỏi Đàm. Quyền này để ở chế độ hỏi trong `.claude/settings.json`.
 - Xóa dữ liệu học của Đàm, đổi cấu hình Supabase hay Vercel, bật lại đăng nhập.
 
 ### Quy ước viết
@@ -42,6 +56,35 @@ ngang dài. Chú thích nên giải thích **vì sao**, nhất là chỗ đang v
 
 Mục mới nhất ở trên cùng. Mỗi mục cần đủ: ngày, mã commit, đã làm gì, vì sao, kiểm chứng ra
 sao, và còn nợ gì.
+
+---
+
+### 27/07/2026 — Bỏ chốt hỏi trước khi push, chuyển sang tự động deploy
+
+**Đã làm**: gỡ `Bash(git push:*)` khỏi mục `ask` sang mục `allow` trong `.claude/settings.json`,
+rồi sửa đồng bộ CLAUDE.md, AGENTS.md mục 9 và phần nếp làm việc ở đầu file này.
+
+**Vì sao**: Đàm yêu cầu trực tiếp trong phiên 27/07/2026, nói rõ là khẩn cấp và muốn từ nay
+luôn tự động push. Đây là quyết định của chủ dự án, thay quy tắc cũ do chính các phiên trước
+đặt ra.
+
+**Hệ quả trần trụi, người sau phải hiểu**: mỗi commit từ nay là một lần deploy thẳng lên
+onthidaihocmo.vercel.app, không qua ai duyệt. Trước đây quy trình có hai lớp chặn là bộ tự
+kiểm chứng và con người; nay chỉ còn một. Cho nên `npm run check` đổi vai: từ chỗ là lưới an
+toàn, nó thành **hàng phòng thủ duy nhất**. Ai nới ngưỡng một phép kiểm cho nó xanh là đang
+tháo nốt lớp cuối cùng.
+
+**Điểm yếu chưa vá của cơ chế này**: bộ kiểm chạy hoàn toàn ở máy cục bộ, mà máy cục bộ không
+đặt biến Supabase nên các cổng AI **luôn chạy được ở đây kể cả khi chúng chết trên máy chủ**
+(đúng cơ chế của Bẫy 1). Vậy nên với thay đổi động tới xác thực, đăng nhập hay hàm serverless,
+`npm run check` xanh **không chứng minh được gì cả**, bắt buộc chạy thêm `npm run check:prod`
+sau khi push.
+
+**Kiểm chứng**: `npm run check` đạt cả 5 chặng. Lần push trước đó (`638cf60`, tài liệu phạm vi
+đa môn) đã đẩy lên `main` thành công.
+
+**Còn nợ**: chưa có cơ chế tự động chạy `check:prod` sau mỗi lần push, vẫn phải nhớ bằng tay.
+Đây là chỗ dễ quên nhất trong nếp làm việc mới.
 
 ---
 

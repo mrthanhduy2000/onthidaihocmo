@@ -292,5 +292,15 @@ quyền mở sẵn trong `.claude/settings.json`. Bắt buộc theo đúng thứ
 5. Nếu thay đổi động tới nếp làm việc thì cập nhật luôn file này và `CLAUDE.md`, đừng để
    ba file hướng dẫn nói ba kiểu khác nhau.
 
-**Riêng `git push` thì PHẢI HỎI.** Đẩy lên `main` là deploy thật lên onthidaihocmo.vercel.app,
-tức là đổi bản người dùng đang chạy.
+6. **`git push` lên `main` cũng tự làm, không hỏi.** Chủ dự án ủy quyền thường trực từ
+   27/07/2026, thay quy tắc cũ vốn bắt phải hỏi. Quyền đã mở trong `.claude/settings.json`.
+
+**Cảnh báo đi kèm quyền push:** đẩy lên `main` là deploy thật lên onthidaihocmo.vercel.app,
+tức đổi ngay bản người dùng đang chạy. Sau bước này **không còn chốt chặn nào của con người**,
+nên chặng `npm run check` ở bước 1 là hàng phòng thủ duy nhất. Đừng bao giờ nới lỏng nó, đừng
+bỏ qua một phép kiểm đang đỏ vì "chắc là phép kiểm sai".
+
+Sau khi push mà thay đổi có động tới xác thực, đăng nhập hoặc hàm serverless, **bắt buộc chạy
+`npm run check:prod`** rồi báo kết quả cho chủ dự án. Đây chính là loại lỗi mà Bẫy 1 mô tả:
+build xanh ở máy cục bộ nhưng chết trên máy chủ, và giờ nó lên thẳng bản chạy thật không qua
+ai duyệt.
