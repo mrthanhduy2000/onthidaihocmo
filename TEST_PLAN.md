@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Kế hoạch Kiểm thử Toàn diện (Comprehensive Test Plan) - Stable v1.0
 
 Tài liệu này xác định các kịch bản kiểm thử (Test Cases) nhằm đánh giá chất lượng phần mềm, đảm bảo độ ổn định tối đa của hệ thống trước khi chính thức phát hành phiên bản **Stable v1.0**.

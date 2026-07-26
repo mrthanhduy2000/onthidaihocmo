@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # POLI-ECON AI v2.0 - Adaptive Learning Platform for Marxist-Leninist Political Economy
 
 POLI-ECON AI v2.0 là một nền tảng học tập thích ứng (Adaptive Learning Platform) chuyên biệt dành cho môn Kinh tế chính trị Mác - Lênin cấp Đại học. Hệ thống tích hợp Trí tuệ Nhân tạo thông qua mô hình ngôn ngữ Gemini 3.5 để cung cấp dịch vụ chẩn đoán năng lực thích ứng thời gian thực, sinh đề thi thử thông minh (Smart Exam), và hỗ trợ học tập trực tiếp 24/7 (AI Tutor).

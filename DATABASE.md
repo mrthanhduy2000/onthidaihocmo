@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Định nghĩa cấu trúc dữ liệu (DATABASE.md) - POLI-ECON AI v2.0
 
 Ứng dụng POLI-ECON AI v2.0 sử dụng cấu trúc dữ liệu kiểu tĩnh (Static JSON) phục vụ cho ngân hàng đề và sử dụng cơ chế lưu trữ cục bộ `LocalStorage` phía Client để lưu vết tiến trình người dùng.

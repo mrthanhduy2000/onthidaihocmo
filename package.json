@@ -9,7 +9,11 @@
     "dev": "tsx server.ts",
     "build": "vite build",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check": "node scripts/check.mjs",
+    "check:fast": "node scripts/check.mjs --fast",
+    "check:prod": "node scripts/prodcheck.mjs",
+    "selftest": "node scripts/check.mjs --fast"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

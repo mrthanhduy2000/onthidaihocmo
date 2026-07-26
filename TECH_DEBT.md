@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Nợ kỹ thuật (TECH_DEBT.md) - POLI-ECON AI v2.0
 
 Tài liệu này ghi chép một cách trung thực và khách quan toàn bộ các giới hạn kỹ thuật (Technical Debts) hiện tại của hệ thống POLI-ECON AI v2.0 nhằm hỗ trợ định hướng cải tiến, tái cấu trúc tối ưu cho đội ngũ phát triển trong tương lai.

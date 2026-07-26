@@ -1,0 +1,233 @@
+# AGENTS.md, đọc file này trước khi sửa bất cứ thứ gì
+
+Tài liệu dành cho AI (hoặc lập trình viên) mới vào dự án. Mục tiêu: sửa được và **tự kiểm chứng được**
+mà không cần hỏi chủ dự án, không cần đăng nhập, không cần khóa API.
+
+Mọi con số trong file này đều đo bằng `npm run check` tại thời điểm 26/07/2026, không phải ước lượng.
+
+---
+
+## 1. Một lệnh để biết mình có làm hỏng gì không
+
+```bash
+npm run check
+```
+
+Chạy 5 chặng, hỏng chặng nào dừng ngay tại đó:
+
+| Chặng | Nội dung | Thời gian |
+|---|---|---|
+| 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
+| 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
+| 3 | **28 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 4 | `vite build` | khoảng 10 giây |
+| 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
+
+Các lệnh khác:
+
+```bash
+npm run check:fast
+```
+
+```bash
+npm run check:prod
+```
+
+`check:fast` bỏ hai chặng build, hợp cho vòng lặp sửa mã. `check:prod` gọi thẳng bản đã deploy
+để phát hiện loại lỗi chỉ xuất hiện trên máy chủ thật (xem mục Bẫy số 1).
+
+Chặng 3 là phần đáng giá nhất: nó **nạp nguyên `src/services/db.ts` và `src/services/ai.ts` vào Node**
+rồi sinh đề, chấm điểm, kiểm tra thật. Không phải mô phỏng, không phải kiểm kiểu suông.
+Mã nguồn ở `scripts/selftest/harness.ts`, thêm phép kiểm mới rất dễ (xem mục 7).
+
+---
+
+## 2. Chạy ứng dụng
+
+```bash
+npm run dev
+```
+
+Mở http://localhost:3000. Lệnh này chạy Express (`server.ts`) vừa phục vụ giao diện qua Vite
+vừa gắn các API AI, nên **AI hoạt động đầy đủ ở máy cục bộ**.
+
+Cảnh báo: `.claude/launch.json` cấu hình `vite --port 5199` chỉ phục vụ giao diện, **không có `/api`**.
+Nếu chỉ chạy Vite thì mọi lời gọi AI sẽ hỏng, và đó là hỏng do cách chạy chứ không phải do mã nguồn.
+
+Ứng dụng **không có màn hình đăng nhập**. Mở lên là dùng được ngay, dữ liệu nằm trong localStorage.
+
+---
+
+## 3. Ứng dụng này thực sự là gì
+
+Ứng dụng luyện thi trắc nghiệm cho một người dùng duy nhất (chủ dự án).
+
+- Môn đang hoạt động: **Hành vi khách hàng**, 292 câu hỏi, 7 chương, 22 chủ đề.
+- Môn Kinh tế chính trị Mác Lênin **đã đóng vì đã thi xong**. Dữ liệu còn trong `src/data/questions.ts`
+  nhưng bị gỡ khỏi danh sách chọn tại `dbService.getSubjects()` ([db.ts:179](src/services/db.ts:179)),
+  và mọi trạng thái cũ trỏ vào môn này bị tự chuyển về Hành vi khách hàng ([db.ts:48](src/services/db.ts:48)).
+  **Đừng "sửa" hai chỗ đó, đó là chủ ý.**
+- Tên thư mục và tên trong tài liệu cũ vẫn là "kinh tế chính trị". Đó là di sản, không phản ánh hiện trạng.
+
+Kiến trúc: React 19 + TypeScript + Vite + Tailwind 4, triển khai trên Vercel qua Build Output API.
+Các hàm serverless nằm ở `functions-src/` (không phải `/api`, để Vercel khỏi tự build sai),
+được `scripts/build-vercel.mjs` đóng gói thành file CommonJS tự chứa.
+
+Quy mô: 30 component, 46 service. Phần lớn logic nặng nằm ở tầng service.
+
+---
+
+## 4. Bất biến KHÔNG được phá
+
+Đây là các quy tắc đã từng bị vi phạm và gây lỗi thật. Bộ tự kiểm chứng canh gác từng cái.
+
+### 4.1. `questionMap` là bản đã trộn, `questions` là bản gốc
+
+`src/services/db.ts` nạp câu hỏi rồi ghi vào `questionMap` **bản đã trộn thứ tự phương án**
+([db.ts:170](src/services/db.ts:170)), còn mảng `questions` giữ nguyên bản gốc.
+
+- **Mọi việc hiển thị và chấm điểm phải đọc từ `questionMap`.** Chấm theo mảng `questions` sẽ ra sai đáp án.
+- Việc trộn là **tất định theo id câu hỏi** (`src/services/optionShuffle.ts`), nên lịch sử làm bài cũ
+  vẫn chấm đúng sau khi tải lại trang. Đừng thay bằng `Math.random()`.
+- Lý do phải trộn, đo được: ngân hàng gốc lệch rất nặng, đáp án **B chiếm 156/292 câu (53%)**
+  còn **D chỉ 8 câu (2,7%)**. Học viên đoán mò chọn B là trúng nửa số câu. Sau khi trộn,
+  bốn vị trí về mức 68 đến 85 câu.
+
+### 4.2. `optionShuffle` cố tình bỏ qua một số câu
+
+Trộn phương án đồng nghĩa phải viết lại các chữ cái trong lời giải thích ("phương án b sai vì...").
+Nhưng lời giải còn chứa chữ cái KHÔNG phải mã phương án: "C.Mác", "thương hiệu A, B, C", "ký hiệu là c".
+Viết lại bừa sẽ làm hỏng nội dung học thuật.
+
+Nên `findOptionLetterIndices` chỉ trộn khi phân loại được **toàn bộ** chữ cái đứng lẻ trong lời giải.
+Còn một chữ cái không phân loại nổi thì **trả câu hỏi về nguyên trạng**. Hiện có **14/292 câu** rơi vào
+diện giữ nguyên. Đó là an toàn có chủ ý, không phải lỗi.
+
+### 4.3. Ràng buộc đề không được rò rỉ
+
+Đề theo chương chỉ được chứa câu của chương đó, đề theo mức độ chỉ chứa câu đúng mức độ đó.
+Khi lọc ra rỗng thì **không được** lấy bù từ toàn bộ ngân hàng, nếu không đề sẽ dán nhãn sai.
+Danh sách loại đề bị ràng buộc nằm trong biến `constrainedTypes` ở `src/services/ai.ts`.
+
+### 4.4. Hai cơ chế ôn tập đang cùng chạy, đừng gỡ nhầm cái nào
+
+Với đề `type: "random"` (nút "Giải đề ngẫu nhiên tổng hợp"):
+
+1. **Ưu tiên ôn tập**: xếp câu TỪNG SAI trước, rồi câu CHƯA LÀM, rồi câu ĐÃ ĐÚNG.
+2. **Chống lặp**: danh sách 80 câu vừa ra gần đây (`poly_econ_recent_served_*` trong
+   `src/services/workspaceService.ts`) bị đẩy xuống cuối.
+
+Đo được: ngay sau khi đánh dấu sai, **7,0/7 câu sai quay lại** trong đề 20 câu, tức cơ chế ưu tiên
+chạy đúng. Khi làm liên tục nhiều đề thì con số này tụt xuống, và **đó là đúng chủ ý**: danh sách 80 câu
+giãn cách chúng ra khoảng 4 đề rồi mới cho gặp lại, đúng tinh thần lặp lại giãn cách.
+
+Nếu ai đó thấy "câu sai không quay lại ngay" rồi tưởng là lỗi và gỡ cơ chế chống lặp, người đó vừa
+phá một tính năng đang chạy đúng. Bộ tự kiểm chứng in cả hai con số để tránh hiểu nhầm này.
+
+### 4.5. Khóa câu đã trả lời ở chế độ gia sư
+
+`PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,
+kể cả khi người dùng tắt công tắc gia sư. Không có nó thì có thể xem đáp án đúng rồi tắt công tắc,
+chọn lại và tự thổi phồng điểm.
+
+---
+
+## 5. Bẫy đã biết
+
+### Bẫy 1 (quan trọng nhất): build xanh không có nghĩa bản deploy còn sống
+
+Máy chủ bắt buộc token đăng nhập Supabase khi có biến môi trường `SUPABASE_URL` và `SUPABASE_ANON_KEY`,
+nhưng **tự động cho qua khi không có hai biến đó** ([functions-src/_lib/auth.ts:14](functions-src/_lib/auth.ts:14)).
+
+Hệ quả trần trụi:
+
+- Máy cục bộ thường không đặt hai biến này, nên AI **luôn chạy được**.
+- Trên Vercel hai biến này có, mà giao diện thì đã gỡ đăng nhập, nên **không gửi token** và mọi cổng AI trả **401**.
+
+Trạng thái đo ngày 26/07/2026 trên https://onthidaihocmo.vercel.app: cả 4 cổng `/api/ai/*` đều trả 401.
+Giao diện **không báo lỗi**, nó âm thầm rơi về chế độ ngoại tuyến:
+
+| Tính năng | Biểu hiện khi bị 401 |
+|---|---|
+| Nhờ gia sư AI phân tích sâu | Trả lời giải có sẵn trong dữ liệu, không phải AI |
+| Hỏi đáp AI | Một câu trả lời mẫu cố định |
+| Gợi ý học tập | Rơi về công thức tính cục bộ |
+| Sinh câu hỏi từ tài liệu | Báo lỗi thẳng "Bạn cần đăng nhập" |
+
+Muốn AI sống lại trên bản deploy, chọn một trong ba hướng:
+
+1. **Bật đăng nhập ẩn danh Supabase** rồi cho `src/main.tsx` tự tạo phiên ẩn danh. Không cần màn đăng nhập,
+   quota vẫn được bảo vệ. Đây là hướng sạch nhất.
+2. **Xóa `SUPABASE_URL` và `SUPABASE_ANON_KEY` khỏi Vercel** để `requireUser` cho qua. Nhanh nhất,
+   nhưng cổng AI thành công khai, ai biết địa chỉ cũng tiêu được quota Gemini.
+3. **Thêm mã bí mật dùng chung** giữa giao diện và máy chủ. Chỉ chặn được người vô tình,
+   ai đọc mã nguồn bundle vẫn moi ra được.
+
+Luôn chạy `npm run check:prod` sau khi động vào xác thực hoặc đăng nhập.
+
+### Bẫy 2: `import.meta.env` làm chết mọi script chạy ngoài Vite
+
+`src/services/supabaseClient.ts` đọc `import.meta.env`, thứ chỉ Vite mới có. Vì vậy `tsx some-script.ts`
+sẽ nổ ngay khi lỡ import gián tiếp tới nó (`ai.ts` có import).
+
+Cách xử lý đã dùng trong `scripts/check.mjs`: đóng gói bằng esbuild với `define: { "import.meta.env": "{}" }`.
+Cứ theo cách đó cho mọi script cần chạy engine ngoài trình duyệt.
+
+### Bẫy 3: localStorage ngoài trình duyệt
+
+`db.ts` tự gắn localStorage giả lập khi không thấy trình duyệt ([db.ts:6](src/services/db.ts:6)),
+nên engine chạy được trong Node. Đừng gỡ đoạn đó, bộ tự kiểm chứng dựa vào nó.
+
+### Bẫy 4: dữ liệu chỉ nằm trên một trình duyệt
+
+Không còn đăng nhập nên không còn đồng bộ đám mây. Toàn bộ lịch sử học nằm trong localStorage của đúng
+một trình duyệt, tiền tố khóa là `poly_econ_*`. Xóa dữ liệu duyệt web là mất sạch.
+Có nút sao lưu thủ công trong Cài đặt (`src/components/ProductSettingsModal.tsx`). Chủ dự án đã chọn
+giữ cách bấm tay, **đừng tự ý thêm đồng bộ hay đăng nhập trở lại nếu không được yêu cầu**.
+
+### Bẫy 5: không bao giờ đặt khóa thật vào `.env.example`
+
+File đó bị commit. Đã từng lộ một khóa Gemini theo đúng cách này. Chặng 1 của `npm run check`
+canh mẫu khóa Google AI, JWT Supabase và khóa OpenAI trong mọi file đã commit.
+
+---
+
+## 6. Tài liệu cũ trong repo KHÔNG đáng tin
+
+Các file sau viết ngày 21/07/2026 cho phiên bản môn Kinh tế chính trị và **đã lạc hậu nặng**:
+`README.md`, `ARCHITECTURE.md`, `DATA_FLOW.md`, `DATABASE.md`, `TECH_DEBT.md`, `TEST_PLAN.md`,
+`ROADMAP.md`, `CHANGELOG.md`.
+
+Chúng còn ghi 60 câu hỏi, 6 chương, React 18, Gemini 3.5, và mô tả một môn học đã đóng.
+Mỗi file đã được gắn cảnh báo ở đầu. Khi có mâu thuẫn, **tin file AGENTS.md này và tin mã nguồn**,
+đừng tin tài liệu cũ. `DEPLOY.md` mới hơn và cơ bản còn đúng, trừ phần đăng nhập đã bị gỡ.
+
+---
+
+## 7. Thêm phép kiểm mới
+
+Mở `scripts/selftest/harness.ts`, dùng đúng hai hàm có sẵn:
+
+```ts
+check("Mô tả điều kiện bắt buộc", dieuKienDung, "chi tiết kèm số liệu");
+info("Số liệu chỉ để tham khảo, không làm hỏng bộ kiểm");
+```
+
+Nguyên tắc:
+
+- Một phép kiểm phải **hỏng được**. Nếu không nghĩ ra cách nó hỏng thì nó vô dụng.
+- Không phụ thuộc mạng, không phụ thuộc dữ liệu riêng trên máy chủ dự án.
+- Đặt ngưỡng theo hành vi **đã đo**, đừng đoán. Đo trước, đặt ngưỡng sau.
+- Nếu một phép kiểm hỏng, hãy nghi ngờ phép kiểm trước khi nghi ngờ mã nguồn.
+  Trong đợt viết file này, phép kiểm đầu tiên về "ưu tiên câu sai" báo hỏng, hóa ra ngưỡng đặt sai
+  chứ mã nguồn đúng.
+
+---
+
+## 8. Quy ước khi viết mã trong repo này
+
+- **Toàn bộ giao diện và chú thích mã dùng tiếng Việt.** Không chèn tiếng Anh vào câu tiếng Việt.
+- **Không dùng dấu gạch ngang dài** trong văn bản hiển thị cho người dùng.
+- Chú thích nên giải thích **vì sao**, nhất là chỗ trông có vẻ thừa nhưng đang vá một lỗi thật.
+  Mã nguồn hiện tại theo phong cách đó, hãy giữ nguyên.
+- Không tự ý commit hay push, chờ chủ dự án yêu cầu.

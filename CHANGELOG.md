@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Nhật ký thay đổi (CHANGELOG.md) - POLI-ECON AI v2.0
 
 Tất cả các thay đổi đáng chú ý đối với dự án này sẽ được ghi lại trong tài liệu này. Dự án đã trải qua các chu kỳ phát triển nghiêm ngặt để đạt đến phiên bản ổn định cao nhất.

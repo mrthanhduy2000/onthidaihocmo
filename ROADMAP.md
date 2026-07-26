@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Lộ trình phát triển (ROADMAP.md) - POLI-ECON AI v2.0
 
 Tài liệu này vạch ra hướng phát triển và nâng cấp hệ thống POLI-ECON AI trong tương lai, được phân chia theo từng giai đoạn rõ ràng và khả thi nhằm gia tăng trải nghiệm học tập và mở rộng quy mô hệ thống.

@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Kiến trúc Hệ thống (ARCHITECTURE.md) - POLI-ECON AI v2.0
 
 Tài liệu này mô tả chi tiết kiến trúc phần mềm, vai trò của từng thành phần, sự phụ thuộc (dependencies) giữa các module, và cách thức hoạt động của nền tảng học tập thích ứng POLI-ECON AI v2.0.

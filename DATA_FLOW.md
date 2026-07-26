@@ -1,3 +1,8 @@
+> **CẢNH BÁO: TÀI LIỆU ĐÃ LẠC HẬU (viết 21/07/2026).**
+> File này mô tả phiên bản cũ dành cho môn Kinh tế chính trị Mác Lênin, môn đó nay ĐÃ ĐÓNG.
+> Số liệu bên dưới (số câu hỏi, số chương, phiên bản thư viện, luồng đăng nhập) không còn đúng.
+> Hiện trạng đúng nằm ở [AGENTS.md](AGENTS.md). Khi mâu thuẫn, tin AGENTS.md và tin mã nguồn.
+
 # Luồng dữ liệu hệ thống (DATA_FLOW.md) - POLI-ECON AI v2.0
 
 Tài liệu này mô tả chi tiết cách thức dữ liệu di chuyển, được xử lý, lưu trữ và đồng bộ hóa giữa các thành phần khác nhau trong ứng dụng POLI-ECON AI v2.0.
