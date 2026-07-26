@@ -39,7 +39,7 @@ không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì 
 | Component | 30 file |
 | Service | 46 file |
 | Tổng dòng TypeScript | khoảng 37.400 |
-| Phép tự kiểm chứng | 50, đạt toàn bộ |
+| Phép tự kiểm chứng | 55, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

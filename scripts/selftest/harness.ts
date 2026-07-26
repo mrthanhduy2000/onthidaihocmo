@@ -13,7 +13,11 @@
  * dùng `info(...)` cho số liệu chỉ để tham khảo. Không bao giờ để một phép kiểm phụ thuộc
  * vào mạng hoặc vào dữ liệu riêng trên máy Đàm.
  */
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { dbService, questions, questionMap, chapters, topics } from "../../src/services/db";
+// Ngân hàng của môn ĐÃ ĐÓNG, nhập vào đây chỉ để đối chiếu dải id trong nhóm kiểm H.
+import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
@@ -581,6 +585,43 @@ check("Quan hệ tiên quyết tra được về khái niệm có thật", nodes
   `${nodesWithPrereq.length} khái niệm có tiên quyết, ${prereqReachable.length} tra được sang khái niệm đang theo dõi`);
 
 info(`Sai lệch dự báo theo từng mức năng lực: ${curveF.map(c => `${(c.realAccuracy * 100).toFixed(0)}%: ${(c.predicted - c.realAccuracy * 10).toFixed(1)}`).join("  |  ")}`);
+
+// ===========================================================================
+g("H. Cổng AI phía máy chủ");
+// ===========================================================================
+// Vì sao có nhóm này: đây là loại lỗi bộ kiểm cũ không thấy, vì nó nằm ở chỗ hai nguồn dữ liệu
+// lệch nhau chứ không nằm trong engine. Cổng /api/ai/explain từng tra câu hỏi trong ngân hàng
+// của môn ĐÃ ĐÓNG, còn pipeline phía sau đọc questionMap của môn ĐANG HỌC. Hai dải id không
+// giao nhau nên mọi lời gọi thật đều rơi vào 404, mà giao diện thì nuốt lỗi rồi hiện lời giải
+// ngoại tuyến, nên nhìn bên ngoài tưởng AI vẫn đang chạy.
+
+const explainSrc = readFileSync(path.join(process.cwd(), "functions-src/ai/explain.ts"), "utf8");
+const aiSrc = readFileSync(path.join(process.cwd(), "src/services/ai.ts"), "utf8");
+
+check("Cổng explain tra câu hỏi qua questionMap",
+  explainSrc.includes("questionMap.get(questionId)"),
+  "phải dùng đúng nguồn mà EvidenceBasedPipeline đọc ở bước sau");
+
+check("Cổng explain không nhập ngân hàng câu hỏi của môn đã đóng",
+  !/from\s+"\.\.\/\.\.\/src\/data\/questions"/.test(explainSrc),
+  "nhập thẳng src/data/questions là quay lại đúng lỗi cũ");
+
+check("Cổng explain lấy mã môn từ dbService, không đoán bằng số chương",
+  explainSrc.includes("dbService.getActiveSubjectId()"),
+  "suy mã môn từ chapterId là mẹo chỉ đúng với hai môn dựng sẵn");
+
+check("Lời gọi API đính token qua ensureSession",
+  aiSrc.includes("await ensureSession()") && !/apiHeaders[\s\S]{0,400}auth\.getSession\(\)/.test(aiSrc),
+  "app không còn màn đăng nhập nên getSession luôn rỗng, mọi cổng AI sẽ nhận 401");
+
+const closedBankIds = new Set(closedSubjectQuestions.map(q => q.id));
+const activeIds = [...questionMap.keys()];
+const overlappingIds = activeIds.filter(id => closedBankIds.has(id));
+check("Tra câu hỏi bằng id phải dựa vào môn đang học, không dựa vào ngân hàng cố định",
+  explainSrc.includes("questionMap.get(questionId)"),
+  `id môn đang học ${Math.min(...activeIds)} đến ${Math.max(...activeIds)}, ngân hàng môn đã đóng 1 đến ${Math.max(...closedBankIds)}, trùng nhau ${overlappingIds.length} id`);
+
+info(`Hai dải id rời nhau hoàn toàn (${overlappingIds.length} id trùng), nên bản cũ tra nhầm ngân hàng thì KHÔNG câu nào giải thích được, chứ không phải chỉ sai lác đác.`);
 
 // ===========================================================================
 // Kết quả

@@ -22,7 +22,7 @@ Chạy 5 chặng, hỏng chặng nào dừng ngay tại đó:
 |---|---|---|
 | 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
 | 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
-| 3 | **28 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 3 | **55 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
 
@@ -172,7 +172,23 @@ Không bao giờ gọi `Math.random()` bên trong hàm so sánh của `sort`. H�
 không tái lập được. Muốn có biến thiên thì rút nhiễu MỘT lần cho mỗi phần tử (xem `jitter01`
 và `adaptiveSeed` trong `ai.ts`), rồi sắp xếp bằng hàm thuần túy có mốc phân giải hòa theo id.
 
-### 4.8. Khóa câu đã trả lời ở chế độ gia sư
+### 4.8. Cổng AI phía máy chủ phải đọc dữ liệu từ `db.ts`, không nhập ngân hàng cố định
+
+`functions-src/ai/explain.ts` tra câu hỏi bằng `questionMap` của `src/services/db.ts`, đúng
+nguồn mà `EvidenceBasedPipeline` đọc ở bước sau, và lấy mã môn bằng
+`dbService.getActiveSubjectId()`.
+
+Trước 27/07/2026 nó nhập thẳng `src/data/questions`, tức ngân hàng của môn **đã đóng**. Hậu quả
+đo được: môn đang học có id từ **2001 đến 3279**, ngân hàng cũ có id **1 đến 60**, hai dải
+**không giao nhau một id nào**. Nghĩa là chức năng "Nhờ gia sư AI phân tích sâu" trả 404 với
+**mọi** câu hỏi thật, còn giao diện thì nuốt lỗi và hiện lời giải ngoại tuyến, nên nhìn ngoài
+tưởng AI đang chạy.
+
+Bài học rộng hơn: **một cổng phía máy chủ mà nhập cứng dữ liệu một môn là hỏng ngay khi đổi
+môn.** Dự án sẽ còn thêm nhiều môn (xem mục 3), nên mọi cổng mới phải lấy dữ liệu qua `db.ts`.
+Nhóm kiểm **H** trong `scripts/selftest/harness.ts` canh bất biến này.
+
+### 4.9. Khóa câu đã trả lời ở chế độ gia sư
 
 `PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,
 kể cả khi người dùng tắt công tắc gia sư. Không có nó thì có thể xem đáp án đúng rồi tắt công tắc,
