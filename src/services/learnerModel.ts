@@ -154,6 +154,19 @@ export const studentModelService = {
 
     const adaptiveMemory = this.getAdaptiveMemory();
 
+    // Tỷ lệ đoán mò: ưu tiên con số ĐO ĐƯỢC từ nhịp làm bài thật, chỉ khi đủ dữ liệu.
+    //
+    // Vì sao phải nối ở đây thay vì ghi vào bộ nhớ: giá trị lưu trong `adaptiveMemory` được cập
+    // nhật theo lối trung bình trượt `cũ * 0,8 + mới * 0,2`, mà chỉ cập nhật từ tương tác với
+    // gia sư AI. Đo được: sau 3 đề đã nộp nó vẫn bằng **0**, nên `averageGuessingRate` trên màn
+    // Phân tích giảng dạy luôn báo 0%. Nếu ghi thêm từ lượt làm bài vào chính ô trung bình trượt
+    // đó thì con số sẽ phụ thuộc số lần gọi, đúng loại lỗi "số tự bò lên theo số lần mở màn
+    // hình" đã sửa ở bộ dự báo. Nên tính tất định từ lịch sử tại mỗi lần đọc.
+    const nhip = learnerModelService.doNhipLamBai();
+    if (nhip.duDuLieu) {
+      adaptiveMemory.guessingFrequency = nhip.tyLeDoanMo;
+    }
+
     return {
       subjectId: activeSubjectId,
       conceptMastery,
@@ -347,7 +360,112 @@ const TOI_THIEU_CAU_XET = 20;
 /** Số câu gắn cờ tối thiểu. Không có cờ nào thì không thể nói gì về hiệu chuẩn. */
 const TOI_THIEU_CAU_GAN_CO = 5;
 
+/** Kết quả đo nhịp làm bài và mức đoán mò suy ra từ đó. */
+export interface NhipLamBai {
+  duDuLieu: boolean;
+  /** Số lượt đã nộp được xét. */
+  soLuotXet: number;
+  /** Tổng thời gian thật, giây. */
+  tongThoiGianThat: number;
+  /** Tổng thời gian ước tính theo `estimatedTime` của các câu trong đề, giây. */
+  tongThoiGianChuan: number;
+  /** Thời gian thật chia thời gian chuẩn. Dưới 1 là làm nhanh hơn dự kiến. */
+  tyLeNhip: number;
+  /** Tỷ lệ đúng trên các lượt được xét, thang 0 đến 1. */
+  tyLeDung: number;
+  /** Mức đoán mò, thang 0 đến 1. Cao chỉ khi VỪA nhanh bất thường VỪA sai nhiều. */
+  tyLeDoanMo: number;
+  giaiTrinh: string;
+}
+
+/**
+ * Ngưỡng mềm cho phần "nhanh": nhịp bằng 1 trở lên thì hệ số nhanh bằng 0, nhịp bằng
+ * `NHIP_NHANH_TOI_DA` trở xuống thì bằng 1, ở giữa nội suy tuyến tính.
+ * Đây là hàm LIÊN TỤC, không phải bậc thang. Đặt theo số đo: `estimatedTime` trung bình 35,1
+ * giây một câu, nên làm dưới 40% thời lượng dự kiến là dấu hiệu đáng nghi.
+ */
+const NHIP_NHANH_TOI_DA = 0.40;
+/** Số lượt đã nộp tối thiểu mới dám kết luận về nhịp. */
+const TOI_THIEU_LUOT_NHIP = 2;
+
 export const learnerModelService = {
+  /**
+   * Đo nhịp làm bài và suy ra mức đoán mò.
+   *
+   * Vì sao đáng làm: hai đầu dữ liệu đã có sẵn mà chưa ai bắc cầu.
+   *   - Đầu chuẩn: `estimatedTime` có ở **292/292** câu, 5 giá trị khác nhau từ 30 đến 50 giây,
+   *     trung bình 35,1 giây. Nhưng nó chỉ được dùng lúc nhập liệu và sinh câu, chưa từng được
+   *     so với thực tế.
+   *   - Đầu thực tế: `attempt.timeSpent` được `PracticeView` đếm thật từng giây rồi ghi vào lượt
+   *     làm bài. Đo trong trình duyệt: một phiên 10 câu ghi được 448 giây.
+   *
+   * Và `adaptiveMemory.guessingFrequency` đo được **luôn bằng 0** sau 3 đề đã nộp, vì nó chỉ
+   * được cập nhật từ tương tác với gia sư AI, không từ lượt làm bài. Nói cách khác, phát hiện
+   * đoán mò trong lúc thi hiện KHÔNG TỒN TẠI dù dữ liệu đã nằm sẵn.
+   *
+   * Hai điều quan trọng trong cách chấm:
+   *
+   * 1. **Nhanh mà vẫn đúng là THÀNH THẠO, không phải đoán mò.** Nên mức đoán mò là TÍCH của hệ
+   *    số nhanh với tỷ lệ sai. Chỉ nhìn tốc độ thì sẽ phạt oan người giỏi, đúng loại lỗi "hạ
+   *    điểm hệ thống" đã sửa ở bộ dự báo.
+   * 2. **Bỏ lượt dở dang.** `timeSpent` của phiên bị bỏ giữa chừng không phản ánh nhịp thật, vì
+   *    đồng hồ vẫn chạy khi người học rời đi. Chỉ xét `isSubmitted`.
+   */
+  doNhipLamBai(): NhipLamBai {
+    const lichSu = dbService.getHistory().filter(a => a.isSubmitted);
+
+    let tongThat = 0;
+    let tongChuan = 0;
+    let soDung = 0;
+    let soCau = 0;
+    let soLuotXet = 0;
+
+    for (const luot of lichSu) {
+      const dsCau = luot.questions || [];
+      if (dsCau.length === 0) continue;
+      const chuan = dsCau.reduce((s, id) => s + (questionMap.get(id)?.estimatedTime || 0), 0);
+      // Không có mốc chuẩn thì không so được, bỏ lượt đó thay vì gán bừa một con số.
+      if (chuan <= 0 || !luot.timeSpent || luot.timeSpent <= 0) continue;
+
+      soLuotXet++;
+      tongThat += luot.timeSpent;
+      tongChuan += chuan;
+      for (const id of dsCau) {
+        const q = questionMap.get(id);
+        if (!q) continue;
+        soCau++;
+        if (luot.answers?.[id] === q.correctAnswer) soDung++;
+      }
+    }
+
+    const duDuLieu = soLuotXet >= TOI_THIEU_LUOT_NHIP && soCau > 0;
+    const tyLeNhip = tongChuan > 0 ? tongThat / tongChuan : 1;
+    const tyLeDung = soCau > 0 ? soDung / soCau : 0;
+
+    // Hệ số nhanh, liên tục trong khoảng 0 đến 1.
+    const heSoNhanh = Math.min(1, Math.max(0, (1 - tyLeNhip) / (1 - NHIP_NHANH_TOI_DA)));
+    const tyLeSai = 1 - tyLeDung;
+    const trongSo = 1 - Math.exp(-soCau / MOC_BANG_CHUNG_CO);
+    const tyLeDoanMo = duDuLieu
+      ? Math.min(1, Math.max(0, heSoNhanh * tyLeSai * trongSo))
+      : 0;
+
+    const giaiTrinh = duDuLieu
+      ? `Xét ${soLuotXet} lượt đã nộp: ${tongThat}s thật so với ${tongChuan}s ước tính, tỷ lệ nhịp ${tyLeNhip.toFixed(2)}. Tỷ lệ đúng ${(tyLeDung * 100).toFixed(1)}%. Hệ số nhanh ${heSoNhanh.toFixed(2)} nhân tỷ lệ sai ${tyLeSai.toFixed(2)} cho mức đoán mò ${(tyLeDoanMo * 100).toFixed(1)}%.`
+      : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_LUOT_NHIP} lượt đã nộp có cả thời gian thật và mốc ước tính, hiện có ${soLuotXet}.`;
+
+    return {
+      duDuLieu,
+      soLuotXet,
+      tongThoiGianThat: tongThat,
+      tongThoiGianChuan: tongChuan,
+      tyLeNhip,
+      tyLeDung,
+      tyLeDoanMo,
+      giaiTrinh,
+    };
+  },
+
   /**
    * Đo hiệu chuẩn nhận thức từ cờ nghi vấn mà chính người học tự bật trên từng câu.
    *

@@ -27,7 +27,7 @@ import { learningEngine } from "../../src/services/learningEngine";
 import { conceptMemoryService } from "../../src/services/conceptMemoryService";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
 import { kbService } from "../../src/services/kbService";
-import { learnerModelService } from "../../src/services/learnerModel";
+import { learnerModelService, studentModelService } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { teachingAnalytics } from "../../src/services/teachingAnalytics";
@@ -1271,6 +1271,102 @@ const batDinhKhongCo = examForecaster.calculatePrediction().uncertaintyDecomposi
 check("Bất định hành vi phản ứng với cờ nghi vấn",
   batDinhCoCo > batDinhKhongCo,
   `cùng 80 câu và cùng tỷ lệ đúng: có cờ cho ${batDinhCoCo.toFixed(3)}, không cờ cho ${batDinhKhongCo.toFixed(3)}`);
+
+dbService.clearAllHistory();
+
+// ===========================================================================
+g("P. Nhịp làm bài và phát hiện đoán mò");
+// ===========================================================================
+// Bối cảnh: `estimatedTime` có ở 292/292 câu nhưng chưa từng được so với `attempt.timeSpent`.
+// Và `adaptiveMemory.guessingFrequency` đo được LUÔN bằng 0 sau nhiều đề, vì nó chỉ cập nhật từ
+// tương tác với gia sư AI, không từ lượt làm bài.
+
+/** Mô phỏng lượt làm bài có ghi thời gian, tất định. `heSoNhip` nhỏ là làm nhanh. */
+function moPhongCoNhip(tyLeDung: number, heSoNhip: number, soDe: number, daNop = true) {
+  dbService.clearAllHistory();
+  for (let e = 0; e < soDe; e++) {
+    const de = aiService.generateExam({ type: "random", count: 20 });
+    de.answers = {};
+    de.questions.forEach((id, i) => {
+      const q = questionMap.get(id);
+      if (!q) return;
+      const dung = (i / de.questions.length) < tyLeDung;
+      de.answers[id] = dung ? q.correctAnswer : (["a", "b", "c", "d"] as const).find(k => k !== q.correctAnswer)!;
+    });
+    const chuan = de.questions.reduce((s, id) => s + (questionMap.get(id)?.estimatedTime || 0), 0);
+    de.timeSpent = Math.round(chuan * heSoNhip);
+    de.isSubmitted = daNop;
+    de.score = de.questions.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+    dbService.saveAttempt(de);
+  }
+}
+
+// P1. Mốc chuẩn phải có thật, nếu không cả phép so là vô nghĩa.
+const cauCoMocThoiGian = questions.filter(q => typeof q.estimatedTime === "number" && q.estimatedTime > 0).length;
+const soMocKhacNhau = new Set(questions.map(q => q.estimatedTime)).size;
+check("Mọi câu có mốc thời gian ước tính và mốc phải phân hóa",
+  cauCoMocThoiGian === questions.length && soMocKhacNhau >= 2,
+  `${cauCoMocThoiGian}/${questions.length} câu có mốc, ${soMocKhacNhau} giá trị khác nhau`);
+
+// P2. Hồ sơ trắng phải nói chưa đủ dữ liệu.
+dbService.clearAllHistory();
+const nhipTrang = learnerModelService.doNhipLamBai();
+check("Hồ sơ trắng: nhịp làm bài tự nhận chưa đủ dữ liệu",
+  nhipTrang.duDuLieu === false && nhipTrang.tyLeDoanMo === 0,
+  `duDuLieu=${nhipTrang.duDuLieu}, ${nhipTrang.soLuotXet} lượt xét`);
+
+// P3. Lượt DỞ DANG không được tính, vì đồng hồ vẫn chạy khi người học rời đi.
+moPhongCoNhip(0.3, 0.2, 3, false);
+const nhipDoDang = learnerModelService.doNhipLamBai();
+check("Lượt làm bài dở dang bị loại khỏi phép đo nhịp",
+  nhipDoDang.soLuotXet === 0,
+  `${dbService.getHistory().length} lượt trong lịch sử, ${nhipDoDang.soLuotXet} lượt được xét`);
+
+// P4. ĐIỀU KIỆN QUAN TRỌNG NHẤT: nhanh mà vẫn đúng là thành thạo, không được coi là đoán mò.
+moPhongCoNhip(0.3, 0.2, 3);
+const nhanhSai = learnerModelService.doNhipLamBai();
+moPhongCoNhip(0.95, 0.2, 3);
+const nhanhDung = learnerModelService.doNhipLamBai();
+check("Nhanh mà làm đúng KHÔNG bị coi là đoán mò",
+  nhanhDung.tyLeDoanMo < nhanhSai.tyLeDoanMo * 0.4,
+  `cùng nhịp ${nhanhDung.tyLeNhip.toFixed(2)}: đúng 95% cho mức đoán mò ${(nhanhDung.tyLeDoanMo * 100).toFixed(1)}%, đúng 30% cho ${(nhanhSai.tyLeDoanMo * 100).toFixed(1)}%`);
+
+// P5. Chậm mà sai cũng không phải đoán mò, chỉ là chưa nắm được bài.
+moPhongCoNhip(0.3, 1.3, 3);
+const chamSai = learnerModelService.doNhipLamBai();
+check("Chậm mà làm sai KHÔNG bị coi là đoán mò",
+  chamSai.tyLeDoanMo === 0,
+  `nhịp ${chamSai.tyLeNhip.toFixed(2)} và đúng ${(chamSai.tyLeDung * 100).toFixed(0)}% cho mức đoán mò ${(chamSai.tyLeDoanMo * 100).toFixed(1)}%`);
+
+// P6. Hàm phải LIÊN TỤC, không nhảy bậc. Quét nhịp từ nhanh tới chậm và đếm số giá trị khác nhau.
+const daiDoanMo: number[] = [];
+for (const heSo of [0.15, 0.25, 0.35, 0.45, 0.55, 0.7, 0.9]) {
+  moPhongCoNhip(0.3, heSo, 3);
+  daiDoanMo.push(learnerModelService.doNhipLamBai().tyLeDoanMo);
+}
+const soBacKhacNhau = new Set(daiDoanMo.map(v => v.toFixed(3))).size;
+const donDieu = daiDoanMo.every((v, i) => i === 0 || v <= daiDoanMo[i - 1] + 1e-9);
+check("Mức đoán mò biến thiên liên tục và giảm dần khi làm chậm lại",
+  soBacKhacNhau >= 5 && donDieu,
+  `7 mức nhịp cho ${soBacKhacNhau} giá trị khác nhau: ${daiDoanMo.map(v => (v * 100).toFixed(1)).join(", ")}%`);
+
+// P7. Con số phải chảy tới nơi tiêu thụ, tức guessingFrequency mà giao diện và lời nhắc đang đọc.
+moPhongCoNhip(0.3, 0.2, 3);
+const gfCoDuLieu = studentModelService.getStudentModel().adaptiveMemory.guessingFrequency;
+dbService.clearAllHistory();
+const gfTrang = studentModelService.getStudentModel().adaptiveMemory.guessingFrequency;
+check("Tỷ lệ đoán mò chảy được vào mô hình người học",
+  gfCoDuLieu > 0 && gfTrang === 0,
+  `có dữ liệu cho ${gfCoDuLieu.toFixed(3)}, hồ sơ trắng cho ${gfTrang}`);
+
+// P8. Tái lập được: gọi lại với cùng dữ liệu phải ra đúng con số cũ (bất biến về tất định).
+moPhongCoNhip(0.4, 0.3, 3);
+const lan1 = learnerModelService.doNhipLamBai().tyLeDoanMo;
+const lan2 = learnerModelService.doNhipLamBai().tyLeDoanMo;
+const lan3 = studentModelService.getStudentModel().adaptiveMemory.guessingFrequency;
+check("Mức đoán mò tái lập được, không bò lên theo số lần gọi",
+  lan1 === lan2 && Math.abs(lan1 - lan3) < 1e-9,
+  `ba lần đọc: ${lan1.toFixed(4)}, ${lan2.toFixed(4)}, ${lan3.toFixed(4)}`);
 
 dbService.clearAllHistory();
 

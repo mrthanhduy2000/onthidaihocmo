@@ -59,6 +59,58 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Đọc nhịp làm bài để phát hiện đoán mò trong lúc thi
+
+**Objective**: mạch thứ ba. Hai đầu dữ liệu đã có sẵn mà chưa ai bắc cầu.
+
+**Đo trước khi viết code**:
+
+| Hạng mục | Số đo |
+|---|---|
+| `estimatedTime` có giá trị dương | **292/292** câu, 5 giá trị khác nhau (30 đến 50 giây), trung bình 35,1 |
+| `attempt.timeSpent` qua vòng ghi rồi đọc | Giữ được |
+| `timeSpent` trên phiên THẬT trong trình duyệt | **504 giây** cho 10 câu |
+| `guessingFrequency` sau 3 đề đã nộp | **0**, đứng yên đúng như mô tả |
+
+Nghĩa là phát hiện đoán mò trong lúc thi trước nay **không tồn tại**, dù dữ liệu nằm sẵn cả hai
+đầu. `averageGuessingRate` trên màn Phân tích giảng dạy vì thế luôn báo 0%.
+
+**Đã làm**: `learnerModelService.doNhipLamBai()` so thời gian thật với tổng `estimatedTime` của
+các câu trong đề.
+
+Hai điều quan trọng trong cách chấm:
+
+1. **Nhanh mà vẫn đúng là THÀNH THẠO, không phải đoán mò.** Mức đoán mò là TÍCH của hệ số nhanh
+   với tỷ lệ sai, nên người giỏi làm nhanh không bị phạt. Đo được: cùng nhịp 0,20, hồ sơ đúng
+   95% cho mức đoán mò **5,0%** còn hồ sơ đúng 30% cho **70,0%**. Bỏ yếu tố tỷ lệ sai đi thì cả
+   hai đều thành 100%, và phép kiểm bắt được đúng chỗ đó.
+2. **Hàm liên tục, không bậc thang.** Quét 7 mức nhịp cho ra 5 giá trị khác nhau và giảm đơn
+   điệu: 70,0 / 70,0 / 70,0 / 64,1 / 52,5 / 35,0 / 11,7 phần trăm. Ba giá trị đầu bằng nhau vì hệ
+   số nhanh đã chạm trần ở nhịp 0,40, đó là chủ ý.
+
+**Vì sao KHÔNG ghi vào ô trung bình trượt**: `guessingFrequency` đang được cập nhật theo lối
+`cũ * 0,8 + mới * 0,2`. Ghi thêm từ lượt làm bài vào chính ô đó thì con số phụ thuộc **số lần
+gọi**, đúng loại lỗi "số tự bò lên theo số lần mở màn hình" đã sửa ở bộ dự báo. Nên tính tất định
+từ lịch sử tại mỗi lần đọc, cắm vào đúng một chỗ là `getStudentModel`, nhờ vậy cả hai nơi tiêu
+thụ (`contextWindowBuilder` và `teachingAnalytics`) nhận cùng một con số mà không phải sửa hai
+lần. Có phép kiểm canh việc gọi ba lần ra đúng một giá trị.
+
+**Lượt dở dang bị loại**: `timeSpent` của phiên bỏ giữa chừng không phản ánh nhịp thật vì đồng hồ
+vẫn chạy khi người học rời đi. Lượt không có thời gian đo được cũng bị loại.
+
+**Nghiệm thu**: nhóm kiểm **P** thêm 8 phép, tổng lên **112**, `npm run check` đủ 6 chặng. Trên
+trình duyệt: nộp thật hai đề, màn Phân tích giảng dạy hiện "Tỷ lệ đoán mò: 0%" và **đó là con số
+đúng** cho hồ sơ đó, vì chỉ có một lượt có thời gian đo được (dưới ngưỡng 2 lượt) và lượt đó còn
+làm CHẬM hơn dự kiến (504 giây so với khoảng 350 giây ước tính). Khác biệt so với trước là 0% nay
+là kết luận đo được, chứ không phải con số kẹt cứng.
+
+**Nói rõ giới hạn nghiệm thu**: tôi **không** quan sát được con số khác 0 trên giao diện, vì để
+tạo nhịp nhanh thật thì phải bấm trong vài giây và lượt bấm bằng script cho `timeSpent` bằng 0
+nên bị loại đúng theo thiết kế. Việc con số khác 0 chảy được tới nơi tiêu thụ được chứng minh
+bằng phép kiểm P7 (có dữ liệu cho 0,700, hồ sơ trắng cho 0), không bằng mắt.
+
+---
+
 ### 27/07/2026 — Đọc cờ nghi vấn để đo hiệu chuẩn nhận thức
 
 **Objective**: mạch thứ hai. `PracticeView` cho người học gắn cờ "không chắc" trên từng câu và
