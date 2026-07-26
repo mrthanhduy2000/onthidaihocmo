@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau đợt rà soát toàn diện hai engine chưa từng được soi.
+**Cập nhật lần cuối**: 27/07/2026, sau ba lượt rà liên tiếp về cùng một họ lỗi.
 
 ---
 
@@ -15,21 +15,42 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Rà soát toàn diện và sửa 9 lỗi thật ở hai engine chưa từng được soi, **ĐÃ HOÀN THÀNH** |
+| **Current Milestone** | Truy quét "con số bịa" trên toàn ứng dụng, **ĐÃ HOÀN THÀNH** ba lượt |
 | **Current Phase** | Rảnh, sẵn sàng nhận việc |
-| **Current Task** | Không có |
-| **Completed %** | 100%, đã kiểm chứng bằng lời gọi thật lên bản deploy |
-| **Git** | `main` khớp `origin/main`, cây làm việc sạch, không file nào chờ |
-| **Bản đang chạy thật** | Đã triển khai, website phục vụ đúng mã nguồn mới nhất |
+| **Completed %** | 100% phạm vi đã nhận, kiểm chứng cả trong Node lẫn trên trình duyệt |
+| **Git** | `main` khớp `origin/main`, cây làm việc sạch |
+| **Bản đang chạy thật** | Đã triển khai qua ba lượt push: `282a408`, `ab0a041`, `7a83a8d` |
 
-**Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có file sửa nửa chừng,
-không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì trước.
+**Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
+
+---
+
+## Ba lượt vừa xong nói về cùng MỘT họ lỗi
+
+Đáng đọc kỹ, vì đây là họ lỗi phổ biến nhất trong dự án này và gần như chắc chắn còn chỗ chưa
+tìm ra: **trình bày một hằng số viết tay như thể đó là kết quả đo được.**
+
+Loại này không bao giờ báo lỗi, không sai kiểu dữ liệu, không nổ ngoại lệ. Nó chỉ lặng lẽ làm
+mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫn hoàn toàn bình thường.
+
+| Lượt | Tìm ra | Nhóm kiểm canh |
+|---|---|---|
+| 1. Màn Kế hoạch học | 7 con số bịa, và trường `bloomLevel` rỗng 292/292 câu | **J**, **K** |
+| 2. Gắn cứng mã môn học | 3 chỗ cho ra số liệu của môn khác khi có từ hai môn | **L** |
+| 3. Quét rộng toàn ứng dụng | 6 con số bịa nữa ở 5 file khác nhau | **M** |
+
+**Hai công cụ để tìm tiếp, cả hai đều cần:**
+
+1. **Bộ quét bằng số**: cho engine chạy trên 5 hồ sơ học khác hẳn nhau (đúng 0%, 25%, 50%, 75%,
+   100%), trải phẳng đầu ra, lọc ra trường **số** nào không đổi qua cả 5 lượt. Cách viết cụ thể
+   nằm ở AGENTS.md mục 4.9b.
+2. **Mở màn hình ra xem**: trong cùng một ngày, **hai** lỗi lọt qua toàn bộ 90+ phép kiểm và chỉ
+   lộ ra khi nhìn giao diện thật (sổ nợ xếp chương ngược từ 7 về 1, và dòng "tăng Retention từ
+   63% lên 89%" nằm cứng trong `StatsView`). Chạy `npm run dev` rồi đọc bằng mắt.
 
 ---
 
 ## Số liệu đã kiểm chứng bằng cách đọc code
-
-Đo trực tiếp ngày 26/07/2026, không lấy từ tài liệu:
 
 | Hạng mục | Số liệu thật |
 |---|---|
@@ -38,8 +59,7 @@ không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì 
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Tổng dòng TypeScript | khoảng 37.400 |
-| Phép tự kiểm chứng | 63, đạt toàn bộ |
+| Phép tự kiểm chứng | **92**, chia 13 nhóm A đến M, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -48,31 +68,25 @@ không có nhánh phụ. Bắt đầu việc mới không cần dọn dẹp gì 
 ## Phạm vi dài hạn của dự án
 
 Chủ dự án xác nhận ngày 27/07/2026: đây là **trung tâm luyện thi và học tập đa môn dùng lâu
-dài**, sẽ còn nạp thêm nhiều môn và nhiều tài liệu khác. Hai môn hiện có chỉ là điểm khởi đầu,
-không phải toàn bộ phạm vi. Tên thư mục là di sản của môn đầu tiên.
+dài**, sẽ còn nạp thêm nhiều môn và nhiều tài liệu khác. Tên thư mục là di sản của môn đầu tiên.
 
-Đọc mục 3 trong [AGENTS.md](AGENTS.md) cho phần quy tắc kỹ thuật đi kèm (26 chỗ gắn cứng mã môn
-học cần chuyển dần sang khai báo bằng dữ liệu).
+Ba chỗ gắn cứng mã môn **nguy hiểm nhất đã xử lý** (xem AGENTS.md mục 3). Cách phân loại khi
+gặp chỗ gắn cứng mới: hỏi xem với môn khác nó *trả về ít hơn* hay *trả về của môn sai*. Loại
+thứ nhất ghi nợ được, loại thứ hai phải sửa ngay.
 
-Trạng thái đường nạp môn mới, cập nhật 27/07/2026: **đã thông**. Sinh câu hỏi từ tài liệu chạy
-được, và môn tự tạo trong ứng dụng cũng dùng được gia sư AI (AGENTS.md mục 4.8).
-
-**Nợ gắn cứng mã môn học** vẫn còn và chi phí trả tăng theo số môn được thêm. Đây là khoản nợ
-đáng dọn tiếp nếu Đàm bắt đầu nạp môn thứ ba.
+Đường nạp môn mới đã thông: sinh câu hỏi từ tài liệu chạy được, môn tự tạo dùng được gia sư AI
+(AGENTS.md mục 4.8), và nay độ thạo khái niệm ghi đủ hai khóa cho mọi môn (nhóm kiểm **L**).
 
 ---
 
 ## Bản đồ mức độ tin cậy của tài liệu
 
-**Chỉ tin 5 file này**, chúng phản ánh đúng hiện trạng:
+**Chỉ tin 5 file này**: `AGENTS.md`, `CLAUDE.md`, `BANGIAO.md`, `WORKSTATE.md` (file này),
+`DEPLOY.md`.
 
-- `AGENTS.md`, `CLAUDE.md`, `BANGIAO.md`, `WORKSTATE.md` (file này), `DEPLOY.md`
-
-**Không tin 8 file này**, chúng viết cho môn Kinh tế chính trị đã đóng, số liệu sai hết (còn ghi
-60 câu hỏi, 6 chương, React 18, Gemini 3.5). Mỗi file đã gắn cảnh báo ở dòng đầu:
-
-- `README.md`, `ARCHITECTURE.md`, `DATA_FLOW.md`, `DATABASE.md`, `TECH_DEBT.md`,
-  `TEST_PLAN.md`, `ROADMAP.md`, `CHANGELOG.md`
+**Không tin 8 file này**, chúng viết cho môn Kinh tế chính trị đã đóng, số liệu sai hết:
+`README.md`, `ARCHITECTURE.md`, `DATA_FLOW.md`, `DATABASE.md`, `TECH_DEBT.md`, `TEST_PLAN.md`,
+`ROADMAP.md`, `CHANGELOG.md`. Mỗi file đã gắn cảnh báo ở dòng đầu.
 
 Khi tài liệu mâu thuẫn với code thì **code thắng**. Cập nhật tài liệu, không lùi code.
 
@@ -80,12 +94,9 @@ Khi tài liệu mâu thuẫn với code thì **code thắng**. Cập nhật tài
 
 ## Technical Debt
 
-Ghi nhận qua khảo sát, **cố ý chưa xử lý** vì nằm ngoài phạm vi yêu cầu. Không tự ý dọn nếu
-chưa được giao.
+Ghi nhận qua khảo sát, **cố ý chưa xử lý**. Không tự ý dọn nếu chưa được giao.
 
 ### Nợ 1: Mã chết, khoảng 1.180 dòng không nơi nào dùng tới
-
-Đã kiểm chứng bằng cách dò tham chiếu trên toàn bộ 100 file, không có tham chiếu động nào.
 
 | Loại | File | Dòng |
 |---|---|---|
@@ -95,76 +106,61 @@ chưa được giao.
 | Component không được render | `src/components/Dashboard2Widgets.tsx` | 382 |
 | Component không được render | `src/components/DashboardClock.tsx` | 61 |
 
-Bổ sung 27/07/2026: tham số `aiEngineExecutor` của `EvidenceBasedPipeline.executePipeline` cũng
-là mã chết. Pipeline khai báo nó nhưng **không bao giờ gọi**, thực tế gọi thẳng
-`aiProviderRegistry` ở bước 9. Đã kiểm chứng bằng cách dò toàn bộ file. Nguy hiểm ở chỗ tên
-tham số khiến người đọc tin rằng có thể thay đường gọi AI qua đó, và niềm tin đó đã làm hỏng
-một lượt sửa (chi tiết trong BANGIAO.md).
-
 Thêm 19 hàm và hằng được export nhưng không ai dùng, trong đó **8 engine nằm trong
-`evidencePipeline.ts`** (`EvidenceRetrievalEngine`, `ReasoningEngine`, `TeachingStrategyEngine`,
-`AIMemory2Engine`, `ConfidenceEngine`, `CitationEngine`, `GuessDetectionEngine`,
-`EvidenceValidationEngine`). File này 839 dòng nhưng bên ngoài chỉ dùng đúng hai kiểu dữ liệu
-`EvidenceSet` và `ReasoningContext`. Nhiều khả năng đây là cả một tầng kiến trúc được dựng
-sẵn rồi chưa bao giờ đấu nối.
+`evidencePipeline.ts`**. File này 839 dòng nhưng bên ngoài chỉ dùng đúng hai kiểu dữ liệu. Nhiều
+khả năng đây là cả một tầng kiến trúc dựng sẵn rồi chưa bao giờ đấu nối. Tham số
+`aiEngineExecutor` của `executePipeline` cũng là mã chết và **đã từng làm hỏng một lượt sửa** vì
+tên của nó khiến người đọc tin là có thể thay đường gọi AI qua đó.
 
-**Rủi ro nếu để nguyên**: người sau đọc code sẽ tưởng các engine này đang chạy và suy luận sai
-về hành vi hệ thống. Đây là rủi ro hiểu nhầm, không phải rủi ro chạy sai.
+**Rủi ro nếu để nguyên**: người sau đọc code sẽ tưởng các engine này đang chạy. Đây là rủi ro
+hiểu nhầm, không phải rủi ro chạy sai.
 
-### Nợ 2: Ngưỡng cứng ở các engine
+### Nợ 2: Con số chưa bám dữ liệu còn sót
 
-| Service | Số ngưỡng cứng | Tình trạng |
-|---|---|---|
-| `productObservabilityService.ts` | 39 | **đã rà 27/07/2026**, sửa 3 lỗi nặng, ngưỡng cứng còn lại chưa đụng |
-| `curriculumIntelligenceEngine.ts` | 18 | **đã rà 27/07/2026**, sửa 5 lỗi nặng, ngưỡng cứng còn lại chưa đụng |
-| `examForecaster.ts` | 34 | đã rà phần lõi dự báo |
+| Chỗ | Còn gì |
+|---|---|
+| `getCurriculumPlan` | `estimatedStudyTime = 20` và `expectedRetentionGain = 15`, `weeklyPlan` chỉ đổi theo giai đoạn chứ không theo người học |
+| Ngân hàng câu hỏi | Trường `misconception` rỗng **292/292** câu, nên `contextWindowBuilder` luôn gửi cho gia sư AI một câu cảnh báo chung chung |
+| `productObservabilityService` | 39 ngưỡng cứng, đã rà và sửa 3 lỗi nặng, phần ngưỡng thuần túy chưa đụng |
+| `curriculumIntelligenceEngine` | 18 ngưỡng cứng, đã rà và sửa 5 lỗi nặng cộng 1 lỗi ở lượt 3 |
 
-Cả hai engine trên nay có nhóm kiểm **I** canh. Phần ngưỡng cứng thuần túy (bậc nhảy, hằng số
-ma thuật) vẫn còn, nhưng đó là chuyện tinh chỉnh chứ không còn là sai sự thật.
-
-Trong `examForecaster`, phần lõi dự báo đã sửa xong. Còn các phần **ROI, what-if, study debt,
-stress test chưa soi kỹ**, vẫn nhiều ngưỡng cứng.
+Mức độ nhẹ hơn hẳn những ca đã sửa: đây là **chỉ tiêu kế hoạch** hoặc **suy giảm êm**, không
+phải khẳng định sai về người học. Riêng `expectedRetentionGain` vẫn là một lời hứa không căn cứ,
+nhưng hiện **không hiển thị ở đâu cả**, nên chưa gây hại.
 
 ### Nợ 3: Gói giao diện lớn
 
-`index-*.js` khoảng 1.033 kB trước khi nén (243 kB sau nén gzip). Vite cảnh báo mỗi lần build.
-Không ảnh hưởng đúng sai, chỉ ảnh hưởng tốc độ tải lần đầu.
+`index-*.js` khoảng **1,0 MB** trước khi nén. Vite cảnh báo mỗi lần build. Không ảnh hưởng đúng
+sai, chỉ ảnh hưởng tốc độ tải lần đầu.
+
+Hướng xử lý gợi ý: tách theo màn hình bằng `React.lazy` cho các dashboard nặng. **Cần cẩn thận**,
+vì nó đổi hành vi dựng giao diện (phải có ranh giới `Suspense`), và hỏng kiểu này thì ra màn hình
+trắng chứ không ra lỗi build. Làm thành một lượt riêng, đừng ghép vào lượt sửa logic.
 
 ---
 
 ## Known Risks
 
-### ~~Rủi ro 1: Bốn cổng AI trên bản chạy thật trả 401~~ ĐÃ XỬ LÝ XONG 27/07/2026
-
-Giữ lại phần ghi chép vì đây là bài học đắt nhất của dự án cho tới nay.
-
-Có **hai lỗi chồng lên nhau**, và lỗi thứ nhất che mất lỗi thứ hai:
-
-1. **Cửa xác thực**: máy chủ đòi token Supabase, giao diện đã gỡ đăng nhập nên không có token.
-   Vá bằng `ensureSession()` (phiên ẩn danh) cộng với việc chủ dự án bật Anonymous sign-ins
-   bên Supabase.
-2. **Tra nhầm ngân hàng câu hỏi**: `/api/ai/explain` tra trong ngân hàng môn đã đóng
-   (id 1 đến 60) còn pipeline đọc môn đang học (id 2001 đến 3279), hai dải không giao nhau nên
-   **mọi** lời gọi đều hỏng. Xem AGENTS.md mục 4.8.
-
-Chỉ sửa lỗi 1 rồi dừng lại là vẫn hỏng, mà nhìn bên ngoài **không thể phân biệt được**, vì giao
-diện nuốt lỗi và hiện lời giải ngoại tuyến trông y như thật.
-
-**Bằng chứng nghiệm thu** (gọi thật lên bản deploy, ngày 27/07/2026): câu id 2001 và 3279 trả
-HTTP 200, `offlineMode: false`, lời giải dài 2769 và 3297 ký tự, không chứa dấu hiệu ngoại
-tuyến. Lượt gọi không kèm token vẫn trả 401 đúng như thiết kế.
-
-### Rủi ro 2: Dữ liệu học chỉ nằm trên một trình duyệt
+### Rủi ro 1: Dữ liệu học chỉ nằm trên một trình duyệt
 
 Không còn đồng bộ đám mây. Xóa dữ liệu duyệt web là mất sạch lịch sử học. Có nút sao lưu thủ
 công trong Cài đặt. Chủ dự án **đã chọn giữ cách bấm tay**, đừng tự ý thêm đồng bộ hay bật lại
 đăng nhập.
 
+### Bài học đắt nhất, giữ lại để khỏi lặp
+
+Bốn cổng AI từng trả 401 trên bản chạy thật trong khi mọi phép kiểm cục bộ đều xanh. Có **hai
+lỗi chồng lên nhau**, và lỗi thứ nhất che mất lỗi thứ hai. Đã xử lý xong 27/07/2026.
+
+Nhắc lại cho phiên sau: **bộ kiểm cục bộ không bao giờ chứng minh được hạng mục xác thực**, vì
+máy nhà không đặt biến Supabase nên cổng AI luôn xanh ở đây. Đụng vào xác thực hay hàm
+serverless thì bắt buộc `npm run check:prod`.
+
 ---
 
 ## Blocked Issues
 
-Không có. Không việc nào đang bị chặn bởi yếu tố ngoài tầm kiểm soát.
+Không có.
 
 ---
 
@@ -172,11 +168,10 @@ Không có. Không việc nào đang bị chặn bởi yếu tố ngoài tầm k
 
 Cần chủ dự án quyết, **không được tự quyết thay**:
 
-1. ~~Có bật lại AI trên bản chạy thật không, và theo hướng nào?~~ **Đã chốt 27/07/2026**: hướng
-   phiên ẩn danh. Mã xong, chờ chủ dự án bật công tắc Anonymous sign-ins bên Supabase.
-2. Có dọn khoảng 1.180 dòng mã chết không? Dọn thì gọn nhưng là thay đổi diện rộng.
-3. Có rà tiếp `productObservabilityService` và `curriculumIntelligenceEngine` theo cùng cách
-   đã làm với các engine khác không?
+1. Có dọn khoảng 1.180 dòng mã chết không? Dọn thì gọn nhưng là thay đổi diện rộng.
+2. Có tách gói giao diện theo màn hình để giảm 1,0 MB không? Xem cảnh báo ở Nợ 3.
+3. Trường `misconception` rỗng toàn tập: có muốn bổ sung dữ liệu thật, hay chấp nhận gia sư AI
+   dùng câu cảnh báo chung?
 
 ---
 
@@ -184,62 +179,26 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
 
 **Chờ yêu cầu mới.** Không tự khởi động việc gì.
 
-Giới hạn "môn tự tạo không dùng được AI" đã được **xử lý xong 27/07/2026**, xem AGENTS.md mục
-4.8. Đã chạy thử thật trên trình duyệt với một môn tự tạo và nhận được bài giảng AI đầy đủ.
-
 Nếu được giao việc, theo đúng trình tự trong AGENTS.md mục 9: chạy `npm run check` phải đạt,
 soát `git status`, commit nêu rõ đổi gì và vì sao, ghi mục mới vào BANGIAO.md, cập nhật file
-WORKSTATE.md này.
+WORKSTATE.md này, rồi push.
 
 ## Next Major Step
 
 Xếp theo mức đáng làm:
 
-1. Rà `productObservabilityService.ts` (1205 dòng, 39 ngưỡng cứng), engine lớn nhất còn lại
-2. Rà nốt phần ROI, what-if, study debt trong `examForecaster` (phần lõi dự báo đã xong)
-3. Rà `curriculumIntelligenceEngine.ts` (390 dòng, 18 ngưỡng cứng)
-4. Bật lại AI trên bản chạy thật
-5. Dọn mã chết
+1. **Quét tiếp họ lỗi "con số bịa"** ở các engine chưa soi: `studentEvolutionEngine` (565 dòng),
+   `questionGenerationEngine` (718 dòng), `pedagogicalEvaluationEngine` (344 dòng),
+   `teachingDecisionEngine` (222 dòng). Dùng đúng bộ quét ở AGENTS.md mục 4.9b, và nhớ mở màn
+   hình tương ứng ra xem.
+2. Bổ sung dữ liệu cho trường `misconception` (Nợ 2)
+3. Tách gói giao diện để giảm 1,0 MB (Nợ 3, đọc cảnh báo trước khi làm)
+4. Dọn mã chết (Nợ 1)
 
 ---
 
 ## Verification Pending
 
-Không có. Đường AI đã nghiệm thu bằng lời gọi thật lên bản deploy, không phải suy đoán từ mã
-nguồn: 55/55 phép tự kiểm chứng đạt, `npm run check:prod` đủ 4 cổng đạt ở lượt có token, và
-lời giải trả về có `offlineMode: false`.
-
-Nhắc cho phiên sau: **bộ kiểm cục bộ không bao giờ chứng minh được hạng mục này**, vì máy nhà
-không đặt biến Supabase nên cổng AI luôn xanh ở đây (đúng cơ chế Bẫy 1). Đụng vào xác thực hay
-hàm serverless thì bắt buộc `npm run check:prod`.
-
-## Expected Commit Scope
-
-Chưa xác định, phụ thuộc việc được giao tiếp theo.
-
----
-
-## Architecture Impact của cột mốc vừa xong
-
-Tóm tắt để không phải đọc lại toàn bộ BANGIAO:
-
-- Tra cứu khái niệm nay có **đúng một nguồn** là `kbService.resolveConceptsForQuestion`.
-  Trước đó ba bản tra cứu khác nhau cùng tồn tại và cả ba đều sai theo kiểu riêng.
-- Độ thành thạo khái niệm ghi **cùng một giá trị dưới hai khóa** qua
-  `setConceptMasteryBothKeys`, trước đó hai nguồn ghi lệch khóa nhau.
-- Mọi thành phần chấm ưu tiên là **hàm liên tục**, không còn ngưỡng bậc thang.
-- Xếp hạng **tất định**, không còn `Math.random` trong hàm so sánh. Đã kiểm lại toàn bộ mã
-  nguồn, hiện không còn chỗ nào vi phạm.
-- Không phá tương thích ngược: không đổi chữ ký hàm công khai, không đổi cấu trúc lưu trữ,
-  không cần di trú dữ liệu.
-
-Bổ sung ngày 27/07/2026 cho bộ dự báo điểm thi:
-
-- **Dự báo tái lập được**: gọi lại với cùng dữ liệu luôn trả về đúng con số cũ. Trước đó con số
-  tự bò lên theo số lần mở màn hình (đo được 3,8 lên 7,2 trên hồ sơ đứng yên).
-- **Hết hạ điểm hệ thống**: lệch trung bình so với năng lực thật giảm từ 1,44 xuống 0,56 điểm,
-  và không còn phình to theo năng lực người học.
-- **Tầng lan truyền phụ thuộc nay chạy thật**, đọc `dependencies.requires` từ đồ thị tri thức
-  thay cho bảng cứng chứa khái niệm kinh tế vi mô của môn khác.
-- Quy tắc chung rút ra: **cân theo lượng bằng chứng chỉ được làm đúng một lần tại nguồn**
-  (`recomputeStatistics`). Mọi engine phía sau đọc thẳng giá trị đó, không co lại lần nữa.
+Không có. Ba lượt vừa rồi đều nghiệm thu hai tầng: `npm run check` đủ 6 chặng với 92 phép kiểm,
+**và** mở `npm run dev` soi tận mắt các màn hình bị đụng tới (Kế hoạch học đủ bốn tab, Báo cáo),
+không lỗi nào trên bảng điều khiển trình duyệt.
