@@ -13,9 +13,9 @@ Ba điều cần nhớ ngay:
 
 1. Sửa xong thì chạy `npm run check` để tự kiểm chứng. Có 55 phép kiểm chạy trên engine thật,
    không phải kiểm kiểu suông. Vòng lặp nhanh thì dùng `npm run check:fast`.
-2. Chạy thử ứng dụng bằng `npm run dev` rồi mở http://localhost:3000. Chạy Vite trần
-   (cổng 5199 trong `.claude/launch.json`) sẽ **không có** các cổng `/api`, nên AI sẽ hỏng
-   vì cách chạy chứ không phải vì mã nguồn.
+2. Chạy thử ứng dụng bằng `npm run dev` rồi mở http://localhost:3000. Đừng chạy Vite trần,
+   nó **không có** các cổng `/api` nên AI sẽ hỏng vì cách chạy chứ không phải vì mã nguồn.
+   `.claude/launch.json` đã trỏ sẵn vào lệnh đúng.
 3. Build xanh **không** đảm bảo bản đã deploy còn sống. Sau khi động tới xác thực, đăng nhập
    hoặc các hàm serverless, chạy thêm `npm run check:prod`. Lý do cụ thể nằm ở mục "Bẫy 1" trong AGENTS.md.
 

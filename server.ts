@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 
 import health from "./functions-src/health";
 import generate from "./functions-src/ai/generate";
-import explain from "./functions-src/ai/explain";
+import complete from "./functions-src/ai/complete";
 import chat from "./functions-src/ai/chat";
 import recommend from "./functions-src/ai/recommend";
 
@@ -26,7 +26,7 @@ app.use(express.json({ limit: "4mb" }));
 // Mount các serverless handler (chữ ký (req, res) tương thích Express).
 app.get("/api/health", health);
 app.post("/api/ai/generate", generate);
-app.post("/api/ai/explain", explain);
+app.post("/api/ai/complete", complete);
 app.post("/api/ai/chat", chat);
 app.post("/api/ai/recommend", recommend);
 

@@ -6,8 +6,8 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau khi hồi sinh và nghiệm thu toàn bộ đường AI trên bản
-chạy thật.
+**Cập nhật lần cuối**: 27/07/2026, sau khi chuyển tầng suy luận về trình duyệt để môn tự tạo
+cũng dùng được AI.
 
 ---
 
@@ -16,7 +16,7 @@ chạy thật.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Hồi sinh toàn bộ đường AI trên bản chạy thật, **ĐÃ HOÀN THÀNH VÀ NGHIỆM THU** |
+| **Current Milestone** | Đưa tầng suy luận về trình duyệt cho mọi môn, **ĐÃ HOÀN THÀNH VÀ NGHIỆM THU** |
 | **Current Phase** | Rảnh, sẵn sàng nhận việc |
 | **Current Task** | Không có |
 | **Completed %** | 100%, đã kiểm chứng bằng lời gọi thật lên bản deploy |
@@ -97,6 +97,12 @@ chưa được giao.
 | Component không được render | `src/components/AssessmentDesignDashboard.tsx` | 321 |
 | Component không được render | `src/components/Dashboard2Widgets.tsx` | 382 |
 | Component không được render | `src/components/DashboardClock.tsx` | 61 |
+
+Bổ sung 27/07/2026: tham số `aiEngineExecutor` của `EvidenceBasedPipeline.executePipeline` cũng
+là mã chết. Pipeline khai báo nó nhưng **không bao giờ gọi**, thực tế gọi thẳng
+`aiProviderRegistry` ở bước 9. Đã kiểm chứng bằng cách dò toàn bộ file. Nguy hiểm ở chỗ tên
+tham số khiến người đọc tin rằng có thể thay đường gọi AI qua đó, và niềm tin đó đã làm hỏng
+một lượt sửa (chi tiết trong BANGIAO.md).
 
 Thêm 19 hàm và hằng được export nhưng không ai dùng, trong đó **8 engine nằm trong
 `evidencePipeline.ts`** (`EvidenceRetrievalEngine`, `ReasoningEngine`, `TeachingStrategyEngine`,
@@ -182,11 +188,8 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
 
 **Chờ yêu cầu mới.** Không tự khởi động việc gì.
 
-Một giới hạn đã biết, chưa xử lý, cần chủ dự án quyết trước khi làm: máy chủ luôn nạp môn dựng
-sẵn `customer_behavior`, nên **các môn do chủ dự án tự nhập sau này sẽ không giải thích AI
-được**, vì dữ liệu của chúng chỉ nằm trong localStorage của trình duyệt. Muốn chạy đúng thì
-giao diện phải gửi kèm nội dung câu hỏi thay vì chỉ gửi id. Đây là việc lớn, đụng vào
-`evidencePipeline`.
+Giới hạn "môn tự tạo không dùng được AI" đã được **xử lý xong 27/07/2026**, xem AGENTS.md mục
+4.8. Đã chạy thử thật trên trình duyệt với một môn tự tạo và nhận được bài giảng AI đầy đủ.
 
 Nếu được giao việc, theo đúng trình tự trong AGENTS.md mục 9: chạy `npm run check` phải đạt,
 soát `git status`, commit nêu rõ đổi gì và vì sao, ghi mục mới vào BANGIAO.md, cập nhật file

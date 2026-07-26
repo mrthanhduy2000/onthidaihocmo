@@ -59,6 +59,44 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Đưa tầng suy luận về trình duyệt để môn tự tạo cũng dùng được AI
+
+**Objective**: Đàm xác nhận sẽ **tự bấm thêm môn ngay trong ứng dụng**, không muốn mỗi lần thêm
+môn lại phải nhờ dựng file trong mã nguồn rồi deploy. Mà môn tự tạo lưu câu hỏi trong
+localStorage, máy chủ không bao giờ thấy, nên gia sư AI không chạy được.
+
+**Đã làm**: bỏ hẳn kiểu "giao diện gửi id, máy chủ tự tra câu hỏi".
+
+- Thêm `functions-src/ai/complete.ts`, cổng chuyển tiếp thuần túy tới Gemini.
+- **Xóa hẳn `functions-src/ai/explain.ts`**. Để lại là còn hai nguồn sự thật cho cùng một việc.
+- `src/services/ai.ts` chạy `EvidenceBasedPipeline` ngay tại trình duyệt.
+- `aiProvider.ts`: `Gemini36FlashProvider.execute` tự phân biệt môi trường.
+- `chat.ts` nhận thẳng `subjectId` thay vì dò chữ trong tên môn, vốn nhận nhầm mọi môn mới
+  thành Kinh tế chính trị.
+- `.claude/launch.json` sửa từ `vite --port 5199` (không có `/api`) sang `npm run dev`.
+
+**Chỗ tôi đã sai, ghi lại để người sau khỏi vấp**: kế hoạch ban đầu dựa trên giả định rằng
+`executePipeline` gọi AI qua tham số `aiEngineExecutor`, nên chỉ cần truyền một hàm khác là
+chạy được ở trình duyệt. **Giả định đó sai.** Tham số ấy được khai báo nhưng pipeline không hề
+gọi, nó gọi thẳng `aiProviderRegistry` ở bước 9. Tôi chỉ phát hiện khi chạy thử thật trên trình
+duyệt và nhận `ReferenceError: process is not defined`, vì tầng provider đọc biến môi trường
+vốn chỉ có trên máy chủ. Bài học: **đừng tin tên tham số, hãy dò đường đi thật của lời gọi.**
+
+**Nghiệm thu, đây là phần đáng giá nhất**: `npm run check` xanh **không chứng minh được gì** cho
+hạng mục này. Bằng chứng thật là chạy trên trình duyệt: dựng một môn tự tạo, làm một câu, bấm
+"Nhờ gia sư AI phân tích sâu", và nhận về bài giảng AI đầy đủ dẫn đúng tài liệu lẫn khái niệm
+của chính môn đó, không còn chuỗi `(Chế độ ngoại tuyến)`. Đúng đường mà bản cũ hỏng 100%.
+
+**Bộ kiểm**: nhóm H thay ba phép kiểm đọc mã `explain.ts` bằng bất biến tổng quát hơn, **không
+hàm serverless nào được nhập dữ liệu môn học**. Đã cố tình thêm một dòng nhập vi phạm vào
+`chat.ts` để xác nhận bộ kiểm bắt được và chỉ đúng tên file, rồi khôi phục. Thêm phép kiểm chạy
+thật dựng môn tự tạo giả lập rồi bắt pipeline giải thích. Tổng vẫn 55 phép, đạt toàn bộ.
+
+**Còn nợ**: gói giao diện phình từ 526 kB lên 943 kB (phần App) vì pipeline nay nằm trong trình
+duyệt. Không sai kết quả, chỉ chậm tải lần đầu, và làm Nợ 3 nặng thêm.
+
+---
+
 ### 27/07/2026 — Cổng giải thích AI tra nhầm ngân hàng câu hỏi, hỏng 100% mà không ai biết
 
 **Phát hiện thế nào**: sau khi mở được đường xác thực, `npm run check:prod` cho thấy hai cổng

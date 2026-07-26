@@ -7,13 +7,17 @@ import { CrossSubjectIntelligenceEngine } from "../../src/services/evidencePipel
 export default async function handler(req: any, res: any) {
   if (!(await requireUser(req, res))) return;
   try {
-    const { message, history, subjectName, kbContext, learnerProfile } = req.body || {};
+    const { message, history, subjectId, subjectName, kbContext, learnerProfile } = req.body || {};
     if (!message) {
       return res.status(400).json({ error: "Thiếu nội dung câu hỏi." });
     }
 
-    const currentSubjectName = subjectName || "Kinh tế chính trị Mác - Lênin";
-    const activeSubjectId = currentSubjectName.includes("Khách hàng") ? "customer_behavior" : "poli_econ";
+    const currentSubjectName = subjectName || "môn đang học";
+    // Nhận thẳng mã môn từ giao diện. Trước đây chỗ này suy mã môn bằng cách dò chữ trong TÊN
+    // môn ("Khách hàng" thì là customer_behavior, còn lại là poli_econ), nên mọi môn người dùng
+    // tự tạo đều bị nhận nhầm thành Kinh tế chính trị. Giao diện luôn biết chính xác mã môn,
+    // không có lý do gì bắt máy chủ phải đoán.
+    const activeSubjectId = subjectId || "";
 
     let crossIntelContext = "";
     const crossSubject = CrossSubjectIntelligenceEngine.findCrossSubjectConnection(activeSubjectId, message);

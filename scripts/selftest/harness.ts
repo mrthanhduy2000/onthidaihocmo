@@ -13,9 +13,10 @@
  * dùng `info(...)` cho số liệu chỉ để tham khảo. Không bao giờ để một phép kiểm phụ thuộc
  * vào mạng hoặc vào dữ liệu riêng trên máy Đàm.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { dbService, questions, questionMap, chapters, topics } from "../../src/services/db";
+import { dbService, loadSubject, questions, questionMap, chapters, topics } from "../../src/services/db";
+import { EvidenceBasedPipeline } from "../../src/services/evidencePipeline";
 // Ngân hàng của môn ĐÃ ĐÓNG, nhập vào đây chỉ để đối chiếu dải id trong nhóm kiểm H.
 import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
@@ -594,57 +595,117 @@ g("H. Cổng AI phía máy chủ");
 // của môn ĐÃ ĐÓNG, còn pipeline phía sau đọc questionMap của môn ĐANG HỌC. Hai dải id không
 // giao nhau nên mọi lời gọi thật đều rơi vào 404, mà giao diện thì nuốt lỗi rồi hiện lời giải
 // ngoại tuyến, nên nhìn bên ngoài tưởng AI vẫn đang chạy.
+//
+// Bất biến chốt lại sau lần sửa 27/07/2026: máy chủ KHÔNG giữ dữ liệu môn học nữa. Tầng suy luận
+// chạy ở trình duyệt, nơi duy nhất biết môn nào đang mở, kể cả môn người dùng tự tạo.
 
-const explainSrc = readFileSync(path.join(process.cwd(), "functions-src/ai/explain.ts"), "utf8");
+const fnDir = path.join(process.cwd(), "functions-src");
+const fnFiles = readdirSync(fnDir, { recursive: true, encoding: "utf8" })
+  .filter(f => f.endsWith(".ts"))
+  .map(f => ({ ten: f, noiDung: readFileSync(path.join(fnDir, f), "utf8") }));
+
+const nhapDuLieuMon = fnFiles.filter(f => /from\s+["'][^"']*src\/data\//.test(f.noiDung));
+check("Không hàm serverless nào nhập dữ liệu môn học cố định",
+  nhapDuLieuMon.length === 0,
+  nhapDuLieuMon.length
+    ? `vi phạm: ${nhapDuLieuMon.map(f => f.ten).join(", ")}`
+    : `đã soát ${fnFiles.length} file trong functions-src`);
+
+check("Cổng chuyển tiếp AI ghép chỉ dẫn hệ thống ở phía máy chủ",
+  fnFiles.some(f => f.ten.endsWith("complete.ts") && f.noiDung.includes("AUTHORITATIVE_KNOWLEDGE_SYSTEM_INSTRUCTION")),
+  "nhận chỉ dẫn hệ thống từ giao diện là mở toang rào an toàn nội dung");
+
 const aiSrc = readFileSync(path.join(process.cwd(), "src/services/ai.ts"), "utf8");
-
-check("Cổng explain tra câu hỏi qua questionMap",
-  explainSrc.includes("questionMap.get(questionId)"),
-  "phải dùng đúng nguồn mà EvidenceBasedPipeline đọc ở bước sau");
-
-check("Cổng explain không nhập ngân hàng câu hỏi của môn đã đóng",
-  !/from\s+"\.\.\/\.\.\/src\/data\/questions"/.test(explainSrc),
-  "nhập thẳng src/data/questions là quay lại đúng lỗi cũ");
-
-check("Cổng explain lấy mã môn từ dbService, không đoán bằng số chương",
-  explainSrc.includes("dbService.getActiveSubjectId()"),
-  "suy mã môn từ chapterId là mẹo chỉ đúng với hai môn dựng sẵn");
 
 check("Lời gọi API đính token qua ensureSession",
   aiSrc.includes("await ensureSession()") && !/apiHeaders[\s\S]{0,400}auth\.getSession\(\)/.test(aiSrc),
   "app không còn màn đăng nhập nên getSession luôn rỗng, mọi cổng AI sẽ nhận 401");
 
+check("Tầng suy luận chạy ở trình duyệt, không gọi cổng explain cũ",
+  aiSrc.includes("EvidenceBasedPipeline.executePipeline") && !aiSrc.includes("/api/ai/explain"),
+  "gọi lại cổng explain là quay về đúng kiến trúc khiến môn tự tạo không dùng được AI");
+
+// Phép kiểm chạy thật: dựng một môn tự tạo y như khi người dùng bấm thêm môn trong ứng dụng,
+// rồi bắt pipeline giải thích một câu của môn đó. Đây là đường mà bản cũ hỏng 100%.
+const monTuTaoId = "custom_selftest";
+const cauHoiMonTuTao: Question = {
+  ...questions[0],
+  id: 990001,
+  chapterId: 1,
+  topicId: `${monTuTaoId}_T1.1`,
+};
+localStorage.setItem(`poly_econ_custom_questions_${monTuTaoId}`, JSON.stringify([cauHoiMonTuTao]));
+localStorage.setItem(`poly_econ_custom_topics_${monTuTaoId}`, JSON.stringify([
+  { id: `${monTuTaoId}_T1.1`, chapterId: 1, title: "Chủ đề 1.1: Nhập môn", description: "Tự kiểm chứng." },
+]));
+localStorage.setItem(`poly_econ_custom_chapters_${monTuTaoId}`, JSON.stringify([
+  { id: 1, code: "CH1", title: "Chương 1: Tổng quan", description: "Tự kiểm chứng." },
+]));
+
+// Gói trong hàm async vì bộ kiểm được đóng gói dạng CommonJS, không dùng được `await` ở mức
+// ngoài cùng. Phần in kết quả được gọi sau khi hàm này xong.
+async function kiemTraMonTuTao(): Promise<void> {
+  const monBanDau = dbService.getActiveSubjectId();
+  let chayDuoc = false;
+  let chiTiet = "";
+  try {
+    loadSubject(monTuTaoId);
+    const ketQua = await EvidenceBasedPipeline.executePipeline({
+      subjectId: monTuTaoId,
+      subjectName: "Môn tự tạo dùng cho tự kiểm chứng",
+      questionId: cauHoiMonTuTao.id,
+      selectedAnswer: "a",
+      explanationLevel: "academic",
+      aiEngineExecutor: async () => "lời giải giả lập, không gọi mạng",
+      fallbackFunction: () => "bản dự phòng",
+    });
+    chayDuoc = Boolean(ketQua.text && ketQua.text.length > 0);
+    chiTiet = `pipeline trả về ${ketQua.text.length} ký tự cho môn ${monTuTaoId}`;
+  } catch (e: any) {
+    chiTiet = `pipeline ném lỗi: ${e?.message}`;
+  } finally {
+    loadSubject(monBanDau);
+  }
+  check("Môn người dùng tự tạo cũng chạy được tầng suy luận", chayDuoc, chiTiet);
+}
+
 const closedBankIds = new Set(closedSubjectQuestions.map(q => q.id));
 const activeIds = [...questionMap.keys()];
 const overlappingIds = activeIds.filter(id => closedBankIds.has(id));
-check("Tra câu hỏi bằng id phải dựa vào môn đang học, không dựa vào ngân hàng cố định",
-  explainSrc.includes("questionMap.get(questionId)"),
-  `id môn đang học ${Math.min(...activeIds)} đến ${Math.max(...activeIds)}, ngân hàng môn đã đóng 1 đến ${Math.max(...closedBankIds)}, trùng nhau ${overlappingIds.length} id`);
-
-info(`Hai dải id rời nhau hoàn toàn (${overlappingIds.length} id trùng), nên bản cũ tra nhầm ngân hàng thì KHÔNG câu nào giải thích được, chứ không phải chỉ sai lác đác.`);
+info(`Hai dải id rời nhau hoàn toàn (${overlappingIds.length} id trùng): môn đang học ${Math.min(...activeIds)} đến ${Math.max(...activeIds)}, ngân hàng môn đã đóng 1 đến ${Math.max(...closedBankIds)}. Nên bản cũ tra nhầm ngân hàng thì KHÔNG câu nào giải thích được, chứ không phải chỉ sai lác đác.`);
 
 // ===========================================================================
 // Kết quả
 // ===========================================================================
-const failed = results.filter(r => !r.ok);
-let lastGroup = "";
-for (const r of results) {
-  if (r.group !== lastGroup) {
-    console.log(`\n${r.group}`);
-    lastGroup = r.group;
+function inKetQua(): void {
+  const failed = results.filter(r => !r.ok);
+  let lastGroup = "";
+  for (const r of results) {
+    if (r.group !== lastGroup) {
+      console.log(`\n${r.group}`);
+      lastGroup = r.group;
+    }
+    const mark = r.ok ? "  DAT " : "  HONG";
+    console.log(`${mark} ${r.name}${r.detail ? `  (${r.detail})` : ""}`);
   }
-  const mark = r.ok ? "  DAT " : "  HONG";
-  console.log(`${mark} ${r.name}${r.detail ? `  (${r.detail})` : ""}`);
+
+  if (notes.length) {
+    console.log("\nSố liệu tham khảo");
+    notes.forEach(n => console.log(`  - ${n}`));
+  }
+
+  console.log(`\nTổng: ${results.length - failed.length}/${results.length} phép kiểm đạt.`);
+  if (failed.length) {
+    console.log("Các phép kiểm HỎNG:");
+    failed.forEach(f => console.log(`  - [${f.group}] ${f.name}${f.detail ? `: ${f.detail}` : ""}`));
+    process.exit(1);
+  }
 }
 
-if (notes.length) {
-  console.log("\nSố liệu tham khảo");
-  notes.forEach(n => console.log(`  - ${n}`));
-}
-
-console.log(`\nTổng: ${results.length - failed.length}/${results.length} phép kiểm đạt.`);
-if (failed.length) {
-  console.log("Các phép kiểm HỎNG:");
-  failed.forEach(f => console.log(`  - [${f.group}] ${f.name}${f.detail ? `: ${f.detail}` : ""}`));
-  process.exit(1);
-}
+// Phép kiểm cuối là bất đồng bộ, nên phải chờ nó xong rồi mới in kết quả. Nếu bản thân nó nổ
+// thì vẫn phải in, không được nuốt lỗi rồi báo xanh.
+kiemTraMonTuTao()
+  .catch((e: any) => {
+    check("Môn người dùng tự tạo cũng chạy được tầng suy luận", false, `lỗi ngoài dự kiến: ${e?.message}`);
+  })
+  .then(inKetQua);

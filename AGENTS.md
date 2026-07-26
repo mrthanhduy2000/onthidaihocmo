@@ -54,8 +54,9 @@ npm run dev
 Mở http://localhost:3000. Lệnh này chạy Express (`server.ts`) vừa phục vụ giao diện qua Vite
 vừa gắn các API AI, nên **AI hoạt động đầy đủ ở máy cục bộ**.
 
-Cảnh báo: `.claude/launch.json` cấu hình `vite --port 5199` chỉ phục vụ giao diện, **không có `/api`**.
-Nếu chỉ chạy Vite thì mọi lời gọi AI sẽ hỏng, và đó là hỏng do cách chạy chứ không phải do mã nguồn.
+`.claude/launch.json` nay trỏ đúng vào lệnh này (cổng 3000). Trước 27/07/2026 nó cấu hình
+`vite --port 5199`, chỉ phục vụ giao diện và **không có `/api`**, nên ai chạy theo cấu hình đó
+sẽ thấy mọi lời gọi AI hỏng và tưởng lỗi nằm ở mã nguồn. Đã sửa, đừng đổi ngược lại.
 
 Ứng dụng **không có màn hình đăng nhập**. Mở lên là dùng được ngay, dữ liệu nằm trong localStorage.
 
@@ -172,21 +173,42 @@ Không bao giờ gọi `Math.random()` bên trong hàm so sánh của `sort`. H�
 không tái lập được. Muốn có biến thiên thì rút nhiễu MỘT lần cho mỗi phần tử (xem `jitter01`
 và `adaptiveSeed` trong `ai.ts`), rồi sắp xếp bằng hàm thuần túy có mốc phân giải hòa theo id.
 
-### 4.8. Cổng AI phía máy chủ phải đọc dữ liệu từ `db.ts`, không nhập ngân hàng cố định
+### 4.8. Máy chủ KHÔNG giữ dữ liệu môn học, tầng suy luận chạy ở trình duyệt
 
-`functions-src/ai/explain.ts` tra câu hỏi bằng `questionMap` của `src/services/db.ts`, đúng
-nguồn mà `EvidenceBasedPipeline` đọc ở bước sau, và lấy mã môn bằng
-`dbService.getActiveSubjectId()`.
+Đây là bất biến quan trọng nhất cho định hướng đa môn. Hai lần sửa trong ngày 27/07/2026 mới
+đi tới nó.
 
-Trước 27/07/2026 nó nhập thẳng `src/data/questions`, tức ngân hàng của môn **đã đóng**. Hậu quả
-đo được: môn đang học có id từ **2001 đến 3279**, ngân hàng cũ có id **1 đến 60**, hai dải
-**không giao nhau một id nào**. Nghĩa là chức năng "Nhờ gia sư AI phân tích sâu" trả 404 với
-**mọi** câu hỏi thật, còn giao diện thì nuốt lỗi và hiện lời giải ngoại tuyến, nên nhìn ngoài
-tưởng AI đang chạy.
+**Lần một** phát hiện `functions-src/ai/explain.ts` nhập thẳng `src/data/questions`, tức ngân
+hàng của môn **đã đóng**. Đo được: môn đang học có id **2001 đến 3279**, ngân hàng cũ có id
+**1 đến 60**, hai dải **không giao nhau một id nào**, nên "Nhờ gia sư AI phân tích sâu" trả 404
+với **mọi** câu hỏi thật.
 
-Bài học rộng hơn: **một cổng phía máy chủ mà nhập cứng dữ liệu một môn là hỏng ngay khi đổi
-môn.** Dự án sẽ còn thêm nhiều môn (xem mục 3), nên mọi cổng mới phải lấy dữ liệu qua `db.ts`.
-Nhóm kiểm **H** trong `scripts/selftest/harness.ts` canh bất biến này.
+**Lần hai** nhận ra vá như vậy vẫn chưa đủ: môn do người dùng tự tạo trong ứng dụng lưu câu hỏi
+ở `localStorage` (`poly_econ_custom_questions_<id>`), máy chủ **không bao giờ** thấy được. Nên
+cổng `explain` đã bị **xóa hẳn**. Kiến trúc hiện tại:
+
+| Chạy ở đâu | Làm gì |
+|---|---|
+| Trình duyệt | Chạy trọn `EvidenceBasedPipeline`, nơi duy nhất biết môn nào đang mở |
+| Máy chủ | Chỉ còn `/api/ai/complete`, nhận lời nhắc rồi chuyển tiếp cho Gemini |
+
+`Gemini36FlashProvider.execute` ([aiProvider.ts](src/services/aiProvider.ts)) tự phân biệt môi
+trường: ở Node thì đọc `process.env.GEMINI_API_KEY` gọi thẳng Gemini, ở trình duyệt thì gọi
+`/api/ai/complete`. **Phép đọc `process.env` phải nằm hẳn trong nhánh Node**, để ngoài là ném
+`ReferenceError: process is not defined` ngay khi mở trang.
+
+Ba điều cấm:
+
+1. **Đừng nhập dữ liệu môn học vào bất kỳ hàm serverless nào.** Nhóm kiểm **H** quét toàn bộ
+   `functions-src/` và bắt được vi phạm, đã thử phá để xác nhận.
+2. **Đừng dựng lại cổng tra câu hỏi theo id trên máy chủ.** Đó chính là kiến trúc vừa gỡ bỏ.
+3. **Đừng cho giao diện gửi chỉ dẫn hệ thống lên.** `complete.ts` tự ghép
+   `AUTHORITATIVE_KNOWLEDGE_SYSTEM_INSTRUCTION`, đây là rào an toàn nội dung duy nhất còn lại
+   sau khi lời nhắc chuyển sang do giao diện dựng.
+
+Cạm bẫy đã ghi nhận: tham số `aiEngineExecutor` của `executePipeline` là **mã chết**, pipeline
+không hề gọi nó mà gọi thẳng `aiProviderRegistry` ở bước 9. Đừng tin vào tên tham số, hãy dò
+đường đi thật.
 
 ### 4.9. Khóa câu đã trả lời ở chế độ gia sư
 

@@ -25,7 +25,7 @@ const NODE_RUNTIME = "nodejs22.x";
 const routes = [
   { src: "functions-src/health.ts", route: "api/health" },
   { src: "functions-src/ai/generate.ts", route: "api/ai/generate" },
-  { src: "functions-src/ai/explain.ts", route: "api/ai/explain" },
+  { src: "functions-src/ai/complete.ts", route: "api/ai/complete" },
   { src: "functions-src/ai/chat.ts", route: "api/ai/chat" },
   { src: "functions-src/ai/recommend.ts", route: "api/ai/recommend" },
 ];

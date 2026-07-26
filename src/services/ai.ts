@@ -13,6 +13,7 @@ import { examReviewEngine } from "./examReviewEngine";
 import { workspaceService } from "./workspaceService";
 import { AIRecommendation, ExamAttempt, Question, DifficultyLevel } from "../types";
 import { ensureSession, supabase } from "./supabaseClient";
+import { EvidenceBasedPipeline } from "./evidencePipeline";
 
 /**
  * Header cho lời gọi API: JSON + token Supabase để máy chủ xác thực.
@@ -31,6 +32,62 @@ async function apiHeaders(): Promise<Record<string, string>> {
   } catch {
     return base;
   }
+}
+
+/**
+ * Gửi một lời nhắc đã dựng sẵn lên Gemini qua cổng chuyển tiếp `/api/ai/complete`.
+ *
+ * Vì sao tầng suy luận chạy ở trình duyệt chứ không ở máy chủ: nó cần ngân hàng câu hỏi, đồ thị
+ * khái niệm và lịch sử học của môn ĐANG mở. Với môn người dùng tự tạo trong ứng dụng, những thứ
+ * đó chỉ nằm trong localStorage của trình duyệt, máy chủ chưa từng thấy. Trước đây máy chủ tự đi
+ * tra câu hỏi theo id nên môn tự tạo luôn nhận 404 và âm thầm rơi về lời giải ngoại tuyến.
+ * Chạy ở trình duyệt thì mọi môn đều đúng, không phải deploy lại khi thêm môn.
+ */
+async function callGemini(prompt: string, taskType: string, subjectName: string): Promise<string> {
+  const response = await fetch("/api/ai/complete", {
+    method: "POST",
+    headers: await apiHeaders(),
+    body: JSON.stringify({ prompt, taskType, subjectName }),
+  });
+  if (!response.ok) {
+    throw new Error(`Cổng AI trả về ${response.status}`);
+  }
+  const data = await response.json();
+  // Máy chủ trả chuỗi rỗng khi Gemini không dùng được; ném lỗi để nơi gọi rơi về bản dự phòng
+  // ngoại tuyến của mình, vốn đầy đủ hơn (có lời giải sẵn trong dữ liệu môn học).
+  if (!data.text || data.offlineMode) {
+    throw new Error("Cổng AI đang ở chế độ ngoại tuyến");
+  }
+  return data.text as string;
+}
+
+/** Bản dự phòng ngoại tuyến: đọc thẳng lời giải có sẵn trong dữ liệu môn học. */
+function offlineExplanation(questionId: number): string {
+  const q = questionMap.get(questionId);
+  if (!q) return "Không tìm thấy câu hỏi.";
+  return `*(Chế độ ngoại tuyến)*\n\n**Đáp án đúng**: **${q.correctAnswer.toUpperCase()}** - ${q.options[q.correctAnswer]}\n\n### Giải thích chi tiết:\n${q.explanation}\n\n### Ánh xạ kiến thức:\n- **Chương**: ${q.chapterId}\n- **Chủ đề**: ${q.topicId} (${topicMap.get(q.topicId)?.title || q.topicId})\n- **Nguồn tài liệu**: *${q.sourcePdf}* (Trang ${q.sourcePage})\n- **Từ khóa**: ${q.knowledgeMapping.join(", ")}`;
+}
+
+/** Chạy tầng suy luận có dẫn chứng ngay tại trình duyệt cho câu hỏi đang xét. */
+async function runPipeline(questionId: number, selectedAnswer?: string, explanationLevel?: string) {
+  const subjectId = dbService.getActiveSubjectId();
+  const subjectName = dbService.getActiveSubjectName();
+  return EvidenceBasedPipeline.executePipeline({
+    subjectId,
+    subjectName,
+    questionId,
+    selectedAnswer,
+    explanationLevel: explanationLevel || "academic",
+    // CẢNH BÁO cho người sau: `executePipeline` KHÔNG hề gọi tham số này. Nó gọi thẳng
+    // `aiProviderRegistry` ở bước 9. Tham số này là mã chết còn sót lại, đã kiểm chứng bằng
+    // cách dò toàn bộ evidencePipeline.ts. Vẫn truyền một hàm chạy đúng để nếu sau này có ai
+    // đấu nối lại thì nó hoạt động, chứ không nổ.
+    // Đường đi thật của lời gọi AI nằm ở `Gemini36FlashProvider.execute`, nơi tự phân biệt
+    // đang chạy trên máy chủ hay trên trình duyệt.
+    aiEngineExecutor: async (_sysInstruction: string, prompt: string) =>
+      callGemini(prompt, "AcademicExplanation", subjectName),
+    fallbackFunction: () => offlineExplanation(questionId),
+  });
 }
 
 // ===== Hỗ trợ sinh câu hỏi hàng loạt từ tài liệu dài =====
@@ -317,39 +374,11 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
    */
   async getAIExplanation(questionId: number, selectedAnswer?: string, explanationLevel?: string): Promise<string> {
     try {
-      const activeSubjectId = dbService.getActiveSubjectId();
-      const activeSubjectName = dbService.getActiveSubjectName();
-      const q = questionMap.get(questionId);
-      
-      let learnerProfile: any = null;
-      if (q) {
-        const conceptNode = kbService.getConceptForQuestion(activeSubjectId, q);
-        if (conceptNode) {
-          learnerProfile = learnerModelService.getOrCreateProfile(conceptNode.concept);
-        }
-      }
-
-      const response = await fetch("/api/ai/explain", {
-        method: "POST",
-        headers: await apiHeaders(),
-        body: JSON.stringify({ 
-          questionId, 
-          selectedAnswer, 
-          explanationLevel: explanationLevel || "academic", 
-          learnerProfile,
-          subjectName: activeSubjectName
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("API request failed");
-      }
-      const data = await response.json();
-      return data.explanation;
+      const result = await runPipeline(questionId, selectedAnswer, explanationLevel);
+      return result.text;
     } catch (error) {
-      console.warn("Gemini explainer unavailable, generating local explanation:", error);
-      const q = questionMap.get(questionId);
-      if (!q) return "Không tìm thấy câu hỏi.";
-      return `*(Chế độ ngoại tuyến)*\n\n**Đáp án đúng**: **${q.correctAnswer.toUpperCase()}** - ${q.options[q.correctAnswer]}\n\n### Giải thích chi tiết:\n${q.explanation}\n\n### Ánh xạ kiến thức:\n- **Chương**: ${q.chapterId}\n- **Chủ đề**: ${q.topicId} (${topicMap.get(q.topicId)?.title || q.topicId})\n- **Nguồn tài liệu**: *${q.sourcePdf}* (Trang ${q.sourcePage})\n- **Từ khóa**: ${q.knowledgeMapping.join(", ")}`;
+      console.warn("Tầng suy luận không chạy được, dùng lời giải cục bộ:", error);
+      return offlineExplanation(questionId);
     }
   },
 
@@ -365,50 +394,19 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     validationReport: any;
   }> {
     try {
-      const activeSubjectId = dbService.getActiveSubjectId();
-      const activeSubjectName = dbService.getActiveSubjectName();
-      const q = questionMap.get(questionId);
-      
-      let learnerProfile: any = null;
-      if (q) {
-        const conceptNode = kbService.getConceptForQuestion(activeSubjectId, q);
-        if (conceptNode) {
-          learnerProfile = learnerModelService.getOrCreateProfile(conceptNode.concept);
-        }
-      }
-
-      const response = await fetch("/api/ai/explain", {
-        method: "POST",
-        headers: await apiHeaders(),
-        body: JSON.stringify({ 
-          questionId, 
-          selectedAnswer, 
-          explanationLevel: explanationLevel || "academic", 
-          learnerProfile,
-          subjectName: activeSubjectName
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("API request failed");
-      }
-      const data = await response.json();
+      const result = await runPipeline(questionId, selectedAnswer, explanationLevel);
       return {
-        explanation: data.explanation,
-        strategyUsed: data.strategyUsed || "Academic Lecture",
-        guessingProbability: data.guessingProbability || 0,
-        unmasteredPrerequisites: data.unmasteredPrerequisites || [],
-        crossSubjectIntel: data.crossSubjectIntel || null,
-        validationReport: data.validationReport || { isValid: true, score: 100, failedChecks: [] }
+        explanation: result.text,
+        strategyUsed: result.strategyUsed || "Academic Lecture",
+        guessingProbability: result.guessingProbability || 0,
+        unmasteredPrerequisites: result.unmasteredPrerequisites || [],
+        crossSubjectIntel: result.crossSubjectIntel || null,
+        validationReport: result.validationReport || { isValid: true, score: 100, failedChecks: [] }
       };
     } catch (error) {
-      console.warn("Gemini explainer pipeline unavailable, generating local explanation:", error);
-      const q = questionMap.get(questionId);
-      const fallbackText = q 
-        ? `*(Chế độ ngoại tuyến)*\n\n**Đáp án đúng**: **${q.correctAnswer.toUpperCase()}** - ${q.options[q.correctAnswer]}\n\n### Giải thích chi tiết:\n${q.explanation}\n\n### Ánh xạ kiến thức:\n- **Chương**: ${q.chapterId}\n- **Chủ đề**: ${q.topicId} (${topicMap.get(q.topicId)?.title || q.topicId})\n- **Nguồn tài liệu**: *${q.sourcePdf}* (Trang ${q.sourcePage})\n- **Từ khóa**: ${q.knowledgeMapping.join(", ")}`
-        : "Không tìm thấy câu hỏi.";
-
+      console.warn("Tầng suy luận không chạy được, dùng lời giải cục bộ:", error);
       return {
-        explanation: fallbackText,
+        explanation: offlineExplanation(questionId),
         strategyUsed: "Offline Local Fallback",
         guessingProbability: 0,
         unmasteredPrerequisites: [],
@@ -445,11 +443,15 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
    */
   async askTutorQuestion(message: string): Promise<string> {
     try {
-      const activeSubjectName = dbService.getActiveSubjectName();
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: await apiHeaders(),
-        body: JSON.stringify({ message, subjectName: activeSubjectName }),
+        body: JSON.stringify({
+          message,
+          // Gửi kèm mã môn để máy chủ khỏi phải đoán từ tên môn, vốn đoán sai với mọi môn tự tạo.
+          subjectId: dbService.getActiveSubjectId(),
+          subjectName: dbService.getActiveSubjectName(),
+        }),
       });
       if (!response.ok) throw new Error("API request failed");
       const data = await response.json();

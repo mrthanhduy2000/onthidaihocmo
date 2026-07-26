@@ -69,8 +69,10 @@ if (!healthOk) bad = true;
 
 console.log("\nTrạng thái các cổng AI (gọi KHÔNG kèm token đăng nhập):");
 const aiRoutes = [
-  ["/api/ai/generate", { prompt: "kiem tra" }],
-  ["/api/ai/explain", { questionId: 1, selectedAnswer: "a" }],
+  // Tải trọng cố tình tối thiểu: mục đích ở đây là đo CỬA XÁC THỰC, không phải đo chất lượng
+  // nội dung. Mã 400 từ cổng generate khi thiếu trường `text` vẫn là "đã qua cửa".
+  ["/api/ai/generate", { text: "Noi dung kiem tra." , count: 2 }],
+  ["/api/ai/complete", { prompt: "Tra loi ngan gon: 1 cong 1 bang may?" }],
   ["/api/ai/chat", { message: "kiem tra" }],
   ["/api/ai/recommend", { stats: {} }],
 ];

@@ -11,6 +11,7 @@ import { outputValidationService, QualityScoreReport } from "./outputValidationS
 import { offlineFallbackEngine } from "./offlineFallbackEngine";
 import { telemetryService } from "./telemetryService";
 import { PROMPT_VERSION_36 } from "./promptBuilder36";
+import { ensureSession } from "./supabaseClient";
 
 export interface AIExecutionOptions {
   taskType?: TaskType;
@@ -133,50 +134,72 @@ export class Gemini36FlashProvider implements AIProvider {
       };
     }
 
-    // 2. Rate Limit or Missing Key Check -> Offline Fallback
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (isRateLimited(clientId) || !apiKey) {
-      return this.executeOfflineFallback(options, startTime, modelUsed, promptVer, "RateLimit/NoKey");
+    // 2. Rate Limit -> Offline Fallback
+    if (isRateLimited(clientId)) {
+      return this.executeOfflineFallback(options, startTime, modelUsed, promptVer, "RateLimit");
     }
 
-    // 3. API Execution with Exponential Backoff Retries
-    let attempt = 0;
-    const maxRetries = 3;
-    let delay = 1000;
+    // 3. API Execution.
+    //
+    // Cùng một tầng suy luận chạy ở HAI nơi, và mỗi nơi nói chuyện với Gemini một kiểu:
+    //   - Trên máy chủ (serverless, Node): gọi thẳng Gemini bằng khóa trong biến môi trường.
+    //   - Trên trình duyệt: KHÔNG có khóa và cũng không được có, nên đi vòng qua cổng chuyển
+    //     tiếp `/api/ai/complete`.
+    //
+    // Vì sao tầng suy luận lại chạy ở trình duyệt: môn do người dùng tự tạo có dữ liệu nằm
+    // trong localStorage, máy chủ chưa từng thấy. Chạy ở trình duyệt là cách duy nhất để mọi
+    // môn đều dùng được AI mà không phải deploy lại.
+    //
+    // Lưu ý: `process` KHÔNG tồn tại trong trình duyệt, nên phép đọc biến môi trường phải nằm
+    // hẳn trong nhánh máy chủ. Đặt ở ngoài là ném ReferenceError ngay khi mở trang.
+    const chayTrenTrinhDuyet = typeof window !== "undefined";
     let rawText = "";
+    let attempt = 0;
 
-    while (attempt < maxRetries) {
-      try {
-        const ai = new GoogleGenAI({ apiKey });
-        const config: any = {
-          temperature,
-        };
-        if (options.systemInstruction) {
-          config.systemInstruction = options.systemInstruction;
-        }
-        if (options.responseMimeType) {
-          config.responseMimeType = options.responseMimeType;
-        }
-        if (options.responseSchema) {
-          config.responseSchema = options.responseSchema;
-        }
+    if (chayTrenTrinhDuyet) {
+      rawText = await this.goiQuaCongChuyenTiep(options, temperature, taskType);
+    } else {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return this.executeOfflineFallback(options, startTime, modelUsed, promptVer, "NoKey");
+      }
 
-        const response = await ai.models.generateContent({
-          model: modelUsed,
-          contents: options.prompt,
-          config
-        });
+      const maxRetries = 3;
+      let delay = 1000;
 
-        rawText = response.text || "";
-        if (rawText) {
-          break;
-        }
-        throw new Error("Empty response returned from Gemini 3.6 Flash.");
-      } catch (err) {
-        attempt++;
-        if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2;
+      while (attempt < maxRetries) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const config: any = {
+            temperature,
+          };
+          if (options.systemInstruction) {
+            config.systemInstruction = options.systemInstruction;
+          }
+          if (options.responseMimeType) {
+            config.responseMimeType = options.responseMimeType;
+          }
+          if (options.responseSchema) {
+            config.responseSchema = options.responseSchema;
+          }
+
+          const response = await ai.models.generateContent({
+            model: modelUsed,
+            contents: options.prompt,
+            config
+          });
+
+          rawText = response.text || "";
+          if (rawText) {
+            break;
+          }
+          throw new Error("Empty response returned from Gemini 3.6 Flash.");
+        } catch (err) {
+          attempt++;
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+          }
         }
       }
     }
@@ -248,6 +271,44 @@ export class Gemini36FlashProvider implements AIProvider {
       retryCount: attempt,
       qualityReport
     };
+  }
+
+  /**
+   * Đường đi của trình duyệt: nhờ máy chủ nói chuyện với Gemini hộ, vì khóa API không được phép
+   * có mặt trong giao diện.
+   *
+   * Trả về chuỗi rỗng khi không gọi được. Nơi gọi sẽ tự rơi về bản dự phòng ngoại tuyến, giống
+   * hệt như khi máy chủ không có khóa.
+   */
+  private async goiQuaCongChuyenTiep(
+    options: AIExecutionOptions,
+    temperature: number,
+    taskType: TaskType
+  ): Promise<string> {
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const session = await ensureSession();
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch("/api/ai/complete", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          prompt: options.prompt,
+          taskType,
+          temperature,
+          responseMimeType: options.responseMimeType,
+          responseSchema: options.responseSchema,
+        }),
+      });
+      if (!res.ok) return "";
+      const data = await res.json();
+      return typeof data?.text === "string" ? data.text : "";
+    } catch {
+      return "";
+    }
   }
 
   private executeOfflineFallback(
