@@ -15,7 +15,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
   };
 }
 
-import { dbService, setConceptMasteryBothKeys } from "./db";
+import { dbService, setConceptMasteryBothKeys, questionMap } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
 import { TimeService } from "./time";
 
@@ -311,7 +311,105 @@ export const studentModelService = {
   }
 };
 
+/** Kết quả đo hiệu chuẩn nhận thức, tức mức khớp giữa "tự thấy chắc" và "làm đúng thật". */
+export interface HieuChuanNhanThuc {
+  /** Đủ dữ liệu để kết luận hay chưa. Chưa đủ thì mọi con số bên dưới KHÔNG được dùng. */
+  duDuLieu: boolean;
+  /** Số câu đã xét, chỉ tính lượt đã nộp. */
+  soCauXet: number;
+  /** Số câu người học có gắn cờ nghi vấn. */
+  soCauGanCo: number;
+  /** Bốn ô bắt chéo giữa "có gắn cờ" và "làm đúng". */
+  o: {
+    coCoLamDung: number;
+    coCoLamSai: number;
+    khongCoLamSai: number;
+    khongCoLamDung: number;
+  };
+  /** Tỷ lệ ô thừa tự tin (không gắn cờ mà làm sai) trên tổng số câu xét, thang 0 đến 1. */
+  tyLeThuaTuTin: number;
+  /** Trọng số bằng chứng w = 1 - e^(-n/k), thang 0 đến 1. */
+  trongSoBangChung: number;
+  /** Tỷ lệ thừa tự tin đã co về 0 theo lượng bằng chứng. Đây là con số dùng được. */
+  thuaTuTinDaCo: number;
+  giaiTrinh: string;
+}
+
+/**
+ * Mốc bằng chứng cho phép co. Dùng CÙNG hằng số 6 với `db.recomputeStatistics` (dòng 750,
+ * `w = 1 - e^(-answered/6)`) để cả dự án chỉ có đúng một cách co theo lượng bằng chứng.
+ * Đừng phát minh mốc mới.
+ */
+const MOC_BANG_CHUNG_CO = 6;
+
+/** Số câu tối thiểu mới dám kết luận. Dưới mức này thì trả về "chưa đủ dữ liệu". */
+const TOI_THIEU_CAU_XET = 20;
+/** Số câu gắn cờ tối thiểu. Không có cờ nào thì không thể nói gì về hiệu chuẩn. */
+const TOI_THIEU_CAU_GAN_CO = 5;
+
 export const learnerModelService = {
+  /**
+   * Đo hiệu chuẩn nhận thức từ cờ nghi vấn mà chính người học tự bật trên từng câu.
+   *
+   * Vì sao đáng làm: `PracticeView` cho người học gắn cờ "không chắc" và `saveAttempt` lưu cờ đó
+   * vào từng lượt làm bài, nhưng **không một service suy luận nào đọc `attempt.flags`**. Đây là
+   * tín hiệu người học TỰ KHAI về mức chắc chắn, thứ đắt nhất trong đo lường giáo dục, vì bắt
+   * chéo nó với đúng sai cho ra bốn ô có ý nghĩa rất khác nhau:
+   *
+   *   - gắn cờ mà làm ĐÚNG   : thiếu tự tin, biết mà không tin mình biết.
+   *   - gắn cờ và làm SAI    : lỗ hổng đã tự nhận ra, dễ chữa nhất.
+   *   - KHÔNG cờ mà làm SAI  : **thừa tự tin**, ô nguy hiểm nhất, vì người học không biết là
+   *                            mình không biết nên sẽ không bao giờ tự ôn lại phần đó.
+   *   - KHÔNG cờ và làm ĐÚNG : đã vững thật.
+   *
+   * Chỉ đếm lượt đã nộp (`isSubmitted`), vì phiên bỏ giữa chừng không phản ánh ý định thật.
+   *
+   * Thiếu dữ liệu thì trả `duDuLieu: false` chứ không trả một con số cho đẹp, đúng bất biến 4.9.
+   */
+  doHieuChuanNhanThuc(): HieuChuanNhanThuc {
+    const lichSu = dbService.getHistory().filter(a => a.isSubmitted);
+
+    let coCoLamDung = 0, coCoLamSai = 0, khongCoLamSai = 0, khongCoLamDung = 0;
+    let soCauGanCo = 0;
+
+    for (const luot of lichSu) {
+      const co = new Set(luot.flags || []);
+      for (const id of luot.questions || []) {
+        const q = questionMap.get(id);
+        if (!q) continue;
+        const dung = luot.answers?.[id] === q.correctAnswer;
+        if (co.has(id)) {
+          soCauGanCo++;
+          if (dung) coCoLamDung++; else coCoLamSai++;
+        } else {
+          if (dung) khongCoLamDung++; else khongCoLamSai++;
+        }
+      }
+    }
+
+    const soCauXet = coCoLamDung + coCoLamSai + khongCoLamSai + khongCoLamDung;
+    const duDuLieu = soCauXet >= TOI_THIEU_CAU_XET && soCauGanCo >= TOI_THIEU_CAU_GAN_CO;
+
+    const tyLeThuaTuTin = soCauXet > 0 ? khongCoLamSai / soCauXet : 0;
+    const trongSoBangChung = 1 - Math.exp(-soCauXet / MOC_BANG_CHUNG_CO);
+    const thuaTuTinDaCo = duDuLieu ? tyLeThuaTuTin * trongSoBangChung : 0;
+
+    const giaiTrinh = duDuLieu
+      ? `Xét ${soCauXet} câu đã nộp, ${soCauGanCo} câu được gắn cờ nghi vấn. Thừa tự tin ${(tyLeThuaTuTin * 100).toFixed(1)}%, sau khi co theo lượng bằng chứng (w = ${trongSoBangChung.toFixed(3)}) còn ${(thuaTuTinDaCo * 100).toFixed(1)}%.`
+      : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_CAU_XET} câu đã nộp và ${TOI_THIEU_CAU_GAN_CO} câu gắn cờ, hiện có ${soCauXet} câu và ${soCauGanCo} cờ.`;
+
+    return {
+      duDuLieu,
+      soCauXet,
+      soCauGanCo,
+      o: { coCoLamDung, coCoLamSai, khongCoLamSai, khongCoLamDung },
+      tyLeThuaTuTin,
+      trongSoBangChung,
+      thuaTuTinDaCo,
+      giaiTrinh,
+    };
+  },
+
   /**
    * Retrieves the detailed concept profiles for the active subject.
    */

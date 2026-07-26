@@ -5,6 +5,7 @@
 
 import { dbService, questions, chapters, topics } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
+import { learnerModelService } from "./learnerModel";
 import { 
   SubjectGoal, 
   ExamPrediction, 
@@ -596,7 +597,25 @@ export const examForecaster = {
     const retentionUncertainty = Math.min(1.0, Math.max(0, (14 - streak) / 14));
     const coverageUncertainty = Math.min(1.0, Math.max(0, (100 - chapterCoverage) / 100));
     const timeUncertainty = Math.min(1.0, remainingDays <= 3 && (finalPredictedScore / goal.targetScore) < 0.8 ? 0.85 : remainingDays <= 7 ? 0.45 : 0.15);
-    const behaviorUncertainty = totalSolved < 20 ? 0.7 : totalSolved < 50 ? 0.35 : 0.1;
+    // Bất định về HÀNH VI học tập.
+    //
+    // Phần nền: càng ít câu đã làm thì càng khó tin vào dự báo. Bản cũ dùng bậc thang
+    // 0,7 / 0,35 / 0,1 theo `totalSolved`, tức nhảy đột ngột ở mốc 20 và 50 câu. Thay bằng hàm
+    // liên tục dùng đúng công thức co theo lượng bằng chứng của dự án: nhiều bằng chứng thì nền
+    // bất định tiến về 0,1.
+    const wSoCau = 1 - Math.exp(-totalSolved / 25);
+    const netBatDinhNen = 0.7 - 0.6 * wSoCau;
+
+    // Phần hành vi thật: đọc cờ nghi vấn người học tự bật để đo hiệu chuẩn nhận thức. Ô "không
+    // gắn cờ mà làm sai" là thừa tự tin, thứ khiến người học không tự ôn lại phần mình hổng, nên
+    // nó làm dự báo đáng ngờ hơn. Trước 27/07/2026 KHÔNG service nào đọc `attempt.flags`, nên
+    // vector này chỉ là hàm của số câu đã làm, không nói gì về hành vi.
+    //
+    // Chưa đủ dữ liệu thì `thuaTuTinDaCo` bằng 0 và vector rơi về đúng phần nền, không bịa thêm.
+    // Việc co theo lượng bằng chứng đã làm MỘT LẦN trong `doHieuChuanNhanThuc`, ở đây không co
+    // lại lần nữa (bài học "cân theo lượng bằng chứng chỉ được làm đúng một lần tại nguồn").
+    const hieuChuan = learnerModelService.doHieuChuanNhanThuc();
+    const behaviorUncertainty = Math.min(1.0, Math.max(0, netBatDinhNen + hieuChuan.thuaTuTinDaCo * 0.4));
     const dependencyUncertainty = Math.min(1.0, avgDependencyDecay * 2);
     const bloomUncertainty = overallAccuracy < 0.65 ? 0.5 : 0.15;
 

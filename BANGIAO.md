@@ -59,6 +59,70 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Đọc cờ nghi vấn để đo hiệu chuẩn nhận thức
+
+**Objective**: mạch thứ hai. `PracticeView` cho người học gắn cờ "không chắc" trên từng câu và
+`saveAttempt` lưu cờ đó, nhưng **không service suy luận nào đọc `attempt.flags`**. Đã dò lại:
+số nơi đọc là 0, chỉ có `db.ts` đọc `stats.flags` cho việc bật tắt nút.
+
+**Đo trước khi viết code**:
+
+| Hạng mục | Số đo |
+|---|---|
+| `saveAttempt` giữ được `flags` qua vòng ghi rồi đọc | **Có**, 20/80 câu |
+| Hồ sơ trắng | 0 lượt, 0 cờ |
+| Phân hóa chỉ số giữa hai hồ sơ | thừa tự tin 10,0% với hồ sơ đúng 90%, **55,0%** với hồ sơ đúng 30% |
+
+**Điều phải nói rõ, không được che**: bản dò chạy trong Node nên chỉ thấy hồ sơ trắng, và dữ
+liệu học thật của Đàm nằm trong trình duyệt của chính Đàm, không nằm trong repo cũng không nằm
+trong trình duyệt của phiên làm việc này. Nên **tôi không đo được Đàm dùng nút cờ nhiều hay ít**.
+Vì vậy tầng này được thiết kế theo hướng dữ liệu thưa: dưới 20 câu đã nộp hoặc dưới 5 câu gắn cờ
+thì trả thẳng `duDuLieu: false` và không đóng góp gì vào dự báo.
+
+**Đã làm**:
+
+- `learnerModelService.doHieuChuanNhanThuc()`: bắt chéo cờ với đúng sai thành bốn ô. Ô đáng quan
+  tâm nhất là **không gắn cờ mà làm sai**, tức thừa tự tin, vì người học không biết là mình
+  không biết nên sẽ không tự ôn lại phần đó. Chỉ đếm lượt `isSubmitted`.
+- Co theo lượng bằng chứng bằng **đúng công thức của dự án** `w = 1 - e^(-n/6)`, cùng hằng số 6
+  với `db.recomputeStatistics` dòng 750. Không phát minh mốc mới.
+- Nối vào `behaviorUncertainty` trong LAYER 10 của `examForecaster`. Vector này trước đây là bậc
+  thang **chỉ theo `totalSolved`** (0,7 / 0,35 / 0,1), tức mang tên "hành vi" mà không đọc một
+  tín hiệu hành vi nào. Nay gồm phần nền liên tục theo lượng bằng chứng cộng phần hiệu chuẩn.
+- Việc co chỉ làm MỘT LẦN, tại `doHieuChuanNhanThuc`. Bên `examForecaster` không co lại.
+
+**Đo được sau khi nối**: hai hồ sơ **cùng 80 câu và cùng tỷ lệ đúng**, chỉ khác chỗ đặt cờ, cho
+ra `behaviorUncertainty` **0,240** và **0,120**. Trước đây cả hai đều cho đúng một con số vì
+vector chỉ là hàm của số câu.
+
+**Hai phép kiểm cũ hóa ra mong manh, đã sửa luôn** (đây là phần đáng đọc nhất của mục này):
+
+1. **J5, nhãn ưu tiên sổ nợ.** Đỏ sau khi tôi sửa, nhưng chạy riêng thì vẫn ra ba nhãn. Đo ra
+   nguyên nhân: nhãn xét theo tỷ lệ đúng của CHƯƠNG với ngưỡng 0,5 và 0,7, mà hồ sơ mô phỏng
+   "đúng 55% đều tay" chỉ tình cờ có chương lọt ra ngoài dải. Thành phần đề lại phụ thuộc trạng
+   thái tích lũy của cả chuỗi nhóm kiểm trước, nên đổi bất cứ thứ gì ở nơi khác là dải co lại và
+   cả 45 mục về cùng một nhãn. Nay dựng thẳng hồ sơ đảm bảo phân hóa: chương đầu sai hết và sai
+   hai lần, chương cuối đúng gần hết. Phép kiểm vẫn đỏ nếu tầng gán nhãn hỏng.
+2. **Phép kiểm bất biến 4.1 tự biến mất.** Tổng số phép kiểm tụt từ 103 xuống 102 mà không ai
+   báo gì. Dò ra "Chấm theo bản đã trộn, không theo bản gốc" nằm trong `if` chỉ chạy khi câu ĐẦU
+   TIÊN của đề tình cờ bị trộn đổi đáp án. Có 14/292 câu cố ý giữ nguyên (bất biến 4.2), nên chỉ
+   cần thành phần đề đổi là phép kiểm im lặng không chạy. Nay dò cả ngân hàng tìm câu bị trộn,
+   nên luôn chạy, kèm một phép kiểm nữa canh việc dữ liệu có đủ để kiểm hay không.
+
+   **Bài học rộng hơn**: nên so danh sách TÊN phép kiểm trước và sau mỗi lượt sửa, không chỉ nhìn
+   số "đạt toàn bộ". Một phép kiểm ngừng chạy cũng nguy hiểm như một phép kiểm sai.
+
+**Nghiệm thu**: nhóm kiểm **O** thêm 6 phép, cộng 1 phép mới ở nhóm E, tổng lên **104**,
+`npm run check` đủ 6 chặng. Mở `npm run dev` xem màn Kế hoạch học, dự báo hiện `5.0 ± 0.5`,
+không lỗi trên bảng điều khiển.
+
+**Còn nợ**: bảy vector bất định **không được hiển thị ở bất kỳ màn hình nào**, đã dò cả
+`src/components`. Chúng chỉ chảy vào con số tổng rồi ra biên độ tin cậy. Nên nếu Đàm muốn thấy
+"vì sao dự báo không chắc", cần một chỗ hiển thị, hiện chưa có. Ngoài ra `dependencyUncertainty`
+vẫn luôn bằng 0 như chú thích đầu file đã ghi.
+
+---
+
 ### 27/07/2026 — Nối dữ liệu hiểu sai biên soạn tay vào lời nhắc gửi gia sư AI
 
 **Objective**: đổi hướng khỏi việc truy "con số bịa". Câu hỏi mới là **ứng dụng đang ghi dữ

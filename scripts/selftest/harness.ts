@@ -258,20 +258,33 @@ check("Thống kê ghi nhận đúng số câu đúng", after.totalCorrect === g
 check("Làm đúng thì không bị ghi vào danh sách câu sai", Object.keys(after.incorrectQuestionHistory || {}).length === 0, `còn ${Object.keys(after.incorrectQuestionHistory || {}).length} câu trong danh sách sai`);
 
 // Chấm điểm phải dựa trên questionMap (bản đã trộn), không phải mảng gốc.
-const firstId = graded.questions[0];
-const mapped = questionMap.get(firstId)!;
-const raw = questions.find(q => q.id === firstId)!;
-if (mapped.correctAnswer !== raw.correctAnswer) {
+//
+// Chọn câu để kiểm bằng cách DÒ TRONG TOÀN NGÂN HÀNG, không lấy câu đầu tiên của đề.
+//
+// Vì sao (đo ngày 27/07/2026): bản cũ lấy `graded.questions[0]` rồi chỉ kiểm khi câu đó tình cờ
+// bị trộn đổi đáp án. Có 14/292 câu cố ý giữ nguyên thứ tự (bất biến 4.2), nên chỉ cần thành
+// phần đề thay đổi là phép kiểm IM LẶNG không chạy, và tổng số phép kiểm tụt đi một mà không ai
+// để ý. Đúng loại "đạt rỗng" mà mục 7 trong AGENTS.md cảnh báo. Nay câu kiểm luôn tồn tại nên
+// phép kiểm luôn chạy.
+const cauBiTron = questions.find(q => {
+  const m = questionMap.get(q.id);
+  return m && m.correctAnswer !== q.correctAnswer;
+});
+check("Ngân hàng có câu bị trộn đổi đáp án để kiểm được việc chấm điểm",
+  !!cauBiTron,
+  cauBiTron ? `dùng câu #${cauBiTron.id}` : "không tìm ra câu nào bị trộn, phép kiểm dưới sẽ vô nghĩa");
+
+if (cauBiTron) {
+  const rawCau = cauBiTron;
   dbService.clearAllHistory();
   const wrongExam = aiService.generateExam({ type: "random", count: 5 });
-  wrongExam.questions = [firstId];
-  wrongExam.answers = { [firstId]: raw.correctAnswer };
+  wrongExam.questions = [rawCau.id];
+  wrongExam.answers = { [rawCau.id]: rawCau.correctAnswer };
   wrongExam.isSubmitted = true;
   dbService.saveAttempt(wrongExam);
   const st = dbService.getStatistics();
-  check("Chấm theo bản đã trộn, không theo bản gốc", st.totalCorrect === 0, `chọn theo đáp án bản gốc phải bị tính SAI, totalCorrect = ${st.totalCorrect}`);
-} else {
-  info("Bỏ qua phép kiểm chấm theo bản đã trộn: câu đầu tiên tình cờ có đáp án trùng bản gốc.");
+  check("Chấm theo bản đã trộn, không theo bản gốc", st.totalCorrect === 0,
+    `chọn theo đáp án bản gốc (${rawCau.correctAnswer}) của câu #${rawCau.id} phải bị tính SAI, totalCorrect = ${st.totalCorrect}`);
 }
 
 // ===========================================================================
@@ -902,7 +915,46 @@ check("Sổ tay rỗng thì mục chữa câu sai không hứa thêm điểm",
 // Bản cũ tính điểm ưu tiên rồi VỨT ĐI, trả về theo thứ tự khóa của bảng lịch sử. Nhãn thì cộng
 // sẵn `soCauLienQuan * 0,2` (thường khoảng 2,6) trước khi xét ngưỡng 3,0, nên đo được 44/45 mục
 // cùng mang nhãn "Cao".
-playAndForecast(0.55, 5);
+//
+// Dựng hồ sơ ĐẢM BẢO phân hóa, thay vì mô phỏng đúng 55% đều tay.
+//
+// Vì sao phải đổi (đo ngày 27/07/2026): nhãn nợ xét theo tỷ lệ đúng của CHƯƠNG chứa câu sai,
+// ngưỡng 0,5 và 0,7. Hồ sơ đúng 55% đều tay chỉ tình cờ cho ba nhãn, vì tỷ lệ từng chương dao
+// động quanh 55% và có chương lọt ra ngoài dải. Thành phần đề lại phụ thuộc trạng thái tích lũy
+// của cả chuỗi nhóm kiểm trước đó, nên chỉ cần một thay đổi ở nơi khác là dải này co lại và cả
+// 45 mục về cùng một nhãn. Phép kiểm khi đó báo đỏ mà mã nguồn không hề sai.
+//
+// Nay dựng thẳng: chương đầu sai HẾT và sai HAI LẦN (buộc phải ra "Cao"), chương cuối đúng gần
+// hết (buộc phải ra "Thấp"). Nếu tầng gán nhãn hỏng thì phép kiểm vẫn đỏ, còn thành phần đề
+// không còn ảnh hưởng.
+dbService.clearAllHistory();
+const chuongYeu = chapters[0].id;
+const chuongManh = chapters[chapters.length - 1].id;
+for (let lan = 0; lan < 2; lan++) {
+  const cauYeu = questions.filter(q => q.chapterId === chuongYeu).slice(0, 8);
+  const deYeu = aiService.generateExam({ type: "chapter", chapterId: chuongYeu, count: cauYeu.length });
+  deYeu.answers = {};
+  deYeu.questions.forEach(id => {
+    const q = questionMap.get(id);
+    if (q) deYeu.answers[id] = (["a", "b", "c", "d"] as const).find(k => k !== q.correctAnswer)!;
+  });
+  deYeu.isSubmitted = true;
+  deYeu.score = 0;
+  deYeu.id = `de_yeu_${lan}`;
+  dbService.saveAttempt(deYeu);
+}
+const deManh = aiService.generateExam({ type: "chapter", chapterId: chuongManh, count: 10 });
+deManh.answers = {};
+deManh.questions.forEach((id, i) => {
+  const q = questionMap.get(id);
+  if (!q) return;
+  deManh.answers[id] = i === 0 ? (["a", "b", "c", "d"] as const).find(k => k !== q.correctAnswer)! : q.correctAnswer;
+});
+deManh.isSubmitted = true;
+deManh.score = deManh.questions.length - 1;
+dbService.saveAttempt(deManh);
+examForecaster.calculatePrediction();
+
 const soNo = examForecaster.getStudyDebtItems();
 const demNhan = new Set(soNo.map(i => i.priority));
 check("Nhãn ưu tiên trong sổ nợ phân loại được", soNo.length < 5 || demNhan.size >= 2,
@@ -1149,6 +1201,78 @@ check("Nút tổng hợp có gắn cờ nhận dạng",
 loadSubject(monTruocN);
 
 info(`Cảnh báo bẫy: ${coCanhBao}/${questions.length} câu nhận nội dung biên soạn tay, ${canhBaoKhacNhau.size} nội dung khác nhau. Trước 27/07/2026 con số này là 0 vì trường misconception của câu hỏi rỗng toàn tập.`);
+
+// ===========================================================================
+g("O. Hiệu chuẩn nhận thức đọc từ cờ nghi vấn");
+// ===========================================================================
+// Bối cảnh: `PracticeView` cho người học gắn cờ "không chắc" trên từng câu, `saveAttempt` lưu cờ
+// đó vào lượt làm bài, nhưng trước 27/07/2026 **không service suy luận nào đọc `attempt.flags`**.
+
+/** Mô phỏng lượt làm bài có gắn cờ, tất định, không dùng Math.random. */
+function moPhongCoGanCo(soDe: number, tyLeDung: number, buocGanCo: number) {
+  dbService.clearAllHistory();
+  for (let e = 0; e < soDe; e++) {
+    const de = aiService.generateExam({ type: "random", count: 20 });
+    de.answers = {};
+    de.flags = [];
+    de.questions.forEach((id, i) => {
+      const q = questionMap.get(id);
+      if (!q) return;
+      const dung = (i / de.questions.length) < tyLeDung;
+      de.answers[id] = dung ? q.correctAnswer : (["a", "b", "c", "d"] as const).find(k => k !== q.correctAnswer)!;
+      if (buocGanCo > 0 && i % buocGanCo === 0) de.flags!.push(id);
+    });
+    de.isSubmitted = true;
+    de.score = de.questions.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+    dbService.saveAttempt(de);
+  }
+}
+
+// O1. Hồ sơ trắng phải nói thẳng là chưa đủ dữ liệu, không được trả một con số.
+dbService.clearAllHistory();
+const hcTrang = learnerModelService.doHieuChuanNhanThuc();
+check("Hồ sơ trắng: hiệu chuẩn tự nhận chưa đủ dữ liệu",
+  hcTrang.duDuLieu === false && hcTrang.thuaTuTinDaCo === 0,
+  `duDuLieu=${hcTrang.duDuLieu}, thuaTuTinDaCo=${hcTrang.thuaTuTinDaCo}, ${hcTrang.soCauXet} câu xét`);
+
+// O2. Có làm bài nhưng KHÔNG gắn cờ nào thì cũng chưa kết luận được về hiệu chuẩn.
+moPhongCoGanCo(3, 0.6, 0);
+const hcKhongCo = learnerModelService.doHieuChuanNhanThuc();
+check("Làm bài mà không gắn cờ nào: vẫn là chưa đủ dữ liệu",
+  hcKhongCo.duDuLieu === false && hcKhongCo.soCauXet >= 20,
+  `${hcKhongCo.soCauXet} câu xét nhưng chỉ ${hcKhongCo.soCauGanCo} cờ`);
+
+// O3. Bốn ô phải cộng đủ về tổng số câu xét, không rơi rụng câu nào.
+moPhongCoGanCo(4, 0.6, 4);
+const hc = learnerModelService.doHieuChuanNhanThuc();
+const tongO = hc.o.coCoLamDung + hc.o.coCoLamSai + hc.o.khongCoLamSai + hc.o.khongCoLamDung;
+check("Bốn ô hiệu chuẩn cộng đủ về tổng số câu xét",
+  tongO === hc.soCauXet && hc.soCauXet > 0,
+  `${hc.o.coCoLamDung} + ${hc.o.coCoLamSai} + ${hc.o.khongCoLamSai} + ${hc.o.khongCoLamDung} = ${tongO}, tổng xét ${hc.soCauXet}`);
+check("Đủ dữ liệu thì mới cho ra chỉ số",
+  hc.duDuLieu === true && hc.thuaTuTinDaCo > 0,
+  hc.giaiTrinh);
+
+// O4. Chỉ số phải PHÂN HÓA giữa hai hồ sơ khác nhau, nếu không nó là hằng số trá hình (mục 4.9b).
+moPhongCoGanCo(4, 0.9, 4);
+const hcGioi = learnerModelService.doHieuChuanNhanThuc().thuaTuTinDaCo;
+moPhongCoGanCo(4, 0.3, 4);
+const hcYeu = learnerModelService.doHieuChuanNhanThuc().thuaTuTinDaCo;
+check("Thừa tự tin phân hóa theo hồ sơ học",
+  hcYeu > hcGioi + 0.05,
+  `hồ sơ đúng 90% cho ${(hcGioi * 100).toFixed(1)}%, hồ sơ đúng 30% cho ${(hcYeu * 100).toFixed(1)}%`);
+
+// O5. Vector bất định hành vi phải THẬT SỰ đổi theo cờ, không chỉ đổi theo số câu đã làm.
+// Hai hồ sơ dưới đây có CÙNG tỷ lệ đúng và cùng số câu, chỉ khác chỗ đặt cờ.
+moPhongCoGanCo(4, 0.6, 4);
+const batDinhCoCo = examForecaster.calculatePrediction().uncertaintyDecomposition?.behaviorUncertainty ?? -1;
+moPhongCoGanCo(4, 0.6, 0);
+const batDinhKhongCo = examForecaster.calculatePrediction().uncertaintyDecomposition?.behaviorUncertainty ?? -1;
+check("Bất định hành vi phản ứng với cờ nghi vấn",
+  batDinhCoCo > batDinhKhongCo,
+  `cùng 80 câu và cùng tỷ lệ đúng: có cờ cho ${batDinhCoCo.toFixed(3)}, không cờ cho ${batDinhKhongCo.toFixed(3)}`);
+
+dbService.clearAllHistory();
 
 // ===========================================================================
 // Kết quả
