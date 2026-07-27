@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Search, 
+  LayoutDashboard,
   Play, 
   RotateCcw, 
   Target, 
@@ -70,6 +71,15 @@ export default function GlobalCommandPalette({
       title: "Mở sổ câu sai",
       icon: RotateCcw,
       action: () => { onNavigate("review"); onClose(); }
+    },
+    {
+      // Màn Tổng quan đã rút khỏi thanh điều hướng vì trùng vai trò với Bàn học, nên phải có
+      // đường vào ở đây. Rút khỏi thanh mà quên mở lối khác là làm mất hẳn một màn hình.
+      id: "cmd_home_overview",
+      category: "Tổng quan",
+      title: "Mở màn Tổng quan",
+      icon: LayoutDashboard,
+      action: () => { onNavigate("home"); onClose(); }
     },
     {
       id: "cmd_forecast",

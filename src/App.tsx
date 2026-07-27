@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  LayoutDashboard, Play, RotateCcw, BarChart3, Brain, 
-  Sun, Moon, Monitor, GraduationCap, Flame, Award, Target,
-  FolderKanban, Command, Settings as SettingsIcon, Search
+import {
+  Play, RotateCcw, BarChart3, Brain,
+  GraduationCap, Flame, Award, Target,
+  FolderKanban, Command, Settings as SettingsIcon
 } from "lucide-react";
 import Dashboard from "./components/Dashboard";
 import PracticeCenterView from "./components/PracticeCenterView";
@@ -25,22 +25,40 @@ import QuickActionFAB from "./components/QuickActionFAB";
 import ProductSettingsModal from "./components/ProductSettingsModal";
 import { dbService } from "./services/db";
 import { workspaceService } from "./services/workspaceService";
-import { useTheme } from "./context/ThemeContext";
 import { ExamAttempt, UserSettings } from "./types";
 import { aiService } from "./services/ai";
+
+/**
+ * Các điểm đến chính, khai báo MỘT LẦN rồi dùng cho cả thanh trên máy tính lẫn thanh dưới trên
+ * điện thoại.
+ *
+ * Vì sao phải gộp: trước 28/07/2026 hai thanh được viết tay riêng biệt và đã trôi ra khác nhau,
+ * đo được trên bản chạy thật: máy tính có 7 mục, điện thoại có 6 mục, khác cả thứ tự lẫn nhãn
+ * ("Câu sai" bên này thành "Sổ câu sai" bên kia). Người học đổi thiết bị là phải học lại đường
+ * đi, còn ứng dụng thì tự mâu thuẫn với chính nó.
+ *
+ * Mục "Tổng quan" đã rút khỏi thanh vì trùng vai trò với "Bàn học"; nó vẫn mở được từ ô Tìm
+ * nhanh, đúng cách các màn công cụ quản trị đang làm.
+ */
+const DIEM_DEN = [
+  { view: "workspace", nhan: "Bàn học", Icon: FolderKanban },
+  { view: "practice", nhan: "Luyện câu", Icon: Play },
+  { view: "review", nhan: "Câu sai", Icon: RotateCcw },
+  { view: "forecast", nhan: "Kế hoạch", Icon: Target },
+  { view: "ai_coach", nhan: "Hỏi AI", Icon: Brain },
+  { view: "progress", nhan: "Báo cáo", Icon: BarChart3 },
+] as const;
 
 export default function App() {
   const [currentView, setCurrentView] = useState<"workspace" | "home" | "practice" | "review" | "progress" | "ai_coach" | "quality_dashboard" | "curriculum" | "forecast" | "observatory">("workspace");
   const [activeExam, setActiveExam] = useState<ExamAttempt | null>(null);
   const [stats, setStats] = useState(dbService.getStatistics());
   const [activeSubjectId, setActiveSubjectId] = useState(dbService.getActiveSubjectId());
-  const { theme, setTheme } = useTheme();
 
   // Modals & Banners state
   const [unfinishedSession, setUnfinishedSession] = useState<ExamAttempt | null>(() => workspaceService.getUnfinishedSession());
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showSearchInWorkspace, setShowSearchInWorkspace] = useState(false);
 
   // Load latest statistics when switching views
   useEffect(() => {
@@ -122,235 +140,107 @@ export default function App() {
               </select>
             </div>
 
-          {/* Journey-First Navigation Menu */}
+          {/* Thanh điều hướng chính, dựng từ DIEM_DEN nên luôn khớp với thanh dưới trên điện thoại. */}
           <nav className="hidden md:flex items-center gap-1">
-            <button 
-              onClick={() => { setActiveExam(null); setCurrentView("workspace"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "workspace"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary font-semibold" 
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <FolderKanban className="w-3.5 h-3.5 text-brand-info" />
-              <span>Bàn học</span>
-            </button>
-
-            <button 
-              onClick={() => { setActiveExam(null); setCurrentView("home"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "home"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary" 
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Tổng quan</span>
-            </button>
-
-            <button 
-              onClick={() => { setActiveExam(null); setCurrentView("practice"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "practice"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary" 
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>Luyện câu</span>
-            </button>
-
-            <button 
-              onClick={() => { setActiveExam(null); setCurrentView("review"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "review"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary" 
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-brand-warning" />
-              <span>Câu sai</span>
-            </button>
-
-            <button 
-              onClick={() => { setActiveExam(null); setCurrentView("forecast"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "forecast"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary" 
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <Target className="w-3.5 h-3.5 text-brand-info" />
-              <span>Kế hoạch</span>
-            </button>
-
-            <button 
-              onClick={() => { setActiveExam(null); setCurrentView("ai_coach"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "ai_coach"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary" 
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <Brain className="w-3.5 h-3.5 text-brand-info" />
-              <span>Hỏi AI</span>
-            </button>
-
-            <button
-              onClick={() => { setActiveExam(null); setCurrentView("progress"); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
-                currentView === "progress"
-                  ? "bg-bg-surface text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary"
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
-              }`}
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-brand-info" />
-              <span>Báo cáo</span>
-            </button>
+            {DIEM_DEN.map(({ view, nhan, Icon }) => {
+              const dangMo = currentView === view;
+              return (
+                <button
+                  key={view}
+                  onClick={() => { setActiveExam(null); setCurrentView(view as any); }}
+                  aria-current={dangMo ? "page" : undefined}
+                  className={`px-3 py-1.5 text-xs rounded-md transition flex items-center gap-1.5 whitespace-nowrap ${
+                    dangMo
+                      ? "bg-bg-surface text-text-primary border border-border-primary font-semibold"
+                      : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50 font-medium border border-transparent"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{nhan}</span>
+                </button>
+              );
+            })}
             {/* Các màn công cụ quản trị (khung chương trình, kiểm tra học liệu, nhật ký hệ thống)
-                đã được ẩn khỏi thanh điều hướng người học cho gọn; vẫn mở được qua ô Tìm nhanh (Ctrl + K). */}
+                và màn Tổng quan mở được qua ô Tìm nhanh (Ctrl + K). */}
           </nav>
 
-          {/* Quick stats & Theme & Command Palette trigger */}
-          <div className="flex items-center gap-3">
-            {/* Ctrl + K Command Palette Button */}
+          {/* Cụm phải: chỉ giữ thứ dùng thường xuyên.
+              Bộ chọn giao diện Sáng/Tối/Hệ thống đã chuyển vào Cài đặt: nó chiếm ba nút ngay
+              giữa thanh trên cùng cho một hành động vài tháng mới làm một lần, và chính nó là
+              thủ phạm làm trang TRÀN NGANG 122px trên khung 375px.
+              Chuỗi ngày và tỷ lệ đúng chỉ hiện khi ĐÃ CÓ dữ liệu: hiện "0 ngày, 0%" cho người
+              mới mở ứng dụng vừa là nhiễu vừa là lời chào nản lòng. */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
               className="px-2 py-1 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-[11px] font-mono text-text-muted hover:text-text-primary flex items-center gap-1 transition cursor-pointer"
               title="Mở tìm nhanh (Ctrl + K)"
             >
               <Command className="w-3 h-3 text-brand-info" />
-              <span className="hidden sm:inline">Tìm nhanh</span>
+              <span className="hidden lg:inline">Tìm nhanh</span>
             </button>
 
-            {/* Settings Modal Trigger Button */}
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="p-1.5 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-text-muted hover:text-text-primary transition cursor-pointer"
-              title="Cài đặt và sao lưu"
+              title="Cài đặt, giao diện và sao lưu"
             >
               <SettingsIcon className="w-3.5 h-3.5" />
             </button>
 
-            <div className="h-4 w-[1px] bg-border-primary/85 hidden sm:block" />
-            <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1 text-brand-warning font-medium font-mono" title="Chuỗi ngày học tập">
-                <Flame className="w-3.5 h-3.5 fill-current" />
-                <span>{stats.studyStreak} ngày</span>
-              </div>
-              <div className="h-4 w-[1px] bg-border-primary/85" />
-              <div className="flex items-center gap-1 text-brand-success font-medium font-mono" title="Tỷ lệ làm đúng">
-                <Award className="w-3.5 h-3.5" />
-                <span>{stats.totalSolved > 0 ? Math.round((stats.totalCorrect / stats.totalSolved) * 100) : 0}%</span>
-              </div>
-            </div>
-
-            <div className="h-4 w-[1px] bg-border-primary/85" />
-
-            {/* Segmented Theme Control */}
-            <div id="theme-segmented-control" className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60">
-              <button
-                onClick={() => setTheme("light")}
-                className={`p-1.5 rounded transition-all ${
-                  theme === "light"
-                    ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] font-medium"
-                    : "text-text-muted hover:text-text-primary"
-                }`}
-                title="Giao diện Sáng"
-              >
-                <Sun className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setTheme("dark")}
-                className={`p-1.5 rounded transition-all ${
-                  theme === "dark"
-                    ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] font-medium"
-                    : "text-text-muted hover:text-text-primary"
-                }`}
-                title="Giao diện Tối"
-              >
-                <Moon className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setTheme("system")}
-                className={`p-1.5 rounded transition-all ${
-                  theme === "system"
-                    ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] font-medium"
-                    : "text-text-muted hover:text-text-primary"
-                }`}
-                title="Theo hệ thống"
-              >
-                <Monitor className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {(stats.studyStreak > 0 || stats.totalSolved > 0) && (
+              <>
+                <div className="h-4 w-[1px] bg-border-primary/85 hidden lg:block" />
+                <div className="hidden lg:flex items-center gap-3 text-xs">
+                  {stats.studyStreak > 0 && (
+                    <div className="flex items-center gap-1 text-brand-warning font-medium" title="Chuỗi ngày học tập">
+                      <Flame className="w-3.5 h-3.5 fill-current" />
+                      <span>{stats.studyStreak} ngày</span>
+                    </div>
+                  )}
+                  {stats.totalSolved > 0 && (
+                    <div className="flex items-center gap-1 text-brand-success font-medium" title="Tỷ lệ làm đúng">
+                      <Award className="w-3.5 h-3.5" />
+                      <span>{Math.round((stats.totalCorrect / stats.totalSolved) * 100)}%</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
         </div>
       </header>
       )}
 
-      {/* Mobile navigation tab bar - hidden during Deep Focus Mode */}
+      {/* Thanh điều hướng trên điện thoại. Nằm ở ĐÁY màn hình cho vừa tầm ngón cái, và dựng
+          từ cùng một DIEM_DEN với thanh trên máy tính nên không thể trôi ra khác nhau nữa.
+          Bản cũ dán nó ngay dưới header, ăn mất hai dải cố định ở đỉnh màn hình. */}
       {!isDeepFocus && (
-        <div className="md:hidden sticky top-12 z-30 bg-bg-card border-b border-border-primary h-10 flex items-center justify-around px-2">
-          <button 
-            onClick={handleNavigateHome}
-            className={`flex items-center gap-1 text-xs py-1 px-2 rounded font-medium ${
-              currentView === "workspace" ? "text-brand-info bg-brand-info-bg" : "text-text-muted"
-            }`}
-          >
-            <LayoutDashboard className="w-3.5 h-3.5" />
-            <span>Bàn học</span>
-          </button>
-          <button 
-            onClick={() => { setActiveExam(null); setCurrentView("practice"); }}
-            className={`flex items-center gap-1 text-xs py-1 px-2 rounded font-medium ${
-              currentView === "practice" ? "text-brand-info bg-brand-info-bg" : "text-text-muted"
-            }`}
-          >
-            <Play className="w-3.5 h-3.5" />
-            <span>Luyện câu</span>
-          </button>
-          <button 
-            onClick={() => { setActiveExam(null); setCurrentView("review"); }}
-            className={`flex items-center gap-1 text-xs py-1 px-2 rounded font-medium ${
-              currentView === "review" ? "text-brand-warning bg-brand-warning-bg" : "text-text-muted"
-            }`}
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Sổ câu sai</span>
-          </button>
-          <button 
-            onClick={() => { setActiveExam(null); setCurrentView("progress"); }}
-            className={`flex items-center gap-1 text-xs py-1 px-2 rounded font-medium ${
-              currentView === "progress" ? "text-brand-info bg-brand-info-bg" : "text-text-muted"
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span>Báo cáo</span>
-          </button>
-          <button 
-            onClick={() => { setActiveExam(null); setCurrentView("forecast"); }}
-            className={`flex items-center gap-1 text-xs py-1 px-2 rounded font-medium ${
-              currentView === "forecast" ? "text-brand-info bg-brand-info-bg" : "text-text-muted"
-            }`}
-          >
-            <Target className="w-3.5 h-3.5" />
-            <span>Kế hoạch</span>
-          </button>
-          <button 
-            onClick={() => { setActiveExam(null); setCurrentView("ai_coach"); }}
-            className={`flex items-center gap-1 text-xs py-1 px-2 rounded font-medium ${
-              currentView === "ai_coach" ? "text-brand-info bg-brand-info-bg" : "text-text-muted"
-            }`}
-          >
-            <Brain className="w-3.5 h-3.5" />
-            <span>Hỏi AI</span>
-          </button>
-        </div>
+        <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bg-card/95 backdrop-blur-md border-t border-border-primary pb-[env(safe-area-inset-bottom)]">
+          <div className="flex items-stretch justify-around">
+            {DIEM_DEN.map(({ view, nhan, Icon }) => {
+              const dangMo = currentView === view;
+              return (
+                <button
+                  key={view}
+                  onClick={() => { setActiveExam(null); setCurrentView(view as any); }}
+                  aria-current={dangMo ? "page" : undefined}
+                  className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-h-[52px] transition ${
+                    dangMo ? "text-brand-info font-semibold" : "text-text-muted"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="text-[10px] leading-none whitespace-nowrap">{nhan}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
       )}
 
       {/* Main workspace */}
-      <main className="min-h-[calc(100vh-3rem)]">
+      <main className="min-h-[calc(100vh-3rem)] pb-20 md:pb-0">
         {/* Session Recovery Banner */}
         {!isDeepFocus && unfinishedSession && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">

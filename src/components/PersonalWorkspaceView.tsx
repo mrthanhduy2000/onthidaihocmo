@@ -270,6 +270,11 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
   const remainingDays = prediction.metricsBreakdown.remainingDays;
   /** Đã có bài làm nào chưa. Nhiều con số chỉ có nghĩa khi đã có bài, xem chỗ dùng bên dưới. */
   const daCoBaiLam = dbService.getStatistics().totalSolved > 0;
+  /** Ngày thi theo lối viết Việt Nam. Bản cũ in thẳng chuỗi ISO kiểu 2026-08-11 ra cho người học. */
+  const ngayThiTiengViet = (() => {
+    const [nam, thang, ngay] = String(goal.examDate || "").split("-");
+    return ngay && thang && nam ? `${ngay}/${thang}/${nam}` : String(goal.examDate || "");
+  })();
   const isArchived = archivedIds.includes(activeSubId);
 
   return (
@@ -280,36 +285,33 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
         
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase tracking-wider text-brand-info font-bold flex items-center gap-1.5">
-                <FolderKanban className="w-4 h-4 text-brand-info" />
-                Bàn học hôm nay
-              </span>
+            {/*
+              Tiêu đề dẫn dắt bằng CỠ CHỮ chứ không bằng nhãn chữ hoa giãn cách.
+
+              Bản cũ đặt bộ chọn môn ở đây với cỡ chữ của tiêu đề trang, nên nó vừa là tiêu đề
+              vừa là điều khiển, mà thanh đầu trang đã có sẵn một bộ chọn môn y hệt cách đó
+              chưa tới trăm điểm ảnh. Hai bộ chọn giống nhau trên cùng một màn hình buộc người
+              học phải tự hỏi chúng có khác nhau không. Nay giữ MỘT bộ chọn ở thanh đầu trang,
+              còn ở đây tên môn chỉ còn là ngữ cảnh.
+            */}
+            <h1 className="text-xl sm:text-2xl font-display font-semibold text-text-primary flex items-center gap-2">
+              <FolderKanban className="w-5 h-5 text-brand-info shrink-0" />
+              Bàn học hôm nay
+            </h1>
+
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-sm text-text-muted">{dbService.getActiveSubjectName()}</span>
               {isArchived && (
-                <span className="px-2 py-0.2 text-[10px] font-mono bg-text-muted/20 text-text-muted rounded-full">
+                <span className="px-2 py-0.5 text-[10px] bg-text-muted/20 text-text-muted rounded-full">
                   Đã lưu trữ
                 </span>
               )}
-            </div>
-
-            <div className="flex items-center gap-3 pt-1">
-              {/* Subject Switcher Dropdown */}
-              <select
-                value={activeSubId}
-                onChange={(e) => handleSubjectSwitch(e.target.value)}
-                className="text-xl sm:text-2xl font-display font-semibold text-text-primary bg-bg-surface border border-border-primary rounded-xl px-3 py-1 cursor-pointer focus:outline-none"
-              >
-                {subjects.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-
               <button
                 onClick={() => handleToggleArchive(activeSubId)}
-                className="p-2 bg-bg-surface border border-border-primary hover:bg-bg-card rounded-xl text-text-muted hover:text-text-primary transition cursor-pointer"
+                className="p-1.5 bg-bg-surface border border-border-primary hover:bg-bg-card rounded-lg text-text-muted hover:text-text-primary transition cursor-pointer"
                 title={isArchived ? "Mở lại môn học" : "Lưu trữ môn học"}
               >
-                <Archive className="w-4 h-4" />
+                <Archive className="w-3.5 h-3.5" />
               </button>
             </div>
             <p className="text-xs text-text-muted max-w-xl pt-1">
@@ -349,11 +351,11 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
         {/* Progress & Countdown Bar */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 border-t border-border-primary/60">
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] font-mono text-text-muted uppercase block">Còn tới kỳ thi</span>
+            <span className="text-[10px] text-text-muted block">Còn tới kỳ thi</span>
             <div className="flex items-center gap-2 pt-0.5">
               <Clock className="w-4 h-4 text-brand-warning shrink-0" />
-              <span className="text-sm font-mono font-bold text-brand-warning">Còn {remainingDays} ngày</span>
-              <span className="text-[10px] text-text-muted">({goal.examDate})</span>
+              <span className="text-sm font-semibold text-brand-warning">Còn {remainingDays} ngày</span>
+              <span className="text-[10px] text-text-muted">{ngayThiTiengViet}</span>
             </div>
           </div>
 
@@ -387,9 +389,9 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
           </div>
 
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] font-mono text-text-muted uppercase block">Câu cần sửa</span>
+            <span className="text-[10px] text-text-muted block">Câu cần sửa</span>
             <div className="flex items-center justify-between pt-0.5">
-              <span className="text-sm font-mono font-bold text-brand-warning">{prediction.metricsBreakdown.studyDebtCount} câu</span>
+              <span className="text-sm font-semibold text-brand-warning">{prediction.metricsBreakdown.studyDebtCount} câu</span>
               <button 
                 onClick={() => onNavigateView("review")}
                 className="text-[10px] font-medium text-brand-info hover:underline cursor-pointer"

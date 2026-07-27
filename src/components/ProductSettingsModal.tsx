@@ -11,6 +11,8 @@ import {
   Upload, 
   Bell, 
   Moon, 
+  Sun,
+  Monitor,
   Keyboard, 
   CheckCircle2, 
   AlertCircle,
@@ -23,6 +25,7 @@ import {
 import { workspaceService } from "../services/workspaceService";
 import { dbService } from "../services/db";
 import { AppSettings, SubjectGoal } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
 interface ProductSettingsModalProps {
   isOpen: boolean;
@@ -32,6 +35,7 @@ interface ProductSettingsModalProps {
 
 export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }: ProductSettingsModalProps) {
   const [settings, setSettings] = useState<AppSettings>(() => workspaceService.getSettings());
+  const { theme, setTheme } = useTheme();
   const activeSubId = dbService.getActiveSubjectId();
   const [goal, setGoal] = useState<SubjectGoal>(() => dbService.getSubjectGoal(activeSubId));
   
@@ -113,7 +117,39 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
         {/* Content Tabs Body */}
         <div className="p-6 space-y-6 overflow-y-auto">
-          
+
+          {/* Giao diện Sáng / Tối / Theo hệ thống.
+              Trước 28/07/2026 ba nút này nằm cố định trên thanh đầu trang, chiếm chỗ giữa vùng
+              đắt nhất của màn hình cho một hành động vài tháng mới làm một lần, và trên khung
+              375px chúng bị đẩy tràn ra ngoài. Đây mới là chỗ đúng của chúng. */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-text-primary flex items-center gap-2">
+              <Sun className="w-3.5 h-3.5 text-brand-info" />
+              Giao diện
+            </h4>
+            <div className="flex items-center gap-2 bg-bg-surface p-3 border border-border-primary/80 rounded-xl">
+              {([
+                { gia: "light", nhan: "Sáng", Icon: Sun },
+                { gia: "dark", nhan: "Tối", Icon: Moon },
+                { gia: "system", nhan: "Theo hệ thống", Icon: Monitor },
+              ] as const).map(({ gia, nhan, Icon }) => (
+                <button
+                  key={gia}
+                  onClick={() => setTheme(gia)}
+                  aria-pressed={theme === gia}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs transition cursor-pointer border ${
+                    theme === gia
+                      ? "bg-bg-card text-text-primary border-border-primary font-semibold"
+                      : "text-text-muted hover:text-text-primary border-transparent"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{nhan}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Section 1: Study Goal & Exam Config */}
           <div className="space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">

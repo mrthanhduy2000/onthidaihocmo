@@ -65,8 +65,10 @@ export default function QuickActionFAB({ onNavigate, onOpenUpload, onOpenSearch 
     }
   ];
 
+  // Trên điện thoại phải nâng lên khỏi thanh điều hướng đáy, nếu không nút cộng che mất mục
+  // cuối cùng của thanh.
   return (
-    <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2">
+    <div className="fixed bottom-24 md:bottom-6 right-6 z-40 flex flex-col items-end gap-2">
       {/* Quick Menu items */}
       {isOpen && (
         <div className="flex flex-col items-end gap-2 mb-2 animate-fade-in">
