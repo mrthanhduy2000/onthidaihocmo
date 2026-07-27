@@ -136,8 +136,10 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
       {/* Primary Modes Section (3 Main Cards) */}
       <div className="space-y-3">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted">
-          1. Nên bắt đầu ở đây
+        {/* Bỏ số "1." vì trong trang KHÔNG hề có mục "2." nào; đánh số dở dang khiến người
+            học đi tìm phần còn thiếu. Nhan đề nay dẫn dắt bằng cỡ chữ thay vì chữ hoa giãn cách. */}
+        <h2 className="text-sm font-semibold text-text-primary">
+          Nên bắt đầu ở đây
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -250,9 +252,18 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border-primary/60 flex items-center justify-between text-xs font-medium text-brand-warning">
-              <span>{incorrectCount > 0 ? `Ôn ngay ${incorrectCount} câu` : "Chưa có câu sai"}</span>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {/* Sổ câu sai trống thì thẻ này KHÔNG phải một lựa chọn: bỏ mũi tên và nói rõ
+                cần làm gì để nó có nội dung, thay vì để một dòng cụt "Chưa có câu sai" kèm
+                mũi tên mời bấm vào chỗ không có gì. */}
+            <div className="mt-6 pt-4 border-t border-border-primary/60 flex items-center justify-between text-xs font-medium">
+              {incorrectCount > 0 ? (
+                <>
+                  <span className="text-brand-warning">Ôn ngay {incorrectCount} câu</span>
+                  <ChevronRight className="w-4 h-4 text-brand-warning group-hover:translate-x-1 transition-transform" />
+                </>
+              ) : (
+                <span className="text-text-muted font-normal">Chưa có câu sai nào. Làm một bài ở trên để hệ thống ghi lại.</span>
+              )}
             </div>
           </div>
         </div>
@@ -303,8 +314,8 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
       {/* Secondary Custom Options Section (Collapsible/Grouped) */}
       <div className="space-y-4 pt-4 border-t border-border-primary/60">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-text-muted flex items-center gap-2">
-          <Sliders className="w-3.5 h-3.5" />
+        <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+          <Sliders className="w-3.5 h-3.5 text-text-muted" />
           Ôn theo chương hoặc mức độ
         </h2>
 
