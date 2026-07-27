@@ -82,7 +82,7 @@ export default function SimpleMarkdown({ text, content }: SimpleMarkdownProps) {
         if (listPrefix !== "" || isBullet) {
           return (
             <div key={idx} className="flex gap-2 pl-4">
-              <span className="text-zinc-400 font-medium font-mono">{listPrefix || "•"}</span>
+              <span className="text-zinc-400 font-medium tabular-nums">{listPrefix || "•"}</span>
               <span className="flex-1">{content}</span>
             </div>
           );

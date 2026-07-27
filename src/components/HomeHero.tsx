@@ -98,13 +98,13 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
               <span>{timeOfRhythm.label} • {timeOfRhythm.strategy}</span>
             </span>
 
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg-surface text-text-muted border border-border-primary text-2xs font-mono rounded-full">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg-surface text-text-muted border border-border-primary text-2xs tabular-nums rounded-full">
               <Clock className="w-3 h-3 text-brand-info" />
               <span>{action.estimatedTimeMinutes} phút</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-xs text-text-muted font-mono">
+          <div className="flex items-center gap-1 text-xs text-text-muted tabular-nums">
             <TrendingUp className="w-3.5 h-3.5 text-brand-success" />
             <span>{action.expectedBenefit}</span>
           </div>
@@ -112,7 +112,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
 
         {/* 1. Learning Momentum System Bar */}
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-4 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs tabular-nums">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-text-primary">Tiến trình tới kỳ thi:</span>
               <span className="text-brand-warning font-bold">Còn {daysLeft} ngày</span>
@@ -133,7 +133,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
               />
             </div>
             <div className="flex items-center justify-between text-2xs font-sans">
-              <span className="text-text-muted font-mono flex items-center gap-1">
+              <span className="text-text-muted tabular-nums flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-success" />
                 <span>Độ tự tin: <strong className="text-text-primary font-medium">{confidenceText}</strong></span>
               </span>

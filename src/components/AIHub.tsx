@@ -105,7 +105,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
       {/* AI Coach Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-info mb-1">
+          <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info mb-1">
             <Brain className="w-4 h-4" />
             Trợ lý học tập • Lộ trình cá nhân
           </div>
@@ -187,7 +187,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                 return (
                   <div key={ch.id} className="relative pl-6 border-l-2 border-border-primary/80 space-y-3">
                     {/* Node Circle Pin */}
-                    <div className={`absolute -left-[17px] top-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold font-mono ${
+                    <div className={`absolute -left-[17px] top-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold tabular-nums ${
                       isUnlocked 
                         ? "bg-brand-info/10 border-brand-info text-brand-info" 
                         : "bg-bg-surface border-border-primary text-text-muted"
@@ -203,10 +203,10 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                     */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <span className="text-2xs font-mono uppercase tracking-wider text-brand-info">Chương {ch.id}</span>
+                        <span className="text-2xs tabular-nums uppercase tracking-wider text-brand-info">Chương {ch.id}</span>
                         <h4 className="text-sm font-semibold text-text-primary">{ch.title}</h4>
                       </div>
-                      <span className={`text-2xs font-mono px-2 py-0.5 rounded border whitespace-nowrap shrink-0 ${
+                      <span className={`text-2xs tabular-nums px-2 py-0.5 rounded border whitespace-nowrap shrink-0 ${
                         isUnlocked ? "bg-brand-success/10 text-brand-success border-brand-success/20" : "bg-bg-surface text-text-muted border-border-primary"
                       }`}>
                         {isUnlocked ? "Đã đủ điều kiện" : "Cần ôn chương trước"}
@@ -225,7 +225,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                             className="bg-bg-surface border border-border-primary hover:border-brand-info/50 rounded-xl p-3.5 transition space-y-2"
                           >
                             <div className="flex items-center justify-end text-2xs">
-                              <span className={`font-mono font-bold ${statusColor}`}>{score}% nắm chắc</span>
+                              <span className={`tabular-nums font-bold ${statusColor}`}>{score}% nắm chắc</span>
                             </div>
                             <h5 className="text-xs font-semibold text-text-primary leading-snug">{node.concept}</h5>
                             <div className="text-2xs text-text-muted line-clamp-2">{node.definition}</div>
@@ -297,7 +297,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                     : "bg-bg-surface border border-border-primary text-text-primary"
                 }`}>
                   <SimpleMarkdown content={msg.text} />
-                  <div className={`text-2xs mt-1.5 font-mono ${msg.sender === "user" ? "text-bg-card/70 text-right" : "text-text-muted"}`}>
+                  <div className={`text-2xs mt-1.5 tabular-nums ${msg.sender === "user" ? "text-bg-card/70 text-right" : "text-text-muted"}`}>
                     {msg.time}
                   </div>
                 </div>
@@ -315,7 +315,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
           <div className="p-3 bg-bg-surface border-t border-border-primary space-y-2">
             {/* Quick Prompt Chips for Teacher Conversation Flow */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              <span className="text-2xs font-mono text-text-muted shrink-0">Hỏi nhanh:</span>
+              <span className="text-2xs tabular-nums text-text-muted shrink-0">Hỏi nhanh:</span>
               {[
                 "Giải thích đơn giản hơn",
                 "Cho ví dụ thực tế khác",

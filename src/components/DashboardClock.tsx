@@ -41,14 +41,14 @@ export default function DashboardClock() {
       </div>
       <div className="flex flex-col min-w-[130px]">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-semibold font-mono tracking-wider text-text-primary">
+          <span className="text-sm font-semibold tabular-nums tracking-wider text-text-primary">
             {timeStr}
           </span>
           <span className="text-2xs text-text-muted font-medium">
             {weekdayStr}
           </span>
         </div>
-        <div className="flex justify-between items-center text-2xs text-text-muted font-mono mt-0.5">
+        <div className="flex justify-between items-center text-2xs text-text-muted tabular-nums mt-0.5">
           <span>{dateStr}</span>
           <span className="text-2xs text-brand-info font-medium uppercase tracking-tight">
             TP. Hồ Chí Minh

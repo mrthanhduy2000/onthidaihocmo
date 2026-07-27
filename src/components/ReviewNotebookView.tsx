@@ -98,7 +98,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-warning mb-1">
+          <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-warning mb-1">
             <BookMarked className="w-4 h-4" />
             Sổ tay củng cố & Khắc phục
           </div>
@@ -197,7 +197,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                     className="p-4 sm:p-5 cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4"
                   >
                     <div className="space-y-2 flex-1">
-                      <div className="flex flex-wrap items-center gap-2 text-2xs font-mono">
+                      <div className="flex flex-wrap items-center gap-2 text-2xs tabular-nums">
                         <span className="px-2 py-0.5 rounded bg-bg-surface border border-border-primary text-text-muted">
                           Chương {q.chapterId}: {ch?.title || ""}
                         </span>
@@ -233,7 +233,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
 
                         return (
                           <div className="bg-bg-surface/80 border border-border-primary/60 rounded-xl p-3 space-y-2 mt-2">
-                            <div className="flex items-center justify-between text-2xs font-mono">
+                            <div className="flex items-center justify-between text-2xs tabular-nums">
                               <span className="text-text-muted font-medium">Lộ trình dứt điểm lỗ hổng:</span>
                               <span className="text-brand-warning font-semibold">{confidenceText}</span>
                             </div>
@@ -252,7 +252,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                                     <div className={`h-1.5 w-full rounded-full transition-all ${
                                       isCurrent ? "bg-brand-warning" : isPast ? "bg-brand-success" : "bg-bg-card border border-border-primary/80"
                                     }`} />
-                                    <span className={`text-2xs font-mono transition-colors ${
+                                    <span className={`text-2xs tabular-nums transition-colors ${
                                       isCurrent ? "text-brand-warning font-bold" : isPast ? "text-brand-success font-medium" : "text-text-muted opacity-50"
                                     }`}>
                                       {stg.label}
@@ -300,7 +300,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
 
                       {/* Options breakdown */}
                       <div className="space-y-2">
-                        <div className="text-2xs font-mono text-text-muted uppercase tracking-wider">Các phương án đáp án:</div>
+                        <div className="text-2xs tabular-nums text-text-muted uppercase tracking-wider">Các phương án đáp án:</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {Object.entries(q.options).map(([key, text]) => {
                             const isCorrect = key === q.correctAnswer;
@@ -313,7 +313,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                                     : "bg-bg-card border-border-primary/60 text-text-muted"
                                 }`}
                               >
-                                <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-2xs shrink-0 ${
+                                <span className={`w-5 h-5 rounded-full flex items-center justify-center tabular-nums text-2xs shrink-0 ${
                                   isCorrect ? "bg-brand-success text-bg-app font-bold" : "bg-bg-surface text-text-muted"
                                 }`}>
                                   {key.toUpperCase()}
@@ -332,7 +332,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                             <Brain className="w-4 h-4 text-brand-info" />
                             Lời giải chuẩn xác theo học liệu
                           </span>
-                          <span className="text-2xs font-mono text-text-muted">
+                          <span className="text-2xs tabular-nums text-text-muted">
                             Nguồn: {q.sourcePdf} (Trang {q.sourcePage})
                           </span>
                         </div>
@@ -366,7 +366,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                           </div>
                         </div>
 
-                        <div className="text-2xs font-mono text-brand-info flex items-center gap-1">
+                        <div className="text-2xs tabular-nums text-brand-info flex items-center gap-1">
                           <Sparkles className="w-3.5 h-3.5" />
                           <span>Dự báo sau khi ôn: độ ghi nhớ tăng từ 45% lên 88%</span>
                         </div>

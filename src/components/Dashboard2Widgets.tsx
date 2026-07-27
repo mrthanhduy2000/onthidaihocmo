@@ -182,17 +182,17 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
                               <div className="w-1.5 h-1.5 rounded-full bg-brand-info"></div>
                             </div>
                           )}
-                          <span className="text-2xs font-mono font-bold text-text-muted mt-0.5">CH{step.chapter}</span>
+                          <span className="text-2xs tabular-nums font-bold text-text-muted mt-0.5">CH{step.chapter}</span>
                         </div>
 
                         <div className="space-y-0.5">
-                          <span className="text-2xs font-mono text-text-muted uppercase tracking-wider block">ID: {step.id}</span>
+                          <span className="text-2xs tabular-nums text-text-muted uppercase tracking-wider block">ID: {step.id}</span>
                           <span className="font-semibold text-text-primary leading-tight font-sans line-clamp-1">{step.conceptName}</span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className={`text-2xs font-mono px-1.5 py-0.5 rounded ${
+                        <span className={`text-2xs tabular-nums px-1.5 py-0.5 rounded ${
                           step.status === "mastered" ? "bg-brand-success-bg text-brand-success" :
                           step.status === "locked" ? "bg-bg-surface text-text-muted" :
                           "bg-brand-info-bg text-brand-info"
@@ -225,7 +225,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
             <div className="mt-2 bg-bg-surface/60 border border-border-primary p-3 rounded-lg text-xs space-y-2 animate-fade-in">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-text-primary text-2xs">{selectedStep.conceptName}</span>
-                <span className="text-2xs font-mono text-text-muted uppercase">Chương {selectedStep.chapter}</span>
+                <span className="text-2xs tabular-nums text-text-muted uppercase">Chương {selectedStep.chapter}</span>
               </div>
               <p className="text-2xs text-text-secondary leading-relaxed font-sans">{selectedStep.reason}</p>
               <div className="flex items-center justify-between gap-4 pt-1.5 border-t border-border-primary/50 text-2xs">
@@ -272,7 +272,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
               return (
                 <div 
                   key={step.id}
-                  className={`w-7 h-7 rounded-md cursor-pointer flex items-center justify-center text-2xs font-mono font-bold transition duration-150 ${colorClass}`}
+                  className={`w-7 h-7 rounded-md cursor-pointer flex items-center justify-center text-2xs tabular-nums font-bold transition duration-150 ${colorClass}`}
                   title={`${step.conceptName}: ${score}% thông thạo`}
                   onClick={() => setSelectedStep(step)}
                 >
@@ -283,7 +283,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
           </div>
 
           {/* Color Key Guide */}
-          <div className="grid grid-cols-4 gap-1 text-2xs font-mono text-text-muted text-center pt-2 border-t border-border-primary/50">
+          <div className="grid grid-cols-4 gap-1 text-2xs tabular-nums text-text-muted text-center pt-2 border-t border-border-primary/50">
             <div><span className="w-2 h-2 rounded bg-bg-surface inline-block mr-1"></span>0% chưa học</div>
             <div><span className="w-2 h-2 rounded bg-brand-warning inline-block mr-1"></span>&lt;60% còn yếu</div>
             <div><span className="w-2 h-2 rounded bg-brand-info inline-block mr-1"></span>≥60% đạt chuẩn</div>
@@ -310,12 +310,12 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
 
           <div className="grid grid-cols-2 gap-4 py-1">
             <div className="bg-bg-surface p-3 rounded-lg border border-border-primary/50 text-center space-y-1">
-              <span className="text-2xs uppercase tracking-wider text-text-muted font-mono block">Tốc độ hoàn thiện</span>
+              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Tốc độ hoàn thiện</span>
               <span className="text-lg font-bold text-text-primary font-display">{forecast.velocity} <span className="text-2xs font-normal text-text-muted">concepts/đề</span></span>
             </div>
 
             <div className="bg-bg-surface p-3 rounded-lg border border-border-primary/50 text-center space-y-1">
-              <span className="text-2xs uppercase tracking-wider text-text-muted font-mono block">Hao hụt trí nhớ</span>
+              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Hao hụt trí nhớ</span>
               <span className="text-lg font-bold text-brand-warning font-display">{forecast.decayRate}% <span className="text-2xs font-normal text-text-muted">suy giảm/ngày</span></span>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
               <span className="text-text-muted block text-2xs">Thời gian dự báo hoàn thành môn học:</span>
               <span className="font-semibold text-text-primary">Khoảng {forecast.etaDays} ngày tiếp theo</span>
             </div>
-            <span className={`text-2xs font-mono px-2 py-1 rounded font-bold uppercase ${
+            <span className={`text-2xs tabular-nums px-2 py-1 rounded font-bold uppercase ${
               forecast.decayRate > 20 ? "bg-brand-error-bg text-brand-error" : "bg-brand-success-bg text-brand-success"
             }`}>
               {forecast.status}
@@ -347,28 +347,28 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
 
           <div className="grid grid-cols-3 gap-2 py-1 text-center">
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
-              <span className="text-2xs uppercase tracking-wider text-text-muted font-mono block">Số cuộc gọi API</span>
+              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Số cuộc gọi API</span>
               <span className="text-md font-bold text-text-primary font-display flex items-center justify-center gap-1 mt-0.5">
                 <Database className="w-3.5 h-3.5 text-text-muted" /> {telemetry.apiCallsCount}
               </span>
             </div>
 
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
-              <span className="text-2xs uppercase tracking-wider text-text-muted font-mono block">Chi phí ước tính</span>
+              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Chi phí ước tính</span>
               <span className="text-md font-bold text-brand-success font-display flex items-center justify-center gap-0.5 mt-0.5">
                 <Coins className="w-3.5 h-3.5 text-brand-success" /> ${telemetry.estimatedCostUsd.toFixed(4)}
               </span>
             </div>
 
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
-              <span className="text-2xs uppercase tracking-wider text-text-muted font-mono block">Tỷ lệ dùng chế độ ngoại tuyến</span>
+              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Tỷ lệ dùng chế độ ngoại tuyến</span>
               <span className="text-md font-bold text-text-primary font-display flex items-center justify-center gap-1 mt-0.5">
                 <RefreshCw className="w-3.5 h-3.5 text-text-muted" /> {telemetry.fallbackOfflineCount > 0 ? `${Math.round((telemetry.fallbackOfflineCount / Math.max(1, telemetry.apiCallsCount + telemetry.fallbackOfflineCount)) * 100)}%` : "0%"}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-between items-center text-2xs text-text-muted border-t border-border-primary/50 pt-2 font-mono">
+          <div className="flex justify-between items-center text-2xs text-text-muted border-t border-border-primary/50 pt-2 tabular-nums">
             <span>Tỷ lệ trúng bộ nhớ đệm: {telemetry.apiCallsCount > 0 ? `${Math.round((telemetry.cacheHitCount / telemetry.apiCallsCount) * 100)}%` : "100% (cục bộ)"}</span>
             <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-text-muted" /> Gemini Pro (ngữ cảnh thông minh)</span>
           </div>

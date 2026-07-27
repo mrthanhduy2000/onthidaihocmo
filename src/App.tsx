@@ -193,7 +193,7 @@ export default function App() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="px-2 py-1 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-2xs font-mono text-text-muted hover:text-text-primary flex items-center gap-1 transition cursor-pointer"
+              className="px-2 py-1 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-2xs tabular-nums text-text-muted hover:text-text-primary flex items-center gap-1 transition cursor-pointer"
               title="Mở tìm nhanh (Ctrl + K)"
             >
               <Command className="w-3 h-3 text-brand-info" />

@@ -122,7 +122,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10 fade-in-up" data-refresh={refreshKey}>
       {/* Header */}
       <div className="border-b border-border-primary pb-6 space-y-1">
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-info">
+        <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info">
           <Brain className="w-4 h-4" />
           Trung tâm Rèn luyện
         </div>
@@ -153,7 +153,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 <div className="w-10 h-10 rounded-xl bg-brand-info/10 text-brand-info flex items-center justify-center font-bold">
                   <Brain className="w-5 h-5" />
                 </div>
-                <span className="text-2xs font-mono font-medium px-2 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20">
+                <span className="text-2xs tabular-nums font-medium px-2 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20">
                   Phổ biến nhất
                 </span>
               </div>
@@ -184,7 +184,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 <div className="w-10 h-10 rounded-xl bg-text-primary text-bg-app flex items-center justify-center font-bold">
                   <Award className="w-5 h-5" />
                 </div>
-                <span className="text-2xs font-mono text-text-muted">
+                <span className="text-2xs tabular-nums text-text-muted">
                   Phủ {chaptersWithQuestions}/{chapters.length} chương
                 </span>
               </div>
@@ -200,7 +200,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
               {/* Chọn quy mô đề (chặn nổi bọt để không kích hoạt vào thi ngay) */}
               <div onClick={(e) => e.stopPropagation()} className="pt-1">
-                <span className="text-2xs text-text-muted font-mono block mb-1">Quy mô đề:</span>
+                <span className="text-2xs text-text-muted tabular-nums block mb-1">Quy mô đề:</span>
                 <div className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60 w-fit">
                   {[25, 40, 50].map((n) => (
                     <button
@@ -237,7 +237,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 <div className="w-10 h-10 rounded-xl bg-brand-warning/10 text-brand-warning flex items-center justify-center font-bold">
                   <RotateCcw className="w-5 h-5" />
                 </div>
-                <span className="text-2xs font-mono px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning font-semibold">
+                <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning font-semibold">
                   {incorrectCount} câu sai
                 </span>
               </div>
@@ -330,7 +330,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
               {/* Bộ chọn số câu mỗi đề */}
               <div className="flex items-center gap-1.5">
-                <span className="text-2xs text-text-muted font-mono">Số câu:</span>
+                <span className="text-2xs text-text-muted tabular-nums">Số câu:</span>
                 <div className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60">
                   {[5, 10, 15, 0].map((n) => (
                     <button
@@ -377,14 +377,14 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         className={`space-y-1 min-w-0 flex-1 text-left ${isEmpty ? "cursor-default" : "cursor-pointer"}`}
                       >
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-2xs font-mono text-brand-info font-semibold">Chương {ch.id}</span>
+                          <span className="text-2xs tabular-nums text-brand-info font-semibold">Chương {ch.id}</span>
                           {isSuggested && !isEmpty && (
-                            <span className="text-2xs font-mono uppercase px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
+                            <span className="text-2xs tabular-nums uppercase px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" /> Nên làm tiếp
                             </span>
                           )}
                           {accuracy !== null && (
-                            <span className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${
+                            <span className={`text-2xs tabular-nums px-1.5 py-0.5 rounded border ${
                               accuracy >= 80
                                 ? "bg-brand-success/10 text-brand-success border-brand-success/20"
                                 : accuracy >= 50
@@ -396,7 +396,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                           )}
                         </div>
                         <div className="text-xs font-medium text-text-primary truncate">{ch.title}</div>
-                        <div className="text-2xs text-text-muted font-mono">
+                        <div className="text-2xs text-text-muted tabular-nums">
                           {isEmpty ? "Chưa có câu hỏi" : `${available} câu có sẵn • đã làm ${solved} câu`}
                         </div>
                       </button>
@@ -413,11 +413,11 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         </button>
 
                         {isEmpty ? (
-                          <span className="text-2xs text-text-muted font-mono hidden sm:inline">Chưa có đề</span>
+                          <span className="text-2xs text-text-muted tabular-nums hidden sm:inline">Chưa có đề</span>
                         ) : (
                           <button
                             onClick={() => handleStartChapter(ch.id)}
-                            className="flex items-center gap-1 text-2xs font-mono text-brand-info cursor-pointer"
+                            className="flex items-center gap-1 text-2xs tabular-nums text-brand-info cursor-pointer"
                           >
                             <span className="hidden sm:inline">Giải {willDo} câu</span>
                             <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-brand-info group-hover:translate-x-0.5 transition-transform" />
@@ -460,7 +460,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                   <Bookmark className="w-4 h-4 text-brand-success" />
                   Câu hỏi đã đánh dấu
                 </span>
-                <span className="text-xs font-mono text-brand-success font-semibold">{bookmarkCount} câu</span>
+                <span className="text-xs tabular-nums text-brand-success font-semibold">{bookmarkCount} câu</span>
               </div>
 
               <button

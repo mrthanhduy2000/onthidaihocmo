@@ -22,11 +22,11 @@ export default function ContinueLearningCard({ exam, onContinue }: ContinueLearn
   return (
     <div className="bg-bg-card border border-brand-info/40 rounded-2xl p-5 shadow-sm space-y-4 hover:border-brand-info/60 transition">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-info font-bold">
+        <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info font-bold">
           <AlertCircle className="w-4 h-4" />
           <span>Phiên học đang diễn ra • Học tiếp</span>
         </div>
-        <span className="text-xs font-mono text-text-muted flex items-center gap-1">
+        <span className="text-xs tabular-nums text-text-muted flex items-center gap-1">
           <Clock className="w-3.5 h-3.5" />
           <span>Còn ~{estMinutes} phút</span>
         </span>
@@ -37,7 +37,7 @@ export default function ContinueLearningCard({ exam, onContinue }: ContinueLearn
           Tiếp tục phiên luyện tập ({exam.examType.toUpperCase()})
         </h3>
         <p className="text-xs text-text-muted">
-          Bạn đã trả lời <strong className="text-text-primary font-mono">{answeredCount}/{totalCount} câu</strong> ({progressPct}% tiến độ). Dữ liệu đã được lưu tự động.
+          Bạn đã trả lời <strong className="text-text-primary tabular-nums">{answeredCount}/{totalCount} câu</strong> ({progressPct}% tiến độ). Dữ liệu đã được lưu tự động.
         </p>
 
         {/* Progress Bar */}

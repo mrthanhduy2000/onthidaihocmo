@@ -392,7 +392,7 @@ export default function StatsView() {
         
         {/* Metric 1: General Accuracy Card */}
         <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
-          <h3 className="text-2xs font-mono font-semibold text-text-muted uppercase tracking-wider">Hiệu suất chính xác</h3>
+          <h3 className="text-2xs tabular-nums font-semibold text-text-muted uppercase tracking-wider">Hiệu suất chính xác</h3>
           
           <div className="flex items-baseline gap-2">
             <span className="text-5xl font-light font-display text-text-primary">
@@ -406,7 +406,7 @@ export default function StatsView() {
           </p>
           
           <div className="pt-2">
-            <div className="text-2xs text-text-muted mb-1 flex justify-between font-mono">
+            <div className="text-2xs text-text-muted mb-1 flex justify-between tabular-nums">
               <span>Đã trả lời đúng ít nhất một lần:</span>
               <span className="font-semibold text-text-secondary">{stats.totalCorrect} câu</span>
             </div>
@@ -421,7 +421,7 @@ export default function StatsView() {
 
         {/* Metric 2: Study Volume */}
         <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
-          <h3 className="text-2xs font-mono font-semibold text-text-muted uppercase tracking-wider">Năng lực rèn luyện</h3>
+          <h3 className="text-2xs tabular-nums font-semibold text-text-muted uppercase tracking-wider">Năng lực rèn luyện</h3>
           
           <div className="flex items-baseline gap-2">
             <span className="text-5xl font-light font-display text-text-primary">
@@ -435,7 +435,7 @@ export default function StatsView() {
           </p>
 
           <div className="pt-2">
-            <div className="text-2xs text-text-muted mb-1 flex justify-between font-mono">
+            <div className="text-2xs text-text-muted mb-1 flex justify-between tabular-nums">
               <span>Độ bao phủ câu hỏi:</span>
               <span className="font-semibold text-text-secondary">{Math.round((stats.totalSolved / questions.length) * 100)}%</span>
             </div>
@@ -450,7 +450,7 @@ export default function StatsView() {
 
         {/* Metric 3: Time Spent and Streaks */}
         <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
-          <h3 className="text-2xs font-mono font-semibold text-text-muted uppercase tracking-wider">Cường độ học tập</h3>
+          <h3 className="text-2xs tabular-nums font-semibold text-text-muted uppercase tracking-wider">Cường độ học tập</h3>
           
           <div className="flex items-baseline gap-2">
             <span className="text-5xl font-light font-display text-text-primary">
@@ -466,11 +466,11 @@ export default function StatsView() {
           <div className="grid grid-cols-2 gap-4 border-t border-border-primary pt-4 text-xs font-sans">
             <div>
               <span className="text-text-muted block text-2xs">Chuỗi ngày:</span>
-              <span className="font-bold text-brand-warning font-mono">{stats.studyStreak} ngày liên tục</span>
+              <span className="font-bold text-brand-warning tabular-nums">{stats.studyStreak} ngày liên tục</span>
             </div>
             <div>
               <span className="text-text-muted block text-2xs">Số lượt thi nộp:</span>
-              <span className="font-bold text-text-primary font-mono">{history.length} lượt</span>
+              <span className="font-bold text-text-primary tabular-nums">{history.length} lượt</span>
             </div>
           </div>
         </div>
@@ -492,8 +492,8 @@ export default function StatsView() {
               <div key={ch.id} className="border border-border-primary p-4 rounded-xl hover:bg-bg-surface transition duration-200 flex flex-col justify-between gap-4 font-sans">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-2xs font-mono font-bold text-brand-info uppercase">Chương {ch.id}</span>
-                    <span className={`text-2xs font-mono font-bold px-2 py-0.5 rounded-full ${getAccuracyColor(accuracyPct)}`}>
+                    <span className="text-2xs tabular-nums font-bold text-brand-info uppercase">Chương {ch.id}</span>
+                    <span className={`text-2xs tabular-nums font-bold px-2 py-0.5 rounded-full ${getAccuracyColor(accuracyPct)}`}>
                       {chData.total > 0 ? `${accuracyPct}% chính xác` : "Chưa làm câu nào"}
                     </span>
                   </div>
@@ -507,7 +507,7 @@ export default function StatsView() {
                       style={{ width: `${chData.total > 0 ? accuracyPct : 0}%` }}
                     />
                   </div>
-                  <div className="text-2xs font-mono text-text-muted flex justify-between">
+                  <div className="text-2xs tabular-nums text-text-muted flex justify-between">
                     <span>Đúng {chData.correct} / {chData.total} câu đã trả lời</span>
                     <span>{chData.total > 0 ? `${accuracyPct}%` : "0%"}</span>
                   </div>
@@ -560,16 +560,16 @@ export default function StatsView() {
         {wrongQuestionIds.length > 0 && (
           <div className="bg-bg-surface border border-border-primary p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-sans">
             <div className="space-y-1">
-              <span className="text-2xs font-mono font-bold text-brand-info uppercase tracking-wider block">TIẾN TRÌNH CỦNG CỐ</span>
+              <span className="text-2xs tabular-nums font-bold text-brand-info uppercase tracking-wider block">TIẾN TRÌNH CỦNG CỐ</span>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-sm font-semibold text-text-secondary">Đã xem:</span>
-                <span className="text-lg font-bold text-brand-info font-mono">{reviewedWrongCount}</span>
-                <span className="text-xs text-text-muted font-mono">/ {wrongQuestionIds.length} câu sai</span>
+                <span className="text-lg font-bold text-brand-info tabular-nums">{reviewedWrongCount}</span>
+                <span className="text-xs text-text-muted tabular-nums">/ {wrongQuestionIds.length} câu sai</span>
               </div>
             </div>
             
             <div className="flex-1 max-w-md w-full space-y-1.5">
-              <div className="flex justify-between text-xs font-mono">
+              <div className="flex justify-between text-xs tabular-nums">
                 <span className="text-text-secondary">Mức độ hoàn thành</span>
                 <span className="font-bold text-brand-info">{progressPercent}%</span>
               </div>
@@ -637,10 +637,10 @@ export default function StatsView() {
                   >
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="bg-brand-error-bg text-brand-error text-2xs font-bold px-2 py-0.5 rounded-md font-mono">
+                        <span className="bg-brand-error-bg text-brand-error text-2xs font-bold px-2 py-0.5 rounded-md tabular-nums">
                           Sai {errorCount} lần
                         </span>
-                        <span className="text-2xs text-text-muted font-mono">
+                        <span className="text-2xs text-text-muted tabular-nums">
                           Chương {q.chapterId} • #{q.id}
                         </span>
                         <span className="text-2xs font-medium text-text-secondary">
@@ -648,17 +648,17 @@ export default function StatsView() {
                         </span>
                         {/* Bookmark and Status Indicators */}
                         {stats.bookmarks?.includes(q.id) && (
-                          <span className="bg-brand-warning-bg text-brand-warning text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                          <span className="bg-brand-warning-bg text-brand-warning text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 tabular-nums">
                             <Star className="w-2.5 h-2.5 fill-current" /> BOOKMARKED
                           </span>
                         )}
                         {learningStatuses[q.id] === "learned" && (
-                          <span className="bg-brand-success-bg text-brand-success text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                          <span className="bg-brand-success-bg text-brand-success text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 tabular-nums">
                             <Check className="w-2.5 h-2.5" /> ĐÃ HIỂU
                           </span>
                         )}
                         {learningStatuses[q.id] === "review" && (
-                          <span className="bg-brand-warning-bg text-brand-warning text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 font-mono">
+                          <span className="bg-brand-warning-bg text-brand-warning text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 tabular-nums">
                             <AlertTriangle className="w-2.5 h-2.5" /> CẦN ÔN LẠI
                           </span>
                         )}
@@ -677,7 +677,7 @@ export default function StatsView() {
                       
                       {/* workspace-navigation / meta information */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-primary pb-4">
-                        <div className="flex flex-wrap gap-2 text-2xs font-mono">
+                        <div className="flex flex-wrap gap-2 text-2xs tabular-nums">
                           <span className="bg-bg-surface text-text-secondary px-2.5 py-1 rounded">
                             Chương {q.chapterId}: {chapter?.title}
                           </span>
@@ -714,7 +714,7 @@ export default function StatsView() {
                       {/* BLOCK 1: Câu hỏi và so sánh đáp án */}
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-4">
                         <div className="flex items-start gap-2.5">
-                          <span className="bg-brand-info-bg text-brand-info font-bold font-mono text-2xs px-2 py-0.5 rounded shrink-0">
+                          <span className="bg-brand-info-bg text-brand-info font-bold tabular-nums text-2xs px-2 py-0.5 rounded shrink-0">
                             CÂU {q.id}
                           </span>
                           <h4 className="text-xs font-semibold text-text-primary leading-relaxed">{q.question}</h4>
@@ -734,7 +734,7 @@ export default function StatsView() {
                                 cardStyle = "border-brand-error-border bg-brand-error-bg text-brand-error font-medium";
                                 iconBadge = "bg-brand-error text-white";
                                 labelBadge = (
-                                  <span className="ml-auto text-2xs font-medium bg-brand-error-bg text-brand-error px-2.5 py-0.5 rounded-full border border-brand-error-border flex items-center gap-1 shrink-0 font-mono">
+                                  <span className="ml-auto text-2xs font-medium bg-brand-error-bg text-brand-error px-2.5 py-0.5 rounded-full border border-brand-error-border flex items-center gap-1 shrink-0 tabular-nums">
                                     <X className="w-3 h-3" /> BẠN ĐÃ CHỌN
                                   </span>
                                 );
@@ -742,7 +742,7 @@ export default function StatsView() {
                                 cardStyle = "border-brand-success-border bg-brand-success-bg text-brand-success font-medium";
                                 iconBadge = "bg-brand-success text-white";
                                 labelBadge = (
-                                  <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 font-mono">
+                                  <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 tabular-nums">
                                     <Check className="w-3 h-3" /> ĐÁP ÁN ĐÚNG
                                   </span>
                                 );
@@ -752,7 +752,7 @@ export default function StatsView() {
                                 cardStyle = "border-brand-success-border bg-brand-success-bg text-brand-success font-medium";
                                 iconBadge = "bg-brand-success text-white";
                                 labelBadge = (
-                                  <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 font-mono">
+                                  <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 tabular-nums">
                                     <Check className="w-3 h-3" /> CHỌN ĐÚNG
                                   </span>
                                 );
@@ -764,7 +764,7 @@ export default function StatsView() {
                                   key={key} 
                                   className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${cardStyle}`}
                                 >
-                                  <span className={`w-5 h-5 rounded-md flex items-center justify-center font-bold font-mono text-xs shrink-0 ${iconBadge}`}>
+                                  <span className={`w-5 h-5 rounded-md flex items-center justify-center font-bold tabular-nums text-xs shrink-0 ${iconBadge}`}>
                                     {isUserSelected && userAnswer !== q.correctAnswer ? <X className="w-3 h-3" /> : (isCorrectAnswer ? <Check className="w-3 h-3" /> : key.toUpperCase())}
                                   </span>
                                   <div className="flex-1 pr-2 leading-relaxed">{q.options[key]}</div>
@@ -778,7 +778,7 @@ export default function StatsView() {
                       {/* BLOCK 2: Phân tích lỗi */}
                       {userAnswer !== q.correctAnswer && (
                         <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
-                          <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                          <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider tabular-nums flex items-center gap-1.5">
                             <AlertTriangle className="w-3.5 h-3.5 text-brand-error" /> Phân tích lỗi sai
                           </h5>
                           
@@ -786,19 +786,19 @@ export default function StatsView() {
                             {/* So sánh trực quan block */}
                             <div className="md:col-span-4 flex items-center justify-center gap-6 bg-bg-surface p-4 rounded-xl border border-border-primary">
                               <div className="flex flex-col items-center gap-1">
-                                <span className="text-2xs text-text-muted font-mono tracking-wider uppercase font-medium">BẠN CHỌN</span>
+                                <span className="text-2xs text-text-muted tabular-nums tracking-wider uppercase font-medium">BẠN CHỌN</span>
                                 <ArrowDown className="w-3 h-3 text-text-muted" />
-                                <span className="w-8 h-8 rounded-full bg-brand-error-bg text-brand-error flex items-center justify-center font-bold font-mono border border-brand-error-border">
+                                <span className="w-8 h-8 rounded-full bg-brand-error-bg text-brand-error flex items-center justify-center font-bold tabular-nums border border-brand-error-border">
                                   {userAnswer?.toUpperCase()}
                                 </span>
                               </div>
                               
-                              <div className="text-text-muted font-mono text-xs">VS</div>
+                              <div className="text-text-muted tabular-nums text-xs">VS</div>
                               
                               <div className="flex flex-col items-center gap-1">
-                                <span className="text-2xs text-text-muted font-mono tracking-wider uppercase font-medium">ĐÚNG LÀ</span>
+                                <span className="text-2xs text-text-muted tabular-nums tracking-wider uppercase font-medium">ĐÚNG LÀ</span>
                                 <ArrowDown className="w-3 h-3 text-text-muted" />
-                                <span className="w-8 h-8 rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center font-bold font-mono border border-brand-success-border">
+                                <span className="w-8 h-8 rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center font-bold tabular-nums border border-brand-success-border">
                                   {q.correctAnswer.toUpperCase()}
                                 </span>
                               </div>
@@ -832,7 +832,7 @@ export default function StatsView() {
 
                       {/* BLOCK 3: Knowledge Card (Kiến thức cần nhớ) */}
                       <div className="bg-brand-warning-bg/20 border border-brand-warning-border p-5 rounded-2xl space-y-3">
-                        <h5 className="text-2xs font-bold text-brand-warning uppercase tracking-wider font-mono flex items-center gap-1.5">
+                        <h5 className="text-2xs font-bold text-brand-warning uppercase tracking-wider tabular-nums flex items-center gap-1.5">
                           <Lightbulb className="w-3.5 h-3.5" /> Kiến thức cần nhớ (Trọng tâm lý thuyết)
                         </h5>
                         
@@ -845,7 +845,7 @@ export default function StatsView() {
 
                       {/* BLOCK 4: Kiến thức gốc (Lời giải chi tiết & Slide gốc) */}
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
-                        <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                        <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider tabular-nums flex items-center gap-1.5">
                           <BookOpen className="w-3.5 h-3.5 text-brand-info" /> Tài liệu gốc & Lời giải chi tiết
                         </h5>
 
@@ -855,7 +855,7 @@ export default function StatsView() {
                           </p>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3 text-2xs text-text-muted font-medium pt-2 font-mono border-t border-border-primary">
+                        <div className="flex flex-col sm:flex-row gap-3 text-2xs text-text-muted font-medium pt-2 tabular-nums border-t border-border-primary">
                           <div>
                             Nguồn slide: <span className="font-semibold text-text-secondary">{q.sourcePdf} (Trang {q.sourcePage})</span>
                           </div>
@@ -869,7 +869,7 @@ export default function StatsView() {
                       {/* BLOCK 5: Ghi nhớ nhanh (Quick Note) */}
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                         <div className="flex items-center justify-between gap-2">
-                          <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                          <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider tabular-nums flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5 text-brand-info" /> Ghi chú cá nhân (Tự động lưu)
                           </h5>
                           {noteFeedback[q.id] && (
@@ -892,22 +892,22 @@ export default function StatsView() {
                         const timeline = getQuestionTimeline(q.id);
                         return (
                           <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
-                            <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                            <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider tabular-nums flex items-center gap-1.5">
                               <History className="w-3.5 h-3.5 text-brand-info" /> Lịch sử luyện tập & Timeline sai
                             </h5>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-xs">
                               <div className="p-3 bg-bg-surface rounded-xl border border-border-primary space-y-1">
-                                <span className="text-2xs text-text-muted font-mono block uppercase">Lần đầu làm sai</span>
-                                <span className="font-bold text-text-primary font-mono">{timeline.firstAttempt}</span>
+                                <span className="text-2xs text-text-muted tabular-nums block uppercase">Lần đầu làm sai</span>
+                                <span className="font-bold text-text-primary tabular-nums">{timeline.firstAttempt}</span>
                               </div>
                               <div className="p-3 bg-brand-error-bg rounded-xl border border-brand-error-border space-y-1">
-                                <span className="text-2xs text-brand-error font-mono block uppercase">Tần suất làm sai</span>
-                                <span className="font-bold text-brand-error font-mono text-base leading-none">{timeline.count} lần</span>
+                                <span className="text-2xs text-brand-error tabular-nums block uppercase">Tần suất làm sai</span>
+                                <span className="font-bold text-brand-error tabular-nums text-base leading-none">{timeline.count} lần</span>
                               </div>
                               <div className="p-3 bg-bg-surface rounded-xl border border-border-primary space-y-1">
-                                <span className="text-2xs text-text-muted font-mono block uppercase">Lần gần nhất sai</span>
-                                <span className="font-bold text-text-primary font-mono">{timeline.lastAttempt}</span>
+                                <span className="text-2xs text-text-muted tabular-nums block uppercase">Lần gần nhất sai</span>
+                                <span className="font-bold text-text-primary tabular-nums">{timeline.lastAttempt}</span>
                               </div>
                             </div>
                           </div>
@@ -926,7 +926,7 @@ export default function StatsView() {
 
                         return (
                           <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
-                            <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
+                            <h5 className="text-2xs font-bold text-text-muted uppercase tracking-wider tabular-nums flex items-center gap-1.5">
                               <Layers className="w-3.5 h-3.5 text-brand-info" /> Các câu sai liên quan trong hệ thống
                             </h5>
 
@@ -941,7 +941,7 @@ export default function StatsView() {
                                   className="w-full text-left p-3 rounded-xl border border-border-primary hover:border-brand-info hover:bg-bg-surface transition flex items-center justify-between gap-3 text-xs cursor-pointer"
                                 >
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <span className="bg-bg-surface text-text-secondary font-bold font-mono text-2xs px-2 py-0.5 rounded shrink-0">
+                                    <span className="bg-bg-surface text-text-secondary font-bold tabular-nums text-2xs px-2 py-0.5 rounded shrink-0">
                                       CÂU #{otherQ.id}
                                     </span>
                                     <span className="text-text-primary truncate font-sans">{otherQ.question}</span>
@@ -958,7 +958,7 @@ export default function StatsView() {
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="space-y-0.5">
-                            <span className="text-2xs font-bold text-text-muted uppercase tracking-wider font-mono block">ĐÁNH GIÁ TIẾN TRÌNH</span>
+                            <span className="text-2xs font-bold text-text-muted uppercase tracking-wider tabular-nums block">ĐÁNH GIÁ TIẾN TRÌNH</span>
                             <span className="text-xs text-text-secondary font-sans">Đánh dấu tình trạng học lại câu này:</span>
                           </div>
 

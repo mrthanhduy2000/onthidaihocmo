@@ -110,7 +110,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
             const chId = parseInt(chIdStr);
             return (
               <div key={chId} className="space-y-3">
-                <div className="text-xs font-semibold text-text-primary uppercase tracking-wider font-mono border-l-2 border-text-primary pl-2.5">
+                <div className="text-xs font-semibold text-text-primary uppercase tracking-wider tabular-nums border-l-2 border-text-primary pl-2.5">
                   Chương {chId}: {nodes[0]?.source ? `${nodes[0].source.split(".pdf")[0] || "Bài học"}` : `Kiến thức Chương ${chId}`}
                 </div>
                 
@@ -140,7 +140,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                         {/* Concept Header */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <span className="text-2xs text-text-muted font-mono font-medium block">
+                            <span className="text-2xs text-text-muted tabular-nums font-medium block">
                               Mã tri thức: {node.id}
                             </span>
                             <h4 className="text-xs font-semibold text-text-primary leading-tight font-sans">
@@ -219,7 +219,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                               </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-2 text-2xs font-mono text-text-muted pt-1">
+                            <div className="grid grid-cols-2 gap-2 text-2xs tabular-nums text-text-muted pt-1">
                               <div>Slide nguồn: {node.source || "Tài liệu môn"}</div>
                               <div>Trang số: {node.page || "N/A"}</div>
                             </div>

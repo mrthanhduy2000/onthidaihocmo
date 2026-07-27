@@ -152,7 +152,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 1: Study Goal & Exam Config */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
               <Target className="w-3.5 h-3.5 text-brand-info" />
               Thiết lập Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
             </h4>
@@ -177,7 +177,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                   type="date"
                   value={goal.examDate}
                   onChange={(e) => handleGoalUpdate("examDate", e.target.value)}
-                  className="w-full bg-bg-card border border-border-primary rounded-lg px-2.5 py-1.5 text-xs font-mono text-text-primary"
+                  className="w-full bg-bg-card border border-border-primary rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-text-primary"
                 />
               </div>
 
@@ -198,7 +198,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 2: Product Preferences */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-brand-info" />
               Tùy chọn trải nghiệm
             </h4>
@@ -227,7 +227,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 3: Backup & Restore */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
               <Download className="w-3.5 h-3.5 text-brand-info" />
               Sao lưu và khôi phục dữ liệu
             </h4>
@@ -254,7 +254,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </div>
 
               {importStatus && (
-                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs font-mono text-brand-success flex items-center gap-2">
+                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>{importStatus}</span>
                 </div>
@@ -264,7 +264,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 4: Làm mới tiến trình học */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
               <RotateCcw className="w-3.5 h-3.5 text-brand-warning" />
               Làm mới tiến trình học
             </h4>
@@ -277,7 +277,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </p>
 
               {resetDone ? (
-                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs font-mono text-brand-success flex items-center gap-2">
+                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Đã làm mới tiến trình. Số liệu đã về 0.</span>
                 </div>

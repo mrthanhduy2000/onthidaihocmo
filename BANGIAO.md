@@ -59,6 +59,52 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Gỡ font đơn cách khỏi 371 chỗ, giữ nguyên chữ số thẳng cột
+
+Vòng tiếp theo của đợt tái thiết kế theo Khan Academy. Đây là thứ tạo ra cảm giác "bảng điều
+khiển quản trị" mà Đàm muốn bỏ.
+
+**Không gỡ hàng loạt theo cảm tính, mà phân loại bằng số đo trước.** Chạy trên bản đang chạy
+thật, duyệt cả sáu màn, lấy mọi phần tử có `font-family` chứa "mono" rồi phân loại nội dung
+chữ của nó:
+
+| Loại nội dung | Số chuỗi khác nhau | Đơn cách có đáng không |
+|---|---|---|
+| Chỉ có chữ số | **5** | Không, vì không chuỗi nào nằm trong cột số cần thẳng hàng |
+| Chỉ có chữ tiếng Việt | **40** | Sai hoàn toàn |
+| Lẫn lộn, kiểu "41 câu có sẵn • đã làm 0 câu" | **32** | Là câu văn, không phải cột số |
+
+Tức trong 77 chuỗi, đúng **5 chuỗi** là số thuần, và cả 5 đều là giá trị đơn lẻ ("6", "7",
+"0%") chứ không phải cột số xếp chồng. Lợi ích duy nhất có thật của font đơn cách là **chữ số
+xếp thẳng cột**, mà ở đây không có chỗ nào cần đến nó.
+
+Còn cái giá thì đo được: chuỗi "Chưa đủ dữ liệu" rộng **360px** trong JetBrains Mono so với
+**297,6px** trong Inter ở cùng cỡ chữ, tức **rộng thêm 21%**. Trong bảng dày, 21% ấy phải trả
+bằng chữ nhỏ hơn hoặc gãy dòng nhiều hơn. Cộng thêm bề rộng đều nhau xoá mất hình bao từ, vốn
+là manh mối chính để mắt lướt nhanh.
+
+**Cách sửa**: thay `font-mono` bằng `tabular-nums` ở cả 371 chỗ. Đây không phải xoá mà là đổi
+sang thứ giữ đúng lợi ích và bỏ hết cái giá: `tabular-nums` bật `font-variant-numeric` nên chữ
+số vẫn xếp thẳng cột, còn chữ cái thì về lại font tỷ lệ.
+
+**Đã kiểm chứng là Inter thật sự làm được việc đó**, không phải tin lời tài liệu. Đo bề rộng
+hai chuỗi sáu chữ số trên bản chạy thật:
+
+| Chế độ | "111111" | "000000" | Thẳng cột |
+|---|---|---|---|
+| `normal` | 97,6px | 151,4px | không |
+| `tabular-nums` | 155,6px | 155,6px | **có** |
+
+**Kết quả đo lại sau khi sửa**: không còn phần tử nào trong ứng dụng dùng font đơn cách.
+
+`npm run check` đạt toàn bộ 6 chặng.
+
+**Lưu ý cho người sau**: `--font-mono` vẫn còn khai báo trong `index.css` và JetBrains Mono vẫn
+còn trong dòng `@import` font. Chưa gỡ vì có thể sau này cần hiển thị mã hoặc dữ liệu thô thật
+sự. Nếu chắc chắn không dùng nữa thì gỡ khỏi `@import` sẽ tiết kiệm được một lượt tải font.
+
+---
+
 ### 28/07/2026 — Đặt sàn cỡ chữ ở 12px, gỡ 405 chỗ viết thẳng số
 
 Vòng tiếp theo của đợt tái thiết kế theo Khan Academy.

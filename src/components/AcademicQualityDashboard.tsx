@@ -140,26 +140,26 @@ export default function AcademicQualityDashboard() {
         <div className="space-y-6 fade-in-up">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs font-mono uppercase text-text-muted">Độ bao phủ Kiến thức</div>
-              <div className="text-2xl font-mono font-bold text-brand-success">{healthOverview.coveragePct}%</div>
+              <div className="text-2xs tabular-nums uppercase text-text-muted">Độ bao phủ Kiến thức</div>
+              <div className="text-2xl tabular-nums font-bold text-brand-success">{healthOverview.coveragePct}%</div>
               <div className="text-2xs text-text-muted">{healthOverview.totalConcepts} khái niệm trọng tâm</div>
             </div>
 
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs font-mono uppercase text-text-muted">Tổng số câu hỏi</div>
-              <div className="text-2xl font-mono font-bold text-brand-info">{healthOverview.totalQuestions}</div>
+              <div className="text-2xs tabular-nums uppercase text-text-muted">Tổng số câu hỏi</div>
+              <div className="text-2xl tabular-nums font-bold text-brand-info">{healthOverview.totalQuestions}</div>
               <div className="text-2xs text-text-muted">Ngân hàng hoạt động</div>
             </div>
 
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs font-mono uppercase text-text-muted">Chất lượng trung bình</div>
-              <div className="text-2xl font-mono font-bold text-text-primary">{healthOverview.averageQualityScore}/100</div>
+              <div className="text-2xs tabular-nums uppercase text-text-muted">Chất lượng trung bình</div>
+              <div className="text-2xl tabular-nums font-bold text-text-primary">{healthOverview.averageQualityScore}/100</div>
               <div className="text-2xs text-text-muted">Đạt tiêu chuẩn học thuật</div>
             </div>
 
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs font-mono uppercase text-text-muted">Câu hỏi trùng lặp</div>
-              <div className="text-2xl font-mono font-bold text-brand-warning">{healthOverview.duplicateQuestionCount}</div>
+              <div className="text-2xs tabular-nums uppercase text-text-muted">Câu hỏi trùng lặp</div>
+              <div className="text-2xl tabular-nums font-bold text-brand-warning">{healthOverview.duplicateQuestionCount}</div>
               <div className="text-2xs text-text-muted">Đã phát hiện</div>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function AcademicQualityDashboard() {
           <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
             <div className="text-xs font-semibold text-text-primary flex items-center justify-between border-b border-border-primary/60 pb-2">
               <span>Trạng thái kiểm định khái niệm ({conceptDetails.length})</span>
-              <span className="text-2xs font-mono text-text-muted">Chương 1 - 6</span>
+              <span className="text-2xs tabular-nums text-text-muted">Chương 1 - 6</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -193,7 +193,7 @@ export default function AcademicQualityDashboard() {
                 <div key={cd.conceptId} className="p-3 bg-bg-surface border border-border-primary/60 rounded-xl space-y-2 text-xs">
                   <div className="flex items-center justify-between font-semibold text-text-primary">
                     <span className="truncate max-w-[180px]">{cd.conceptName}</span>
-                    <span className={`px-2 py-0.5 rounded text-2xs font-mono font-bold ${
+                    <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
                       cd.coverageStatus === "FULL" ? "bg-brand-success/20 text-brand-success" :
                       cd.coverageStatus === "PARTIAL" ? "bg-brand-warning/20 text-brand-warning" :
                       "bg-brand-error/20 text-brand-error"
@@ -202,7 +202,7 @@ export default function AcademicQualityDashboard() {
                     </span>
                   </div>
 
-                  <div className="text-2xs text-text-muted flex justify-between font-mono">
+                  <div className="text-2xs text-text-muted flex justify-between tabular-nums">
                     <span>{cd.questionCount} câu hỏi</span>
                     <span>Chương {cd.chapterId}</span>
                   </div>
@@ -218,13 +218,13 @@ export default function AcademicQualityDashboard() {
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-4 fade-in-up">
           <div className="text-xs font-semibold text-text-primary flex items-center justify-between border-b border-border-primary/60 pb-3">
             <span>Ma trận phủ tri thức (Khái niệm → Dẫn chứng → Ma trận đề → Cấp độ Bloom → Câu hỏi)</span>
-            <span className="text-2xs font-mono text-text-muted">{coverageMatrix.length} Khái niệm</span>
+            <span className="text-2xs tabular-nums text-text-muted">{coverageMatrix.length} Khái niệm</span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border-primary text-text-muted font-mono text-2xs uppercase">
+                <tr className="border-b border-border-primary text-text-muted tabular-nums text-2xs uppercase">
                   <th className="py-2.5 px-3">Chương</th>
                   <th className="py-2.5 px-3">Khái niệm</th>
                   <th className="py-2.5 px-3">Căn cứ giáo trình</th>
@@ -235,13 +235,13 @@ export default function AcademicQualityDashboard() {
               <tbody className="divide-y divide-border-primary/40 text-text-primary">
                 {coverageMatrix.map((row, idx) => (
                   <tr key={idx} className="hover:bg-bg-surface transition">
-                    <td className="py-3 px-3 font-mono text-brand-info">Chương {row.chapterId}</td>
+                    <td className="py-3 px-3 tabular-nums text-brand-info">Chương {row.chapterId}</td>
                     <td className="py-3 px-3 font-medium">{row.concept}</td>
                     <td className="py-3 px-3 text-text-muted text-2xs max-w-xs truncate">{row.evidenceSnippet}</td>
-                    <td className="py-3 px-3 font-mono text-2xs">
+                    <td className="py-3 px-3 tabular-nums text-2xs">
                       {row.bloomLevelsUsed.length > 0 ? row.bloomLevelsUsed.join(", ") : "Chưa có"}
                     </td>
-                    <td className="py-3 px-3 font-mono font-bold">{row.questionCount} câu</td>
+                    <td className="py-3 px-3 tabular-nums font-bold">{row.questionCount} câu</td>
                   </tr>
                 ))}
               </tbody>
@@ -320,7 +320,7 @@ export default function AcademicQualityDashboard() {
                 <button
                   key={status}
                   onClick={() => setReviewFilter(status)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-medium transition cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-xs tabular-nums font-medium transition cursor-pointer ${
                     reviewFilter === status 
                       ? "bg-text-primary text-bg-card" 
                       : "bg-bg-surface text-text-muted border border-border-primary"
