@@ -270,6 +270,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
   const remainingDays = prediction.metricsBreakdown.remainingDays;
   /** Đã có bài làm nào chưa. Nhiều con số chỉ có nghĩa khi đã có bài, xem chỗ dùng bên dưới. */
   const daCoBaiLam = dbService.getStatistics().totalSolved > 0;
+  const coCauSai = prediction.metricsBreakdown.studyDebtCount > 0;
   /** Ngày thi theo lối viết Việt Nam. Bản cũ in thẳng chuỗi ISO kiểu 2026-08-11 ra cho người học. */
   const ngayThiTiengViet = (() => {
     const [nam, thang, ngay] = String(goal.examDate || "").split("-");
@@ -443,16 +444,28 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
           {/* Today's Checklist Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             
-            <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
+            {/*
+              MỘT việc chính, hai việc phụ.
+
+              Bản cũ dựng ba thẻ "Nhiệm vụ 1, 2, 3" hoàn toàn ngang hàng nhau: cùng khung, cùng
+              cỡ chữ, cùng một kiểu nút xám. Người học phải tự đọc hết cả ba rồi tự xếp hạng, tức
+              là bị đẩy lại đúng phần việc mà một gia sư phải làm thay. Nay việc nên làm trước
+              mang nút đặc, hai việc còn lại lùi về nền.
+
+              Thẻ câu sai còn một lỗi trạng thái rỗng: khi sổ câu sai trống, bản cũ vẫn hiện
+              "Sửa 0 câu trong Sổ câu sai" kèm một nút bấm được, tức mời người học đi làm một
+              việc không tồn tại.
+            */}
+            <div className={`rounded-2xl p-5 space-y-3 shadow-sm border ${coCauSai ? "bg-bg-card border-border-primary" : "bg-bg-card border-border-primary"}`}>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-text-muted uppercase">Nhiệm vụ 1</span>
+                <span className="text-xs text-text-muted">Nên làm trước</span>
                 <CheckCircle2 className="w-4 h-4 text-brand-success" />
               </div>
-              <h4 className="text-xs font-semibold text-text-primary">Ôn 15 câu theo điểm yếu</h4>
+              <h4 className="text-sm font-semibold text-text-primary">Ôn 15 câu theo điểm yếu</h4>
               <p className="text-xs text-text-muted">Tập trung vào phần dễ quên và các câu từng làm sai.</p>
-              <button 
+              <button
                 onClick={() => onStartExam("adaptive")}
-                className="w-full py-1.5 bg-bg-surface border border-border-primary hover:border-brand-info/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
+                className="w-full py-2 bg-text-primary text-bg-card hover:opacity-90 text-xs rounded-lg transition font-semibold cursor-pointer"
               >
                 Ôn ngay
               </button>
@@ -460,29 +473,41 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
             <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-text-muted uppercase">Nhiệm vụ 2</span>
-                <AlertTriangle className="w-4 h-4 text-brand-warning" />
+                <span className="text-xs text-text-muted">Sổ câu sai</span>
+                {coCauSai
+                  ? <AlertTriangle className="w-4 h-4 text-brand-warning" />
+                  : <CheckCircle2 className="w-4 h-4 text-brand-success" />}
               </div>
-              <h4 className="text-xs font-semibold text-text-primary">Sửa {prediction.metricsBreakdown.studyDebtCount} câu trong Sổ câu sai</h4>
-              <p className="text-xs text-text-muted">Hiểu lại lỗi cũ trước khi học thêm phần mới.</p>
-              <button 
-                onClick={() => onNavigateView("review")}
-                className="w-full py-1.5 bg-bg-surface border border-border-primary hover:border-brand-warning/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
-              >
-                Mở câu sai
-              </button>
+              <h4 className="text-sm font-semibold text-text-primary">
+                {coCauSai
+                  ? `Sửa ${prediction.metricsBreakdown.studyDebtCount} câu đang nợ`
+                  : "Sổ câu sai đang sạch"}
+              </h4>
+              <p className="text-xs text-text-muted">
+                {coCauSai
+                  ? "Hiểu lại lỗi cũ trước khi học thêm phần mới."
+                  : "Chưa có câu nào cần sửa lại. Làm thêm bài để hệ thống tìm điểm yếu."}
+              </p>
+              {coCauSai && (
+                <button
+                  onClick={() => onNavigateView("review")}
+                  className="w-full py-2 bg-bg-surface border border-border-primary hover:border-brand-warning/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
+                >
+                  Mở câu sai
+                </button>
+              )}
             </div>
 
             <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono text-text-muted uppercase">Nhiệm vụ 3</span>
+                <span className="text-xs text-text-muted">Tự kiểm tra</span>
                 <Clock className="w-4 h-4 text-brand-info" />
               </div>
-              <h4 className="text-xs font-semibold text-text-primary">Làm một bài thi thử ngắn</h4>
+              <h4 className="text-sm font-semibold text-text-primary">Làm một bài thi thử ngắn</h4>
               <p className="text-xs text-text-muted">Tự kiểm tra mức sẵn sàng trước kỳ thi.</p>
-              <button 
+              <button
                 onClick={() => onStartExam("ai-smart")}
-                className="w-full py-1.5 bg-bg-surface border border-border-primary hover:border-brand-info/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
+                className="w-full py-2 bg-bg-surface border border-border-primary hover:border-brand-info/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
               >
                 Thi thử
               </button>

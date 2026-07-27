@@ -21,7 +21,6 @@ import PersonalWorkspaceView from "./components/PersonalWorkspaceView";
 import { LearningObservatoryView } from "./components/LearningObservatoryView";
 import SessionRecoveryBanner from "./components/SessionRecoveryBanner";
 import GlobalCommandPalette from "./components/GlobalCommandPalette";
-import QuickActionFAB from "./components/QuickActionFAB";
 import ProductSettingsModal from "./components/ProductSettingsModal";
 import { dbService } from "./services/db";
 import { workspaceService } from "./services/workspaceService";
@@ -327,21 +326,18 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Quick Action Button (+) */}
-      {!isDeepFocus && (
-        <QuickActionFAB
-          onNavigate={(view, param) => {
-            if (param) {
-              const exam = aiService.generateExam({ type: param.type || "adaptive", count: 10 });
-              handleStartExam(exam);
-            } else {
-              setCurrentView(view as any);
-            }
-          }}
-          onOpenUpload={() => setCurrentView("workspace")}
-          onOpenSearch={() => setCurrentView("workspace")}
-        />
-      )}
+      {/*
+        Nút cộng nổi đã gỡ ngày 28/07/2026.
+
+        Sáu mục của nó thì bốn mục trùng y hệt thanh điều hướng (Ôn theo điểm yếu, Sửa câu sai,
+        Kế hoạch điểm, Hỏi trợ lý AI), tức thêm một lớp thao tác để tới đúng chỗ đã ở sẵn cách
+        một lần bấm. Hai mục còn lại, "Tra cứu khái niệm" và "Thêm tài liệu", gọi hai hàm mà
+        App chỉ cài là `setCurrentView("workspace")`, nên bấm vào chỉ chuyển trang chứ KHÔNG mở
+        ô tra cứu hay hộp thêm tài liệu nào cả. Cả hai việc đó đã có nút thật, chạy thật, ngay
+        trên màn Bàn học.
+
+        Nó còn là một khối nổi che mất nội dung ở góc phải dưới trên mọi màn hình.
+      */}
 
       {/* Global Command Palette Modal (Ctrl + K) */}
       <GlobalCommandPalette
