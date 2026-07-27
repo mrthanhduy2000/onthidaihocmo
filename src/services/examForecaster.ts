@@ -407,24 +407,32 @@ export const examForecaster = {
     let bloomWeight = 0.10;
 
     if (profile.calibrationCount >= 2) {
-      // Evidence optimization: if mock exams have low bias error, increase mock weight
+      // Trọng số điều chỉnh theo hàm LIÊN TỤC, không dùng ngưỡng bậc thang.
+      //
+      // Bản cũ có hai ngưỡng cứng, tăng trọng số khi sai lệch dưới 0,3 và giảm khi trên 0,8, nên
+      // **cả dải từ 0,3 tới 0,8 là vùng chết**: sai lệch nằm trong đó thì trọng số không đổi một
+      // ly. Mà đo được ngày 27/07/2026 thì sai lệch thật hay rơi đúng vào dải này (một hồ sơ mô
+      // phỏng cho 0,8 chằn, tức nằm ngay mép và không kích hoạt nhánh nào). Nói cách khác cơ chế
+      // thích nghi im lặng đúng lúc cần nó nhất.
+      //
+      // Nay dùng nội suy tuyến tính, chặn hai đầu: sai lệch 0 thì tin bài thi thử nhất
+      // (+0,08), sai lệch 0,4 thì trung tính, từ 0,8 trở lên thì lùi hẳn (-0,08). Mọi giá trị ở
+      // giữa đều cho một mức điều chỉnh riêng.
       const mockBias = Math.abs(profile.examTypeBias["mock"] || profile.overallBias);
-      if (mockBias < 0.3) {
-        mockWeight += 0.08;
-        masteryWeight -= 0.04;
-        coverageWeight -= 0.04;
-      } else if (mockBias > 0.8) {
-        // High error in mock exams -> rely more on stable mastery & coverage
-        mockWeight -= 0.06;
-        masteryWeight += 0.03;
-        coverageWeight += 0.03;
-      }
+      const BIEN_SAI_LECH = 0.8;
+      const mucTinBaiThiThu = 1 - 2 * Math.min(1, mockBias / BIEN_SAI_LECH); // +1 xuống -1
+      const dieuChinhMock = 0.08 * mucTinBaiThiThu;
 
-      // If high overall variance -> increase retention weight as safety buffer
-      if (profile.predictionVariance > 0.4) {
-        retentionWeight += 0.05;
-        bloomWeight -= 0.05;
-      }
+      mockWeight += dieuChinhMock;
+      masteryWeight -= dieuChinhMock / 2;
+      coverageWeight -= dieuChinhMock / 2;
+
+      // Phương sai càng lớn thì càng phải dựa vào trí nhớ như tấm đệm an toàn. Cũng liên tục,
+      // thay cho ngưỡng cứng 0,4 vốn nhảy một bậc rồi thôi.
+      const BIEN_PHUONG_SAI = 0.4;
+      const dieuChinhPhuongSai = 0.05 * Math.min(1, Math.max(0, profile.predictionVariance) / BIEN_PHUONG_SAI);
+      retentionWeight += dieuChinhPhuongSai;
+      bloomWeight -= dieuChinhPhuongSai;
     }
 
     // Normalize weights to strictly sum to 1.0

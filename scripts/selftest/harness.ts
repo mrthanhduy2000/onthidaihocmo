@@ -1602,6 +1602,19 @@ check("Trọng số dự báo đổi theo sai lệch đã học được",
   khac(tsThap, tsMacDinh) && khac(tsCao, tsMacDinh) && khac(tsThap, tsCao),
   `mặc định mock=${tsMacDinh.mockWeight}; sai lệch nhỏ cho mock=${tsThap.mockWeight}; sai lệch lớn cho mock=${tsCao.mockWeight}`);
 
+// R7. KHÔNG được có vùng chết. Bản cũ chỉ đổi trọng số khi sai lệch dưới 0,3 hoặc trên 0,8, nên
+// cả dải giữa là vùng chết, đúng nơi phần lớn sai lệch thật rơi vào. Quét dải đó và đòi mỗi mức
+// sai lệch cho một mức trọng số riêng.
+const daiSaiLech = [0.30, 0.40, 0.50, 0.60, 0.70, 0.80];
+const mockTheoSaiLech = daiSaiLech.map(b =>
+  examForecaster.calculateAdaptiveWeights({ ...hcGioiR, overallBias: b, examTypeBias: {}, calibrationCount: 5 }).mockWeight
+);
+const soMucKhacNhau = new Set(mockTheoSaiLech.map(v => v.toFixed(4))).size;
+const giamDanTheoSaiLech = mockTheoSaiLech.every((v, i) => i === 0 || v <= mockTheoSaiLech[i - 1] + 1e-9);
+check("Trọng số không có vùng chết giữa hai ngưỡng cũ",
+  soMucKhacNhau === daiSaiLech.length && giamDanTheoSaiLech,
+  `sai lệch 0,30 đến 0,80 cho ${soMucKhacNhau} mức trọng số khác nhau: ${mockTheoSaiLech.map(v => v.toFixed(3)).join(", ")}`);
+
 // Và chốt chặn: cùng sai lệch đó nhưng CHƯA đủ lượt hiệu chuẩn thì trọng số phải nằm im. Đây
 // chính là cái cổng mà trước đây không bao giờ mở được.
 const hoSoChuaDu = { ...hoSoSaiLechCao, calibrationCount: 0 };

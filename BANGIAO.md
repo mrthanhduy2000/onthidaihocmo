@@ -59,6 +59,34 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Bỏ vùng chết trong hàm trọng số thích nghi
+
+**Objective**: khoản nợ do chính tôi ghi lại ở lượt trước. `calculateAdaptiveWeights` dùng hai
+ngưỡng bậc thang: tăng trọng số bài thi thử khi sai lệch **dưới 0,3**, giảm khi **trên 0,8**.
+
+**Vấn đề**: cả dải từ 0,3 tới 0,8 là **vùng chết**, trọng số không đổi một ly. Mà đo được ở lượt
+trước, sai lệch thật hay rơi đúng vào dải này. Một hồ sơ mô phỏng cho sai lệch **0,8 chằn**, tức
+nằm ngay mép và không kích hoạt nhánh nào. Cơ chế thích nghi im lặng đúng lúc cần nó nhất.
+
+**Đã làm**: đổi sang nội suy tuyến tính có chặn hai đầu. Sai lệch 0 thì tin bài thi thử nhất
+(+0,08), sai lệch 0,4 trung tính, từ 0,8 trở lên lùi hẳn (−0,08). Phần điều chỉnh theo phương sai
+cũng bỏ ngưỡng cứng 0,4, đổi sang liên tục.
+
+**Đo được**: quét sai lệch từ 0,30 tới 0,80 theo bước 0,10.
+
+| Sai lệch | 0,30 | 0,40 | 0,50 | 0,60 | 0,70 | 0,80 |
+|---|---|---|---|---|---|---|
+| Trọng số bài thi thử, bản cũ | 0,200 | 0,200 | 0,200 | 0,200 | 0,200 | 0,200 |
+| Bản mới | 0,220 | 0,200 | 0,180 | 0,160 | 0,140 | 0,120 |
+
+Từ **1 mức duy nhất** lên đủ 6 mức. Sai lệch tổng thể của bộ dự báo cũng nhích thêm chút: lệch
+lớn nhất từ 0,3 xuống **0,2**, lệch trung bình từ 0,22 xuống **0,20**.
+
+**Nghiệm thu**: nhóm kiểm **R** thêm 1 phép, tổng lên **135**, `npm run check` đủ 6 chặng. Đã thử
+phá: khôi phục dạng bậc thang thì cả sáu mức sai lệch cho đúng một trọng số 0,200 và phép kiểm đỏ.
+
+---
+
 ### 27/07/2026 — Quét ba engine chưa ai soi, ra hai con số kẹt cứng
 
 **Objective**: chủ dự án yêu cầu tự chạy chẩn đoán rồi làm tiếp, không thêm tính năng mới. Áp bộ
