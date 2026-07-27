@@ -106,7 +106,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-bg-card border border-border-primary rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-border-primary pb-3">
-          <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+          <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-brand-info" />
             Tạo câu hỏi AI cho Chương {chapterId}
           </h3>

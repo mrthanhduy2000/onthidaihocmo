@@ -92,7 +92,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
                 key={key} 
                 className={`p-2 rounded-lg border ${isCorrect ? "bg-brand-success/5 border-brand-success/40 text-brand-success font-medium" : "bg-bg-surface border-border-primary/60 text-text-muted"}`}
               >
-                <span className="tabular-nums uppercase font-bold mr-1.5">{key}:</span>
+                <span className="tabular-nums font-bold mr-1.5">{key}:</span>
                 <span>{val}</span>
               </div>
             );
@@ -119,7 +119,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
       <div className="flex items-center justify-between pt-1 border-t border-border-primary/60 text-xs">
         <div className="flex items-center gap-2">
           {/* Human Review Status Pill */}
-          <span className={`px-2.5 py-0.5 rounded-full text-2xs tabular-nums font-bold uppercase ${
+          <span className={`px-2.5 py-0.5 rounded-full text-2xs tabular-nums font-bold ${
             profile.humanReview.status === "APPROVED" ? "bg-brand-success/20 text-brand-success border border-brand-success/30" :
             profile.humanReview.status === "NEEDS_REVISION" ? "bg-brand-warning/20 text-brand-warning border border-brand-warning/30" :
             profile.humanReview.status === "REJECTED" ? "bg-brand-error/20 text-brand-error border border-brand-error/30" :

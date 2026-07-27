@@ -105,7 +105,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
       {/* AI Coach Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info mb-1">
+          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info mb-1">
             <Brain className="w-4 h-4" />
             Trợ lý học tập • Lộ trình cá nhân
           </div>
@@ -203,7 +203,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                     */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <span className="text-2xs tabular-nums uppercase tracking-wider text-brand-info">Chương {ch.id}</span>
+                        <span className="text-2xs tabular-nums text-brand-info">Chương {ch.id}</span>
                         <h4 className="text-sm font-semibold text-text-primary">{ch.title}</h4>
                       </div>
                       <span className={`text-2xs tabular-nums px-2 py-0.5 rounded border whitespace-nowrap shrink-0 ${

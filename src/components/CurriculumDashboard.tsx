@@ -75,7 +75,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
           </div>
 
           <div className="flex items-center gap-3 self-start md:self-auto">
-            <span className={`px-3 py-1.5 rounded-full border text-xs tabular-nums font-bold uppercase tracking-wider ${getStageBadgeColor(plan.currentStage)}`}>
+            <span className={`px-3 py-1.5 rounded-full border text-xs tabular-nums font-bold ${getStageBadgeColor(plan.currentStage)}`}>
               Giai đoạn: {plan.currentStage}
             </span>
           </div>
@@ -84,25 +84,25 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
         {/* 4 Core Strategy Metric Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted uppercase">Sẵn sàng thi</div>
+            <div className="text-2xs tabular-nums text-text-muted">Sẵn sàng thi</div>
             <div className="text-2xl tabular-nums font-bold text-brand-info">{plan.readinessScore}/100</div>
             <div className="text-2xs text-text-muted">Chỉ số tự tin làm bài</div>
           </div>
 
           <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted uppercase">Độ thông thạo</div>
+            <div className="text-2xs tabular-nums text-text-muted">Độ thông thạo</div>
             <div className="text-2xl tabular-nums font-bold text-brand-success">{plan.masteryScore}%</div>
             <div className="text-2xs text-text-muted">Tỷ lệ chính xác tổng thể</div>
           </div>
 
           <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted uppercase">Nhiệm vụ hôm nay</div>
+            <div className="text-2xs tabular-nums text-text-muted">Nhiệm vụ hôm nay</div>
             <div className="text-xs font-semibold text-text-primary truncate">{plan.todayGoal}</div>
             <div className="text-2xs tabular-nums text-brand-info">{plan.estimatedStudyTime} phút dự kiến</div>
           </div>
 
           <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted uppercase">Đếm ngược kỳ thi</div>
+            <div className="text-2xs tabular-nums text-text-muted">Đếm ngược kỳ thi</div>
             <div className="text-2xl tabular-nums font-bold text-brand-warning">{plan.examDaysRemaining} Ngày</div>
             <div className="text-2xs text-text-muted">Tính từ ngày thi trong mục tiêu môn học</div>
           </div>
@@ -133,7 +133,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
       {/* SECTION 1: LEARNING MAP (CHAPTER STATUSES) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs tabular-nums uppercase tracking-wider text-text-muted flex items-center gap-2">
+          <h2 className="text-xs tabular-nums text-text-muted flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-brand-info" />
             Bản đồ tiến trình học phần
           </h2>
@@ -205,7 +205,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
         <div className="flex items-center justify-between border-b border-border-primary/60 pb-3">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-brand-info" />
-            <h3 className="text-xs font-bold text-text-primary uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-text-primary">
               Kế hoạch rèn luyện 7 ngày
             </h3>
           </div>

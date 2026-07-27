@@ -450,7 +450,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-primary/60 pb-5">
             <div>
-              <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-success mb-1">
+              <div className="flex items-center gap-2 text-xs tabular-nums text-brand-success mb-1">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Phiên học hoàn tất • Tổng kết buổi học</span>
               </div>
@@ -490,28 +490,28 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
           {/* 4 Core Summary Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums uppercase text-text-muted">Kết quả bài thi</span>
+              <span className="text-2xs tabular-nums text-text-muted">Kết quả bài thi</span>
               <p className="text-lg font-display font-semibold text-text-primary">
                 {correctCount} / {examQuestions.length} <span className="text-xs font-sans font-normal text-text-muted">đúng</span>
               </p>
             </div>
 
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums uppercase text-text-muted">Khái niệm đã thông thạo</span>
+              <span className="text-2xs tabular-nums text-text-muted">Khái niệm đã thông thạo</span>
               <p className="text-lg font-display font-semibold text-brand-success">
                 +{Math.max(1, Math.floor(correctCount / 3))} <span className="text-xs font-sans font-normal text-text-muted">khái niệm</span>
               </p>
             </div>
 
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums uppercase text-text-muted">Hiểu sai đã sửa</span>
+              <span className="text-2xs tabular-nums text-text-muted">Hiểu sai đã sửa</span>
               <p className="text-lg font-display font-semibold text-brand-warning">
                 {incorrectCount > 0 ? "1 hiểu sai" : "0 bẫy sai"}
               </p>
             </div>
 
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums uppercase text-text-muted">Độ ghi nhớ dự đoán</span>
+              <span className="text-2xs tabular-nums text-text-muted">Độ ghi nhớ dự đoán</span>
               <p className="text-lg font-display font-semibold text-brand-info">
                 71% &rarr; {Math.min(96, 71 + Math.round((correctCount / examQuestions.length) * 18))}%
               </p>
@@ -871,7 +871,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   {/* Gia sư AI phân tích sâu theo đúng câu hỏi (gọi khi người học yêu cầu) */}
                   {aiExplanations[activeQuestion.id] ? (
                     <div className="space-y-1.5">
-                      <span className="text-brand-info font-semibold uppercase tracking-wider text-2xs block flex items-center gap-1">
+                      <span className="text-brand-info font-semibold text-2xs block flex items-center gap-1">
                         <Sparkles className="w-3.5 h-3.5 text-brand-info" />
                         Gia sư AI phân tích sâu:
                       </span>
@@ -991,13 +991,13 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-xs font-sans">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-text-muted text-2xs uppercase tabular-nums font-bold">Chiến lược sư phạm</span>
+                            <span className="text-text-muted text-2xs tabular-nums font-bold">Chiến lược sư phạm</span>
                             <span className="bg-brand-success-bg text-brand-success px-2 py-0.5 rounded text-2xs font-semibold border border-brand-success-border/20">
                               {aiPipelineMetadata[activeQuestion.id].strategyUsed}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-text-muted text-2xs uppercase tabular-nums font-bold">Xác suất đoán bừa</span>
+                            <span className="text-text-muted text-2xs tabular-nums font-bold">Xác suất đoán bừa</span>
                             <span className={`font-semibold tabular-nums ${
                               aiPipelineMetadata[activeQuestion.id].guessingProbability >= 0.6 ? "text-brand-error" : "text-text-secondary"
                             }`}>
@@ -1014,7 +1014,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                         <div className="space-y-3">
                           <div>
-                            <span className="text-text-muted text-2xs uppercase tabular-nums font-bold block mb-1">Kiểm định học thuật</span>
+                            <span className="text-text-muted text-2xs tabular-nums font-bold block mb-1">Kiểm định học thuật</span>
                             <div className="flex items-center gap-1.5 text-2xs">
                               <span className="w-2 h-2 rounded-full bg-brand-success"></span>
                               <span className="text-text-secondary font-medium">Bằng chứng xác thực nguồn Slide</span>
@@ -1034,7 +1034,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         {/* Cross Subject Intelligence Alert Card */}
                         {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel && (
                           <div className="md:col-span-2 bg-brand-info-bg/5 border border-brand-info-border/20 p-3 rounded-lg space-y-1 mt-1">
-                            <div className="flex items-center gap-1 text-2xs font-bold text-brand-info uppercase tabular-nums">
+                            <div className="flex items-center gap-1 text-2xs font-bold text-brand-info tabular-nums">
                               <Brain className="w-3.5 h-3.5" />
                               <span>Kết nối tư duy liên môn (Cross-Subject Intelligence)</span>
                             </div>
@@ -1051,7 +1051,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                     {/* The main AI Lecture body */}
                     <div className="bg-bg-card p-5 rounded-lg border border-border-primary/60 text-xs text-text-secondary leading-relaxed font-sans prose dark:prose-invert max-w-none">
-                      <div className="flex items-center gap-1.5 mb-3 text-2xs uppercase tabular-nums text-brand-info font-bold">
+                      <div className="flex items-center gap-1.5 mb-3 text-2xs tabular-nums text-brand-info font-bold">
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Bài giảng AI (Góc nhìn: {
                           explanationLevel === "simple" ? "Dễ hiểu" :
@@ -1180,21 +1180,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {conceptNode.teaching?.misconception && (
                             <div className="border border-brand-error-border/30 bg-brand-error-bg/5 p-3 rounded-xl space-y-1">
-                              <span className="text-2xs font-bold text-brand-error uppercase tabular-nums block">Cảnh báo hiểu sai</span>
+                              <span className="text-2xs font-bold text-brand-error tabular-nums block">Cảnh báo hiểu sai</span>
                               <p className="text-2xs text-text-primary leading-relaxed font-sans">{conceptNode.teaching.misconception}</p>
                             </div>
                           )}
 
                           {conceptNode.teaching?.counterExample && (
                             <div className="border border-brand-warning-border/30 bg-brand-warning-bg/5 p-3 rounded-xl space-y-1">
-                              <span className="text-2xs font-bold text-brand-warning uppercase tabular-nums block">Ví dụ phản chứng tránh học vẹt</span>
+                              <span className="text-2xs font-bold text-brand-warning tabular-nums block">Ví dụ phản chứng tránh học vẹt</span>
                               <p className="text-2xs text-text-primary leading-relaxed font-sans">{conceptNode.teaching.counterExample}</p>
                             </div>
                           )}
 
                           {conceptNode.teaching?.learningObjective && (
                             <div className="border border-brand-info-border/30 bg-brand-info-bg/5 p-3 rounded-xl space-y-1 sm:col-span-2">
-                              <span className="text-2xs font-bold text-brand-info uppercase tabular-nums block">Chuẩn đầu ra năng lực</span>
+                              <span className="text-2xs font-bold text-brand-info tabular-nums block">Chuẩn đầu ra năng lực</span>
                               <p className="text-2xs text-text-primary leading-relaxed font-sans">Sau khi ôn tập xong khái niệm này, sinh viên phải: {conceptNode.teaching.learningObjective}</p>
                             </div>
                           )}
@@ -1219,7 +1219,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <span className="text-text-primary font-semibold block">Bản đồ liên kết tri thức</span>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                           <div className="bg-bg-surface/50 border border-border-primary/30 p-2.5 rounded-md">
-                            <span className="text-text-muted tabular-nums text-2xs block uppercase tracking-wider mb-1">Tri thức tiên quyết:</span>
+                            <span className="text-text-muted tabular-nums text-2xs block mb-1">Tri thức tiên quyết:</span>
                             {reqNodes.length > 0 ? (
                               <div className="flex flex-wrap gap-1.5">
                                 {reqNodes.map(rn => (
@@ -1234,14 +1234,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           </div>
 
                           <div className="bg-bg-surface/50 border border-border-primary/30 p-2.5 rounded-md">
-                            <span className="text-text-muted tabular-nums text-2xs block uppercase tracking-wider mb-1">Khái niệm hiện tại:</span>
+                            <span className="text-text-muted tabular-nums text-2xs block mb-1">Khái niệm hiện tại:</span>
                             <span className="bg-brand-info-bg text-brand-info border border-brand-info-border/20 text-2xs px-1.5 py-0.5 rounded font-medium">
                               {conceptNode.concept}
                             </span>
                           </div>
 
                           <div className="bg-bg-surface/50 border border-border-primary/30 p-2.5 rounded-md">
-                            <span className="text-text-muted tabular-nums text-2xs block uppercase tracking-wider mb-1">Khái niệm liên quan:</span>
+                            <span className="text-text-muted tabular-nums text-2xs block mb-1">Khái niệm liên quan:</span>
                             {relatedNodes.length > 0 || conceptNode.dependencies?.relatedConcepts?.length ? (
                               <div className="flex flex-wrap gap-1.5">
                                 {(relatedNodes.length > 0 ? relatedNodes.map(rn => rn.concept) : conceptNode.dependencies?.relatedConcepts || []).slice(0, 2).map((c, i) => (
@@ -1307,7 +1307,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 </svg>
                 <div className="absolute flex flex-col items-center">
                   <span className="text-md tabular-nums font-bold text-text-primary">{scorePercent}%</span>
-                  <span className="text-2xs text-text-muted tabular-nums uppercase">Đúng</span>
+                  <span className="text-2xs text-text-muted tabular-nums">Đúng</span>
                 </div>
               </div>
 

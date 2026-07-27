@@ -186,7 +186,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
                         </div>
 
                         <div className="space-y-0.5">
-                          <span className="text-2xs tabular-nums text-text-muted uppercase tracking-wider block">ID: {step.id}</span>
+                          <span className="text-2xs tabular-nums text-text-muted block">ID: {step.id}</span>
                           <span className="font-semibold text-text-primary leading-tight font-sans line-clamp-1">{step.conceptName}</span>
                         </div>
                       </div>
@@ -225,7 +225,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
             <div className="mt-2 bg-bg-surface/60 border border-border-primary p-3 rounded-lg text-xs space-y-2 animate-fade-in">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-text-primary text-2xs">{selectedStep.conceptName}</span>
-                <span className="text-2xs tabular-nums text-text-muted uppercase">Chương {selectedStep.chapter}</span>
+                <span className="text-2xs tabular-nums text-text-muted">Chương {selectedStep.chapter}</span>
               </div>
               <p className="text-2xs text-text-secondary leading-relaxed font-sans">{selectedStep.reason}</p>
               <div className="flex items-center justify-between gap-4 pt-1.5 border-t border-border-primary/50 text-2xs">
@@ -310,12 +310,12 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
 
           <div className="grid grid-cols-2 gap-4 py-1">
             <div className="bg-bg-surface p-3 rounded-lg border border-border-primary/50 text-center space-y-1">
-              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Tốc độ hoàn thiện</span>
+              <span className="text-2xs text-text-muted tabular-nums block">Tốc độ hoàn thiện</span>
               <span className="text-lg font-bold text-text-primary font-display">{forecast.velocity} <span className="text-2xs font-normal text-text-muted">concepts/đề</span></span>
             </div>
 
             <div className="bg-bg-surface p-3 rounded-lg border border-border-primary/50 text-center space-y-1">
-              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Hao hụt trí nhớ</span>
+              <span className="text-2xs text-text-muted tabular-nums block">Hao hụt trí nhớ</span>
               <span className="text-lg font-bold text-brand-warning font-display">{forecast.decayRate}% <span className="text-2xs font-normal text-text-muted">suy giảm/ngày</span></span>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
               <span className="text-text-muted block text-2xs">Thời gian dự báo hoàn thành môn học:</span>
               <span className="font-semibold text-text-primary">Khoảng {forecast.etaDays} ngày tiếp theo</span>
             </div>
-            <span className={`text-2xs tabular-nums px-2 py-1 rounded font-bold uppercase ${
+            <span className={`text-2xs tabular-nums px-2 py-1 rounded font-bold ${
               forecast.decayRate > 20 ? "bg-brand-error-bg text-brand-error" : "bg-brand-success-bg text-brand-success"
             }`}>
               {forecast.status}
@@ -347,21 +347,21 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
 
           <div className="grid grid-cols-3 gap-2 py-1 text-center">
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
-              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Số cuộc gọi API</span>
+              <span className="text-2xs text-text-muted tabular-nums block">Số cuộc gọi API</span>
               <span className="text-md font-bold text-text-primary font-display flex items-center justify-center gap-1 mt-0.5">
                 <Database className="w-3.5 h-3.5 text-text-muted" /> {telemetry.apiCallsCount}
               </span>
             </div>
 
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
-              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Chi phí ước tính</span>
+              <span className="text-2xs text-text-muted tabular-nums block">Chi phí ước tính</span>
               <span className="text-md font-bold text-brand-success font-display flex items-center justify-center gap-0.5 mt-0.5">
                 <Coins className="w-3.5 h-3.5 text-brand-success" /> ${telemetry.estimatedCostUsd.toFixed(4)}
               </span>
             </div>
 
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
-              <span className="text-2xs uppercase tracking-wider text-text-muted tabular-nums block">Tỷ lệ dùng chế độ ngoại tuyến</span>
+              <span className="text-2xs text-text-muted tabular-nums block">Tỷ lệ dùng chế độ ngoại tuyến</span>
               <span className="text-md font-bold text-text-primary font-display flex items-center justify-center gap-1 mt-0.5">
                 <RefreshCw className="w-3.5 h-3.5 text-text-muted" /> {telemetry.fallbackOfflineCount > 0 ? `${Math.round((telemetry.fallbackOfflineCount / Math.max(1, telemetry.apiCallsCount + telemetry.fallbackOfflineCount)) * 100)}%` : "0%"}
               </span>

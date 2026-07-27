@@ -119,7 +119,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info mb-1">
+          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info mb-1">
             <TrendingUp className="w-4 h-4 text-brand-info" />
             <span>Kế hoạch ôn thi và dự báo điểm</span>
           </div>
@@ -131,12 +131,12 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
         {/* Top Summary Chips */}
         <div className="flex items-center gap-3">
           <div className="bg-bg-card border border-border-primary/80 rounded-xl px-4 py-2 text-right">
-            <span className="text-2xs tabular-nums text-text-muted uppercase block">Mục tiêu hiện tại</span>
+            <span className="text-2xs tabular-nums text-text-muted block">Mục tiêu hiện tại</span>
             <span className="text-sm font-semibold text-text-primary">{goal.targetScore.toFixed(1)} điểm</span>
           </div>
 
           <div className="bg-bg-card border border-brand-info/30 rounded-xl px-4 py-2 text-right">
-            <span className="text-2xs tabular-nums text-brand-info uppercase block">Dự báo kết quả</span>
+            <span className="text-2xs tabular-nums text-brand-info block">Dự báo kết quả</span>
             <span className="text-sm font-bold text-brand-info">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</span>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             {/* Metric 1: Forecast Score Card */}
             <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums text-text-muted uppercase tracking-wider">Điểm dự báo</span>
+                <span className="text-xs tabular-nums text-text-muted">Điểm dự báo</span>
                 <span className={`px-2 py-0.5 text-2xs tabular-nums rounded-full border ${
                   prediction.confidenceLevel === "Cao" 
                     ? "bg-brand-success/10 text-brand-success border-brand-success/20" 
@@ -216,7 +216,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             {/* Metric 2: Target & Gap Card */}
             <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums text-text-muted uppercase tracking-wider">Mục tiêu và khoảng cách</span>
+                <span className="text-xs tabular-nums text-text-muted">Mục tiêu và khoảng cách</span>
                 <span className="text-xs tabular-nums font-bold text-brand-warning">
                   Còn thiếu: -{prediction.gap.toFixed(1)}
                 </span>
@@ -224,11 +224,11 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
               <div className="flex items-center justify-between pt-1">
                 <div>
-                  <span className="text-2xs text-text-muted uppercase block">Mục tiêu</span>
+                  <span className="text-2xs text-text-muted block">Mục tiêu</span>
                   <span className="text-2xl font-display font-medium text-text-primary">{prediction.targetScore.toFixed(1)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xs text-text-muted uppercase block">Sẵn sàng</span>
+                  <span className="text-2xs text-text-muted block">Sẵn sàng</span>
                   <span className="text-2xl font-display font-medium text-brand-success">{prediction.readinessPercentage}%</span>
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             {/* Metric 3: Risk Level Card */}
             <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums text-text-muted uppercase tracking-wider">Nguy cơ trượt mục tiêu</span>
+                <span className="text-xs tabular-nums text-text-muted">Nguy cơ trượt mục tiêu</span>
                 <span className={`px-2 py-0.5 text-2xs tabular-nums rounded-full ${
                   prediction.riskReport.level === "Thấp" 
                     ? "bg-brand-success/10 text-brand-success" 
@@ -269,7 +269,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* Target Gap Action Plan */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Zap className="w-4 h-4 text-brand-info" />
               Hành động cụ thể dứt điểm khoảng cách (-{prediction.gap.toFixed(1)} điểm)
             </h3>
@@ -298,26 +298,26 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* Milestone Planner Timeline */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <CalendarDays className="w-4 h-4 text-brand-info" />
               Cột mốc lộ trình
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-1">
-                <span className="text-2xs tabular-nums text-brand-info uppercase">Trong 3 ngày tới</span>
+                <span className="text-2xs tabular-nums text-brand-info">Trong 3 ngày tới</span>
                 <h4 className="text-xs font-semibold text-text-primary">Xử lý xong 100% Sổ tay câu sai</h4>
                 <p className="text-2xs text-text-muted">Giúp xóa rủi ro mất điểm bẫy quen thuộc.</p>
               </div>
 
               <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-1">
-                <span className="text-2xs tabular-nums text-brand-warning uppercase">Trong 7 ngày tới</span>
+                <span className="text-2xs tabular-nums text-brand-warning">Trong 7 ngày tới</span>
                 <h4 className="text-xs font-semibold text-text-primary">Đạt độ thông thạo 80% toàn bộ các chương</h4>
                 <p className="text-2xs text-text-muted">Bảo đảm kiến thức nền tảng trước khi làm đề.</p>
               </div>
 
               <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-1">
-                <span className="text-2xs tabular-nums text-brand-success uppercase">Trong 10 ngày tới</span>
+                <span className="text-2xs tabular-nums text-brand-success">Trong 10 ngày tới</span>
                 <h4 className="text-xs font-semibold text-text-primary">Làm 2 đề thi thử Tự Thích ứng</h4>
                 <p className="text-2xs text-text-muted">Tối ưu điểm số tiệm cận mốc mong muốn.</p>
               </div>
@@ -328,7 +328,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl text-xs space-y-2 tabular-nums">
             <div className="flex items-center gap-2 text-text-muted">
               <Info className="w-3.5 h-3.5 text-brand-info" />
-              <span className="font-semibold text-text-primary uppercase">Vì sao AI đề xuất như vậy</span>
+              <span className="font-semibold text-text-primary">Vì sao AI đề xuất như vậy</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-2xs text-text-muted">
               <div>• <strong>Quyết định:</strong> {prediction.explainability.decision}</div>
@@ -345,7 +345,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
         <div className="space-y-6">
           {/* Goal Editor Form */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-5 shadow-sm">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Target className="w-4 h-4 text-brand-info" />
               Thiết lập Mục tiêu & Ngày thi ({dbService.getActiveSubjectName()})
             </h3>
@@ -408,7 +408,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* Multiple Subjects Planning Overview */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Calendar className="w-4 h-4 text-brand-info" />
               Tổng quan lịch thi đa môn học
             </h3>
@@ -468,7 +468,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           {/* Daily Budget Distribution */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+              <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
                 <Clock className="w-4 h-4 text-brand-info" />
                 Phân bổ Ngân sách Học hàng ngày ({dailyBudgetPlan.totalMinutes} phút/ngày)
               </h3>
@@ -492,7 +492,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* Study ROI Dashboard Table */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-info" />
               Việc học nào đáng làm trước
             </h3>
@@ -537,7 +537,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {activeTab === "debt" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-border-primary pb-4">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-brand-warning" />
               Sổ quản lý nợ học tập
             </h3>
@@ -612,7 +612,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {activeTab === "simulator" && (
         <div className="space-y-6">
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-5 shadow-sm">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Sliders className="w-4 h-4 text-brand-info" />
               Mô phỏng thay đổi lịch thi & thời lượng học
             </h3>
@@ -653,11 +653,11 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
             <div className="bg-bg-surface border border-border-primary rounded-xl p-4 flex items-center justify-between">
               <div>
-                <span className="text-2xs tabular-nums text-text-muted uppercase block">Kết quả mô phỏng</span>
+                <span className="text-2xs tabular-nums text-text-muted block">Kết quả mô phỏng</span>
                 <span className="text-xs font-medium text-text-primary">Nếu học {simMinutes} phút/ngày trong {simDays} ngày</span>
               </div>
               <div className="text-right">
-                <span className="text-2xs tabular-nums text-brand-info uppercase block">Điểm dự báo mô phỏng</span>
+                <span className="text-2xs tabular-nums text-brand-info block">Điểm dự báo mô phỏng</span>
                 <span className="text-2xl font-display font-bold text-brand-info">{simulatedScore.toFixed(1)}</span>
               </div>
             </div>
@@ -665,7 +665,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* What-if Cards */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-info" />
               Kịch bản giả định
             </h3>
@@ -693,7 +693,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {activeTab === "sessions" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-border-primary pb-4">
-            <h3 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Layers className="w-4 h-4 text-brand-info" />
               Quản lý lịch sử & phiên làm bài
             </h3>

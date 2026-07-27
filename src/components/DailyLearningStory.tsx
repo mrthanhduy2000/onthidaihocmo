@@ -59,7 +59,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
       {/* Proposed Next Step Callout */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-bg-surface border border-border-primary/80 rounded-xl p-3.5 text-xs">
         <div className="space-y-0.5">
-          <span className="text-2xs tabular-nums text-brand-info uppercase font-bold">Gợi ý vi bước tiếp theo</span>
+          <span className="text-2xs tabular-nums text-brand-info font-bold">Gợi ý vi bước tiếp theo</span>
           <div className="font-semibold text-text-primary">{story.proposedNextStep}</div>
         </div>
 

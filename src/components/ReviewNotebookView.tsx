@@ -98,7 +98,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-warning mb-1">
+          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-warning mb-1">
             <BookMarked className="w-4 h-4" />
             Sổ tay củng cố & Khắc phục
           </div>
@@ -300,7 +300,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
 
                       {/* Options breakdown */}
                       <div className="space-y-2">
-                        <div className="text-2xs tabular-nums text-text-muted uppercase tracking-wider">Các phương án đáp án:</div>
+                        <div className="text-2xs tabular-nums text-text-muted">Các phương án đáp án:</div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {Object.entries(q.options).map(([key, text]) => {
                             const isCorrect = key === q.correctAnswer;

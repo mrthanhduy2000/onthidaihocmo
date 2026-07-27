@@ -62,7 +62,7 @@ export default function TeachingAnalyticsView() {
         {/* Metric 1 */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Hiệu quả Giảng dạy</span>
+            <span className="text-xs font-semibold text-text-muted">Hiệu quả Giảng dạy</span>
             <span className="p-1.5 bg-emerald-500/10 text-emerald-600 rounded-md">
               <ShieldCheck className="w-4 h-4" />
             </span>
@@ -89,7 +89,7 @@ export default function TeachingAnalyticsView() {
         {/* Metric 2 */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Tốc độ Học tập</span>
+            <span className="text-xs font-semibold text-text-muted">Tốc độ Học tập</span>
             <span className="p-1.5 bg-blue-500/10 text-blue-600 rounded-md">
               <Zap className="w-4 h-4" />
             </span>
@@ -104,7 +104,7 @@ export default function TeachingAnalyticsView() {
         {/* Metric 3 */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Mệt mỏi Nhận thức</span>
+            <span className="text-xs font-semibold text-text-muted">Mệt mỏi Nhận thức</span>
             <span className="p-1.5 bg-amber-500/10 text-amber-600 rounded-md">
               <Clock className="w-4 h-4" />
             </span>
@@ -121,7 +121,7 @@ export default function TeachingAnalyticsView() {
         {/* Metric 4 */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Phong cách Ưu tiên</span>
+            <span className="text-xs font-semibold text-text-muted">Phong cách Ưu tiên</span>
             <span className="p-1.5 bg-purple-500/10 text-purple-600 rounded-md">
               <Brain className="w-4 h-4" />
             </span>
@@ -259,7 +259,7 @@ export default function TeachingAnalyticsView() {
               </div>
 
               <div className="p-4 bg-bg-surface border border-border-primary rounded-lg space-y-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-text-muted uppercase">
+                <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
                   <span>Phương pháp hiệu quả nhất</span>
                 </div>
                 <div className={`text-sm font-bold ${report.mostEffectiveTeachingStyle === "Chưa đủ dữ liệu" ? "text-text-muted" : "text-emerald-600"}`}>
@@ -287,7 +287,7 @@ export default function TeachingAnalyticsView() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="border-b border-border-primary text-xs font-semibold text-text-muted uppercase">
+                <tr className="border-b border-border-primary text-xs font-semibold text-text-muted">
                   <th className="py-3 px-3">Phương pháp</th>
                   <th className="py-3 px-3">Số lần tương tác</th>
                   <th className="py-3 px-3">Tỷ lệ thành công</th>
@@ -391,12 +391,12 @@ export default function TeachingAnalyticsView() {
                   </div>
 
                   <div>
-                    <span className="text-xs font-semibold text-text-muted uppercase">Quyết định: </span>
+                    <span className="text-xs font-semibold text-text-muted">Quyết định: </span>
                     <span className="text-text-primary font-medium">{entry.decision}</span>
                   </div>
 
                   <div>
-                    <span className="text-xs font-semibold text-text-muted uppercase">Lý do sư phạm: </span>
+                    <span className="text-xs font-semibold text-text-muted">Lý do sư phạm: </span>
                     <span className="text-text-secondary">{entry.reason}</span>
                   </div>
 

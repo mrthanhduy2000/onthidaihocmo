@@ -50,7 +50,7 @@ export default function DashboardClock() {
         </div>
         <div className="flex justify-between items-center text-2xs text-text-muted tabular-nums mt-0.5">
           <span>{dateStr}</span>
-          <span className="text-2xs text-brand-info font-medium uppercase tracking-tight">
+          <span className="text-2xs text-brand-info font-medium tracking-tight">
             TP. Hồ Chí Minh
           </span>
         </div>

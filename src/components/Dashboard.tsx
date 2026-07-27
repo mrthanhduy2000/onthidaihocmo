@@ -101,7 +101,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xs tabular-nums text-text-muted uppercase">1. Thời gian tới kỳ thi</div>
+            <div className="text-2xs tabular-nums text-text-muted">1. Thời gian tới kỳ thi</div>
             <div className="text-sm font-semibold text-text-primary">
               {simplified.timeToExamText}
             </div>
@@ -115,7 +115,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             <Target className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xs tabular-nums text-text-muted uppercase">2. Việc nên làm ngay</div>
+            <div className="text-2xs tabular-nums text-text-muted">2. Việc nên làm ngay</div>
             <div className="text-sm font-semibold text-text-primary">
               {simplified.todayGoalText}
             </div>
@@ -129,7 +129,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xs tabular-nums text-text-muted uppercase">3. Tiến độ hiện tại</div>
+            <div className="text-2xs tabular-nums text-text-muted">3. Tiến độ hiện tại</div>
             <div className="text-sm font-semibold text-text-primary">
               {simplified.progressSummary}
             </div>
@@ -182,7 +182,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
 
       {/* PROGRESSIVE DISCLOSURE TOGGLE FOR SECONDARY DETAILS */}
       <div className="flex items-center justify-between pt-2 border-t border-border-primary/60">
-        <h2 className="text-xs tabular-nums uppercase tracking-wider text-text-muted flex items-center gap-2">
+        <h2 className="text-xs tabular-nums text-text-muted flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-brand-info" />
           Tùy chọn ôn tập thêm
         </h2>

@@ -316,7 +316,12 @@ button, select, input, textarea, a, [role="button"], [role="tab"], [role="option
   Với tiếng Việt còn nặng hơn một bậc: ở cỡ 10px viết hoa, Ế và Ề khác nhau đúng một nét nhỏ
   phía trên. Bó chữ lại làm dấu của chữ này chạm vào thân chữ bên cạnh.
 
-  Toàn dự án có 154 chỗ dùng `uppercase`. Sửa tại đây một lần, thay vì đi sửa 154 chỗ.
+  Ban đầu quy tắc này sinh ra để sửa một lần cho cả 154 chỗ dùng `uppercase`. Sau đó vòng kế
+  tiếp đã gỡ hẳn `uppercase` khỏi toàn bộ 154 chỗ đó, nên hiện KHÔNG còn phần tử nào trong ứng
+  dụng dùng tới nó nữa.
+
+  Vẫn giữ quy tắc lại làm hàng rào: nếu sau này có ai thêm `uppercase` vào đâu đó thì nó tự
+  nhận khoảng giãn đúng, thay vì lặp lại lỗi giãn âm cũ.
 */
 .uppercase {
   letter-spacing: 0.06em;

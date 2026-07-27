@@ -148,7 +148,7 @@ export const LearningObservatoryView: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-bg-surface/80 p-4 rounded-xl border border-border-primary/80 backdrop-blur-sm">
             <div className="text-center sm:text-right">
-              <div className="text-xs text-text-muted font-medium uppercase tracking-wider">Điểm sức khỏe hệ thống</div>
+              <div className="text-xs text-text-muted font-medium">Điểm sức khỏe hệ thống</div>
               <div className="text-3xl font-black tabular-nums tracking-tight text-brand-info flex items-center justify-center sm:justify-end gap-1.5">
                 <span>{health.systemHealthScore}</span>
                 <span className="text-sm font-normal text-text-muted">/100</span>
@@ -471,7 +471,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <p className="text-xs text-text-muted">{dc.reason}</p>
 
                   <div className="p-2.5 bg-bg-card rounded-lg border border-border-primary/80 space-y-1">
-                    <div className="text-2xs font-bold uppercase text-brand-info">Đề xuất Tác giả:</div>
+                    <div className="text-2xs font-bold text-brand-info">Đề xuất Tác giả:</div>
                     <p className="text-xs text-text-primary font-medium">{dc.suggestedAction}</p>
                   </div>
 

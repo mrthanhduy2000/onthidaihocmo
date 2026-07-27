@@ -152,7 +152,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 1: Study Goal & Exam Config */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Target className="w-3.5 h-3.5 text-brand-info" />
               Thiết lập Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
             </h4>
@@ -198,7 +198,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 2: Product Preferences */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-brand-info" />
               Tùy chọn trải nghiệm
             </h4>
@@ -227,7 +227,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 3: Backup & Restore */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Download className="w-3.5 h-3.5 text-brand-info" />
               Sao lưu và khôi phục dữ liệu
             </h4>
@@ -264,7 +264,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 4: Làm mới tiến trình học */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums uppercase tracking-wider text-text-primary flex items-center gap-2">
+            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <RotateCcw className="w-3.5 h-3.5 text-brand-warning" />
               Làm mới tiến trình học
             </h4>

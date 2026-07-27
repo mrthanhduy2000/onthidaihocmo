@@ -122,7 +122,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-10 fade-in-up" data-refresh={refreshKey}>
       {/* Header */}
       <div className="border-b border-border-primary pb-6 space-y-1">
-        <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info">
+        <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info">
           <Brain className="w-4 h-4" />
           Trung tâm Rèn luyện
         </div>
@@ -379,7 +379,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-2xs tabular-nums text-brand-info font-semibold">Chương {ch.id}</span>
                           {isSuggested && !isEmpty && (
-                            <span className="text-2xs tabular-nums uppercase px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
+                            <span className="text-2xs tabular-nums px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" /> Nên làm tiếp
                             </span>
                           )}

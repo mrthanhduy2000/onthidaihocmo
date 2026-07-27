@@ -59,6 +59,36 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Gỡ chữ viết hoa khỏi 154 chỗ, dấu vết bảng điều khiển cuối cùng
+
+**Đã làm**: gỡ `uppercase` khỏi toàn bộ 154 chỗ, kèm 78 chỗ `tracking-wider` đi cặp với nó.
+
+**Vì sao**: chữ hoa không có hình bao từ. Chữ thường có phần nhô lên (l, h, t) và thụt xuống
+(g, y, p) tạo ra một bóng dáng riêng cho từng từ, và mắt dùng chính bóng dáng đó để nhận từ mà
+không cần đọc từng chữ cái. Viết hoa biến mọi từ thành một khối chữ nhật giống hệt nhau, xoá
+sạch manh mối đó. Đây là lý do chữ hoa luôn đọc chậm hơn, và với sản phẩm để học nhiều giờ
+liền thì 154 nhãn như vậy là một khoản thuế trả suốt buổi.
+
+Đo trên Khan Academy: trong toàn bộ luồng học chỉ dùng chữ hoa ở **đúng một chỗ**, là dòng
+đường dẫn "KHÓA HỌC: SỐ HỌC > CHƯƠNG 1" trong khung bên trái. Chữ hoa dùng thưa như vậy thì
+còn là dấu hiệu phân loại; dùng 154 lần thì thành tiếng ồn.
+
+**Một cái bẫy đã kiểm trước khi sửa**: gỡ class `uppercase` chỉ ăn thua nếu chữ gốc trong mã
+nguồn vốn viết thường. Quét thì thấy có **5 chuỗi viết hoa sẵn ngay trong mã**, gỡ class không
+chạm tới được. Bốn chuỗi đã đổi sang viết thường ("Tiến trình củng cố", "Bạn chọn", "Đúng là",
+"Đánh giá tiến trình"). Chuỗi thứ năm là "ÔN THI ĐẠI HỌC MỞ", tức tên thương hiệu, **giữ
+nguyên**: tên thương hiệu viết hoa là quy ước nhận diện chứ không phải nhãn để đọc.
+
+**Kiểm chứng**: quét cả sáu màn, còn **0 phần tử** dùng chữ hoa, không màn nào vỡ hay tràn.
+`npm run check` đạt toàn bộ 6 chặng.
+
+**Một ghi chú tự sửa**: quy tắc `.uppercase { letter-spacing: 0.06em }` thêm ở vòng token nay
+không còn phần tử nào dùng tới. Vẫn giữ lại làm hàng rào phòng khi sau này có ai thêm
+`uppercase` vào đâu đó, để khỏi lặp lại lỗi giãn âm cũ. Đã cập nhật chú thích trong `index.css`
+cho khớp thực tế.
+
+---
+
 ### 28/07/2026 — Gỡ font đơn cách khỏi 371 chỗ, giữ nguyên chữ số thẳng cột
 
 Vòng tiếp theo của đợt tái thiết kế theo Khan Academy. Đây là thứ tạo ra cảm giác "bảng điều
@@ -335,8 +365,9 @@ hai mặt. Dự án đang có 371 chỗ dùng `font-mono`, chưa xử lý, xem p
 - **Hàng đáp án ở màn luyện câu vẫn là thẻ có viền và có nền.** Theo mô hình Khan thì nên là
   danh sách chữ ngăn nhau bằng đường kẻ 1px, để mắt đọc trôi từ câu hỏi xuống các phương án
   thay vì phải phân tích năm khối đóng. Đây là việc lớn tiếp theo và nên làm riêng một vòng.
-- Huy hiệu `+6% tuần này` viết cứng trong `PersonalWorkspaceView.tsx` vẫn còn, là con số bịa
-  hiển thị bằng màu xanh thành công, phạm bất biến 4.9.
+- ~~Huy hiệu `+6% tuần này` viết cứng trong `PersonalWorkspaceView.tsx`.~~ **Ghi nhầm.** Rà lại
+  mã nguồn thì nó đã được gỡ từ lượt trước, chú thích giải thích lý do vẫn nằm ngay tại chỗ cũ
+  trong file. Tôi đã liệt kê nó dựa trên thông tin cũ mà không kiểm lại mã.
 
 ---
 

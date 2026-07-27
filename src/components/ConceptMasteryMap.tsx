@@ -110,7 +110,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
             const chId = parseInt(chIdStr);
             return (
               <div key={chId} className="space-y-3">
-                <div className="text-xs font-semibold text-text-primary uppercase tracking-wider tabular-nums border-l-2 border-text-primary pl-2.5">
+                <div className="text-xs font-semibold text-text-primary tabular-nums border-l-2 border-text-primary pl-2.5">
                   Chương {chId}: {nodes[0]?.source ? `${nodes[0].source.split(".pdf")[0] || "Bài học"}` : `Kiến thức Chương ${chId}`}
                 </div>
                 
@@ -201,20 +201,20 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                         {isExpanded && (
                           <div className="pt-3 border-t border-border-primary/60 space-y-3 text-2xs text-text-secondary leading-relaxed font-sans animate-fade-in">
                             <div className="space-y-1">
-                              <span className="text-text-muted font-semibold uppercase tracking-wider text-2xs block">Định nghĩa tài liệu chính thức:</span>
+                              <span className="text-text-muted font-semibold text-2xs block">Định nghĩa tài liệu chính thức:</span>
                               <p className="whitespace-pre-line text-text-primary bg-bg-surface p-2.5 rounded-lg border border-border-primary/40">{node.definition}</p>
                             </div>
                             
                             {node.teaching?.misconception && (
                               <div className="space-y-1">
-                                <span className="text-brand-error font-semibold uppercase tracking-wider text-2xs block">Lỗi sai học viên thường mắc:</span>
+                                <span className="text-brand-error font-semibold text-2xs block">Lỗi sai học viên thường mắc:</span>
                                 <p className="text-text-secondary bg-brand-error-bg/20 border border-brand-error-border/20 p-2.5 rounded-lg">{node.teaching.misconception}</p>
                               </div>
                             )}
 
                             {node.teaching?.memoryHook && (
                               <div className="space-y-1">
-                                <span className="text-brand-success font-semibold uppercase tracking-wider text-2xs block">Mẹo ghi nhớ nhanh:</span>
+                                <span className="text-brand-success font-semibold text-2xs block">Mẹo ghi nhớ nhanh:</span>
                                 <p className="text-brand-success bg-brand-success-bg/10 border border-brand-success-border/20 p-2.5 rounded-lg italic">"{node.teaching.memoryHook}"</p>
                               </div>
                             )}

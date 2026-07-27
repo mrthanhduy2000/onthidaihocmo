@@ -47,7 +47,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary/60 pb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info">
+          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info">
             <Sliders className="w-4 h-4" />
             Assessment Design Engine • Bàn thiết kế Đề thi
           </div>
@@ -166,7 +166,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                   isPass ? "bg-brand-success/5 border-brand-success/20 text-brand-success" : "bg-brand-warning/5 border-brand-warning/20 text-brand-warning"
                 }`}
               >
-                <div className="text-2xs tabular-nums uppercase text-text-muted">{key}</div>
+                <div className="text-2xs tabular-nums text-text-muted">{key}</div>
                 <div className="text-xs font-bold mt-0.5 flex items-center justify-center gap-1">
                   {isPass ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
                   <span>{check.status}</span>
@@ -282,7 +282,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
 
         <div className="overflow-x-auto border border-border-primary/60 rounded-xl">
           <table className="w-full text-left text-xs">
-            <thead className="bg-bg-surface text-text-muted tabular-nums uppercase text-2xs border-b border-border-primary/60">
+            <thead className="bg-bg-surface text-text-muted tabular-nums text-2xs border-b border-border-primary/60">
               <tr>
                 <th className="p-3">#</th>
                 <th className="p-3">Khái niệm</th>

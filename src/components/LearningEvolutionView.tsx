@@ -93,7 +93,7 @@ export default function LearningEvolutionView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Đắc thụ Ổn định</span>
+            <span className="text-xs font-semibold text-text-muted">Đắc thụ Ổn định</span>
             <span className="p-1.5 bg-emerald-500/10 text-emerald-600 rounded-md">
               <ShieldCheck className="w-4 h-4" />
             </span>
@@ -107,7 +107,7 @@ export default function LearningEvolutionView() {
 
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Cảnh báo Giảm sút</span>
+            <span className="text-xs font-semibold text-text-muted">Cảnh báo Giảm sút</span>
             <span className="p-1.5 bg-red-500/10 text-red-600 rounded-md">
               <AlertTriangle className="w-4 h-4" />
             </span>
@@ -121,7 +121,7 @@ export default function LearningEvolutionView() {
 
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Đang Phát triển</span>
+            <span className="text-xs font-semibold text-text-muted">Đang Phát triển</span>
             <span className="p-1.5 bg-blue-500/10 text-blue-600 rounded-md">
               <Activity className="w-4 h-4" />
             </span>
@@ -135,7 +135,7 @@ export default function LearningEvolutionView() {
 
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">Cột mốc Đạt được</span>
+            <span className="text-xs font-semibold text-text-muted">Cột mốc Đạt được</span>
             <span className="p-1.5 bg-amber-500/10 text-amber-600 rounded-md">
               <Award className="w-4 h-4" />
             </span>
@@ -282,7 +282,7 @@ export default function LearningEvolutionView() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* List of Concepts */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-4 shadow-sm space-y-2">
-            <h3 className="text-sm font-semibold text-text-muted uppercase tracking-wider px-2 mb-2">Danh sách Khái niệm</h3>
+            <h3 className="text-sm font-semibold text-text-muted px-2 mb-2">Danh sách Khái niệm</h3>
             {profileList.length === 0 ? (
               <p className="text-sm text-text-muted p-2 italic">Chưa có khái niệm trong bộ nhớ.</p>
             ) : (
@@ -554,7 +554,7 @@ export default function LearningEvolutionView() {
                   </div>
 
                   <div>
-                    <span className="text-xs font-semibold text-text-muted uppercase">Lý do: </span>
+                    <span className="text-xs font-semibold text-text-muted">Lý do: </span>
                     <span className="text-text-secondary">{entry.reason}</span>
                   </div>
 

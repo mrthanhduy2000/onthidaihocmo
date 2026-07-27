@@ -177,7 +177,7 @@ export default function GlobalCommandPalette({
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-2xs tabular-nums text-text-muted uppercase block">{cmd.category}</span>
+                      <span className="text-2xs tabular-nums text-text-muted block">{cmd.category}</span>
                       <span className="text-xs font-semibold text-text-primary group-hover:text-brand-info transition">{cmd.title}</span>
                     </div>
                   </div>

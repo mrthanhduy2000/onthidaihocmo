@@ -22,7 +22,7 @@ export default function ContinueLearningCard({ exam, onContinue }: ContinueLearn
   return (
     <div className="bg-bg-card border border-brand-info/40 rounded-2xl p-5 shadow-sm space-y-4 hover:border-brand-info/60 transition">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs tabular-nums uppercase tracking-wider text-brand-info font-bold">
+        <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info font-bold">
           <AlertCircle className="w-4 h-4" />
           <span>Phiên học đang diễn ra • Học tiếp</span>
         </div>

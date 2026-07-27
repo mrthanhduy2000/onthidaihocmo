@@ -140,25 +140,25 @@ export default function AcademicQualityDashboard() {
         <div className="space-y-6 fade-in-up">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs tabular-nums uppercase text-text-muted">Độ bao phủ Kiến thức</div>
+              <div className="text-2xs tabular-nums text-text-muted">Độ bao phủ Kiến thức</div>
               <div className="text-2xl tabular-nums font-bold text-brand-success">{healthOverview.coveragePct}%</div>
               <div className="text-2xs text-text-muted">{healthOverview.totalConcepts} khái niệm trọng tâm</div>
             </div>
 
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs tabular-nums uppercase text-text-muted">Tổng số câu hỏi</div>
+              <div className="text-2xs tabular-nums text-text-muted">Tổng số câu hỏi</div>
               <div className="text-2xl tabular-nums font-bold text-brand-info">{healthOverview.totalQuestions}</div>
               <div className="text-2xs text-text-muted">Ngân hàng hoạt động</div>
             </div>
 
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs tabular-nums uppercase text-text-muted">Chất lượng trung bình</div>
+              <div className="text-2xs tabular-nums text-text-muted">Chất lượng trung bình</div>
               <div className="text-2xl tabular-nums font-bold text-text-primary">{healthOverview.averageQualityScore}/100</div>
               <div className="text-2xs text-text-muted">Đạt tiêu chuẩn học thuật</div>
             </div>
 
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 text-center space-y-1">
-              <div className="text-2xs tabular-nums uppercase text-text-muted">Câu hỏi trùng lặp</div>
+              <div className="text-2xs tabular-nums text-text-muted">Câu hỏi trùng lặp</div>
               <div className="text-2xl tabular-nums font-bold text-brand-warning">{healthOverview.duplicateQuestionCount}</div>
               <div className="text-2xs text-text-muted">Đã phát hiện</div>
             </div>
@@ -224,7 +224,7 @@ export default function AcademicQualityDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border-primary text-text-muted tabular-nums text-2xs uppercase">
+                <tr className="border-b border-border-primary text-text-muted tabular-nums text-2xs">
                   <th className="py-2.5 px-3">Chương</th>
                   <th className="py-2.5 px-3">Khái niệm</th>
                   <th className="py-2.5 px-3">Căn cứ giáo trình</th>
