@@ -2371,39 +2371,73 @@ check("Chỉ số mỏi mệt chảy được vào mô hình người học",
 // thật sự có lúc dồn câu khó về một đầu tùy trạng thái trước đó.
 dbService.clearAllHistory();
 const NHOM_KHO_AB = ["Dễ", "Trung bình", "Khó"];
+
+// Kịch bản dựng TẤT ĐỊNH, rút thẳng từ ngân hàng câu hỏi theo thứ tự mã câu.
+//
+// VÌ SAO PHẢI VIẾT LẠI (28/07/2026): bản cũ rút đề bằng `generateExam({ type: "random" })` rồi
+// mới xếp lại, nên bộ câu và cách chúng rơi vào ba phần đề THAY ĐỔI mỗi lượt chạy. Phép kiểm vì
+// thế chập chờn: đo được hỏng khoảng 1 trên 5 lượt, và khi hỏng thì hỏng nặng (chỉ số 71 so với
+// ngưỡng 20) chứ không phải sát ngưỡng.
+//
+// Nguồn chập chờn nằm ở dòng quyết định đúng sai cho nhóm "Trung bình": bản cũ dùng `id % 2`,
+// tức đúng sai phụ thuộc MÃ CÂU, mà mã nào rơi vào phần đầu hay phần cuối lại do bốc ngẫu nhiên.
+// Thế là trong cùng một nhóm độ khó, tỷ lệ đúng đầu đề và cuối đề lệch nhau hoàn toàn do may rủi,
+// đúng thứ mà phép kiểm này muốn khẳng định là KHÔNG được lệch.
+//
+// Đây chính là bài học đã ghi cho J5 trong WORKSTATE: phép kiểm dựa vào một mẫu rút ngẫu nhiên
+// thì mong manh, phải dựng thẳng kịch bản bảo đảm phân hóa.
+//
+// KHÔNG nới ngưỡng 20. Ngưỡng giữ nguyên, chỉ bỏ tính ngẫu nhiên khỏi kịch bản.
+const theoDoKhoAB: Record<string, number[]> = { "Dễ": [], "Trung bình": [], "Khó": [] };
+[...questions]
+  .sort((a, b) => a.id - b.id)
+  .forEach(q => {
+    const nhom = NHOM_KHO_AB.includes(String(q.difficulty)) ? String(q.difficulty) : "Trung bình";
+    theoDoKhoAB[nhom].push(q.id);
+  });
+
+// Đầu đề: nhiều Dễ, ít Khó. Cuối đề: ngược lại. Mỗi phần ba vẫn có đủ cả ba nhóm để còn so
+// được TRONG CÙNG một nhóm độ khó.
+//
+// Số câu "Trung bình" phải BẰNG NHAU và CHẴN ở cả ba phần (2, 2, 2). Lý do: nhóm này là nhóm
+// duy nhất có cả đúng lẫn sai, nên nếu số câu của nó lệch giữa các phần thì tỷ lệ đúng trong
+// chính nhóm đó cũng lệch theo phần đề, tức là tự tay tạo ra đúng cái nhiễu mà phép kiểm này
+// muốn khẳng định là không có. Bố cục cũ 1 / 3 / 2 cho ra 100% / 33% / 50%.
+const boCucAB: Array<Array<[string, number]>> = [
+  [["Dễ", 4], ["Trung bình", 2], ["Khó", 1]],
+  [["Dễ", 2], ["Trung bình", 2], ["Khó", 3]],
+  [["Dễ", 1], ["Trung bình", 2], ["Khó", 4]],
+];
+const conLaiAB: Record<string, number[]> = {
+  "Dễ": [...theoDoKhoAB["Dễ"]],
+  "Trung bình": [...theoDoKhoAB["Trung bình"]],
+  "Khó": [...theoDoKhoAB["Khó"]],
+};
+const dsCuoiAB: number[] = [];
+const dsDungAB = new Set<number>();
+for (const phan of boCucAB) {
+  for (const [nhom, n] of phan) {
+    const lay = conLaiAB[nhom].splice(0, n);
+    dsCuoiAB.push(...lay);
+    // Dễ đúng hết, Khó sai hết, Trung bình đúng đúng NỬA ĐẦU của chính phần này.
+    // Nhờ vậy mỗi nhóm độ khó có tỷ lệ đúng y hệt nhau ở cả ba phần đề: 100%, 50%, 0%.
+    if (nhom === "Dễ") lay.forEach(id => dsDungAB.add(id));
+    else if (nhom === "Trung bình") lay.slice(0, Math.floor(n / 2)).forEach(id => dsDungAB.add(id));
+  }
+}
+
 for (let e = 0; e < 6; e++) {
   const de = aiService.generateExam({ type: "random", count: 21 });
-  // Xếp lại: câu dễ dồn về đầu, câu khó dồn về cuối, nhưng mỗi phần ba VẪN có đủ ba nhóm để
-  // còn so được trong cùng nhóm.
-  const theoNhom: Record<string, number[]> = { "Dễ": [], "Trung bình": [], "Khó": [] };
-  de.questions.forEach(id => {
-    const q = questionMap.get(id);
-    if (q) theoNhom[NHOM_KHO_AB.includes(String(q.difficulty)) ? String(q.difficulty) : "Trung bình"].push(id);
-  });
-  const xepLai: number[] = [];
-  // Đầu đề: nhiều Dễ, ít Khó. Cuối đề: ngược lại. Mỗi phần vẫn có cả ba nhóm.
-  const lay = (nhom: string, n: number) => theoNhom[nhom].splice(0, n);
-  xepLai.push(...lay("Dễ", 5), ...lay("Trung bình", 1), ...lay("Khó", 1));
-  xepLai.push(...lay("Dễ", 2), ...lay("Trung bình", 3), ...lay("Khó", 2));
-  xepLai.push(...lay("Dễ", 1), ...lay("Trung bình", 2), ...lay("Khó", 4));
-  const conLai = [...theoNhom["Dễ"], ...theoNhom["Trung bình"], ...theoNhom["Khó"]];
-  const dsCuoi = [...xepLai, ...conLai].slice(0, 21);
-  if (dsCuoi.length < 18) continue;
-
-  de.questions = dsCuoi;
+  de.questions = [...dsCuoiAB];
   de.answers = {};
   de.timeSpent = 700;
-  dsCuoi.forEach(id => {
+  de.questions.forEach(id => {
     const q = questionMap.get(id);
     if (!q) return;
-    // Đúng sai CHỈ do độ khó quyết định, tuyệt đối không nhìn vị trí.
-    const dung = String(q.difficulty) === "Dễ" ? true
-      : String(q.difficulty) === "Trung bình" ? (id % 2 === 0)
-      : false;
-    de.answers[id] = dung ? q.correctAnswer : LETTERS.find(k => k !== q.correctAnswer)!;
+    de.answers[id] = dsDungAB.has(id) ? q.correctAnswer : LETTERS.find(k => k !== q.correctAnswer)!;
   });
   de.isSubmitted = true;
-  de.score = dsCuoi.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+  de.score = de.questions.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
   dbService.saveAttempt(de);
 }
 const abGia = learnerModelService.doMoiMoiTheoViTri();
