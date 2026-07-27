@@ -59,6 +59,138 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Đường cong quên: gộp hai nguồn, cho nó nhìn giãn cách, lần quên, và tự hiệu chuẩn
+
+**Commit**: bốn commit liên tiếp, nhóm kiểm mới **U, V, W, X**, tổng phép kiểm 135 lên **152**.
+
+**Yêu cầu**: quét nốt `questionGenerationEngine`, cải tiến khả năng dự đoán đường cong quên, và
+ra gợi ý tốt hơn.
+
+#### Phát hiện lớn nhất: dự án có HAI đường cong quên, và chúng nói ngược nhau
+
+Đây là thứ đáng nhớ nhất của lượt này. `conceptMemoryService.memoryStrengthDays` và
+`learnerModel.recalculateForgettingScore` là hai công thức hoàn toàn khác nhau cho cùng một câu
+hỏi "còn nhớ bao nhiêu phần trăm":
+
+| Tình huống | conceptMemory | learnerModel |
+|---|---|---|
+| Người mới học, nghỉ 1 ngày | 87% | **32%** |
+| Học 5 lần đúng, nghỉ 14 ngày | 33% | **64%** |
+
+Lệch tới **55 điểm phần trăm**. Và chỗ hiểm nằm ở đây: cái hiện lên màn Tiến hóa cho người học
+nhìn là cái thứ nhất, còn cái **điều khiển** chọn câu ôn tập, cảnh báo ôn khẩn và kế hoạch học
+lại là cái thứ hai. Con số người học **nhìn thấy** chưa bao giờ là con số hệ thống **dùng để
+quyết định**.
+
+Công thức cũ bên `learnerModel` là `0,5 * 2,2^chuỗi_đúng * (0,5 + tự_tin)`. Hàm mũ theo chuỗi
+đúng cho dải nửa đời từ **0,26 ngày tới 29 ngày**, chênh nhau 111 lần, chỉ do một biến. Hệ quả
+đo được: người mới luyện một khái niệm bị kết luận "cần ôn khẩn" sau đúng **6 tiếng**, nên danh
+sách ôn tập lúc nào cũng đỏ rực và mất hết ý nghĩa. Nay 6 tiếng sau còn 97%.
+
+Chú thích ngay trên hàm cũ khoe rằng công thức đã được gộp về một chỗ, nhưng nó chỉ gộp **hai
+bản chép trong cùng một file**, hoàn toàn không biết còn bản thứ ba ở file khác. **Bài học: khi
+một chú thích khẳng định "đây là nguồn duy nhất", hãy grep cả dự án để kiểm, đừng tin.**
+
+#### Ba thứ đường cong quên vốn không nhìn thấy
+
+| Bỏ sót | Đo trước | Đo sau |
+|---|---|---|
+| Hiệu ứng giãn cách | ôn dồn 5 lần trong 1 giờ và ôn giãn 5 lần trong 60 ngày **đều 55%** sau 7 ngày | 58% so với **69%** |
+| Nhớ lại thất bại | 5 lần đúng hết và 5 lần sai hết **đều 55%** | 58% so với **5%** |
+| Đối chiếu thực tế | không có gì cả | xem mục hiệu chuẩn dưới đây |
+
+Phạt theo **tỷ lệ** quên chứ không theo số tuyệt đối, đúng bài học đã rút ra ở hàm phạt nợ học
+tập của bộ dự báo: đếm tuyệt đối thì ai luyện càng nhiều càng bị phạt nặng.
+
+#### Hiệu chuẩn: đường cong lần đầu được đối chiếu với thực tế
+
+Dữ liệu vốn nằm sẵn không ai đọc: mỗi mục `scoreHistory` có mốc thời gian và điểm độ thạo ngay
+sau lượt đó. Hai mục liên tiếp cho ra đúng thứ cần: **nghỉ bao nhiêu ngày, quay lại có nhớ được
+không**.
+
+Đúng hay sai suy từ **dấu** của mức thay đổi điểm, vì `studentEvolutionEngine` cộng 10 khi đúng
+và trừ 8 khi sai. Đã kiểm trên dữ liệu thật: **9/9 cặp suy ra khớp** với kết quả biết trước. Cặp
+nào điểm đứng yên (chạm trần 100 hoặc sàn 0) thì **bỏ**, không đoán.
+
+Ước lượng dạng đóng, giải thích được: `S = -nghỉ_TB / ln(tỷ_lệ_nhớ_lại)`, tỷ lệ làm trơn Laplace,
+kết quả co về tiên nghiệm theo `w = 1 - e^(-n/6)`.
+
+| Kiểu người học (10 lượt cách nhau 5 ngày) | Độ bền đo được | Còn nhớ sau 7 ngày |
+|---|---|---|
+| Nhớ dai, đúng 9/10 | 24,9 ngày | **79%** |
+| Trung bình, đúng 6/10 | 11,1 ngày | **55%** |
+| Quên nhanh, đúng 2/10 | 2,9 ngày | **14%** |
+
+Trước đó cả ba đều cho cùng một con số.
+
+**Bài học phương pháp, đáng giữ**: khi thử phá bằng cách cắt sợi dây hiệu chuẩn, phép kiểm W2
+(ba kiểu người học cho ba kết quả khác nhau) **vẫn xanh**, vì phần phân hóa còn đến từ hệ số
+giãn cách và phạt quên lại. Một phép kiểm trông như đang canh một thứ mà thật ra không canh gì
+cả thì **nguy hiểm hơn là không có**, vì nó tạo cảm giác an toàn giả. Đã thêm W6 canh thẳng sợi
+dây đó: giữ nguyên mọi bằng chứng khác, chỉ đổi đúng danh sách lần nhớ lại. Đây là lần thứ tư
+dự án này bắt được phép kiểm rỗng, nên **mọi phép kiểm mới đều phải thử phá bằng cách cắt đúng
+sợi dây nó nói là đang canh, không phải cắt chỗ khác**.
+
+#### Quét questionGenerationEngine
+
+`buildQuestionSpec` gọi thẳng `.sort()` lên mảng do `kbService.getKnowledgeGraph` trả về, mà đó
+là mảng **dùng chung**. Một lần sinh câu hỏi làm xáo trộn vĩnh viễn thứ tự khái niệm của lộ
+trình học, bản đồ độ thạo, màn AI Hub và các bảng quan trắc. Đo được: thứ tự 5 nút đầu đổi từ
+`CB_C4_N2, CB_C7_N2, CB_C3_N2` thành `CB_C2_N4, CB_C6_N3, CB_C2_N3` chỉ sau **một** lần gọi.
+
+Nhánh dính lỗi là nhánh lọc không ra nút nào, tức đúng lúc câu hỏi sinh ra mang mã chương hoặc
+mã chủ đề chưa có trong đồ thị. Đó là tình huống thường gặp nhất với **môn tự tạo từ tài liệu**,
+chính là đường Đàm dùng nhiều nhất.
+
+**Cố ý KHÔNG sửa**: `generateDeterministicFallbackQuestion` cho đáp án đúng nằm ở phương án A
+trong **12/12** câu, tức người học bấm A hết là đúng hết. Nhưng hàm này có **0 nơi gọi**, nên đây
+là mã chết và thuộc Nợ 1, không tự ý dọn. Ghi vào sổ nợ.
+
+Tám trong chín chỉ số `qualityMetrics` đứng yên qua cả 5 hồ sơ, nhưng đây **không** phải bịa số:
+chúng mô tả câu hỏi chứ không mô tả người học. Có điều chúng gần như vô nghĩa vì engine tự sinh
+câu hỏi từ spec rồi tự chấm câu hỏi đó với chính spec đó, nên tự cho mình 90/100. Đây là **thẩm
+định rỗng**, cùng họ với phép kiểm rỗng. Ghi nhận, chưa sửa vì không gây hại.
+
+#### Gợi ý học tập
+
+Câu chào đầu tiên chốt cứng "Kinh tế chính trị Mác - Lênin" trong khi môn đang mở là Hành vi
+Khách hàng. Câu **đầu tiên** người học đọc được đã sai tên môn.
+
+Gợi ý cũ chỉ nhìn tỷ lệ đúng theo chương và chủ đề, tức chỉ nhìn thứ **đã** xảy ra, không nhìn
+thứ **đang** mất dần. Người đúng 100% luôn nhận đúng một câu "chúc mừng phong độ xuất sắc" kể cả
+khi mọi khái niệm đã quá hạn ôn từ lâu. Nay từ 3 khái niệm quá hạn trở lên thì việc ôn lại được
+ưu tiên trước cả chương yếu, vì nó có tính thời điểm.
+
+**Phải nói rõ, không được im**: cả hai cổng gợi ý đều **không hiện ra màn hình nào**. `AIHub`
+gọi `generateLocalRecommendation` rồi cất vào state và không bao giờ render;
+`getGeminiRecommendation` thì không có nơi nào gọi. Nên bản sửa này đúng về nội dung nhưng **chưa
+tới được mắt người học**. Phần "gợi ý tốt hơn" thật sự đến được với người học nằm ở đường khác và
+đã xong ở ba commit trước: chọn câu hỏi ôn tập, cảnh báo ôn khẩn và lịch ôn đều ăn theo
+`forgettingScore` và `nextReviewAt`.
+
+#### Nghiệm thu
+
+Cả 6 chặng xanh với 152 phép kiểm. **Đã thử phá 10 đường**, mỗi đường đỏ đúng phép kiểm tương
+ứng: xáo trộn đồ thị, bỏ hệ số giãn cách, bỏ phạt quên lại, trả lại sàn 0,08, trả lại công thức
+riêng của learnerModel, cắt mạch hiệu chuẩn, bỏ ngưỡng nghỉ, bỏ trạng thái chưa đủ dữ liệu, đảo
+dấu suy đúng/sai, trả lại tên môn gắn cứng.
+
+Mở `npm run dev` soi tận mắt tab Trí nhớ với hai khái niệm gieo sẵn, cùng số lượt và cùng độ
+thạo đỉnh, chỉ khác lịch sử nhớ lại. Hai đường cong vẽ ra khác hẳn nhau:
+
+- nhớ dai 9/10: 100 / 96 / 88 / 74 / 55 / 28 phần trăm ở mốc 0/1/3/7/14/30 ngày
+- quên nhanh 2/10: 100 / 76 / 45 / 15 / 5 / 5 phần trăm
+
+Trước lượt này hai đường sẽ trùng khít. Không lỗi nào trên bảng điều khiển trình duyệt. Đã dọn
+dữ liệu gieo.
+
+**Một việc phải báo, không giấu**: lúc soi trình duyệt, thao tác điều hướng của tôi làm ứng dụng
+tự dựng lại phiên luyện dở dang của Đàm, từ đề 10 câu thành đề 20 câu, vẫn 1 câu đã trả lời. Dữ
+liệu học thật không mất gì (lịch sử vốn đang trống, `totalSolved` bằng 0 cả trước lẫn sau), chỉ
+là phiên đang làm dở bị thay. Bấm "Bỏ qua" ở hộp thoại hỏi tiếp tục là xong.
+
+---
+
 ### 27/07/2026 — Bỏ vùng chết trong hàm trọng số thích nghi
 
 **Objective**: khoản nợ do chính tôi ghi lại ở lượt trước. `calculateAdaptiveWeights` dùng hai

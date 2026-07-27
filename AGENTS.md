@@ -22,7 +22,7 @@ Chạy 6 chặng, hỏng chặng nào dừng ngay tại đó:
 |---|---|---|
 | 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
 | 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
-| 3 | **135 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 3 | **152 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
 | 6 | **Nạp thật từng gói hàm serverless trong Node** | vài giây |
@@ -305,6 +305,29 @@ Hiện `bloomLevel` được điền tự động trong `db.loadSubject` qua `su
 **đứng đầu** trong `learningObjective`. Đừng đổi thành "lấy bậc Bloom cao nhất tìm thấy": đã
 thử và sai, vì mục tiêu học tập viết theo lối "động-từ-tư-duy + nội dung + mục đích nghiệp vụ",
 mà phần mục đích cũng chứa động từ mạnh. Nhóm kiểm **K** canh chỗ này.
+
+### 4.9c. Chỉ có MỘT công thức độ bền trí nhớ trong cả dự án
+
+`conceptMemoryService.doBenTriNhoNgay` là **nguồn duy nhất**. Mọi nơi cần biết "còn nhớ bao
+nhiêu phần trăm" đều phải gọi nó, kể cả `learnerModel`. Đừng viết công thức suy giảm mới ở bất
+kỳ file nào khác. Nhóm kiểm **V** canh cả hai mặt: một phép kiểm so kết quả hai đường, một phép
+kiểm đọc thẳng mã nguồn `learnerModel.ts` để chặn công thức riêng mọc lại.
+
+Vì sao thành bất biến: tới 27/07/2026 dự án có **hai** đường cong quên khác hẳn nhau, lệch tới
+**55 điểm phần trăm**. Cái hiện lên màn Tiến hóa cho người học nhìn là một cái, còn cái điều
+khiển chọn câu ôn tập và cảnh báo ôn khẩn lại là cái kia. Con số người học **nhìn thấy** chưa bao
+giờ là con số hệ thống **dùng để quyết định**.
+
+Điều đáng sợ nhất của ca này: chú thích ngay trên hàm cũ **tự nhận là nguồn duy nhất**, nhưng nó
+chỉ gộp hai bản chép trong **cùng một file** và không hề biết còn bản thứ ba ở file khác. Nên khi
+gặp một chú thích khẳng định "đây là nguồn duy nhất của công thức này", **grep cả dự án để kiểm,
+đừng tin chú thích**.
+
+Cũng ở mục này: đường cong quên **tự hiệu chuẩn** bằng chính lịch sử nhớ lại của người học, qua
+`rutCapNhoLai` và `doBenTriNhoDoDuoc`. Nếu thêm dữ liệu vào `scoreHistory`, giữ đúng quy ước
+`studentEvolutionEngine` cộng 10 khi đúng và trừ 8 khi sai, vì phép suy đúng/sai dựa vào **dấu**
+của mức thay đổi điểm. Đổi quy ước đó mà không sửa `rutCapNhoLai` là làm hỏng lặng lẽ toàn bộ
+tầng hiệu chuẩn. Nhóm kiểm **W1** canh đúng chỗ này bằng cách so với kết quả biết trước.
 
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 

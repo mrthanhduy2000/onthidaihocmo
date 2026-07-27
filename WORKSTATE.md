@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau lượt tự chẩn đoán và nâng cấp cái đã có.
+**Cập nhật lần cuối**: 27/07/2026, sau lượt nâng cấp đường cong quên và gợi ý học tập.
 
 ---
 
@@ -15,17 +15,73 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Tự chẩn đoán rồi nâng cấp cái đã có, **ĐÃ HOÀN THÀNH** ba hạng mục |
+| **Current Milestone** | Đường cong quên và gợi ý học tập, **ĐÃ HOÀN THÀNH** bốn hạng mục |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Ba lượt push gần nhất: `a650a0f`, `bae900d`, và bản cập nhật tài liệu kèm theo |
+| **Bản đang chạy thật** | Bốn commit của lượt này đã push, kèm bản cập nhật tài liệu |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
 ---
 
-## Lượt mới nhất: tự chẩn đoán rồi nâng cấp cái đã có
+## Lượt mới nhất: đường cong quên và gợi ý học tập
+
+Yêu cầu: quét nốt `questionGenerationEngine`, cải tiến dự đoán đường cong quên, ra gợi ý tốt hơn.
+Bốn hạng mục, bốn commit, nhóm kiểm mới **U, V, W, X**.
+
+### Phát hiện lớn nhất: dự án có HAI đường cong quên nói ngược nhau
+
+`conceptMemoryService.memoryStrengthDays` và `learnerModel.recalculateForgettingScore` là hai
+công thức khác hẳn nhau cho cùng một câu hỏi "còn nhớ bao nhiêu phần trăm", lệch tới **55 điểm
+phần trăm**. Chỗ hiểm: cái hiện lên màn Tiến hóa cho người học nhìn là cái thứ nhất, còn cái
+**điều khiển** chọn câu ôn tập, cảnh báo ôn khẩn và kế hoạch học lại là cái thứ hai.
+
+Công thức cũ bên `learnerModel` là `0,5 * 2,2^chuỗi_đúng`, cho dải nửa đời **0,26 tới 29 ngày**,
+chênh 111 lần chỉ do một biến. Người mới luyện một khái niệm bị coi là "cần ôn khẩn" sau đúng
+**6 tiếng**. Nay 6 tiếng sau còn 97%. Sau khi gộp, hai đường lệch nhau **1 điểm** khi cùng bằng
+chứng, và **4 điểm** trên lịch sử học thật (phần dư đến từ hai kho hồ sơ ghi lượng bằng chứng
+khác nhau, không phải từ công thức).
+
+### Bốn hạng mục
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Xáo trộn đồ thị tri thức (nhóm **U**) | một lần sinh câu hỏi đảo lộn thứ tự khái niệm của lộ trình học và bản đồ độ thạo | giữ nguyên |
+| Hiệu ứng giãn cách (nhóm **V**) | ôn dồn 1 giờ và ôn giãn 60 ngày **đều 55%** | 58% so với **69%** |
+| Nhớ lại thất bại (nhóm **V**) | đúng hết và sai hết **đều 55%** | 58% so với **5%** |
+| Hai mức sàn 0,05 và 0,08 (nhóm **V**) | đường vẽ ra lệch điểm chấm từ mốc 14 ngày | khớp cả 6 mốc |
+| Hiệu chuẩn từ dữ liệu thật (nhóm **W**) | đường cong chưa từng đối chiếu với lần nhớ lại nào | ba kiểu người học cho **79 / 55 / 14** phần trăm |
+| Gợi ý gắn cứng tên môn (nhóm **X**) | chào bằng tên môn **đã đóng** | tên môn đang mở |
+| Gợi ý bỏ quên lịch ôn (nhóm **X**) | đúng 100% luôn được khen dù kiến thức trôi hết | ưu tiên ôn lại khi có từ 3 khái niệm quá hạn |
+
+### Hai bài học đáng giữ
+
+1. **Chú thích tự nhận "đây là nguồn duy nhất" không đáng tin.** Chú thích trên
+   `memoryStrengthDays` khoe đã gộp công thức về một chỗ, nhưng nó chỉ gộp hai bản chép **trong
+   cùng một file** và hoàn toàn không biết còn bản thứ ba ở file khác. Gặp câu tương tự thì grep
+   cả dự án để kiểm.
+2. **Thử phá phải cắt đúng sợi dây phép kiểm nói là đang canh.** Khi cắt mạch hiệu chuẩn, phép
+   kiểm W2 vẫn xanh vì phần phân hóa còn đến từ hệ số giãn cách. Đây là lần thứ tư dự án bắt được
+   phép kiểm rỗng.
+
+### Cố ý chưa xử lý, đã ghi nhận
+
+- **Cả hai cổng gợi ý đều không hiện ra màn hình nào.** `AIHub` gọi `generateLocalRecommendation`
+  rồi cất vào state và không render; `getGeminiRecommendation` không có nơi nào gọi. Cần chủ dự
+  án quyết có hiện phần chữ này ra không, xem Open Question 5.
+- **`generateDeterministicFallbackQuestion` cho đáp án đúng ở phương án A trong 12/12 câu**, tức
+  bấm A hết là đúng hết. Nhưng hàm có 0 nơi gọi nên là mã chết, thuộc Nợ 1, không tự ý dọn.
+- **Thẩm định rỗng trong `verifyAndScoreQuestion`**: engine tự sinh câu hỏi từ spec rồi tự chấm
+  câu đó với chính spec đó, nên tự cho mình 90/100. Không gây hại vì chỉ là siêu dữ liệu.
+- **Nhãn "Độ ghi nhớ" trên tab Trí nhớ đọc giá trị đã lưu**, tức ảnh chụp lúc học lần cuối, trong
+  khi đường cong ngay dưới nó lại vẽ theo thời điểm hiện tại. Hai con số cạnh nhau nói hai thời
+  điểm khác nhau. Sửa được nhưng phải quyết nhãn đó **nên mang nghĩa gì** trước, nên để chủ dự án
+  chọn.
+
+---
+
+## Lượt trước: tự chẩn đoán rồi nâng cấp cái đã có
 
 Chủ dự án yêu cầu **không thêm tính năng**, chỉ nâng cấp thứ đã có, và tự chạy chẩn đoán. Áp bộ
 quét ở AGENTS.md mục 4.9b lên ba engine chưa ai soi. Ba hạng mục, ba commit riêng.
@@ -150,7 +206,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **135**, chia 20 nhóm A đến T, đạt toàn bộ |
+| Phép tự kiểm chứng | **152**, chia 24 nhóm A đến X, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -268,6 +324,14 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
 4. Có muốn hiển thị bảy vector bất định của bộ dự báo không? Hiện chúng **không xuất hiện ở màn
    hình nào**, chỉ chảy vào con số tổng rồi ra biên độ tin cậy. Nếu chủ dự án muốn biết "vì sao dự
    báo không chắc" thì cần một chỗ hiển thị.
+5. **Có hiện phần chữ gợi ý học tập ra màn hình không?** `AIHub` đã gọi
+   `generateLocalRecommendation` và cất kết quả vào state nhưng **không render**, còn
+   `getGeminiRecommendation` thì không nơi nào gọi. Nội dung đã đúng và đã bám lịch ôn từ
+   27/07/2026, chỉ thiếu chỗ hiển thị. Đây là thêm phần giao diện nên không tự làm.
+6. **Nhãn "Độ ghi nhớ" trên tab Trí nhớ nên mang nghĩa gì?** Hiện nó đọc giá trị đã lưu, tức ảnh
+   chụp lúc học lần cuối, trong khi đường cong ngay bên dưới lại vẽ theo thời điểm hiện tại. Hai
+   con số cạnh nhau nói hai thời điểm khác nhau. Sửa dễ, nhưng phải chọn nghĩa trước: "lúc quay
+   lại lần trước còn nhớ bao nhiêu" hay "ngay bây giờ còn nhớ bao nhiêu".
 
 ---
 
@@ -301,10 +365,9 @@ code**, đúng như bốn mạch vừa làm.
    không sẽ nhầm độ khó thành mỏi mệt.
 2. **Khung giờ học hiệu quả.** `attempt.startTime` là chuỗi ISO đầy đủ trên mọi lượt. Gom theo
    khung rộng (sáng, chiều, tối, khuya) chứ đừng chia 24 ô, và phải nói rõ số lượt làm căn cứ.
-3. **Rà `studentEvolutionEngine`** (565 dòng, chưa ai soi, có màn hình `LearningEvolutionView`).
-   Dùng bộ quét ở AGENTS.md mục 4.9b. Ba engine chưa soi còn lại không có màn hình riêng nên để
-   sau: `questionGenerationEngine` (718 dòng), `pedagogicalEvaluationEngine` (344),
-   `teachingDecisionEngine` (222).
+3. ~~Rà `studentEvolutionEngine` và ba engine chưa soi~~ **ĐÃ XONG 27/07/2026**. Cả bốn engine
+   (`studentEvolutionEngine`, `pedagogicalEvaluationEngine`, `teachingDecisionEngine`,
+   `questionGenerationEngine`) đều đã cho chạy qua bộ quét ở AGENTS.md mục 4.9b.
 4. **Trường `examReviewResult`** được ghi vào mọi lượt ở `ai.ts` nhưng **không nơi nào đọc**. Đọc
    xem nó chứa gì rồi quyết: nối vào đâu đó, hoặc ghi vào sổ nợ là mã chết.
 
