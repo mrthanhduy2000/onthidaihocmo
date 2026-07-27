@@ -6,6 +6,13 @@
 import { dbService, questions, chapters, topics } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
 import { learnerModelService } from "./learnerModel";
+
+/** Số câu tối thiểu của một lượt thì mới coi là bằng chứng đủ nặng để hiệu chuẩn dự báo. */
+const SO_CAU_TOI_THIEU_MOT_LUOT = 5;
+/** Số lượt đã nộp tối thiểu mới dám kết luận về sai lệch. Khớp ngưỡng của nhánh thích nghi. */
+const SO_LUOT_TOI_THIEU_HIEU_CHUAN = 2;
+/** Cửa sổ lượt gần đây dùng để đo. Năng lực đổi theo thời gian nên không lấy toàn bộ lịch sử. */
+const CUA_SO_HIEU_CHUAN = 8;
 import { 
   SubjectGoal, 
   ExamPrediction, 
@@ -284,6 +291,89 @@ export const examForecaster = {
   },
 
   /**
+   * Dựng lại hồ sơ hiệu chuẩn TỪ LỊCH SỬ LÀM BÀI THẬT, tất định, không tích lũy.
+   *
+   * Vì sao cần: file này tự gọi mình là "SELF-CALIBRATING FORECASTING ENGINE v3.0", có sẵn
+   * `registerActualExamResult` để nạp kết quả thi thật, và `calculateAdaptiveWeights` đã được
+   * dùng ở hai chỗ trong lúc dự báo. Nhưng dò toàn bộ mã nguồn ngày 27/07/2026:
+   * `registerActualExamResult` có **0 nơi gọi**. Nên `calibrationCount` vĩnh viễn bằng 0, mà
+   * nhánh thích nghi trong `calculateAdaptiveWeights` lại yêu cầu `>= 2`. Tức là **toàn bộ cơ
+   * chế tự hiệu chuẩn chưa từng chạy một lần nào**, dù cả hai đầu dữ liệu đã nằm sẵn.
+   *
+   * Vì sao DỰNG LẠI chứ không tích lũy: bản gốc cộng dồn từng lần gọi vào hồ sơ đã lưu. Cách đó
+   * làm con số phụ thuộc **số lần được gọi**, đúng loại lỗi "số tự bò lên theo số lần mở màn
+   * hình" đã sửa ở chính file này, và cũng là lý do phải tránh trung bình trượt ở
+   * `guessingFrequency`. Dựng lại từ lịch sử thì gọi bao nhiêu lần cũng ra một kết quả, và
+   * quan trọng hơn: nó học được từ lịch sử ĐÃ CÓ, chứ không phải chỉ từ các lượt tương lai.
+   *
+   * Cách đo sai lệch: so điểm thi thật gần đây (quy về thang 10) với **điểm dự báo đã chốt ở
+   * lần tính trước**, thứ đang lưu sẵn ở khóa `poly_econ_last_prediction_*`. Dương nghĩa là
+   * người học làm tốt hơn dự báo, tức bộ dự báo đang hạ điểm họ.
+   *
+   * **Điểm tham chiếu BẮT BUỘC do nơi gọi truyền vào, hàm này tuyệt đối không tự gọi
+   * `calculatePrediction`.** Gọi như vậy tạo vòng vô hạn giữa hai hàm, đúng Bẫy 5 trong
+   * AGENTS.md, thứ từng làm tràn ngăn xếp mỗi lần mở màn Đài quan sát.
+   *
+   * Thiếu dữ liệu thì trả hồ sơ mặc định với `calibrationCount` bằng 0, để nhánh thích nghi
+   * không kích hoạt. Không đoán.
+   */
+  doHieuChuanTuLichSu(subjectId: string, duBaoThamChieu: number | null): ForecastCalibrationProfile {
+    const activeSub = subjectId || dbService.getActiveSubjectId();
+    const macDinh = this.getCalibrationProfile(activeSub);
+
+    const luotHopLe = dbService.getHistory()
+      .filter(a => a.isSubmitted && (a.questions || []).length >= SO_CAU_TOI_THIEU_MOT_LUOT);
+
+    // Không có điểm tham chiếu thì không so được với cái gì cả, và bịa một mốc là điều cấm.
+    if (duBaoThamChieu === null || luotHopLe.length < SO_LUOT_TOI_THIEU_HIEU_CHUAN) {
+      return { ...macDinh, calibrationCount: 0, calibrationHistory: [] };
+    }
+
+    // Chỉ lấy cửa sổ gần đây: năng lực người học thay đổi theo thời gian, lượt thi từ hai tháng
+    // trước không nói lên độ chính xác của dự báo hôm nay.
+    const cuaSo = luotHopLe.slice(-CUA_SO_HIEU_CHUAN);
+    const duBao = duBaoThamChieu;
+
+    const diemTheoLuot = cuaSo.map(a => (a.score / Math.max(1, (a.questions || []).length)) * 10);
+    const trungBinhThat = diemTheoLuot.reduce((s, v) => s + v, 0) / diemTheoLuot.length;
+
+    const overallBias = Math.round((trungBinhThat - duBao) * 100) / 100;
+
+    // Phương sai của chính điểm thi thật, dùng làm chỉ báo hồ sơ ổn định tới đâu.
+    const phuongSai = diemTheoLuot.reduce((s, v) => s + Math.pow(v - trungBinhThat, 2), 0) / diemTheoLuot.length;
+
+    const examTypeBias: Record<string, number> = {};
+    const nhomTheoLoai = new Map<string, number[]>();
+    cuaSo.forEach((a, i) => {
+      const loai = a.examType || "unknown";
+      if (!nhomTheoLoai.has(loai)) nhomTheoLoai.set(loai, []);
+      nhomTheoLoai.get(loai)!.push(diemTheoLuot[i]);
+    });
+    nhomTheoLoai.forEach((ds, loai) => {
+      const tb = ds.reduce((s, v) => s + v, 0) / ds.length;
+      examTypeBias[loai] = Math.round((tb - duBao) * 100) / 100;
+    });
+
+    return {
+      subjectId: activeSub,
+      overallBias,
+      chapterBias: macDinh.chapterBias,
+      difficultyBias: macDinh.difficultyBias,
+      bloomBias: macDinh.bloomBias,
+      examTypeBias,
+      predictionVariance: Math.round(Math.min(2, phuongSai) * 1000) / 1000,
+      calibrationCount: cuaSo.length,
+      calibrationHistory: cuaSo.map((a, i) => ({
+        timestamp: a.endTime || a.startTime,
+        predictedScore: duBao,
+        actualScore: Math.round(diemTheoLuot[i] * 100) / 100,
+        bias: Math.round((diemTheoLuot[i] - duBao) * 100) / 100,
+        examType: a.examType || "unknown",
+      })),
+    };
+  },
+
+  /**
    * Deterministically calculates adaptive component weights based on historical evidence.
    */
   calculateAdaptiveWeights(profile: ForecastCalibrationProfile) {
@@ -334,7 +424,31 @@ export const examForecaster = {
     const stats = dbService.getStatistics();
     const history = dbService.getHistory();
     const goal = dbService.getSubjectGoal(activeSub);
-    const profile = this.getCalibrationProfile(activeSub);
+
+    // Hồ sơ hiệu chuẩn dựng lại từ lịch sử thật, không đọc bản tích lũy đã lưu.
+    //
+    // Điểm tham chiếu là dự báo ĐÃ CHỐT ở lần tính trước, lấy từ `poly_econ_last_prediction_*`.
+    // So nó với điểm thi thật gần đây cho ra sai lệch có hướng. Chưa có dự báo cũ thì truyền
+    // null, và tầng hiệu chuẩn tự trả `calibrationCount` bằng 0 nên nhánh thích nghi nằm im.
+    //
+    // Đọc ở đây, TRƯỚC khi tính trọng số, vì trọng số phụ thuộc hồ sơ hiệu chuẩn. Và tuyệt đối
+    // không gọi ngược `calculatePrediction` từ trong tầng hiệu chuẩn, xem Bẫy 5 trong AGENTS.md.
+    let duBaoThamChieu: number | null = null;
+    try {
+      const raw = localStorage.getItem(`poly_econ_last_prediction_${activeSub}`);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved && typeof saved.value === "number") duBaoThamChieu = saved.value;
+        else {
+          const so = parseFloat(raw);
+          if (!isNaN(so)) duBaoThamChieu = so;
+        }
+      }
+    } catch {
+      duBaoThamChieu = null;
+    }
+
+    const profile = this.doHieuChuanTuLichSu(activeSub, duBaoThamChieu);
 
     const totalSolved = stats.totalSolved || 0;
     const totalCorrect = stats.totalCorrect || 0;

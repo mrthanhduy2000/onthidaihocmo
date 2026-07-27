@@ -1480,6 +1480,132 @@ check("Độ bền trí nhớ tái lập được",
   `hai lần đọc cho ${q1.toFixed(4)} và ${q2.toFixed(4)}`);
 
 // ===========================================================================
+g("R. Vòng phản hồi hiệu chuẩn dự báo");
+// ===========================================================================
+// Bối cảnh: file `examForecaster.ts` tự gọi mình là "SELF-CALIBRATING ENGINE v3.0", có sẵn
+// `registerActualExamResult` và `calculateAdaptiveWeights` được dùng ở hai chỗ khi dự báo. Nhưng
+// dò toàn bộ mã nguồn ngày 27/07/2026: `registerActualExamResult` có **0 nơi gọi**, nên
+// `calibrationCount` vĩnh viễn bằng 0, mà nhánh thích nghi lại yêu cầu >= 2. Toàn bộ cơ chế tự
+// hiệu chuẩn chưa từng chạy một lần nào, dù cả hai đầu dữ liệu đã nằm sẵn.
+
+const subR = dbService.getActiveSubjectId();
+const KHOA_DU_BAO_CU = `poly_econ_last_prediction_${subR}`;
+
+/** Thêm lượt làm bài mà KHÔNG xóa lịch sử, để giữ lại dự báo đã chốt trước đó. */
+function themLuotLamBai(tyLeDung: number, soDe: number) {
+  for (let e = 0; e < soDe; e++) {
+    const de = aiService.generateExam({ type: "random", count: 20 });
+    de.answers = {};
+    de.questions.forEach((id, i) => {
+      const q = questionMap.get(id);
+      if (!q) return;
+      de.answers[id] = (i / de.questions.length) < tyLeDung
+        ? q.correctAnswer
+        : (["a", "b", "c", "d"] as const).find(k => k !== q.correctAnswer)!;
+    });
+    de.isSubmitted = true;
+    de.score = de.questions.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+    dbService.saveAttempt(de);
+  }
+}
+
+function docThamChieuR(): number | null {
+  const raw = localStorage.getItem(KHOA_DU_BAO_CU);
+  if (!raw) return null;
+  try {
+    const s = JSON.parse(raw);
+    return typeof s?.value === "number" ? s.value : null;
+  } catch {
+    return null;
+  }
+}
+
+// R1. Hồ sơ trắng: không được bịa sai lệch, và nhánh thích nghi phải nằm im.
+dbService.clearAllHistory();
+localStorage.removeItem(KHOA_DU_BAO_CU);
+const hcTrangR = examForecaster.doHieuChuanTuLichSu(subR, docThamChieuR());
+const tsMacDinh = examForecaster.calculateAdaptiveWeights(hcTrangR);
+check("Hồ sơ trắng: không hiệu chuẩn, không bịa sai lệch",
+  hcTrangR.calibrationCount === 0 && hcTrangR.overallBias === 0,
+  `calibrationCount=${hcTrangR.calibrationCount}, overallBias=${hcTrangR.overallBias}`);
+
+// R2. Có lịch sử nhưng CHƯA có dự báo cũ để đối chiếu thì cũng không kết luận.
+playAndForecast(0.6, 3);
+localStorage.removeItem(KHOA_DU_BAO_CU);
+const hcKhongMoc = examForecaster.doHieuChuanTuLichSu(subR, null);
+check("Thiếu điểm tham chiếu thì không hiệu chuẩn",
+  hcKhongMoc.calibrationCount === 0,
+  `có ${dbService.getHistory().filter(a => a.isSubmitted).length} lượt đã nộp nhưng không có dự báo cũ, calibrationCount=${hcKhongMoc.calibrationCount}`);
+
+// R3. Đủ dữ liệu thì vòng phản hồi phải THẬT SỰ kích hoạt.
+playAndForecast(0.9, 5);
+examForecaster.calculatePrediction(subR);
+themLuotLamBai(0.9, 2);
+const thamChieuGioi = docThamChieuR();
+const hcGioiR = examForecaster.doHieuChuanTuLichSu(subR, thamChieuGioi);
+check("Đủ dữ liệu thì vòng phản hồi kích hoạt",
+  hcGioiR.calibrationCount >= 2,
+  `${hcGioiR.calibrationCount} lượt được dùng để hiệu chuẩn, điểm tham chiếu ${thamChieuGioi}`);
+
+// R4. Dấu của sai lệch phải đúng chiều. Người học làm tốt hơn dự báo thì sai lệch DƯƠNG.
+const diemThatGioi = dbService.getHistory()
+  .filter(a => a.isSubmitted && (a.questions || []).length >= 5)
+  .slice(-8)
+  .map(a => (a.score / Math.max(1, a.questions.length)) * 10);
+const tbThatGioi = diemThatGioi.reduce((s, v) => s + v, 0) / Math.max(1, diemThatGioi.length);
+check("Dấu sai lệch đúng chiều với thực tế",
+  (tbThatGioi > (thamChieuGioi ?? 0)) === (hcGioiR.overallBias > 0),
+  `điểm thi thật trung bình ${tbThatGioi.toFixed(2)} so với dự báo ${thamChieuGioi}, sai lệch ${hcGioiR.overallBias}`);
+
+// R5. Sai lệch phải TÁI LẬP, không bò lên theo số lần gọi. Đây là lý do dựng lại từ lịch sử
+// thay vì cộng dồn vào hồ sơ đã lưu.
+const bias1 = examForecaster.doHieuChuanTuLichSu(subR, thamChieuGioi).overallBias;
+const bias2 = examForecaster.doHieuChuanTuLichSu(subR, thamChieuGioi).overallBias;
+const bias3 = examForecaster.doHieuChuanTuLichSu(subR, thamChieuGioi).overallBias;
+check("Sai lệch hiệu chuẩn tái lập được",
+  bias1 === bias2 && bias2 === bias3,
+  `ba lần đọc cho ${bias1}, ${bias2}, ${bias3}`);
+
+// R5b. ĐƯỜNG NỐI phải thật sự tồn tại.
+//
+// Vì sao cần riêng phép kiểm này: năm phép kiểm trên gọi thẳng `doHieuChuanTuLichSu`, nên chúng
+// vẫn xanh kể cả khi `calculatePrediction` không hề dùng tới hồ sơ hiệu chuẩn. Tôi đã thử ngắt
+// dây nối và cả năm vẫn đạt. Đó đúng là kiểu "đạt rỗng". Phép kiểm này đi qua `calculatePrediction`
+// rồi đọc hồ sơ mà chính nó trả về, nên ngắt dây là đỏ ngay.
+const duBaoCoHieuChuan = examForecaster.calculatePrediction(subR);
+check("Bộ dự báo thật sự dùng hồ sơ hiệu chuẩn khi tính",
+  (duBaoCoHieuChuan.calibrationProfile?.calibrationCount ?? 0) >= 2,
+  `calculatePrediction trả về calibrationCount=${duBaoCoHieuChuan.calibrationProfile?.calibrationCount}, sai lệch ${duBaoCoHieuChuan.calibrationProfile?.overallBias}`);
+
+// R6. Nhánh thích nghi phải THẬT SỰ mở ra được. Trước 27/07/2026 nó không bao giờ chạy vì
+// `calibrationCount` vĩnh viễn bằng 0.
+//
+// Kiểm CƠ CHẾ chứ không kiểm một con số may rủi: `calculateAdaptiveWeights` có vùng chết giữa
+// 0,3 và 0,8, nên hồ sơ mô phỏng rơi đúng vào đó sẽ không đổi trọng số dù vòng phản hồi vẫn
+// chạy đúng. Nên dựng thẳng hai hồ sơ nằm hai bên vùng chết.
+const khac = (a: any, b: any) =>
+  (Object.keys(a) as string[]).some(k => Math.abs((a[k] as number) - (b[k] as number)) > 1e-9);
+
+const hoSoSaiLechThap = { ...hcGioiR, overallBias: 0.1, examTypeBias: {}, calibrationCount: 5 };
+const hoSoSaiLechCao = { ...hcGioiR, overallBias: 1.2, examTypeBias: {}, calibrationCount: 5 };
+const tsThap = examForecaster.calculateAdaptiveWeights(hoSoSaiLechThap);
+const tsCao = examForecaster.calculateAdaptiveWeights(hoSoSaiLechCao);
+
+check("Trọng số dự báo đổi theo sai lệch đã học được",
+  khac(tsThap, tsMacDinh) && khac(tsCao, tsMacDinh) && khac(tsThap, tsCao),
+  `mặc định mock=${tsMacDinh.mockWeight}; sai lệch nhỏ cho mock=${tsThap.mockWeight}; sai lệch lớn cho mock=${tsCao.mockWeight}`);
+
+// Và chốt chặn: cùng sai lệch đó nhưng CHƯA đủ lượt hiệu chuẩn thì trọng số phải nằm im. Đây
+// chính là cái cổng mà trước đây không bao giờ mở được.
+const hoSoChuaDu = { ...hoSoSaiLechCao, calibrationCount: 0 };
+check("Chưa đủ lượt hiệu chuẩn thì trọng số nằm im",
+  !khac(examForecaster.calculateAdaptiveWeights(hoSoChuaDu), tsMacDinh),
+  `cùng sai lệch 1,2 nhưng calibrationCount=0 thì trọng số giữ nguyên mặc định`);
+
+dbService.clearAllHistory();
+localStorage.removeItem(KHOA_DU_BAO_CU);
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

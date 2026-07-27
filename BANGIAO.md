@@ -59,6 +59,72 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Bộ dự báo "tự hiệu chuẩn" chưa từng hiệu chuẩn lần nào, đã nối vòng phản hồi
+
+**Objective**: Đàm muốn nâng độ chính xác của dự đoán cá nhân hóa. Thay vì đoán nên làm gì, tôi
+dò trước và tìm ra chỗ hổng lớn nhất.
+
+**Phát hiện, đo bằng cách dò toàn bộ mã nguồn**:
+
+| Bằng chứng | Số đo |
+|---|---|
+| `registerActualExamResult`, cửa nạp kết quả thi thật | **0 nơi gọi** ngoài chính file đó |
+| `calculateAdaptiveWeights`, hàm bẻ trọng số theo sai lệch | Đang được gọi ở **2 chỗ** khi dự báo |
+| Điều kiện mở nhánh thích nghi | `calibrationCount >= 2` |
+| `calibrationCount` thực tế | **Vĩnh viễn 0** |
+
+Nói cách khác: file này tự gọi mình là "SELF-CALIBRATING FORECASTING ENGINE v3.0", đã dựng đủ cơ
+chế học từ sai lệch, đã dùng cơ chế đó khi tính, nhưng **chưa từng nhận một kết quả thật nào**.
+Cùng khuôn với `attempt.flags` và `estimatedTime`: mạch dựng xong rồi bỏ không.
+
+**Đã làm**: `doHieuChuanTuLichSu` dựng lại hồ sơ hiệu chuẩn **từ lịch sử làm bài thật**, so điểm
+thi thật gần đây (cửa sổ 8 lượt) với dự báo đã chốt ở lần tính trước, thứ vốn đã lưu sẵn ở khóa
+`poly_econ_last_prediction_*`. `calculatePrediction` đọc hồ sơ này thay cho bản tích lũy.
+
+**Ba quyết định thiết kế, mỗi cái tránh một cái bẫy đã có tiền lệ trong dự án**:
+
+1. **Dựng lại, không tích lũy.** Bản gốc cộng dồn từng lần gọi vào hồ sơ đã lưu, nên con số phụ
+   thuộc **số lần được gọi**, đúng lỗi "số tự bò lên theo số lần mở màn hình" từng sửa ở chính
+   file này. Dựng lại thì gọi bao nhiêu lần cũng ra một kết quả, và **học được từ lịch sử ĐÃ CÓ**
+   chứ không chỉ từ các lượt tương lai.
+2. **Không tự gọi `calculatePrediction`.** Điểm tham chiếu bắt buộc do nơi gọi truyền vào. Tôi đã
+   viết bản đầu để hàm tự gọi, rồi nhận ra đó chính là Bẫy 5, vòng gọi vô hạn giữa hai hàm.
+3. **Thiếu mốc thì không kết luận.** Chưa có dự báo cũ để đối chiếu thì trả `calibrationCount`
+   bằng 0, nhánh thích nghi nằm im. Không bịa một mốc để có số cho đẹp.
+
+**Đo được**: hồ sơ mô phỏng người học đúng 90% cho `overallBias` **+0,9 điểm**, tức hệ thống tự
+phát hiện chính nó đang hạ điểm người học giỏi. Trọng số dịch theo: mastery 0,30 lên 0,33, mock
+0,20 xuống 0,14. Ba lần đọc liên tiếp ra đúng một con số.
+
+Đường cong sai lệch tổng thể nhúc nhích theo hướng tốt nhưng **chưa giải quyết được gốc**, vì
+nén về giữa là lỗi cấu trúc:
+
+| Năng lực | Trước | Sau |
+|---|---|---|
+| 20% | +0,5 | +0,5 |
+| 40% | 0,0 | −0,2 |
+| 60% | −0,4 | −0,3 |
+| 80% | **−0,7** | **−0,6** |
+| 100% | −0,6 | −0,5 |
+
+**Một phép kiểm của tôi suýt lọt kiểu "đạt rỗng", ghi lại vì đây là bài học lặp lại lần thứ hai
+trong ngày**: năm phép kiểm đầu gọi thẳng `doHieuChuanTuLichSu`, nên khi tôi thử ngắt dây nối
+trong `calculatePrediction` thì **cả năm vẫn xanh**. Phải thêm phép kiểm R5b đi qua
+`calculatePrediction` rồi đọc `calibrationProfile` mà chính nó trả về. Ngắt dây là đỏ ngay. Quy
+tắc rút ra: **phép kiểm cho một đường nối phải đi qua đúng đường nối đó, không được gọi tắt vào
+hàm ở đầu kia.**
+
+**Nghiệm thu**: nhóm kiểm **R** thêm 8 phép, tổng lên **126**, `npm run check` đủ 6 chặng. Đã
+thử phá hai lần: ngắt dây nối thì R5b đỏ; và kiểm nhánh trọng số bằng hai hồ sơ nằm hai bên vùng
+chết thay vì phụ thuộc một con số may rủi.
+
+**Còn nợ**: `chapterBias`, `difficultyBias`, `bloomBias` vẫn để nguyên giá trị cũ, chưa dựng lại
+theo lịch sử. Chúng cần điểm thi thật tách theo chương và theo mức Bloom, mà lượt làm bài hiện
+không ghi đủ chiều đó. Và `calculateAdaptiveWeights` có **vùng chết giữa 0,3 và 0,8**: sai lệch
+rơi vào dải đó thì trọng số không đổi gì cả. Chưa sửa vì đó là ngưỡng có chủ ý, nhưng đáng xem lại.
+
+---
+
 ### 27/07/2026 — Tiên nghiệm lịch ôn từ dữ liệu biên soạn tay, gỡ bài toán khởi đầu nguội
 
 **Objective**: mạch thứ tư. `customer_behavior_kb.ts` biên soạn tay
