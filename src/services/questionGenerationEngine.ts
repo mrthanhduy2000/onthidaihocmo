@@ -425,14 +425,28 @@ export const questionGenerationEngine = {
     // Prioritize concepts with lower mastery in Student Model if available
     const stats = dbService.getStatistics();
     const conceptMastery = stats.conceptMastery || {};
-    
-    eligibleNodes.sort((a, b) => {
+
+    // CHÉP RA MẢNG RIÊNG rồi mới sắp xếp. Bản cũ gọi thẳng `.sort()` lên mảng do
+    // `kbService.getKnowledgeGraph` trả về, mà đó là mảng DÙNG CHUNG cho cả ứng dụng, nên một
+    // lần sinh câu hỏi làm xáo trộn vĩnh viễn thứ tự khái niệm của mọi nơi khác: lộ trình học
+    // (`learningEngine.generateLearningRoadmap` duyệt đồ thị theo đúng thứ tự này), bản đồ độ
+    // thạo, màn AI Hub, các bảng quan trắc. Đo ngày 27/07/2026: thứ tự 5 nút đầu đổi từ
+    // CB_C4_N2, CB_C7_N2, CB_C3_N2... thành CB_C2_N4, CB_C6_N3, CB_C2_N3... chỉ sau MỘT lần gọi.
+    //
+    // Nhánh dính lỗi là nhánh không lọc được nút nào (dòng `eligibleNodes = knowledgeGraph` ở
+    // trên), tức đúng lúc câu hỏi sinh ra mang mã chương hoặc mã chủ đề chưa có trong đồ thị.
+    // Đó là tình huống thường gặp nhất với môn tự tạo từ tài liệu, chính là đường Đàm dùng nhiều.
+    //
+    // Hàm so sánh cũng phải là THỨ TỰ TOÀN PHẦN (bất biến 4.7): độ thạo bằng nhau thì so tiếp
+    // bằng mã nút, nếu không thứ tự các khái niệm cùng mức thạo sẽ phụ thuộc vào thuật toán sắp
+    // xếp chứ không phải vào dữ liệu.
+    const nodesTheoDoThao = [...eligibleNodes].sort((a, b) => {
       const masteryA = conceptMastery[a.concept] ?? 50;
       const masteryB = conceptMastery[b.concept] ?? 50;
-      return masteryA - masteryB; // Lowest mastery first
+      return (masteryA - masteryB) || a.id.localeCompare(b.id); // Lowest mastery first
     });
 
-    const selectedNode = eligibleNodes[0];
+    const selectedNode = nodesTheoDoThao[0];
     const evidence = this.extractEvidenceSlice(selectedNode);
 
     // 2. Blueprint Selection

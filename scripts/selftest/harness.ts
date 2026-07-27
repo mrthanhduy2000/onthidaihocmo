@@ -35,6 +35,7 @@ import { examForecaster } from "../../src/services/examForecaster";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { teachingAnalytics } from "../../src/services/teachingAnalytics";
 import { examQualityReportService } from "../../src/services/examQualityReport";
+import { questionGenerationEngine } from "../../src/services/questionGenerationEngine";
 import { Question } from "../../src/types";
 
 type Result = { group: string; name: string; ok: boolean; detail: string };
@@ -1750,6 +1751,38 @@ check("Chiến lược chưa dùng lần nào thì mọi chỉ số phải bằn
 
 localStorage.removeItem(`poly_econ_concept_memory_${subT}`);
 localStorage.removeItem(`poly_econ_evolution_timeline_${subT}`);
+
+// ===========================================================================
+g("U. Sinh câu hỏi không được đụng vào dữ liệu dùng chung");
+// ===========================================================================
+// Bộ quét ngày 27/07/2026 bắt được: `buildQuestionSpec` gọi thẳng `.sort()` lên mảng do
+// `kbService.getKnowledgeGraph` trả về, mà đó là mảng DÙNG CHUNG. Một lần sinh câu hỏi làm xáo
+// trộn vĩnh viễn thứ tự khái niệm của lộ trình học, bản đồ độ thạo và các bảng quan trắc.
+
+const subU = dbService.getActiveSubjectId();
+
+// U1. Gọi sinh câu hỏi xong, thứ tự đồ thị tri thức phải y nguyên.
+const thuTuTruocU = kbService.getKnowledgeGraph(subU).map(n => n.id).join("|");
+questionGenerationEngine.buildQuestionSpec({ subjectId: subU });
+// Gọi thêm một lần nữa với chương và chủ đề KHÔNG tồn tại, để ép vào đúng nhánh dính lỗi:
+// lọc không ra nút nào thì mã cũ quay về chính mảng dùng chung rồi sắp xếp tại chỗ.
+questionGenerationEngine.buildQuestionSpec({ subjectId: subU, chapterId: 999, topicId: "T999.9" });
+const thuTuSauU = kbService.getKnowledgeGraph(subU).map(n => n.id).join("|");
+check("Sinh câu hỏi không làm xáo trộn thứ tự đồ thị tri thức dùng chung",
+  thuTuTruocU === thuTuSauU,
+  thuTuTruocU === thuTuSauU
+    ? `${thuTuTruocU.split("|").length} nút giữ nguyên thứ tự sau 2 lần gọi`
+    : `thứ tự đã đổi: ${thuTuTruocU.split("|").slice(0, 3).join(", ")} -> ${thuTuSauU.split("|").slice(0, 3).join(", ")}`);
+
+// U2. Chọn khái niệm phải là THỨ TỰ TOÀN PHẦN (bất biến 4.7): cùng dữ liệu vào thì cùng kết quả
+// ra, kể cả khi nhiều khái niệm có độ thạo bằng nhau, không phụ thuộc thuật toán sắp xếp.
+const chonLap = Array.from({ length: 5 }, () =>
+  questionGenerationEngine.buildQuestionSpec({ subjectId: subU }).conceptName);
+check("Chọn khái niệm để ra đề là tất định khi độ thạo bằng nhau",
+  new Set(chonLap).size === 1,
+  new Set(chonLap).size === 1
+    ? `5 lần gọi liên tiếp đều chọn "${chonLap[0]}"`
+    : `5 lần gọi cho ${new Set(chonLap).size} khái niệm khác nhau`);
 
 // ===========================================================================
 // Kết quả
