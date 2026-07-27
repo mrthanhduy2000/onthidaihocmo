@@ -664,8 +664,37 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 </h3>
               </div>
 
-              {/* Multiple Choice Options */}
-              <div className="grid grid-cols-1 gap-2.5 pt-1">
+              {/*
+                DANH SÁCH PHƯƠNG ÁN, KHÔNG PHẢI BỐN CÁI THẺ.
+
+                Đổi ngày 28/07/2026, sau khi đo trang làm bài của Khan Academy bằng trình duyệt.
+
+                Trước đó mỗi phương án là một thẻ đóng: có viền, có nền, bo góc, cách nhau
+                10px. Nghĩa là ngay ở trạng thái NGHỈ, lúc người học đang đọc để suy nghĩ, mắt
+                phải phân tích năm khối đóng riêng biệt (câu hỏi cộng bốn thẻ). Theo nguyên lý
+                khép kín của Gestalt, một hình bao kín được não đọc thành một VẬT THỂ; bốn vật
+                thể xếp dọc bắt mắt dừng và khởi động lại ở từng ranh giới, thay vì trôi liền
+                mạch từ câu hỏi xuống các phương án.
+
+                Khan Academy đo được: hàng đáp án **nền trong suốt, không viền, không đổ bóng**,
+                cao 64px, đệm 16px, ngăn nhau bằng một đường kẻ 1px màu #DBDCDD. Toàn bộ sức
+                nặng thị giác nằm ở CHỮ, không ở cái hộp chứa chữ.
+
+                Nhưng KHÔNG bê nguyên mô hình đó vào đây, vì dự án này đã có một quyết định
+                khác có căn cứ đo (xem chú thích trạng thái lộ đáp án bên dưới): tín hiệu đúng
+                sai được cố ý dời vào nền, viền, ô chữ cái và biểu tượng để chữ nội dung giữ
+                được tương phản 18,04:1. Bỏ nền với viền là xoá mất hai trong bốn tín hiệu đó.
+
+                Nên tách theo trạng thái:
+                  - Lúc NGHỈ, tức lúc đang cân nhắc và cũng là lúc kéo dài nhất, phẳng hoàn
+                    toàn như Khan. Trạng thái này không mang tin gì nên không mất gì cả.
+                  - Lúc ĐÃ CHỌN hoặc ĐÃ LỘ đáp án thì giữ nguyên nền và viền, vì đó mới là chỗ
+                    thật sự có thông tin.
+
+                Các hàng nay nằm sát nhau và ngăn bằng đường kẻ thay vì rời nhau bằng khe, đúng
+                cách Khan làm, nên mảng phương án đọc thành MỘT khối liền thay vì bốn mảnh.
+              */}
+              <div className="grid grid-cols-1 pt-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
                 {(() => {
                   // Trong chế độ gia sư, khi đã trả lời thì lộ đáp án đúng/sai ngay trên các phương án
                   // (không cần đợi nộp bài). Câu đã chốt khóa cũng luôn lộ + khóa. Chế độ thường chỉ lộ sau khi nộp.
@@ -679,10 +708,12 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   const isCorrect = activeQuestion.correctAnswer === key;
                   const isWrongSelection = isSelected && !isCorrect;
 
-                  let optionStyle = "border-border-primary bg-bg-card text-text-secondary hover:bg-bg-surface/50 hover:border-text-muted/20";
+                  // Trạng thái nghỉ: trong suốt hoàn toàn, không viền. Chỉ khi rê chuột mới
+                  // hiện một mảng nền rất nhạt để báo rằng hàng này bấm được.
+                  let optionStyle = "border-transparent bg-transparent text-text-secondary hover:bg-bg-surface/60";
 
                   if (isSelected && !reveal) {
-                    optionStyle = "bg-bg-surface/80 border-text-primary text-text-primary font-medium shadow-xs";
+                    optionStyle = "bg-bg-surface/80 border-text-primary text-text-primary font-medium";
                   } else if (reveal) {
                     // NỘI DUNG phương án giữ màu chữ thường, tín hiệu đúng sai nằm ở NỀN, VIỀN,
                     // Ô CHỮ CÁI và BIỂU TƯỢNG.
@@ -700,7 +731,24 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     } else if (isWrongSelection) {
                       optionStyle = "bg-brand-error-bg border-brand-error-border text-text-primary";
                     } else {
-                      optionStyle = "border-border-primary/60 bg-bg-card opacity-40 text-text-muted";
+                      /*
+                        PHƯƠNG ÁN KHÔNG ĐƯỢC CHỌN, SAU KHI LỘ ĐÁP ÁN.
+
+                        Bản cũ dùng `opacity-40` chồng lên `text-text-muted`. Tính ra màu thật
+                        hiện trên nền trắng: 0,4 x (107,107,117) cộng 0,6 x (255,255,255), ra
+                        xấp xỉ #C4C4C8, tức tương phản chỉ khoảng **1,85:1**. Ngưỡng WCAG AA cho
+                        chữ thường là 4,5:1, nên đoạn chữ này gần như không đọc được.
+
+                        Đây không phải lỗi nhỏ. Sau khi biết mình sai, việc đọc lại BA phương án
+                        còn lại để hiểu vì sao chúng sai chính là phần học nhiều nhất của cả
+                        câu hỏi. Làm mờ chúng tới mức không đọc nổi là cắt mất đúng phần đó.
+
+                        Khan Academy làm khác: phương án không được chọn lùi về màu chữ mờ
+                        #717378, vẫn đạt 4,75:1, chứ không hạ độ đục. Làm theo cách đó: dùng
+                        thẳng `text-text-muted` (5,27:1), bỏ `opacity`. Vẫn lùi rõ so với đáp án
+                        đúng nhưng đọc được.
+                      */
+                      optionStyle = "border-transparent bg-transparent text-text-muted";
                     }
                   }
 
@@ -709,17 +757,29 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       key={key}
                       onClick={() => handleSelectAnswer(key)}
                       disabled={locked}
-                      className={`w-full text-left p-3.5 min-h-[44px] rounded-xl border flex items-center justify-between gap-4 transition-all duration-150 group relative ${locked ? "cursor-default" : "cursor-pointer"} ${optionStyle}`}
+                      className={`w-full text-left p-4 min-h-[56px] rounded-lg border flex items-center justify-between gap-4 group relative ${locked ? "cursor-default" : "cursor-pointer"} ${optionStyle}`}
                     >
                       <div className="flex items-center gap-3.5">
-                        <span className={`w-6 h-6 rounded-md flex items-center justify-center font-medium font-mono text-[11px] transition duration-150 ${
+                        {/*
+                          Ô CHỮ CÁI. Đo trên Khan Academy: hình vuông bo 4px, lúc nghỉ là viền
+                          2px rỗng ruột, lúc được chọn thì tô đặc và chữ đổi sang trắng. Chính ô
+                          này gánh phần lớn tín hiệu trạng thái, nên hàng đằng sau nó mới được
+                          phép để trống trơn.
+
+                          Bỏ `font-mono`: đây là MỘT ký tự, mà lợi ích duy nhất của font đơn cách
+                          là xếp thẳng cột nhiều ký tự. Một ký tự thì không có gì để xếp cột,
+                          chỉ còn lại nhược điểm là nét chữ khô và rộng hơn.
+                        */}
+                        <span className={`w-6 h-6 rounded shrink-0 flex items-center justify-center font-semibold text-xs ${
                           isSelected && !reveal
-                            ? "bg-text-primary text-bg-card"
+                            ? "bg-text-primary text-bg-card border-2 border-text-primary"
                             : reveal && isCorrect
-                            ? "bg-brand-success text-white"
+                            ? "bg-brand-success text-white border-2 border-brand-success"
                             : reveal && isWrongSelection
-                            ? "bg-brand-error text-white"
-                            : "bg-bg-surface group-hover:bg-border-primary text-text-muted border border-border-primary/60"
+                            ? "bg-brand-error text-white border-2 border-brand-error"
+                            : reveal
+                            ? "text-text-muted border-2 border-border-primary"
+                            : "text-text-muted border-2 border-border-primary group-hover:border-text-muted"
                         }`}>
                           {key.toUpperCase()}
                         </span>

@@ -59,6 +59,60 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Phương án trả lời thành danh sách chữ, và một lỗi tương phản 1,85:1 lộ ra
+
+Vòng tiếp theo của đợt tái thiết kế theo Khan Academy, xem mục ngay dưới cho phần đo gốc.
+
+**Đã làm**: đổi bốn phương án trả lời ở màn luyện câu từ bốn cái thẻ đóng thành một danh sách
+chữ ngăn nhau bằng đường kẻ 1px.
+
+**Vì sao**: trước đó mỗi phương án là một thẻ có viền, có nền, bo góc, cách nhau 10px. Nghĩa
+là ngay ở trạng thái nghỉ, tức lúc người học đang đọc để cân nhắc và cũng là lúc kéo dài nhất
+của mỗi câu, mắt phải phân tích **năm khối đóng** riêng biệt: câu hỏi cộng bốn thẻ. Theo
+nguyên lý khép kín của Gestalt, một hình bao kín được não đọc thành một vật thể, nên bốn vật
+thể xếp dọc bắt mắt dừng lại và khởi động lại ở từng ranh giới thay vì trôi liền từ câu hỏi
+xuống các phương án. Đo trên Khan Academy: hàng đáp án nền trong suốt, không viền, không đổ
+bóng, ngăn nhau bằng đường kẻ 1px.
+
+**KHÔNG bê nguyên mô hình Khan vào**, vì dự án này đã có một quyết định khác có căn cứ đo:
+lượt trước đã cố ý dời tín hiệu đúng sai vào nền, viền, ô chữ cái và biểu tượng để giữ chữ nội
+dung ở 18,04:1. Bỏ nền với viền là xoá mất hai trong bốn tín hiệu đó. Nên tách theo trạng
+thái: **lúc nghỉ thì phẳng hoàn toàn như Khan** (trạng thái này không mang tin gì nên không
+mất gì), **lúc đã chọn hoặc đã lộ đáp án thì giữ nguyên nền và viền**. Hệ quả phụ đáng giá:
+vì mọi thứ xung quanh đã phẳng, hai hàng có màu ngữ nghĩa nay nổi bật hẳn lên.
+
+**Lỗi tương phản phát hiện trong lúc làm.** Phương án KHÔNG được chọn, sau khi lộ đáp án, đang
+dùng `opacity-40` chồng lên `text-text-muted`. Tính màu thật hiện trên nền trắng: 0,4 x
+(107,107,117) cộng 0,6 x (255,255,255) ra xấp xỉ `#C4C4C8`, tức tương phản **1,85:1** so với
+ngưỡng 4,5:1 của WCAG AA. Gần như không đọc được.
+
+Đây không phải lỗi nhỏ. Sau khi biết mình sai, việc đọc lại ba phương án còn lại để hiểu vì
+sao chúng sai **chính là phần học nhiều nhất của cả câu hỏi**. Làm mờ tới mức không đọc nổi là
+cắt mất đúng phần đó. Khan Academy cho phương án không được chọn lùi về màu chữ mờ `#717378`,
+vẫn 4,75:1, chứ không hạ độ đục. Đã bỏ `opacity`, dùng thẳng `text-text-muted`.
+
+Đo lại trên bản chạy thật, cả bốn phương án sau khi lộ đáp án:
+
+| Phương án | Trước | Sau |
+|---|---|---|
+| A, đã chọn nhưng sai | 17,26:1 | 17,26:1 |
+| B, không chọn | **1,85:1** | **5,27:1** |
+| C, đáp án đúng | 18,04:1 | 18,04:1 |
+| D, không chọn | **1,85:1** | **5,27:1** |
+
+**Ô chữ cái A/B/C/D**: bỏ `font-mono`. Đây là MỘT ký tự, mà lợi ích duy nhất của font đơn cách
+là xếp thẳng cột nhiều ký tự; một ký tự thì không có gì để xếp cột, chỉ còn lại nét chữ khô và
+rộng hơn. Đổi sang viền 2px rỗng ruột lúc nghỉ và tô đặc lúc được chọn, đúng cách Khan làm, vì
+chính ô này gánh phần lớn tín hiệu trạng thái nên hàng phía sau nó mới được phép để trống.
+
+Chiều cao hàng lên 60px (Khan là 64px), vượt chuẩn chạm 44 x 44 của Apple.
+
+**Kiểm chứng**: `npm run check` đạt toàn bộ 6 chặng. Mọi số tương phản ở trên đo bằng Claude
+Browser trên ứng dụng đang chạy, lấy màu nền thật bằng cách leo cây DOM tìm nền không trong
+suốt gần nhất, không phải đọc từ mã nguồn.
+
+---
+
 ### 28/07/2026 — Đo Khan Academy bằng trình duyệt rồi dựng lại tầng token, và sửa lỗi tràn ngang có sẵn
 
 **Yêu cầu của Đàm**: tái thiết kế theo triết lý thiết kế của Khan Academy Web bản hiện đại.
