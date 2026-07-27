@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau lượt nâng độ chính xác dự báo.
+**Cập nhật lần cuối**: 27/07/2026, sau lượt tự chẩn đoán và nâng cấp cái đã có.
 
 ---
 
@@ -15,17 +15,41 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Nâng độ chính xác dự báo, **ĐÃ HOÀN THÀNH** cả hai phần |
+| **Current Milestone** | Tự chẩn đoán rồi nâng cấp cái đã có, **ĐÃ HOÀN THÀNH** ba hạng mục |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Sáu lượt push gần nhất: `1cb3787`, `c409520`, `9d6eb3a`, `ade2809`, `bf02448`, `068c769` |
+| **Bản đang chạy thật** | Ba lượt push gần nhất: `a650a0f`, `bae900d`, và bản cập nhật tài liệu kèm theo |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
 ---
 
-## Lượt mới nhất: nâng độ chính xác dự báo
+## Lượt mới nhất: tự chẩn đoán rồi nâng cấp cái đã có
+
+Chủ dự án yêu cầu **không thêm tính năng**, chỉ nâng cấp thứ đã có, và tự chạy chẩn đoán. Áp bộ
+quét ở AGENTS.md mục 4.9b lên ba engine chưa ai soi. Ba hạng mục, ba commit riêng.
+
+| Chỗ sửa | Trước | Sau |
+|---|---|---|
+| Cột "Độ ghi nhớ" màn Tiến hóa (nhóm **T**) | **luôn 100%**, mọi hồ sơ | Nghỉ 0/1/3/7/14/30 ngày cho 100/91/75/52/27/8 phần trăm |
+| Bảng hiệu quả chiến lược (nhóm **T**) | `averageSessionCompletion` cứng **100** cho 7 chiến lược chưa dùng lần nào | 0, đúng bất biến 4.9 |
+| Vùng chết hàm trọng số (nhóm **R**) | Sai lệch 0,30 đến 0,80 cho **đúng 1 mức** trọng số | Đủ **6 mức**, giảm đơn điệu |
+
+**Vì sao đáng làm**: cả ba đều là số hiển thị cho người học hoặc điều khiển quyết định thật, mà
+không một phép kiểm nào chạm tới. Bộ quét tìm ra chúng trong một lượt chạy.
+
+**Kết quả kèm theo**: sai lệch dự báo lớn nhất giảm tiếp từ 0,3 xuống **0,2**, trung bình từ 0,22
+xuống **0,20**.
+
+**Chưa xử lý, ghi nhận có chủ ý**: `getEvaluationHistory` và `getDecisionHistory` đều rỗng sau khi
+làm bài, vì chỉ được nuôi từ tương tác với gia sư AI. Giống khuôn `guessingFrequency` cũ, nhưng
+đây có thể là quyết định phạm vi chứ không phải lỗi: chỉ đánh giá chiến lược giảng dạy khi thật sự
+có giảng dạy. Cần chủ dự án xác nhận trước khi đụng vào.
+
+---
+
+## Lượt trước: nâng độ chính xác dự báo
 
 Chủ dự án yêu cầu nâng độ chính xác của dự đoán cá nhân hóa. Dò trước rồi mới đề xuất, và tìm ra
 hai thứ, mỗi thứ một commit.
@@ -264,9 +288,8 @@ WORKSTATE.md này, rồi push.
     chương và theo mức Bloom, mà lượt làm bài hiện **không ghi đủ chiều đó**. Muốn làm thì phải
     bổ sung dữ liệu lúc chấm trước.
 
-0b. **`calculateAdaptiveWeights` có vùng chết giữa 0,3 và 0,8**: sai lệch rơi vào dải đó thì
-    trọng số không đổi gì cả. Đó là ngưỡng có chủ ý nhưng đáng xem lại, vì phần lớn sai lệch thật
-    sẽ nằm đúng trong dải này. Nên thay bằng hàm liên tục.
+0b. ~~Vùng chết trong `calculateAdaptiveWeights`~~ **ĐÃ XỬ LÝ 27/07/2026**: đổi sang nội suy
+    tuyến tính, sai lệch 0,30 đến 0,80 nay cho đủ sáu mức trọng số khác nhau.
 
 **Bốn nhiệm vụ còn lại trong danh sách tám đã giao**, xếp theo đúng thứ tự chủ dự án đề nghị.
 Cả bốn đều đã được xác minh là mạch dữ liệu có thật, nhưng **vẫn phải đo độ dày trước khi viết
