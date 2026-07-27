@@ -78,10 +78,19 @@ export const teachingAnalytics = {
       : 0;
 
     // 2. Strategy Effectiveness Analysis
+    //
+    // Chưa có chiến lược nào được dùng thì phải nói thẳng, KHÔNG được trả về một cái tên.
+    // Bản cũ khởi tạo sẵn "Academic" và "Expert", nên màn hình khoe "Phương pháp hiệu quả
+    // nhất: Academic" kèm câu "giúp học viên khắc phục lỗi sai và duy trì độ tinh thông cao
+    // nhất" cho một người chưa từng hỏi gia sư AI lần nào. Đúng bất biến 4.9.
+    //
+    // Lưu ý: lượt TỰ LÀM BÀI cố ý không được cộng vào bảng này (xem `capNhatBangChienLuoc`),
+    // vì không có ai giảng thì không có chiến lược giảng dạy nào để so.
     const strategyStatsList = Object.values(strategyStatsMap);
-    let mostEffectiveStyle = "Academic";
+    const CHUA_DU = "Chưa đủ dữ liệu";
+    let mostEffectiveStyle = CHUA_DU;
     let maxSuccessRate = -1;
-    let leastEffectiveStyle = "Expert";
+    let leastEffectiveStyle = CHUA_DU;
     let minSuccessRate = 101;
 
     strategyStatsList.forEach(s => {

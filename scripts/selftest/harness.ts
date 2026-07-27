@@ -25,7 +25,7 @@ import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
 import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "../../src/services/conceptMemoryService";
-import { studentEvolutionEngine } from "../../src/services/studentEvolutionEngine";
+import { studentEvolutionEngine, NHAN_TU_LAM_BAI } from "../../src/services/studentEvolutionEngine";
 import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvaluationEngine";
 import { TimeService } from "../../src/services/time";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
@@ -2207,6 +2207,88 @@ const nguonCtx = readFileSync(path.join(process.cwd(), "src/services/contextWind
 check("Lời nhắc gửi gia sư AI có mang theo hiệu chuẩn tự đánh giá",
   nguonCtx.includes("calibrationState") && nguonCtx.includes("Hiệu chuẩn tự đánh giá"),
   "contextWindowBuilder đọc calibrationState và đưa vào phần tóm tắt người học");
+
+// ===========================================================================
+// NHÓM AA. Cây cầu "làm bài -> tầng trí nhớ" phải đi qua engine sư phạm thật
+//
+// Hook nộp bài vốn TỰ VIẾT một bản đánh giá sư phạm gồm 15 trường hằng số, trong khi
+// `pedagogicalEvaluationEngine.evaluateInteraction` đã có sẵn logic tính đúng chúng. Hậu quả:
+// lịch sử chấm rỗng 0 bản ghi sau 5 đề, và khoảng ôn lại cứng 48 hoặc 12 giờ chạy song song
+// với lịch ôn thật do độ bền trí nhớ quyết định.
+// ===========================================================================
+g("AA. Làm bài chảy vào engine sư phạm và bảng phân tích");
+
+dbService.clearAllHistory();
+moPhongCoGanCo(5, 0.6, 4);
+
+// AA1. Lịch sử chấm sư phạm phải có bản ghi. Trước là 0.
+const lsChamAA = pedagogicalEvaluationEngine.getEvaluationHistory();
+check("Làm bài xong thì lịch sử chấm sư phạm có bản ghi",
+  lsChamAA.length > 0,
+  `${lsChamAA.length} bản ghi sau 5 đề đã nộp`);
+
+// AA2. Khoảng ôn lại phải do engine tính, tức phải có nhiều hơn hai giá trị cứng 48 và 12.
+const tapKhoangOn = new Set(lsChamAA.map(e => e.recommendedReviewInterval));
+check("Khoảng ôn lại do engine tính, không phải hai hằng số",
+  tapKhoangOn.size >= 3,
+  `${tapKhoangOn.size} giá trị: ${[...tapKhoangOn].sort((a, b) => a - b).join(", ")} giờ`);
+
+// AA3. Hiệu quả và chỉ số con phải phân hóa, không đứng yên ở một số cứng.
+const tapHieuQua = new Set(lsChamAA.map(e => e.effectivenessScore));
+const tapHieuChuanCon = new Set(lsChamAA.map(e => e.metrics.confidenceCalibration));
+check("Điểm hiệu quả và hiệu chuẩn tự tin đều phân hóa",
+  tapHieuQua.size >= 3 && tapHieuChuanCon.size >= 3,
+  `hiệu quả ${tapHieuQua.size} giá trị, hiệu chuẩn ${tapHieuChuanCon.size} giá trị`);
+
+// AA4. BẤT BIẾN 4.5: tên khái niệm trong lịch sử chấm phải là tên của BỘ TRA CHÍNH THỐNG,
+// không phải `question.concept`. Trước khi sửa, hai cách đặt tên khớp nhau ở 0/292 câu.
+const tenDoThi = new Set(kbService.getKnowledgeGraph(dbService.getActiveSubjectId()).map(n => n.concept));
+const tenTrongLichSu = new Set(lsChamAA.map(e => e.conceptName));
+const tenLac = [...tenTrongLichSu].filter(t => !tenDoThi.has(t));
+check("Tên khái niệm trong lịch sử chấm khớp đồ thị tri thức",
+  tenLac.length === 0,
+  tenLac.length === 0 ? `${tenTrongLichSu.size} tên, khớp hết` : `lạc: ${tenLac.slice(0, 3).join(" | ")}`);
+
+// AA5. Tên trong lịch sử chấm và tên trong hồ sơ trí nhớ phải là CÙNG một tập, nếu không thì
+// bảng khái niệm khó nhất và bản đồ độ thạo mãi mãi không đối chiếu được với nhau.
+const tenTriNho = new Set(Object.keys(conceptMemoryService.getAllConceptProfiles()));
+const lechHaiKho = [...tenTrongLichSu].filter(t => !tenTriNho.has(t));
+check("Lịch sử chấm và hồ sơ trí nhớ dùng chung một tập tên khái niệm",
+  lechHaiKho.length === 0,
+  `${tenTrongLichSu.size} tên bên chấm, ${tenTriNho.size} tên bên trí nhớ, lệch ${lechHaiKho.length}`);
+
+// AA6. Lượt TỰ LÀM BÀI không được cộng vào bảng hiệu quả chiến lược giảng dạy. Không có ai
+// giảng thì không có chiến lược nào để so, cộng vào sẽ đẻ ra một phong cách dạy không tồn tại
+// rồi `adaptiveTeachingPolicy` có thể chọn chính nó làm phong cách ưu tiên.
+const bangChienLuocAA = pedagogicalEvaluationEngine.getStrategyStats();
+const coLuotTuLamBai = Object.values(bangChienLuocAA).some(s => s.strategyName === NHAN_TU_LAM_BAI && s.totalInteractions > 0);
+check("Lượt tự làm bài không lọt vào bảng hiệu quả chiến lược giảng dạy",
+  !coLuotTuLamBai,
+  `bảng có ${Object.keys(bangChienLuocAA).length} chiến lược, không có "${NHAN_TU_LAM_BAI}"`);
+
+// AA7. Chưa hỏi gia sư AI lần nào thì KHÔNG được nêu tên một phương pháp hiệu quả nhất.
+const bcAA = teachingAnalytics.generateAnalyticsReport();
+check("Chưa có giảng dạy thì không nêu tên phương pháp hiệu quả nhất",
+  bcAA.mostEffectiveTeachingStyle === "Chưa đủ dữ liệu",
+  `báo cáo trả về "${bcAA.mostEffectiveTeachingStyle}", tổng tương tác ${bcAA.totalInteractions}`);
+
+// AA8. Nhưng số lượt tương tác thì PHẢI khác 0, vì người học vừa làm 100 câu thật.
+check("Màn Phân tích giảng dạy thấy được số câu đã làm",
+  bcAA.totalInteractions >= 90,
+  `${bcAA.totalInteractions} lượt`);
+
+// AA9. Bảng lỗi hay mắc phải nuôi được từ lượt làm bài, không chỉ từ gia sư AI.
+check("Bảng lỗi hay mắc nhận được dữ liệu từ lượt làm bài",
+  bcAA.mostFrequentMisconceptions.length > 0,
+  `${bcAA.mostFrequentMisconceptions.length} lỗi, hay gặp nhất xuất hiện ${bcAA.mostFrequentMisconceptions[0]?.count ?? 0} lần`);
+
+// AA10. Nội dung lỗi hay mắc phải là BẪY HIỂU SAI biên soạn tay, không phải nguyên văn lời
+// giải thích của câu hỏi. Bản cũ nhét thẳng `q.explanation` vào đây.
+const loiDauAA = bcAA.mostFrequentMisconceptions[0]?.misconception || "";
+const trungLoiGiaiThich = questions.some(q => (q.explanation || "").trim() === loiDauAA.trim() && loiDauAA.length > 0);
+check("Lỗi hay mắc không phải nguyên văn lời giải thích của câu hỏi",
+  loiDauAA.length > 0 && !trungLoiGiaiThich,
+  `"${loiDauAA.slice(0, 60)}..."`);
 
 dbService.clearAllHistory();
 

@@ -6,8 +6,8 @@
 import { dbService, dangKyDonDuLieuSuyRa } from "./db";
 import { TimeService } from "./time";
 import { conceptMemoryService, ConceptMemoryProfile, ConceptMemoryUpdate } from "./conceptMemoryService";
-import { studentModelService, doTuTinTuCoNghiVan } from "./learnerModel";
-import { PedagogicalEvaluation } from "./pedagogicalEvaluationEngine";
+import { studentModelService, doTuTinTuCoNghiVan, luotCoNhipNhanh } from "./learnerModel";
+import { PedagogicalEvaluation, pedagogicalEvaluationEngine } from "./pedagogicalEvaluationEngine";
 import { kbService } from "./kbService";
 
 export interface EvolutionTimelineSnapshot {
@@ -517,7 +517,31 @@ export const studentEvolutionEngine = {
   }
 };
 
-// Auto-synchronize student evolution profile and concept memory on exam submission
+/**
+ * Nhãn dành riêng cho lượt NGƯỜI HỌC TỰ LÀM BÀI, không có ai giảng.
+ *
+ * Bản cũ dán nhãn `"STORY_METAPHOR"` cho mọi câu trả lời trong đề thi, tức khẳng định rằng
+ * người học vừa được dạy bằng phương pháp kể chuyện ẩn dụ, trong khi thực tế họ chỉ bấm chọn
+ * một phương án. Nhãn đó chảy vào bảng hiệu quả chiến lược và vào phân bố phong cách giảng
+ * dạy trên màn Phân tích giảng dạy.
+ */
+export const NHAN_TU_LAM_BAI = "Tự làm bài";
+
+// Đồng bộ hồ sơ tiến hóa và trí nhớ khái niệm mỗi khi người học nộp một đề.
+//
+// VÌ SAO VIẾT LẠI (27/07/2026). Đây là CÂY CẦU DUY NHẤT nối "làm bài" với toàn bộ tầng trí
+// nhớ, nhưng nó tự viết tay một bản đánh giá sư phạm gồm 15 trường hằng số (hiệu quả 0,9 hoặc
+// 0,3, mức tăng độ thạo 10 hoặc -8, khoảng ôn lại 48 hoặc 12 giờ, cả 9 chỉ số con đều là số
+// cứng 0,8 và 0,85 và 0,4 và 0,1), trong khi `pedagogicalEvaluationEngine.evaluateInteraction`
+// ĐÃ CÓ SẴN toàn bộ logic tính đúng những trường đó một cách tất định.
+//
+// Hai hệ quả đo được:
+//   - `getEvaluationHistory` rỗng 0 bản ghi sau 5 đề đã nộp, vì bản viết tay không đi qua
+//     engine nên không được lưu. Màn Phân tích giảng dạy báo 0 tương tác cho một người vừa
+//     làm 100 câu.
+//   - `recommendedReviewInterval` cứng 48 hoặc 12 giờ, chạy song song và mâu thuẫn với lịch
+//     ôn thật do `conceptMemoryService` tính từ độ bền trí nhớ. Hai lịch ôn cho cùng một
+//     khái niệm, đúng khuôn "hai đường cong quên" đã phải gộp trước đó.
 dbService.addOnSubmit((attempt) => {
   if (!attempt || !attempt.answers) return;
   const activeSubjectId = dbService.getActiveSubjectId();
@@ -526,7 +550,17 @@ dbService.addOnSubmit((attempt) => {
   const totalAns = Object.keys(answers).length;
   if (totalAns === 0) return;
 
+  // Thời gian mỗi câu là PHÂN BỔ ĐỀU, không phải đo được. Ứng dụng chỉ ghi tổng thời gian của
+  // cả lượt, không ghi thời gian từng câu. Đã cân nhắc phân bổ theo `estimatedTime` cho có
+  // phân hóa, nhưng đo lại thì trường đó gần như KHÔNG bám độ khó (trung bình 34,7s cho câu
+  // Dễ, 35,3s cho Trung bình, 35,2s cho Khó), nên chia theo nó chỉ tạo phân hóa giả.
   const timeSpentPerQ = Math.max(5, Math.round((attempt.timeSpent || 0) / Math.max(1, totalAns)));
+
+  // Nhịp của CHÍNH lượt này so với tổng thời gian ước tính của các câu trong đề. Dùng lại
+  // đúng ngưỡng của `doNhipLamBai` để cả dự án chỉ có một định nghĩa "làm nhanh bất thường".
+  const lamVoiVang = luotCoNhipNhanh(attempt);
+
+  const studentModel = studentModelService.getStudentModel();
 
   Object.entries(answers).forEach(([qIdStr, answer]) => {
     const qId = parseInt(qIdStr);
@@ -541,6 +575,35 @@ dbService.addOnSubmit((attempt) => {
     const doTuTin = doTuTinTuCoNghiVan(attempt.flags, qId);
     const coTinHieuTuTin = (attempt.flags || []).length > 0;
 
+    // Bẫy hiểu sai lấy từ tầng KHÁI NIỆM biên soạn tay. Bản cũ nhét nguyên văn `q.explanation`
+    // vào đây, nghĩa là cả đoạn lời giải bị ghi lại thành "điều người học hiểu sai", rồi hiện
+    // nguyên như vậy trên màn Tiến hóa và trong bảng lỗi hay mắc.
+    const bayHieuSai = isCorrect
+      ? undefined
+      : (kbService.layCanhBaoBayHocThuat(activeSubjectId, q) || undefined);
+
+    const danhGia = pedagogicalEvaluationEngine.evaluateInteraction({
+      // Engine không đọc hai trường này (đã dò: `learningPlan` và `teachingDecision` được rút
+      // ra rồi bỏ không), nhưng chữ ký vẫn đòi nên truyền bản tối thiểu, không bịa nội dung.
+      learningPlan: { bloom: q.bloomLevel || "Understand" } as any,
+      teachingDecision: { actionType: NHAN_TU_LAM_BAI } as any,
+      studentModel,
+      question: q,
+      studentAnswer: String(answer),
+      correctAnswer: q.correctAnswer,
+      responseTimeSeconds: timeSpentPerQ,
+      retryCount: 0,
+      confidence: doTuTin,
+      guessDetection: lamVoiVang,
+      evidenceCoverage: 1,
+      teachingStrategy: NHAN_TU_LAM_BAI,
+      bloomLevel: q.bloomLevel || "Understand",
+      misconceptionType: bayHieuSai,
+      conceptName,
+      // Không có ai giảng thì không được ghi vào bảng hiệu quả chiến lược giảng dạy.
+      capNhatBangChienLuoc: false
+    });
+
     studentEvolutionEngine.processInteraction({
       conceptName,
       subjectId: activeSubjectId,
@@ -549,43 +612,20 @@ dbService.addOnSubmit((attempt) => {
         confidence: doTuTin,
         coTinHieuTuTin,
         responseTimeSeconds: timeSpentPerQ,
-        teachingStrategy: "STORY_METAPHOR",
+        teachingStrategy: NHAN_TU_LAM_BAI,
         explanationLength: "balanced",
-        detectedMisconception: isCorrect ? undefined : (q.explanation || "Cần củng cố nội dung lý luận này"),
+        detectedMisconception: bayHieuSai,
         questionId: qId
       },
-      evaluation: {
-        id: `eval_${Date.now()}_${qId}`,
-        timestamp: TimeService.now().toISOString(),
-        conceptName,
-        teachingStrategy: "STORY_METAPHOR",
-        bloomLevel: q.bloomLevel || "Understand",
-        effectivenessScore: isCorrect ? 0.9 : 0.3,
-        teachingWorked: isCorrect,
-        masteryImprovement: isCorrect ? 10 : -8,
-        misconceptionResolved: isCorrect,
-        confidenceDelta: isCorrect ? 0.1 : -0.1,
-        recommendedBloom: isCorrect ? "Apply" : "Remember",
-        recommendedDifficulty: isCorrect ? "Apply" : "Understand",
-        retryStrategy: "DEFAULT",
-        needsPrerequisiteReview: !isCorrect,
-        recommendedTeachingStyle: "Academic",
-        recommendedReviewInterval: isCorrect ? 48 : 12,
-        nextLearningAction: isCorrect ? "ADVANCE" : "REINFORCE",
-        reason: isCorrect ? "Trả lời chính xác câu hỏi" : "Cần củng cố thêm lý luận",
-        metrics: {
-          immediateUnderstanding: isCorrect ? 1.0 : 0.0,
-          misconceptionRecovery: isCorrect ? 1.0 : 0.2,
-          responseTimeImprovement: 0.8,
-          confidenceCalibration: 0.8,
-          bloomReadiness: 0.8,
-          retentionPrediction: 0.8,
-          teachingStrategyEffectiveness: 0.85,
-          cognitiveLoad: 0.4,
-          questionFatigue: 0.1
-        }
-      }
+      evaluation: danhGia
     });
+
+    // Bảng "lỗi hay mắc" trên màn Phân tích giảng dạy đọc `studentModel.misconceptionHistory`,
+    // mà kho đó trước nay CHỈ được nuôi từ tương tác với gia sư AI (`evidencePipeline`). Người
+    // học làm sai 100 câu trong đề thi vẫn thấy bảng rỗng. Nay ghi luôn từ lượt làm bài.
+    if (bayHieuSai) {
+      studentModelService.logMisconception(conceptName, bayHieuSai, qId);
+    }
   });
 });
 

@@ -262,11 +262,13 @@ export default function TeachingAnalyticsView() {
                 <div className="flex items-center gap-2 text-xs font-semibold text-text-muted uppercase">
                   <span>Phương pháp hiệu quả nhất</span>
                 </div>
-                <div className="text-sm font-bold text-emerald-600">
+                <div className={`text-sm font-bold ${report.mostEffectiveTeachingStyle === "Chưa đủ dữ liệu" ? "text-text-muted" : "text-emerald-600"}`}>
                   {report.mostEffectiveTeachingStyle}
                 </div>
                 <p className="text-xs text-text-secondary">
-                  Giúp học viên khắc phục lỗi sai và duy trì độ tinh thông cao nhất.
+                  {report.mostEffectiveTeachingStyle === "Chưa đủ dữ liệu"
+                    ? "Chỉ so sánh được sau khi bạn nhờ gia sư AI giảng lại một số câu. Lượt tự làm bài không tính vào đây vì không có ai giảng."
+                    : "Giúp học viên khắc phục lỗi sai và duy trì độ tinh thông cao nhất."}
                 </p>
               </div>
             </div>

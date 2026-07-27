@@ -77,6 +77,26 @@ export const pedagogicalEvaluationEngine = {
     teachingStrategy: string;
     bloomLevel: string;
     misconceptionType?: string;
+    /**
+     * Tên khái niệm do BỘ TRA CHÍNH THỐNG quyết định (`kbService.getConceptForQuestion`).
+     *
+     * VÌ SAO PHẢI TRUYỀN VÀO (27/07/2026). Trước đây hàm này tự lấy `question.concept`, còn
+     * tầng trí nhớ khái niệm lại dùng bộ tra chính thống. Đo được: hai cách đặt tên khớp nhau
+     * ở **0/292 câu**, lệch 280 câu và 12 câu bỏ trống. `question.concept` chia rất nhỏ theo
+     * từng câu ("Chủ thể của hành vi khách hàng"), còn đồ thị tri thức gom theo khái niệm
+     * ("Hành vi khách hàng (Consumer Behavior)"). Hệ quả: bảng khái niệm khó nhất trên màn
+     * Phân tích giảng dạy và hồ sơ trí nhớ nói về hai tập tên hoàn toàn rời nhau, không bao
+     * giờ đối chiếu được với nhau. Đây đúng là thứ bất biến 4.5 cấm: một dự án, một bộ tra.
+     * Bỏ trống thì rơi về hành vi cũ để đường gọi chưa sửa không gãy.
+     */
+    conceptName?: string;
+    /**
+     * Có cộng lượt này vào BẢNG HIỆU QUẢ CHIẾN LƯỢC GIẢNG DẠY hay không. Mặc định là có.
+     * Lượt tự làm bài phải truyền `false`: người học trả lời một mình, không có ai giảng, nên
+     * cộng vào bảng đó sẽ đẻ ra một "chiến lược giảng dạy" không tồn tại, rồi
+     * `adaptiveTeachingPolicy` có thể chọn chính nó làm phong cách dạy ưu tiên.
+     */
+    capNhatBangChienLuoc?: boolean;
   }): PedagogicalEvaluation {
     const {
       learningPlan,
@@ -94,7 +114,7 @@ export const pedagogicalEvaluationEngine = {
     } = params;
 
     const isCorrect = studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
-    const conceptName = question.concept || "Khái niệm học thuật";
+    const conceptName = params.conceptName || question.concept || "Khái niệm học thuật";
 
     // 1. Immediate Understanding Metric (0.0 to 1.0)
     let immediateUnderstanding = isCorrect ? 1.0 : 0.0;
@@ -261,7 +281,9 @@ export const pedagogicalEvaluationEngine = {
     };
 
     // 11. Save to Strategy Stats Database & Evaluation History
-    this.recordStrategyStats(teachingStrategy, evaluation);
+    if (params.capNhatBangChienLuoc !== false) {
+      this.recordStrategyStats(teachingStrategy, evaluation);
+    }
     this.saveEvaluationHistory(evaluation);
 
     return evaluation;

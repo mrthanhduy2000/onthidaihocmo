@@ -395,6 +395,24 @@ export function doTuTinTuCoNghiVan(coNghiVanCuaLuot: number[] | undefined, quest
   return co.includes(questionId) ? 0.25 : 0.8;
 }
 
+/**
+ * Một lượt làm bài có nhanh bất thường không, so với tổng thời gian ước tính của chính các câu
+ * trong đề đó.
+ *
+ * Dùng lại ĐÚNG ngưỡng `NHIP_NHANH_TOI_DA` của `doNhipLamBai` để cả dự án chỉ có một định
+ * nghĩa "làm nhanh bất thường". Đừng đặt ngưỡng thứ hai ở chỗ khác.
+ *
+ * Trả về `false` khi thiếu dữ liệu (không có thời gian thật, hoặc không có mốc ước tính), tức
+ * mặc định KHÔNG kết tội người học đoán mò.
+ */
+export function luotCoNhipNhanh(luot: { questions?: number[]; timeSpent?: number }): boolean {
+  const dsCau = luot.questions || [];
+  if (dsCau.length === 0 || !luot.timeSpent || luot.timeSpent <= 0) return false;
+  const chuan = dsCau.reduce((s, id) => s + (questionMap.get(id)?.estimatedTime || 0), 0);
+  if (chuan <= 0) return false;
+  return luot.timeSpent / chuan <= NHIP_NHANH_TOI_DA;
+}
+
 /** Kết quả đo nhịp làm bài và mức đoán mò suy ra từ đó. */
 export interface NhipLamBai {
   duDuLieu: boolean;
