@@ -2582,6 +2582,21 @@ check("Phím tắt nhường chỗ khi đang gõ và khi có phím điều khi�
     && /e\.metaKey \|\| e\.ctrlKey \|\| e\.altKey/.test(nguonPractice),
   "bỏ qua khi ở ô nhập, ô soạn thảo, hoặc khi giữ Cmd/Ctrl/Alt");
 
+// AE5. Câu hỏi phải là thứ dẫn dắt, không phải dòng ngữ cảnh phía trên nó.
+//
+// Bản cũ viết dòng chủ đề và khái niệm bằng chữ hoa giãn cách cỡ 10px kiểu mã máy, lại tô đậm,
+// tức dạng chữ khó đọc nhất dành cho thứ ÍT quan trọng nhất trên thẻ. Trên khung 375px nó chiếm
+// hai dòng ngay trước câu hỏi, nên thứ mắt chạm đầu tiên trong mỗi câu lại là thứ không cần đọc.
+check("Dòng ngữ cảnh không lấn át câu hỏi",
+  !/text-\[10px\] text-text-muted font-semibold uppercase tracking-wider font-mono/.test(nguonPractice),
+  "đã bỏ chữ hoa giãn cách và tô đậm khỏi dòng chủ đề, khái niệm");
+
+// AE6. Các chip đầu thẻ không được xuống dòng trên khung hẹp.
+// Đo trên khung 375px: "Câu 3 / 10" từng xuống BA dòng, "Giáo viên AI Coaching" cũng ba dòng.
+check("Chip đầu thẻ làm bài không xuống dòng trên khung hẹp",
+  (nguonPractice.match(/whitespace-nowrap/g) || []).length >= 3,
+  "chip số câu, chip mức độ và nhãn công tắc gia sư đều giữ một dòng");
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

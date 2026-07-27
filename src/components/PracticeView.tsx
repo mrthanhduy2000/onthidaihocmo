@@ -519,7 +519,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               {/* Question Index & Action Flags */}
               <div className="flex items-center justify-between gap-4 border-b border-border-primary/60 pb-4">
                 <div className="flex items-center gap-2">
-                  <span className="bg-bg-surface border border-border-primary text-text-secondary text-xs font-medium px-2.5 py-0.5 rounded-md">
+                  <span className="bg-bg-surface border border-border-primary text-text-secondary text-xs font-medium px-2.5 py-0.5 rounded-md whitespace-nowrap">
                     Câu {currentIdx + 1} / {examQuestions.length}
                   </span>
                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
@@ -527,7 +527,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     activeQuestion.difficulty === "Trung bình" ? "bg-brand-info-bg text-brand-info border-brand-info-border/30" :
                     activeQuestion.difficulty === "Khó" ? "bg-brand-warning-bg text-brand-warning border-brand-warning-border/30" :
                     "bg-brand-danger-bg text-brand-danger border-brand-danger-border/30"
-                  }`}>
+                  } whitespace-nowrap`}>
                     Mức {activeQuestion.difficulty}
                   </span>
                   <span className="text-[11px] text-text-muted font-mono hidden sm:inline">
@@ -552,9 +552,16 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <div className={`w-8 h-4 rounded-full transition duration-150 ${isTutorMode ? "bg-brand-success" : "bg-bg-surface border border-border-primary"}`}></div>
                         <div className={`absolute top-0.5 left-0.5 bg-white w-3 h-3 rounded-full shadow-md transition-transform duration-150 ${isTutorMode ? "transform translate-x-4 bg-white" : "bg-text-muted"}`}></div>
                       </div>
-                      <span className="text-[10px] font-medium text-text-secondary flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-brand-success" />
-                        Giáo viên AI Coaching
+                      {/* Trên điện thoại chỉ giữ biểu tượng: cụm chữ "Giáo viên AI Coaching"
+                          xuống ba dòng ở khung 375px, đẩy cả hàng đầu thẻ thành một mớ rối.
+                          Vẫn có nhãn cho trình đọc màn hình và cho chuột dừng lại. */}
+                      <span
+                        className="text-[10px] font-medium text-text-secondary flex items-center gap-1 whitespace-nowrap"
+                        title="Giáo viên AI Coaching"
+                      >
+                        <Sparkles className="w-3 h-3 text-brand-success shrink-0" />
+                        <span className="hidden sm:inline">Giáo viên AI Coaching</span>
+                        <span className="sr-only">Giáo viên AI Coaching</span>
                       </span>
                     </label>
                   )}
@@ -586,7 +593,17 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
               {/* Question Text */}
               <div className="space-y-2">
-                <div className="text-[10px] text-text-muted font-semibold uppercase tracking-wider font-mono flex flex-wrap items-center gap-1.5">
+                {/*
+                  Dòng ngữ cảnh (chủ đề, khái niệm, kiến thức cần trước) đặt TRÊN câu hỏi nhưng
+                  là thứ ÍT quan trọng nhất trên thẻ. Bản cũ viết nó bằng chữ hoa giãn cách cỡ
+                  10px kiểu mã máy, tức là dạng chữ khó đọc nhất, lại còn tô đậm. Trên khung
+                  375px nó chiếm hai dòng ngay trước câu hỏi, nên thứ mắt chạm đầu tiên trong
+                  mỗi câu lại là thứ không cần đọc kỹ.
+
+                  Nay hạ nó xuống đúng vai trò ngữ cảnh: chữ thường, không tô đậm, màu nhạt.
+                  Câu hỏi trở thành thứ dẫn dắt, đúng như nó phải thế.
+                */}
+                <div className="text-[11px] text-text-muted flex flex-wrap items-center gap-1.5">
                   <span>Chủ đề: {topics.find(t => t.id === activeQuestion.topicId)?.title}</span>
                   {(() => {
                     const activeSubjectId = dbService.getActiveSubjectId();
@@ -597,8 +614,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       return (
                         <>
                           <span className="text-text-muted">•</span>
-                          <span className="text-brand-info flex items-center gap-1 font-semibold">
-                            <Brain className="w-3.5 h-3.5" />
+                          <span className="text-brand-info flex items-center gap-1">
+                            <Brain className="w-3.5 h-3.5 shrink-0" />
                             Khái niệm: {conceptNode.concept}
                           </span>
                           {reqNodes.length > 0 && (
