@@ -2542,6 +2542,47 @@ check("Điểm dự kiến chỉ hiện khi đã có bài làm",
   "chưa có bài làm thì hiện \"Chưa đủ dữ liệu\" thay cho 5,0 kèm biên độ");
 
 // ===========================================================================
+g("AE. Làm bài được bằng bàn phím");
+// ===========================================================================
+// Đo trên bản chạy thật ngày 28/07/2026: màn làm bài chỉ có "," và "." để chuyển câu, còn việc
+// CHỌN ĐÁP ÁN bắt buộc phải dùng chuột. Trong một buổi ôn 2 đến 4 tiếng đó là hàng trăm lần rời
+// tay khỏi bàn phím cho một việc đã quyết định xong trong đầu. Mỗi phương án vốn ĐÃ hiện sẵn
+// chữ cái A, B, C, D nên phím tương ứng là thứ người học đoán ra ngay mà chưa dùng được.
+
+const nguonPractice = docNguon("src/components/PracticeView.tsx");
+
+// AE1. Phải chọn được đáp án bằng chữ cái và bằng số.
+//
+// Phép kiểm này phải soi ĐÚNG SỢI DÂY chứ không chỉ soi xem các tên biến có tồn tại không.
+// Bản đầu tôi viết `/theoChuCai/ && /theoSo/ && /chonDapAnRef\.current\(/` và khi thử phá bằng
+// cách cắt phép tra bảng thì nó VẪN XANH, vì ba cái tên đó vẫn còn nguyên trong file. Đây là
+// lần thứ năm dự án bắt được phép kiểm rỗng, nên quy tắc là: khớp cả biểu thức nối, không khớp
+// riêng lẻ từng danh từ.
+check("Chọn đáp án được bằng phím A/B/C/D và 1/2/3/4",
+  /const\s+chon\s*=\s*theoChuCai\[phim\]\s*\|\|\s*theoSo\[phim\]/.test(nguonPractice)
+    && /if\s*\(chon\)\s*\{[\s\S]{0,120}chonDapAnRef\.current\(chon\)/.test(nguonPractice)
+    && /theoSo:\s*Record<string,\s*"a" \| "b" \| "c" \| "d">\s*=\s*\{\s*"1": "a"/.test(nguonPractice),
+  "phím chữ cái và phím số cùng tra ra đáp án rồi gọi thẳng handleSelectAnswer");
+
+// AE2. Mũi tên trái phải chuyển câu, giữ nguyên "," và "." cho ai đã quen.
+check("Chuyển câu được bằng mũi tên trái phải",
+  /"ArrowLeft"/.test(nguonPractice) && /"ArrowRight"/.test(nguonPractice)
+    && /=== ","/.test(nguonPractice) && /=== "\."/.test(nguonPractice),
+  "mũi tên và dấu phẩy, dấu chấm cùng chuyển câu");
+
+// AE3. Phím tắt phải HIỆN RA cho người học thấy. Một phím tắt không ai biết thì bằng không.
+check("Có nhắc phím tắt ngay trên màn làm bài",
+  /để chọn/.test(nguonPractice) && /để chuyển câu/.test(nguonPractice),
+  "dòng nhắc nằm ngay dưới bốn phương án");
+
+// AE4. Không được cướp phím khi người học đang gõ vào ô nhập, và không đụng vào phím tắt của
+//      trình duyệt.
+check("Phím tắt nhường chỗ khi đang gõ và khi có phím điều khiển",
+  /tag === "INPUT"/.test(nguonPractice) && /isContentEditable/.test(nguonPractice)
+    && /e\.metaKey \|\| e\.ctrlKey \|\| e\.altKey/.test(nguonPractice),
+  "bỏ qua khi ở ô nhập, ô soạn thảo, hoặc khi giữ Cmd/Ctrl/Alt");
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

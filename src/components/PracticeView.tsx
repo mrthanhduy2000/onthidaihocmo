@@ -77,8 +77,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
   const activeQuestion = examQuestions[currentIdx];
 
-  // Phím tắt chuyển câu: "," = câu trước, "." = câu sau. Bỏ qua khi đang gõ vào ô nhập
-  // hoặc khi hộp thoại nộp bài đang mở, để không cướp phím của người dùng.
+  // Giữ hàm chọn đáp án MỚI NHẤT trong một ref, để trình nghe phím không phải gắn lại sau mỗi
+  // lần render mà vẫn không bao giờ gọi nhầm bản cũ (đóng gói giá trị cũ của exam).
+  const chonDapAnRef = useRef<(k: "a" | "b" | "c" | "d") => void>(() => {});
+
+  // Phím tắt khi làm bài.
+  //
+  // VÌ SAO MỞ RỘNG (28/07/2026). Bản cũ chỉ có "," và "." để chuyển câu, còn việc CHỌN ĐÁP ÁN
+  // thì bắt buộc phải dùng chuột. Trong một buổi ôn 2 đến 4 tiếng, đó là hàng trăm lần rời tay
+  // khỏi bàn phím, đưa chuột tới đúng một trong bốn ô rồi bấm, cho một việc mà người học đã
+  // quyết định xong trong đầu từ trước. Mỗi phương án vốn ĐÃ hiện sẵn chữ cái A, B, C, D ngay
+  // trên màn hình, nên phím tương ứng là thứ người học đoán ra ngay mà chưa hề dùng được.
+  //
+  // Nay: A/B/C/D hoặc 1/2/3/4 để chọn đáp án, mũi tên trái phải để chuyển câu (giữ nguyên ","
+  // và "." cho ai đã quen). Vẫn bỏ qua khi đang gõ vào ô nhập hoặc khi hộp thoại nộp bài mở,
+  // để không cướp phím của người dùng.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -86,10 +99,25 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
       const el = e.target as HTMLElement | null;
       const tag = el?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable) return;
-      if (e.key === ",") {
+
+      if (e.key === "," || e.key === "ArrowLeft") {
+        e.preventDefault();
         setCurrentIdx(prev => (prev > 0 ? prev - 1 : prev));
-      } else if (e.key === ".") {
+        return;
+      }
+      if (e.key === "." || e.key === "ArrowRight") {
+        e.preventDefault();
         setCurrentIdx(prev => (prev < examQuestions.length - 1 ? prev + 1 : prev));
+        return;
+      }
+
+      const phim = e.key.toLowerCase();
+      const theoChuCai: Record<string, "a" | "b" | "c" | "d"> = { a: "a", b: "b", c: "c", d: "d" };
+      const theoSo: Record<string, "a" | "b" | "c" | "d"> = { "1": "a", "2": "b", "3": "c", "4": "d" };
+      const chon = theoChuCai[phim] || theoSo[phim];
+      if (chon) {
+        e.preventDefault();
+        chonDapAnRef.current(chon);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -222,6 +250,9 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     setExam(updated);
     // Phản hồi tức thì (đáp án đúng + lời giải bám sát câu hỏi) do các panel bên dưới đảm nhiệm.
   };
+
+  // Cập nhật ref sau mỗi lần render để phím tắt luôn dùng đúng bản hiện tại.
+  chonDapAnRef.current = handleSelectAnswer;
 
   const toggleBookmark = (qId: number) => {
     const isBookmarked = dbService.toggleBookmark(qId);
@@ -739,9 +770,24 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <span>Câu trước</span>
                 </button>
 
-                <div className="text-[11px] text-text-muted font-mono hidden sm:inline">
-                  Slide: <span className="font-medium text-text-secondary">{activeQuestion.sourcePdf} (Trang {activeQuestion.sourcePage})</span>
-                </div>
+                {/*
+                  Nhắc phím tắt, đặt đúng chỗ mắt dừng lại sau khi đọc xong bốn phương án.
+                  Một phím tắt không ai biết thì bằng không: người học sẽ vẫn với tay lấy chuột.
+                  Chỉ hiện khi chưa nộp bài, vì lúc xem lại thì không còn chọn đáp án nữa.
+                */}
+                {!exam.isSubmitted && (
+                  <div className="text-[11px] text-text-muted hidden sm:flex items-center gap-1.5">
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">A</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">B</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">C</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">D</kbd>
+                    <span>để chọn</span>
+                    <span className="text-border-primary">•</span>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">←</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">→</kbd>
+                    <span>để chuyển câu</span>
+                  </div>
+                )}
 
                 <button 
                   onClick={handleNext}
