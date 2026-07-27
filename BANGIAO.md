@@ -59,6 +59,121 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Rà toàn bộ liên kết: nối lại những chỗ dữ liệu chảy rời nhau
+
+**Yêu cầu của Đàm**: "Rà soát mọi thứ, liên kết toàn bộ thành phần với nhau, không để mọi thứ
+rời rạc, tất cả mọi dữ liệu phải đồng bộ hóa với nhau. Nâng cao trí thông minh của nội tại
+sản phẩm."
+
+Bốn commit: `f4b3099`, `251572f`, `d64844d`, `832b921`. Số phép kiểm 152 lên **182**, thêm
+năm nhóm mới **Y, Z, AA, AB, AC**.
+
+#### Cách tìm việc, đáng giữ cho lượt sau
+
+Không đi dò "chỗ nào bịa số" như ba lượt trước, mà hỏi một câu khác: **thành phần nào đang
+nói chuyện với nhau bằng hai thứ tiếng?** Ba dấu hiệu dẫn tới cả bốn lỗi:
+
+1. Một trường được ghi mà không ai đọc, hoặc ngược lại.
+2. Hai kho cùng mô tả một thứ nhưng được nuôi từ hai đường khác nhau.
+3. Một engine đã có sẵn logic đúng, nhưng nơi gọi lại tự viết tay bản rút gọn.
+
+Dấu hiệu thứ ba là dấu hiệu đắt nhất và khó thấy nhất, vì mã vẫn chạy, kiểu vẫn đúng, màn
+hình vẫn hiện số.
+
+#### 1. Xóa tiến trình bỏ sót bảy kho dẫn xuất (`f4b3099`)
+
+`clearAllHistory` chỉ xóa 4 khóa. Bấm "Làm mới tiến trình" thì màn Thống kê về 0 nhưng màn
+Tiến hóa, bản đồ độ thạo và lịch ôn vẫn giữ nguyên người học cũ. `resetProgress` còn xóa ít
+hơn nữa, trong khi thông báo trên màn Thống kê hứa "làm sạch toàn bộ tiến trình học tập".
+
+Đã sửa bằng mẫu đăng ký trễ: mỗi service tự khai kho của mình. Xem bất biến **4.9d**.
+
+**Số đo quan trọng nhất của cả lượt** nằm ở đây: sau khi việc dọn trở nên thật, sai lệch dự
+báo nhảy từ 0,3 lên 0,4. Tôi đã **không** chấp nhận con số mà đi tách nguyên nhân: cất thay
+đổi bằng `git stash` để lấy mốc nền, rồi bẻ riêng từng thay đổi. Kết quả: giữ nguyên công
+thức độ tự tin cũ mà chỉ dọn kho cho đúng thì con số **đã là 0,4**. Tức 0,3 là số đo trên
+trạng thái còn tồn dư của kịch bản trước, không phải chất lượng bị tụt. Đã ghi cảnh báo ngay
+trong harness để người sau không "khôi phục" nhầm.
+
+#### 2. Độ tự tin suy ngược từ đúng sai (`f4b3099`)
+
+Cây cầu nối làm bài với tầng trí nhớ truyền `confidence = đúng ? 0,85 : 0,4`. Thay vào công
+thức xếp loại hiệu chuẩn ra `diff = 0,4 - 0,55a`, nên nhãn "underconfident" đòi tỷ lệ đúng
+trên 109%, tức **không bao giờ xuất hiện**, còn "overconfident" chỉ là cách gọi khác của
+"đúng dưới 36,4%". Một chỉ số tự nhận đo mức tự tin nhưng thực chất đo lại chính cái nó đang
+so sánh. Nay lấy từ `attempt.flags`, tức nút cờ nghi vấn người học tự bấm.
+
+**Tôi tự bắt lỗi trong chính đoạn mới**: bản đầu trả 0,5 trung lập khi người học không bấm cờ
+lần nào, nhưng vẫn đem 0,5 đó so với tỷ lệ đúng, nên hồ sơ đúng 90% bị dán nhãn "thiếu tự
+tin" ở 13/15 khái niệm. Vẫn là bịa, chỉ đổi chiều. Đã thêm `confidenceSignalCount` và trạng
+thái "chua-du-du-lieu" để im lặng không bị đọc thành tự tin.
+
+#### 3. Cây cầu tự viết 15 hằng số thay vì gọi engine đã có (`251572f`)
+
+`pedagogicalEvaluationEngine.evaluateInteraction` đã có sẵn logic tất định cho toàn bộ các
+trường đó, nhưng hook nộp bài tự viết tay một bản rút gọn. Ba hệ quả đo được:
+
+- lịch sử chấm sư phạm **rỗng 0 bản ghi** sau 5 đề đã nộp, nên màn Phân tích giảng dạy báo
+  0 tương tác cho người vừa làm 100 câu. Sau khi nối: 100 bản ghi.
+- **tên khái niệm khớp nhau ở 0/292 câu** giữa engine chấm (`question.concept`) và tầng trí
+  nhớ (bộ tra chính thống). Hai bảng trên màn hình nói về hai tập tên rời nhau. Vi phạm bất
+  biến 4.5. Sau khi sửa: 14 tên bên chấm, 14 bên trí nhớ, lệch 0.
+- khoảng ôn lại cứng 48 hoặc 12 giờ chạy **song song và mâu thuẫn** với lịch ôn thật do độ
+  bền trí nhớ quyết định. Đúng khuôn "hai đường cong quên" đã phải gộp trước đó.
+
+Nhãn chiến lược cũ là `"STORY_METAPHOR"` cho mọi câu trong đề, tức khẳng định người học vừa
+được dạy bằng phương pháp kể chuyện ẩn dụ trong khi họ chỉ bấm chọn một phương án. Nay là
+`NHAN_TU_LAM_BAI` và **cố ý không cộng vào bảng hiệu quả chiến lược giảng dạy**, vì không có
+ai giảng thì không có chiến lược nào để so.
+
+**Cố ý KHÔNG làm, ghi lại vì suýt làm**: phân bổ thời gian từng câu theo `estimatedTime` cho
+có phân hóa. Đo lại thì trường đó gần như không bám độ khó (trung bình 34,7s cho câu Dễ,
+35,3s Trung bình, 35,2s Khó), nên chia theo nó chỉ tạo **phân hóa giả**. Giữ chia đều và ghi
+rõ trong chú thích rằng đây là phân bổ chứ không phải đo.
+
+#### 4. Mỏi mệt: một trường chết, một cái đếm chỉ tăng (`d64844d`)
+
+`fatigueTrend` khai báo rồi không ai ghi cũng không ai đọc. `questionFatigue` cộng thêm 8 mỗi
+lần hỏi gia sư AI và không bao giờ giảm, nên sau 13 lần là ghim 100 vĩnh viễn, còn người chỉ
+làm bài thì mãi 0. Bốn nơi ra quyết định thật dựa vào nó, gồm luật giảm tải chưa từng chạy.
+
+Nay đo từ vị trí câu trong đề, **khử độ khó** bằng cách so trong từng nhóm rồi mới gộp.
+
+**Một phép kiểm của chính tôi đã chập chờn và phải viết lại.** Bản đầu đo xem bộ sinh đề có
+dồn câu khó về cuối không: có lượt ra 1,907/1,957/1,821, có lượt ra 2,279/1,900/1,957. Tức bộ
+sinh đề thật sự có lúc dồn câu khó về một đầu tùy trạng thái trước đó, nên việc khử độ khó là
+bắt buộc chứ không phải phòng xa. Đã đổi sang phép kiểm dựng thẳng một hồ sơ mà đúng sai chỉ
+phụ thuộc độ khó: cách đo ngây thơ thấy tụt 21 đến 31 điểm phần trăm, sau khi khử còn 0.
+
+#### 5. Màn Bàn học hiện khái niệm của môn đã đóng (`832b921`)
+
+Tìm ra **bằng mắt** khi mở `npm run dev` để nghiệm thu ba commit trên, sau khi 179 phép kiểm
+đều xanh. Khối "Liên kết kiến thức đang học" gắn cứng bốn khái niệm của môn Kinh tế chính trị
+đã đóng, kèm bốn ô số liệu viết sẵn, dưới nhãn "Tự tổng hợp từ tài liệu đã có".
+
+Đây là **lần thứ ba** trong dự án một lỗi lọt qua toàn bộ bộ kiểm và chỉ lộ ra khi nhìn giao
+diện. Nhóm **AC** nay quét nguồn của toàn bộ `src/components`. Một trong ba phép kiểm mới
+từng đỏ vì bắt trúng chính đoạn chú thích tôi viết, đã lọc dòng chú thích.
+
+#### Còn nợ, có chủ ý
+
+- `estimatedTime` không bám độ khó (34,7 / 35,3 / 35,2 giây cho ba mức). Muốn có nhịp từng câu
+  thật thì phải **ghi thời gian từng câu lúc làm bài**, hiện chỉ ghi tổng của cả lượt. Đây là
+  bổ sung thu thập dữ liệu, chỉ có tác dụng từ nay về sau, nên cần Đàm quyết.
+- `metrics.responseTimeImprovement` vì thế vẫn chỉ có 1 giá trị. Là giới hạn dữ liệu, không
+  phải lỗi, nhưng nên biết.
+- Ba khóa `poly_econ_pedagogical_*` và `poly_econ_policy_audit_log` **không gắn mã môn**, tức
+  gộp chung mọi môn. Thiếu sót có sẵn từ trước, đã ghi chú thích tại chỗ. Xóa tiến trình một
+  môn hiện dọn luôn chúng, chấp nhận được khi mới có một môn đang mở.
+- Màn Báo cáo hiện hai con số độ phủ khác nhau ("Đã chạm 10/292 câu, 3%" và "6/292 câu đã quét
+  qua, 2%"). Một cái đếm câu đã gặp, một cái đếm câu đã trả lời. Cả hai đều đúng nhưng nhãn
+  không phân biệt, dễ đọc thành mâu thuẫn.
+- Màn Phân tích giảng dạy hiện "Độ tự tin trung bình" lấy từ `ConceptProfile.confidence` của
+  `learnerModel`, là đại lượng **khác** với `ConceptMemoryProfile.averageConfidence` vừa nối
+  vào cờ nghi vấn. Hai khái niệm "độ tự tin" cùng tồn tại. Chưa gộp vì phải chọn nghĩa trước.
+
+---
+
 ### 27/07/2026 — Đường cong quên: gộp hai nguồn, cho nó nhìn giãn cách, lần quên, và tự hiệu chuẩn
 
 **Commit**: bốn commit liên tiếp, nhóm kiểm mới **U, V, W, X**, tổng phép kiểm 135 lên **152**.

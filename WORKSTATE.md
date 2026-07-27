@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau lượt nâng cấp đường cong quên và gợi ý học tập.
+**Cập nhật lần cuối**: 28/07/2026, sau lượt rà toàn bộ liên kết giữa các thành phần.
 
 ---
 
@@ -15,13 +15,69 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Đường cong quên và gợi ý học tập, **ĐÃ HOÀN THÀNH** bốn hạng mục |
+| **Current Milestone** | Rà liên kết toàn hệ thống, **ĐÃ HOÀN THÀNH** năm hạng mục |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
 | **Bản đang chạy thật** | Bốn commit của lượt này đã push, kèm bản cập nhật tài liệu |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
+
+---
+
+## Lượt mới nhất: rà toàn bộ liên kết giữa các thành phần
+
+Yêu cầu: liên kết toàn bộ thành phần với nhau, không để rời rạc, mọi dữ liệu phải đồng bộ.
+Bốn commit, năm nhóm kiểm mới **Y, Z, AA, AB, AC**. Số phép kiểm 152 lên **182**.
+
+### Cách tìm việc của lượt này, khác hẳn ba lượt trước
+
+Ba lượt trước hỏi "chỗ nào đang bịa số". Lượt này hỏi: **thành phần nào đang nói chuyện với
+nhau bằng hai thứ tiếng?** Ba dấu hiệu dẫn tới cả năm lỗi:
+
+1. Một trường được ghi mà không ai đọc, hoặc ngược lại.
+2. Hai kho cùng mô tả một thứ nhưng được nuôi từ hai đường khác nhau.
+3. **Một engine đã có sẵn logic đúng, nhưng nơi gọi lại tự viết tay bản rút gọn.**
+
+Dấu hiệu thứ ba đắt nhất và khó thấy nhất: mã vẫn chạy, kiểu vẫn đúng, màn hình vẫn hiện số.
+
+### Năm hạng mục
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Xóa tiến trình (nhóm **Y**) | bỏ sót **7 kho dẫn xuất**, màn Thống kê về 0 nhưng màn Tiến hóa giữ nguyên người học cũ | dọn hết, `resetProgress` ủy quyền cho một đường duy nhất |
+| Hiệu chuẩn nhận thức (nhóm **Z**) | nhãn "thiếu tự tin" **không bao giờ xuất hiện được**, "thừa tự tin" chỉ là cách gọi khác của "đúng dưới 36,4%" | đủ 4 trạng thái, bám cờ nghi vấn thật |
+| Lịch sử chấm sư phạm (nhóm **AA**) | **0 bản ghi** sau 5 đề đã nộp | 100 bản ghi, màn Phân tích giảng dạy thấy được số câu đã làm |
+| Tên khái niệm hai kho (nhóm **AA**) | khớp nhau **0/292 câu** | 14 tên bên chấm, 14 bên trí nhớ, lệch 0 |
+| Khoảng ôn lại (nhóm **AA**) | cứng 48 hoặc 12 giờ, mâu thuẫn với lịch ôn thật | 4 giá trị do engine tính |
+| Mỏi mệt (nhóm **AB**) | `fatigueTrend` chết hẳn, `questionFatigue` ghim 100 sau 13 lần hỏi AI | 100/100 khi càng cuối càng sai, 0 khi càng cuối càng đúng |
+| Màn Bàn học (nhóm **AC**) | 4 khái niệm gắn cứng của **môn đã đóng** cùng 4 ô số liệu viết sẵn | đếm thật từ đồ thị tri thức của môn đang mở |
+
+### Ba bài học đáng giữ
+
+1. **Một phép đo chạy sau một lần reset không sạch thì không đo cái mình tưởng.** Sai lệch dự
+   báo nhảy 0,3 lên 0,4 sau khi việc dọn kho trở nên thật. Đã tách nguyên nhân bằng `git stash`
+   lấy mốc nền rồi bẻ riêng từng thay đổi: giữ công thức cũ mà chỉ dọn kho cho đúng thì **đã là
+   0,4**. Con số 0,3 là số đo sai. Đã ghi cảnh báo trong harness.
+2. **Sửa một chỗ bịa có thể đẻ ra chỗ bịa mới ở chiều ngược lại.** Mức trung lập 0,5 cho người
+   không bấm cờ vẫn bị đem so với tỷ lệ đúng, nên hồ sơ 90% đúng bị dán nhãn "thiếu tự tin" ở
+   13/15 khái niệm. Im lặng không phải bằng chứng.
+3. **Phép kiểm chập chờn còn tệ hơn không có phép kiểm.** Bản đầu của AB6 đo tính chất của bộ
+   sinh đề nên lúc xanh lúc đỏ. Đã đổi sang đo đúng thứ cần đo: dựng hồ sơ mà đúng sai chỉ phụ
+   thuộc độ khó, rồi kiểm rằng chỉ số mỏi mệt **không** bị lừa.
+
+### Cố ý chưa xử lý, đã ghi nhận
+
+- **Ứng dụng không ghi thời gian TỪNG CÂU**, chỉ ghi tổng của cả lượt. Nên `averageResponseTime`
+  theo khái niệm là phân bổ đều chứ không phải đo, và `metrics.responseTimeImprovement` chỉ có
+  một giá trị. Đã cân nhắc phân bổ theo `estimatedTime` nhưng đo lại thì trường đó **không bám
+  độ khó** (34,7 / 35,3 / 35,2 giây cho Dễ / Trung bình / Khó), nên chia theo nó chỉ tạo phân
+  hóa giả. Muốn có nhịp từng câu thật thì phải bổ sung thu thập dữ liệu, xem Open Question 7.
+- Ba khóa `poly_econ_pedagogical_*` và `poly_econ_policy_audit_log` **không gắn mã môn**.
+- Màn Báo cáo hiện hai con số độ phủ khác nhau (10/292 và 6/292), một đếm câu đã gặp một đếm
+  câu đã trả lời, nhãn không phân biệt.
+- Hai khái niệm "độ tự tin" cùng tồn tại: `ConceptProfile.confidence` của `learnerModel` và
+  `ConceptMemoryProfile.averageConfidence` vừa nối vào cờ nghi vấn. Chưa gộp vì phải chọn nghĩa.
 
 ---
 
@@ -206,7 +262,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **152**, chia 24 nhóm A đến X, đạt toàn bộ |
+| Phép tự kiểm chứng | **182**, chia 29 nhóm A đến AC, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -332,6 +388,14 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
    chụp lúc học lần cuối, trong khi đường cong ngay bên dưới lại vẽ theo thời điểm hiện tại. Hai
    con số cạnh nhau nói hai thời điểm khác nhau. Sửa dễ, nhưng phải chọn nghĩa trước: "lúc quay
    lại lần trước còn nhớ bao nhiêu" hay "ngay bây giờ còn nhớ bao nhiêu".
+7. **Có ghi thời gian TỪNG CÂU khi làm bài không?** Hiện chỉ ghi tổng thời gian của cả lượt, nên
+   mọi chỉ số về nhịp ở mức khái niệm đều là phân bổ đều chứ không phải đo. Ghi được thì mở ra
+   nhịp thật từng câu, phát hiện đoán mò chính xác hơn, và `averageResponseTime` có nghĩa. Nhưng
+   đây là **thêm việc thu thập dữ liệu**, chỉ có tác dụng từ lúc bật trở đi, không hồi tố được.
+8. **Hai khái niệm "độ tự tin" nên gộp làm một hay giữ riêng?** `ConceptProfile.confidence` của
+   `learnerModel` là một đại lượng, `ConceptMemoryProfile.averageConfidence` vừa nối vào cờ nghi
+   vấn là đại lượng khác, và màn Phân tích giảng dạy đang hiện cái thứ nhất. Cùng một chữ, hai
+   nghĩa. Phải chọn nghĩa trước rồi mới gộp được.
 
 ---
 
@@ -359,12 +423,12 @@ WORKSTATE.md này, rồi push.
 Cả bốn đều đã được xác minh là mạch dữ liệu có thật, nhưng **vẫn phải đo độ dày trước khi viết
 code**, đúng như bốn mạch vừa làm.
 
-1. **Hiệu ứng vị trí câu trong đề, tức đường cong mỏi mệt.** `attempt.questions` là mảng CÓ THỨ
-   TỰ, `answers` tra theo id, nên tỷ lệ đúng theo vị trí tính được ngay. Nối vào `fatigueTrend`
-   đã có trong `learnerModel`. **Cẩn thận**: phải khử ảnh hưởng của độ khó theo vị trí trước, nếu
-   không sẽ nhầm độ khó thành mỏi mệt.
+1. ~~Hiệu ứng vị trí câu trong đề, tức đường cong mỏi mệt~~ **ĐÃ XONG 28/07/2026**, nhóm kiểm
+   **AB**. Việc khử độ khó hóa ra là bắt buộc thật: bộ sinh đề có lúc dồn câu khó về một đầu,
+   đo được chênh lệch tới 0,38 trên thang 1 tới 3 giữa các phần đề.
 2. **Khung giờ học hiệu quả.** `attempt.startTime` là chuỗi ISO đầy đủ trên mọi lượt. Gom theo
    khung rộng (sáng, chiều, tối, khuya) chứ đừng chia 24 ô, và phải nói rõ số lượt làm căn cứ.
+   Đây là nhiệm vụ **còn lại đáng làm nhất** trong danh sách này.
 3. ~~Rà `studentEvolutionEngine` và ba engine chưa soi~~ **ĐÃ XONG 27/07/2026**. Cả bốn engine
    (`studentEvolutionEngine`, `pedagogicalEvaluationEngine`, `teachingDecisionEngine`,
    `questionGenerationEngine`) đều đã cho chạy qua bộ quét ở AGENTS.md mục 4.9b.
@@ -373,6 +437,12 @@ code**, đúng như bốn mạch vừa làm.
 
 Tin tốt đã kiểm chứng, khỏi mất công dò lại: **8 khóa localStorage được ghi thì cả 8 đều có nơi
 đọc.** Không có dữ liệu lưu trữ chết ở tầng đó.
+
+Thêm hai việc mới sinh ra từ lượt rà liên kết 28/07/2026:
+
+7. **Gộp hai khái niệm "độ tự tin"**, xem Open Question 8. Phải chọn nghĩa trước.
+8. **Nhãn độ phủ trên màn Báo cáo** hiện hai con số khác nhau mà không phân biệt (câu đã gặp so
+   với câu đã trả lời). Sửa nhãn là đủ, không phải sửa phép tính.
 
 Sau đó mới tới các khoản nợ cũ:
 
@@ -383,15 +453,27 @@ Sau đó mới tới các khoản nợ cũ:
 
 ## Verification Pending
 
-Không có. Bốn commit vừa rồi đều nghiệm thu hai tầng: `npm run check` đủ 6 chặng với **118** phép
-kiểm, **và** mở `npm run dev` soi tận mắt màn hình bị đụng tới (bài giảng gia sư AI, Kế hoạch học,
-Phân tích giảng dạy, tab Trí nhớ), không lỗi nào trên bảng điều khiển trình duyệt.
+Không có. Bốn commit của lượt 28/07/2026 đều nghiệm thu hai tầng: `npm run check` đủ 6 chặng với
+**182** phép kiểm, **và** mở `npm run dev` làm một lượt thi thật rồi soi tận mắt.
 
-**Một giới hạn nghiệm thu phải nói rõ**: với nhiệm vụ nhịp làm bài, tôi **không** quan sát được
-con số khác 0 trên giao diện. Lý do là để tạo nhịp nhanh thật thì phải bấm trong vài giây, mà lượt
-bấm bằng script cho `timeSpent` bằng 0 nên bị loại đúng theo thiết kế. Việc con số khác 0 chảy tới
-nơi tiêu thụ được chứng minh bằng phép kiểm P7, không bằng mắt.
+Quan sát được trên trình duyệt thật, sau khi làm và nộp một đề:
+- lịch sử chấm sư phạm có **6 bản ghi**, trước đó là 0
+- ô "Phương pháp hiệu quả nhất" hiện **"Chưa đủ dữ liệu"** kèm giải thích, trước đó hiện
+  "Academic" kèm câu khẳng định nó giúp duy trì độ tinh thông cao nhất
+- khối "Liên kết kiến thức" hiện đúng khái niệm của môn đang mở, chuyên đề đọc được, nguồn tài
+  liệu thật, 20 câu trong ngân hàng, 0 câu cần sửa
+- nút cờ nghi vấn ghi đúng vào `attempt.flags` và chảy tới tầng trí nhớ
 
-Ngoài ra dữ liệu học thật của chủ dự án nằm trong trình duyệt của chính chủ dự án, không nằm trong
-repo. Nên **không đo được chủ dự án dùng nút cờ nghi vấn nhiều hay ít**. Ba tầng mới vì thế đều
-thiết kế theo hướng dữ liệu thưa: thiếu thì trả "chưa đủ dữ liệu" chứ không đoán.
+**Chính lượt soi bằng mắt này tìm ra lỗi thứ năm** (màn Bàn học hiện khái niệm của môn đã đóng),
+thứ mà 179 phép kiểm đều bỏ qua. Lần thứ ba trong dự án. Đừng bỏ bước này.
+
+**Ba giới hạn nghiệm thu phải nói rõ:**
+
+1. Chỉ số **mỏi mệt** không quan sát được khác 0 trên giao diện, vì cần tối thiểu 30 câu trong
+   các đề dài từ 9 câu, mà lượt soi chỉ làm 1 đề 10 câu. Màn hình hiện 0 là **đúng thiết kế**
+   cho lượng dữ liệu đó. Việc con số khác 0 chảy tới nơi tiêu thụ được chứng minh bằng phép
+   kiểm AB5, không bằng mắt.
+2. Nhịp làm bài cũng vậy, xem giới hạn đã ghi ở lượt trước.
+3. Dữ liệu học thật của chủ dự án nằm trong trình duyệt của chính chủ dự án, không nằm trong
+   repo. Nên **không đo được chủ dự án dùng nút cờ nghi vấn nhiều hay ít**. Mọi tầng mới vì thế
+   đều thiết kế theo hướng dữ liệu thưa: thiếu thì trả "chưa đủ dữ liệu" chứ không đoán.

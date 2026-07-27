@@ -22,7 +22,7 @@ Chạy 6 chặng, hỏng chặng nào dừng ngay tại đó:
 |---|---|---|
 | 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
 | 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
-| 3 | **152 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 3 | **182 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
 | 6 | **Nạp thật từng gói hàm serverless trong Node** | vài giây |
@@ -91,6 +91,12 @@ môn và nhiều tài liệu khác trong tương lai. Hệ quả bắt buộc v�
   **Cách phân loại khi gặp một chỗ gắn cứng mới**: hỏi xem với môn khác nó *trả về ít hơn* hay
   *trả về của môn sai*. Loại thứ nhất (ví dụ `kbService.getDistractors` trả mảng rỗng) là suy
   giảm êm, ghi nợ được. Loại thứ hai phải sửa ngay, vì nó nói dối mà không có dấu hiệu gì.
+
+  Chỗ thứ tư thuộc loại nguy hiểm **đã xử lý ngày 28/07/2026**: khối "Liên kết kiến thức đang
+  học" trên màn Bàn học gắn cứng bốn khái niệm của **môn đã đóng** cùng bốn ô số liệu viết sẵn,
+  dưới nhãn "Tự tổng hợp từ tài liệu đã có". Nhóm kiểm **AC** nay quét nguồn của **toàn bộ**
+  `src/components` để chặn kiểu này tái diễn. Đáng chú ý: lỗi này lọt qua 179 phép kiểm và chỉ
+  lộ ra khi mở `npm run dev` nhìn bằng mắt, lần thứ ba trong dự án.
 
 - **Không được cho `db.ts` nhập `kbService.ts`.** Chiều nhập là một chiều: `kbService` nhập
   `db`, không bao giờ ngược lại. `db.ts` gọi `loadSubject` ngay ở mức module, nên vòng nhập sẽ
@@ -328,6 +334,53 @@ Cũng ở mục này: đường cong quên **tự hiệu chuẩn** bằng chính
 `studentEvolutionEngine` cộng 10 khi đúng và trừ 8 khi sai, vì phép suy đúng/sai dựa vào **dấu**
 của mức thay đổi điểm. Đổi quy ước đó mà không sửa `rutCapNhoLai` là làm hỏng lặng lẽ toàn bộ
 tầng hiệu chuẩn. Nhóm kiểm **W1** canh đúng chỗ này bằng cách so với kết quả biết trước.
+
+### 4.9d. Xóa tiến trình phải dọn HẾT kho dẫn xuất
+
+Lịch sử làm bài không chỉ nằm ở một khóa. Nó còn đẻ ra **bảy kho dẫn xuất**: hồ sơ khái niệm,
+hồ sơ trí nhớ dài hạn, dòng thời gian tiến hóa, nhật ký tiến hóa, các mốc đạt được, bộ nhớ
+thích ứng, và lịch sử chấm sư phạm. Trước 28/07/2026 `clearAllHistory` chỉ xóa 4 khóa, nên bấm
+"Làm mới tiến trình" thì màn Thống kê về 0 còn màn Tiến hóa, bản đồ độ thạo và lịch ôn vẫn giữ
+nguyên người học cũ. Hai nửa ứng dụng mô tả hai người khác nhau.
+
+Cách làm đúng: **mỗi service tự đăng ký hàm dọn kho của chính nó** qua `dangKyDonDuLieuSuyRa`
+trong `db.ts`, cùng mẫu đăng ký trễ đã dùng cho đồ thị tri thức. Không được cho `db.ts` nhập
+ngược các service đó (vòng nhập, xem Bẫy 5). Thêm kho lưu trữ mới thì phải đăng ký dọn luôn.
+Nhóm kiểm **Y** canh chỗ này, gồm cả `resetProgress` vốn từng xóa ít hơn `clearAllHistory`.
+
+**Bài học đo lường đi kèm, quan trọng hơn chính lỗi**: sau khi việc dọn trở nên thật, sai lệch
+dự báo trong bộ kiểm nhảy từ 0,3 lên 0,4. Đã tách nguyên nhân bằng cách bẻ riêng từng thay đổi
+và xác định 0,3 là **số đo sai**, vì năm kịch bản trong `curveF` chạy nối đuôi và mỗi kịch bản
+thừa hưởng tầng trí nhớ của kịch bản trước. Đừng "khôi phục" con số cũ. Suy rộng ra: **một phép
+đo chạy sau một lần reset không sạch thì không đo cái mình tưởng.**
+
+### 4.9e. Cây cầu duy nhất giữa "làm bài" và tầng trí nhớ
+
+Hook `dbService.addOnSubmit` ở cuối `studentEvolutionEngine.ts` là **đường duy nhất** đưa dữ
+liệu làm bài vào tầng trí nhớ khái niệm, tiến hóa và chấm sư phạm. Ba quy tắc cho nó:
+
+1. **Không tự viết bản đánh giá sư phạm.** Phải gọi
+   `pedagogicalEvaluationEngine.evaluateInteraction`. Bản viết tay cũ có 15 trường hằng số và
+   không được lưu, nên lịch sử chấm rỗng 0 bản ghi sau 5 đề đã nộp.
+2. **Tên khái niệm phải truyền từ bộ tra chính thống** qua tham số `conceptName`. Engine mặc
+   định lấy `question.concept`, mà cách đặt tên đó khớp bộ tra chính thống ở **0/292 câu**.
+3. **Lượt tự làm bài truyền `capNhatBangChienLuoc: false`** và mang nhãn `NHAN_TU_LAM_BAI`.
+   Không có ai giảng thì không có chiến lược giảng dạy nào để so; cộng vào bảng đó sẽ đẻ ra một
+   phong cách dạy không tồn tại rồi `adaptiveTeachingPolicy` có thể chọn chính nó.
+
+Nhóm kiểm **AA** canh cả ba.
+
+### 4.9f. Chỉ số về người học phải đo lại từ lịch sử, không cộng dồn vào ô nhớ
+
+`guessingFrequency`, `questionFatigue` và `fatigueTrend` đều **tính lại tất định tại mỗi lần
+đọc** trong `studentModelService.getStudentModel`, không ghi tích lũy. Lý do: ô nhớ cũ cập nhật
+theo lối trung bình trượt hoặc cộng dồn, nên con số phụ thuộc **số lần mở màn hình** chứ không
+phụ thuộc việc học. `questionFatigue` cũ cộng thêm 8 mỗi lần hỏi gia sư AI và không bao giờ
+giảm, nên sau 13 lần là ghim 100 vĩnh viễn. Nhóm kiểm **AB** canh mỏi mệt, nhóm **P** canh nhịp.
+
+Khi đo bất cứ hiệu ứng nào theo **vị trí câu trong đề**, phải khử độ khó trước bằng cách so
+trong từng nhóm độ khó rồi mới gộp. Bộ sinh đề có lúc dồn câu khó về một đầu tùy trạng thái
+trước đó, đã đo được chênh lệch tới 0,38 trên thang 1 tới 3 giữa các phần đề.
 
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 
