@@ -2,6 +2,44 @@
 @import "tailwindcss";
 
 :root {
+  /*
+    TOKEN CHUYỂN ĐỘNG. Ba con số, không hơn.
+
+    Đo trên Khan Academy ngày 28/07/2026: cả trang khoá học lẫn trang làm bài chỉ tồn tại đúng
+    MỘT mốc thời gian là `0.1s ease-in-out`, riêng hàng đáp án dùng `0.125s`. Không có mốc nào
+    khác, không có hiệu ứng nảy, không có chuyển động khi nội dung xuất hiện.
+
+    Sản phẩm này trước đó dùng 200ms ở khắp nơi. Rút xuống ba mốc:
+      nhanh  90ms   phần tử bấm được, phản hồi di chuột và tiêu điểm
+      chậm  140ms   nền và viền, chủ yếu phục vụ lúc đổi sáng/tối
+      nội  180ms    nội dung mới hiện ra
+  */
+  --thoi-chuyen-cham: 90ms;
+  --thoi-chuyen-nen: 140ms;
+  --thoi-chuyen-noi: 180ms;
+  --nhip-chuyen: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /*
+    TOKEN ĐỘ NỔI. Hai bậc, không phải chín.
+
+    Kiểm kê ngày 28/07/2026 trên `src/components`: đang dùng **chín** mức đổ bóng khác nhau
+    (shadow-sm 115 lần, shadow- 12, xs 8, xl 7, md 6, 2xl 5, 2xs 2, lg 1, 3xs 1).
+
+    Chín mức nghĩa là độ nổi không còn mang thông tin gì. Khi mọi thứ đều nổi thì không gì nổi,
+    nên lúc một hộp thoại thật sự mở đè lên trang, người học không có tín hiệu nào để biết cái
+    gì đang ở trên và phải xử lý cái nào trước.
+
+    Khan Academy đi tới cực đoan ngược lại: trong toàn bộ luồng học chỉ tồn tại ĐÚNG MỘT đổ
+    bóng thật, `0 4px 8px rgba(33,36,44,0.16)`, dành riêng cho hộp phản hồi sau khi nộp câu.
+    Thẻ nội dung không đổ bóng, chúng tách nhau bằng một đường viền 1px màu #DBDCDD.
+
+    Ở đây giữ hai bậc thay vì một, vì sản phẩm này có menu thả xuống lẫn hộp thoại:
+      --do-noi-mat   phẳng, chỉ một vệt rất nhẹ để thẻ không dính vào nền
+      --do-noi-lop   dành riêng cho thứ thật sự đè lên trang
+  */
+  --do-noi-mat: 0 1px 2px rgba(17, 17, 17, 0.04);
+  --do-noi-lop: 0 4px 12px rgba(17, 17, 17, 0.12), 0 1px 3px rgba(17, 17, 17, 0.06);
+
   /* Color System Light Mode - Crisp, Academic & Premium (Apple/Notion/Arc style) */
   --bg-app: #fafafc;       /* Clean warm off-white */
   --bg-card: #ffffff;      /* Pure white card */
@@ -12,8 +50,17 @@
   
   --text-primary: #111111;   /* True high-contrast charcoal */
   --text-secondary: #444446; /* Mid-tone gray */
-  --text-muted: #767680;     /* Muted gray */
-  --text-dimmed: #aeaeae;    /* Subtle placeholder / disabled */
+  /*
+    Hạ sáng một bậc, từ #767680 xuống #6b6b75 (28/07/2026).
+
+    Đo trên bản chạy thật: ba cặp chữ trên nền đang dùng màu này cho tương phản 4,31 / 4,49 /
+    4,49, đều dưới ngưỡng 4,5:1 của chuẩn WCAG AA cho chữ thường. Đây là màu của dòng phụ đề
+    phiên học, mã câu hỏi và chú giải bảng câu hỏi, tức những chữ người học liếc suốt buổi.
+    Sau khi đổi: cả ba lên 5,03:1. Vẫn giữ đúng vai trò chữ mờ, chỉ đủ đọc chứ không tranh
+    chú ý với nội dung chính.
+  */
+  --text-muted: #6b6b75;     /* Muted gray, 5,03:1 trên nền trắng */
+  --text-dimmed: #a1a1aa;    /* Subtle placeholder / disabled */
   
   /*
     Bốn màu ngữ nghĩa, chế độ sáng. Mỗi màu đậm hơn một bậc so với bản trước ngày 28/07/2026.
@@ -47,6 +94,13 @@
 }
 
 .dark {
+  /*
+    Nền tối thì đổ bóng gần như vô hình, nên độ nổi phải chuyển sang đậm hơn và trải rộng hơn.
+    Giữ đúng hai bậc như chế độ sáng để ý nghĩa của độ nổi không đổi giữa hai chế độ.
+  */
+  --do-noi-mat: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --do-noi-lop: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+
   /* Color System Dark Mode - Expensive, high-density professional terminal workspace style */
   --bg-app: #0c0c0e;       /* Deep rich dark backdrop */
   --bg-card: #131316;      /* Slightly lifted cards */
@@ -82,6 +136,38 @@
   --font-display: "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
+  /*
+    THANG CHỮ CHO VIỆC ĐỌC LIÊN TỤC NHIỀU GIỜ.
+
+    VÌ SAO ĐỔI (28/07/2026). Đếm trên toàn bộ `src/components`:
+
+        10px  246 lần        14px  106 lần
+        11px  118 lần        16px   34 lần
+        12px  479 lần
+
+    Tức **843 khai báo từ 12px trở xuống so với 140 khai báo từ 14px trở lên**. Đo trên màn
+    Tổng quan đang chạy thật: 41 trên 63 phần tử có chữ ở cỡ 12px, 12 phần tử ở 10px, chỉ một
+    phần tử duy nhất trên 14px. Với một sản phẩm để học 2 tới 4 tiếng mỗi phiên thì đây là
+    nguyên nhân mỏi mắt lớn nhất, lớn hơn mọi vấn đề màu sắc.
+
+    Dòng cao còn đáng lo hơn cỡ chữ: `text-xs` mặc định là 12px trên 16px, tức tỷ lệ **1,33**.
+    Các nghiên cứu về đọc màn hình đặt vùng thoải mái ở 1,5 tới 1,6 cho chữ nhỏ, vì mắt cần
+    khoảng trắng giữa các dòng để bắt lại đầu dòng kế tiếp mà không đọc lặp.
+
+    Sửa tại tầng token thay vì sửa 843 chỗ: vừa an toàn hơn, vừa đảm bảo nhất quán. Mức nâng
+    giữ vừa phải (một bậc, không phải hai) để bố cục dày sẵn không vỡ.
+
+    Vẫn giữ 10px và 11px ở các nhãn siêu nhỏ dùng lớp tùy biến, sẽ xử lý riêng ở vòng sau.
+  */
+  --text-xs: 0.8125rem;      /* 12px -> 13px */
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.9375rem;      /* 14px -> 15px */
+  --text-sm--line-height: 1.55;
+  --text-base: 1rem;         /* giữ 16px, chỉ nới dòng */
+  --text-base--line-height: 1.65;
+  --text-lg: 1.125rem;       /* 18px, dùng cho câu hỏi */
+  --text-lg--line-height: 1.6;
+
   /* Theme Design Token Colors */
   --color-bg-app: var(--bg-app);
   --color-bg-card: var(--bg-card);
@@ -110,32 +196,135 @@
   --color-brand-info: var(--color-info);
   --color-brand-info-bg: var(--color-info-bg);
   --color-brand-info-border: var(--color-info-border);
+
+  /*
+    ÉP CHÍN MỨC ĐỔ BÓNG CỦA TAILWIND VỀ HAI BẬC THẬT.
+
+    Không đi sửa 155 chỗ gọi `shadow-*` trong components, mà định nghĩa lại chính các token đó.
+    Mọi `shadow-xs`, `shadow-sm`, `shadow-md` giờ trỏ về cùng một vệt phẳng; mọi `shadow-lg`,
+    `shadow-xl`, `shadow-2xl` trỏ về cùng một lớp nổi. Nhờ vậy 115 thẻ đang dùng `shadow-sm`
+    trở nên phẳng cùng lúc, còn hộp thoại và menu thả xuống giữ nguyên độ nổi thật của chúng.
+
+    Đây chính là mô hình của Khan Academy: thẻ nội dung tách nhau bằng viền 1px chứ không bằng
+    bóng, còn bóng để dành cho thứ đè lên trang.
+  */
+  --shadow-3xs: none;
+  --shadow-2xs: none;
+  --shadow-xs: var(--do-noi-mat);
+  --shadow-sm: var(--do-noi-mat);
+  --shadow-md: var(--do-noi-mat);
+  --shadow-lg: var(--do-noi-lop);
+  --shadow-xl: var(--do-noi-lop);
+  --shadow-2xl: var(--do-noi-lop);
+
+  /*
+    Nhịp mặc định cho mọi lớp `transition-*` viết trong components. Trước đây Tailwind dùng
+    150ms; hạ về 90ms cho khớp đúng mốc "nhanh" ở trên, để cảm giác bấm trong toàn ứng dụng
+    thống nhất thay vì mỗi chỗ một tốc độ.
+  */
+  --default-transition-duration: 90ms;
 }
 
 /* Base Aesthetics for premium Workspace style */
 body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
-  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-app);
   color: var(--text-primary);
-  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color var(--thoi-chuyen-nen) var(--nhip-chuyen),
+              color var(--thoi-chuyen-nen) var(--nhip-chuyen);
 }
 
-/* Smooth transitons for layout containers */
-div, header, nav, main, footer, button, select, input {
-  transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1), fill 200ms cubic-bezier(0.4, 0, 0.2, 1), stroke 200ms cubic-bezier(0.4, 0, 0.2, 1);
+/*
+  CHUYỂN ĐỘNG: NỀN THÌ CHUYỂN, CHỮ THÌ KHÔNG.
+
+  Vì sao đổi (28/07/2026). Quy tắc cũ là một dòng duy nhất phủ lên
+  `div, header, nav, main, footer, button, select, input` với `transition` 200ms cho **cả
+  `color`**. Đo trên màn Bàn học đang chạy thật: **94 trên 309 phần tử, tức 30% số phần tử của
+  trang, đang mang một transition đang hoạt động**.
+
+  Cái giá không phải hiệu năng mà là ĐỘ TRỄ CỦA PHẢN HỒI. Khoảnh khắc đáng giá nhất trong cả
+  sản phẩm là lúc người học bấm đáp án và màn hình trả lời đúng hay sai. Tín hiệu đó truyền
+  bằng màu chữ. Với quy tắc cũ, màu chữ ấy **mờ dần trong 200ms** thay vì hiện ra ngay. Người
+  học nhận phản hồi chậm hơn một phần năm giây, mỗi câu, suốt cả buổi.
+
+  Đo trên Khan Academy: toàn bộ vỏ ứng dụng dùng đúng MỘT mốc thời gian, 0,1s ease-in-out; hàng
+  đáp án dùng 0,125s. Không có ngoại lệ nào dài hơn.
+
+  Cách sửa: tách hai nhóm.
+    - Nền và viền vẫn chuyển, để lúc đổi sáng/tối không bị giật. 140ms.
+    - Màu CHỮ không còn chuyển trên phần tử bố cục, nên phản hồi đúng/sai hiện tức thì.
+    - Riêng phần tử bấm được thì trả lại chuyển màu chữ ở 90ms, đủ để cảm giác di chuột còn
+      sống mà không kịp gây trễ nhận thức.
+*/
+div, header, nav, main, footer, section, article, aside {
+  transition: background-color var(--thoi-chuyen-nen) var(--nhip-chuyen),
+              border-color var(--thoi-chuyen-nen) var(--nhip-chuyen);
 }
 
-/* Subtle, ultra-crisp custom components */
+button, select, input, textarea, a, [role="button"], [role="tab"], [role="option"] {
+  transition: background-color var(--thoi-chuyen-cham) var(--nhip-chuyen),
+              border-color var(--thoi-chuyen-cham) var(--nhip-chuyen),
+              color var(--thoi-chuyen-cham) var(--nhip-chuyen),
+              fill var(--thoi-chuyen-cham) var(--nhip-chuyen),
+              stroke var(--thoi-chuyen-cham) var(--nhip-chuyen),
+              opacity var(--thoi-chuyen-cham) var(--nhip-chuyen);
+}
+
+/*
+  Tôn trọng thiết lập giảm chuyển động của hệ điều hành. Chuẩn WCAG 2.3.3. Với người học có
+  tiền đình nhạy cảm thì hiệu ứng trượt vào của mỗi câu hỏi mới là nguyên nhân gây khó chịu
+  thật, không phải chuyện sở thích.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+  NHÃN VIẾT HOA: TRẢ LẠI KHOẢNG GIÃN DƯƠNG.
+
+  Đo trên bản chạy thật, màn Bàn học: các nhãn viết hoa cỡ 10px đang nhận `letter-spacing`
+  **âm 0,176px**, thừa hưởng từ dòng `letter-spacing: -0.011em` đặt trên `body` (đã gỡ ở trên).
+
+  Chữ hoa vốn không có hình bao từ (chữ thường có phần nhô lên nhô xuống giúp mắt đoán từ chỉ
+  bằng bóng dáng; chữ hoa thì mọi từ đều là một khối chữ nhật). Đây là lý do chữ hoa luôn đọc
+  chậm hơn chữ thường. Bó thêm khoảng cách vào là làm nặng đúng chỗ vốn đã yếu.
+
+  Với tiếng Việt còn nặng hơn một bậc: ở cỡ 10px viết hoa, Ế và Ề khác nhau đúng một nét nhỏ
+  phía trên. Bó chữ lại làm dấu của chữ này chạm vào thân chữ bên cạnh.
+
+  Toàn dự án có 154 chỗ dùng `uppercase`. Sửa tại đây một lần, thay vì đi sửa 154 chỗ.
+*/
+.uppercase {
+  letter-spacing: 0.06em;
+}
+
+/*
+  THẺ NỀN TẢNG.
+
+  Trước ngày 28/07/2026 thẻ này đổ bóng hai lớp ở độ mờ **1%**. Ở mức đó bóng không nhìn thấy
+  được trên màn hình thật, nhưng trình duyệt vẫn phải vẽ nó cho từng thẻ trong mỗi lần dựng
+  lại. Tức là trả giá mà không nhận được tín hiệu thị giác nào.
+
+  Nay thẻ tách khỏi nền bằng viền 1px, đúng mô hình Khan Academy, và chỉ nhấc lên một vệt rất
+  nhẹ khi rê chuột để báo rằng nó bấm được. `transition-all` cũng được thay bằng danh sách
+  đúng những thuộc tính thật sự đổi, vì `all` buộc trình duyệt theo dõi mọi thuộc tính động.
+*/
 .workspace-card {
-  @apply bg-bg-card border border-border-primary/80 rounded-xl transition-all duration-200;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01), 0 4px 12px rgba(0, 0, 0, 0.01);
+  @apply bg-bg-card border border-border-primary/80 rounded-xl;
+  transition: border-color var(--thoi-chuyen-cham) var(--nhip-chuyen),
+              box-shadow var(--thoi-chuyen-cham) var(--nhip-chuyen);
 }
 
 .workspace-card:hover {
-  @apply border-border-primary shadow-xs;
+  @apply border-border-primary;
+  box-shadow: var(--do-noi-mat);
 }
 
 /* Subtle input overrides */

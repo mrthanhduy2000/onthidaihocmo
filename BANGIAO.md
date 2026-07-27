@@ -59,6 +59,142 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Đo Khan Academy bằng trình duyệt rồi dựng lại tầng token, và sửa lỗi tràn ngang có sẵn
+
+**Yêu cầu của Đàm**: tái thiết kế theo triết lý thiết kế của Khan Academy Web bản hiện đại.
+Chỉ được đụng UX/UI, Design System, Component System, Presentation Layer. Không thêm tính
+năng, không đổi luồng sản phẩm, không đổi kiến trúc thông tin, không đụng engine hay thuật
+toán. **Bắt buộc dùng Claude Browser quan sát ứng dụng thật, không được chỉ đọc mã nguồn.**
+Kèm một luật nghiêm: thay đổi nào chỉ làm đẹp mà không giúp đọc nhanh hơn, hiểu hơn, nhớ hơn,
+học lâu hơn, giảm tải nhận thức hoặc tăng độ rõ thị giác thì **không triển khai**.
+
+#### Phần 1: đã đo được gì trên vi.khanacademy.org
+
+Không đọc bài viết về Khan Academy mà mở thẳng trang bằng Claude Browser rồi đọc
+`getComputedStyle` của từng phần tử. Đi qua trang chủ, trang khoá học Số học, và quan trọng
+nhất là **trang làm bài tập**, có chọn đáp án, nộp bài, xem cả trạng thái đúng lẫn sai.
+
+Con số rút ra (font chữ trong ứng dụng học là **Lato**, không phải font ở trang tiếp thị):
+
+| Vai trò | Cỡ / chiều cao dòng / độ đậm |
+|---|---|
+| Tiêu đề bài | 28 / 32 / 700 |
+| Tiêu đề mục | 20 / 24 / 700 |
+| **Câu hỏi** | **18 / 22 / 700** |
+| Chữ thân, nút, liên kết | 16 / 20 hoặc 16 / 24 |
+| Chữ phụ | 14 / 19,6 / 400 |
+| Chú thích | 12 / 16 / 400 |
+
+Chỉ dùng **hai** độ đậm: 400 và 700. Giãn chữ để `normal` ở gần như mọi chỗ.
+
+Bảng màu bề mặt học: chữ chính `#21242C`, chữ phụ `#5F6167`, chữ mờ `#717378`, chữ tắt
+`#B8B9BB`, đường kẻ `#DBDCDD`, xanh thương hiệu `#1865F2`, xanh đúng `#0B7C18`.
+
+Ba phát hiện đáng giá nhất, đều trái với trực giác thông thường:
+
+1. **Toàn bộ luồng học chỉ có ĐÚNG MỘT đổ bóng thật**, là `0 4px 8px rgba(33,36,44,0.16)` trên
+   hộp phản hồi sau khi nộp câu. Thẻ nội dung không đổ bóng, chúng tách nhau bằng viền 1px.
+2. **Hàng đáp án không phải thẻ.** Nền trong suốt, không viền, không đổ bóng, cao 64px, đệm
+   16px. Ngăn cách nhau bằng một đường `::before` / `::after` cao 1px màu `#DBDCDD`. Lúc được
+   chọn thì **nền vẫn trong suốt**, chỉ ô chữ cái A/B/C/D đổi từ viền rỗng sang tô đặc màu
+   xanh, cộng thêm màu chữ của hàng chuyển sang `#1B50B3`.
+3. **Trạng thái trả lời sai KHÔNG có màu đỏ ở bất cứ đâu.** Đáp án đã chọn giữ nguyên màu
+   xanh, thông điệp là "Đáp án của bạn gần chính xác", nút đổi thành "Thử lại". Hộp thông báo
+   sai dùng đúng cùng màu chữ và cùng đổ bóng với hộp thông báo đúng, chỉ khác chữ.
+
+Điểm 3 trùng khớp với kết luận đợt trước của dự án này, xem mục ngay dưới.
+
+Chuyển động: cả trang khoá học lẫn trang làm bài chỉ tồn tại **một** mốc `0.1s ease-in-out`,
+riêng hàng đáp án `0.125s`. Không có gì dài hơn. Bo góc: 4px là mốc áp đảo (258 lần), 8px cho
+vùng bấm của hàng đáp án. Khoảng cách: 16px áp đảo cả đệm lẫn khe.
+
+#### Phần 2: đã sửa gì
+
+**Chuyển động.** Quy tắc cũ phủ `transition` 200ms **có cả `color`** lên
+`div, header, nav, main, footer, button, select, input`. Đo trên màn Bàn học đang chạy:
+**94 trên 309 phần tử, tức 30% cả trang**, mang transition đang hoạt động. Cái giá không phải
+hiệu năng mà là **độ trễ của phản hồi**: khoảnh khắc đáng giá nhất sản phẩm là lúc người học
+bấm đáp án và biết mình đúng hay sai, tín hiệu đó truyền bằng màu chữ, mà màu chữ ấy đang mờ
+dần trong 200ms thay vì hiện ngay. Đã tách: nền và viền vẫn chuyển 140ms cho việc đổi sáng
+tối; màu chữ **không** còn chuyển trên phần tử bố cục; riêng phần tử bấm được trả lại 90ms.
+Số phần tử làm mờ dần màu chữ: **94 xuống 35**, và 35 chỗ còn lại đúng là nút với liên kết.
+
+**Độ nổi.** Kiểm kê thấy đang dùng **chín** mức đổ bóng (`shadow-sm` 115 lần, `shadow-` 12,
+`xs` 8, `xl` 7, `md` 6, `2xl` 5, `2xs` 2, `lg` 1, `3xs` 1). Chín mức nghĩa là độ nổi không còn
+mang thông tin, nên lúc hộp thoại thật mở đè lên trang người học không có tín hiệu nào để biết
+phải xử lý cái nào trước. Đã ép cả chín token của Tailwind về **hai bậc thật**: `xs`/`sm`/`md`
+trỏ chung một vệt phẳng, `lg`/`xl`/`2xl` trỏ chung một lớp nổi. Không phải sửa 155 chỗ gọi.
+Đo lại trên trang: chỉ còn **đúng một** kiểu đổ bóng. Riêng `.workspace-card` trước đó đổ bóng
+hai lớp ở độ mờ **1%**, tức không nhìn thấy được nhưng vẫn phải vẽ, đã bỏ.
+
+**Nhãn viết hoa.** `body` đang đặt `letter-spacing: -0.011em`, chảy xuống làm các nhãn viết
+hoa cỡ 10px nhận giãn chữ **âm 0,176px**. Chữ hoa vốn không có hình bao từ nên đã đọc chậm hơn
+chữ thường; bó thêm là làm nặng đúng chỗ vốn yếu. Với tiếng Việt còn nặng hơn: ở 10px viết
+hoa, Ế và Ề khác nhau đúng một nét nhỏ. Đã gỡ giãn âm khỏi `body` và cho `.uppercase` giãn
+dương `0.06em`. Đo lại: **âm 0,176px thành dương 0,6px**, sửa một chỗ, ăn cho cả 154 chỗ dùng.
+
+**Tôn trọng `prefers-reduced-motion`** (chuẩn WCAG 2.3.3), trước đó không có.
+
+**Lỗi tràn ngang, có sẵn từ trước.** Ở bề rộng cửa sổ 864px, hàng trong header rộng 859px
+nhưng ba cụm con đòi tổng **954px** (cụm logo 281 + thanh điều hướng 603 + cụm phải 70), nên
+cụm phải bị đẩy tới toạ độ 978 và cả trang cuộn ngang được. Kèm theo, chữ "ÔN THI ĐẠI HỌC MỞ"
+rơi xuống thành một **cột dọc 5 dòng** trong hộp rộng 41px.
+
+Đã dùng `git stash` để đo trên bản gốc trước khi kết luận: bản gốc cũng tràn **928 so với
+864** và logo cũng đã 5 dòng. Tức đây là lỗi có sẵn, không phải do đợt sửa giao diện gây ra,
+tuy đợt sửa có làm nặng thêm 49px.
+
+Gốc rễ: thanh điều hướng trên bật từ mốc `md` (768px) trong khi tự nó cần khoảng 825px. Đã
+dời mốc chuyển giữa thanh trên và thanh đáy từ `md` lên **`lg` (1024px)**, và thêm
+`whitespace-nowrap` cho chữ logo, cho chữ logo chỉ hiện từ `xl`. **Không mất điểm đến nào**,
+vì hai thanh dựng từ đúng cùng một mảng `DIEM_DEN`: dưới 1024px điều hướng bằng thanh đáy,
+từ 1024px trở lên bằng thanh trên. **Ba chỗ phải dời cùng lúc** nếu không sẽ hở một dải bề
+rộng không có thanh nào: thanh trên, thanh đáy, và lớp đệm dưới của `main`.
+
+Kiểm chứng lại bằng trình duyệt ở 375, 864, 1024, 1280: **không còn tràn ở bề rộng nào**. Ở
+375px thanh đáy sáu nút, mỗi nút 63 x 52px, vượt chuẩn 44 x 44 của Apple lẫn 24 x 24 của WCAG.
+
+#### Phần 3: đã CỐ Ý không làm
+
+`--text-primary` hiện là `#111111`, cho tương phản 18,88:1; Khan Academy là 15,52:1. Đã định
+hạ xuống `#1d1d20` cho dịu mắt và đã tính sẵn (16,82:1). **Không làm.** Lý do: cả hai đều vượt
+xa ngưỡng cần, và bằng chứng về chuyện chói sáng khi đọc lâu chỉ mạnh với đen tuyệt đối `#000`
+chứ không với `#111111` vốn đã lệch khỏi đen. Đây là thay đổi thuần thẩm mỹ, đúng loại mà luật
+Đàm đặt ra bắt phải loại.
+
+Cũng không đổi thang bo góc. Dự án đang dùng sáu mốc (`xl` 239 lần, `lg` 167, `2xl` 100,
+`full` 99, `md` 26, `sm` 4) so với ba mốc của Khan, nhưng bo góc là tín hiệu yếu, sai lệch ở
+đây không gây tốn kém nhận thức đo được.
+
+**Một giả thuyết của tôi đã sai, ghi lại để người sau khỏi lặp**: tôi đã nghĩ JetBrains Mono
+thiếu chữ tiếng Việt nên trình duyệt phải thay font giữa chừng. Đo bằng `document.fonts` và
+so bề rộng chuỗi thì **sai**: font có tải và có render tiếng Việt bình thường. Nhưng phép đo
+lại cho ra một lý do khác và mạnh hơn: chuỗi "Chưa đủ dữ liệu" rộng **357,4px** trong JetBrains
+Mono so với **295px** trong Inter ở cùng cỡ 40px, tức **font đơn cách làm chữ Việt rộng thêm
+21%**. Trong bảng dày ở cỡ 10 tới 13px, 21% ấy phải trả bằng chữ nhỏ hơn hoặc gãy dòng nhiều
+hơn. Cộng thêm việc bề rộng đều nhau xoá mất hình bao từ, vốn là manh mối chính để mắt lướt
+nhanh. Với **số** thì đơn cách đúng (các chữ số thẳng cột); với **từ tiếng Việt** thì sai cả
+hai mặt. Dự án đang có 371 chỗ dùng `font-mono`, chưa xử lý, xem phần nợ.
+
+#### Kiểm chứng
+
+`npm run check` đạt toàn bộ 6 chặng. Mọi phép đo trước và sau đều lấy bằng Claude Browser trên
+`http://localhost:3000` đang chạy thật, không phải suy từ mã nguồn.
+
+#### Còn nợ
+
+- **371 chỗ `font-mono`** và **154 chỗ `uppercase`**: đã sửa được phần giãn chữ, chưa chuyển
+  các nhãn là **từ tiếng Việt** sang chữ thường không đơn cách. Giữ đơn cách cho **số**.
+- **245 chỗ `text-[10px]` và 120 chỗ `text-[11px]`**: đây là cỡ chữ nhỏ nhất và là nguồn mỏi
+  mắt lớn nhất còn lại. Chúng viết thẳng giá trị nên vượt mặt tầng token, phải sửa từng chỗ.
+- **Hàng đáp án ở màn luyện câu vẫn là thẻ có viền và có nền.** Theo mô hình Khan thì nên là
+  danh sách chữ ngăn nhau bằng đường kẻ 1px, để mắt đọc trôi từ câu hỏi xuống các phương án
+  thay vì phải phân tích năm khối đóng. Đây là việc lớn tiếp theo và nên làm riêng một vòng.
+- Huy hiệu `+6% tuần này` viết cứng trong `PersonalWorkspaceView.tsx` vẫn còn, là con số bịa
+  hiển thị bằng màu xanh thành công, phạm bất biến 4.9.
+
+---
+
 ### 28/07/2026 — Rà màu ngữ nghĩa: đáp án sai vốn không hề có màu đỏ
 
 **Commit**: một commit lớn, nhóm kiểm mới **AF**, tổng phép kiểm 191 lên **195**.

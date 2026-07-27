@@ -119,7 +119,11 @@ export default function App() {
                 <div className="w-7 h-7 rounded-lg bg-text-primary flex items-center justify-center text-bg-card shadow-sm transition hover:opacity-95">
                   <GraduationCap className="w-4 h-4" />
                 </div>
-                <span className="font-display font-medium text-xs tracking-wider text-text-primary hidden sm:inline-block">
+                {/* `whitespace-nowrap`: không có nó, khi hộp bị bó hẹp chữ này rơi xuống thành
+                    một CỘT DỌC 5 dòng cao hơn cả thanh header. Hiện từ mốc `xl` trở lên vì
+                    dưới mức đó chỗ trống phải nhường cho thanh điều hướng, xem chú thích ở
+                    thanh đó. Biểu tượng mũ tốt nghiệp vẫn đứng đó làm lối về trang chủ. */}
+                <span className="font-display font-medium text-xs tracking-wider text-text-primary hidden xl:inline-block whitespace-nowrap">
                   ÔN THI ĐẠI HỌC MỞ
                 </span>
               </div>
@@ -139,8 +143,25 @@ export default function App() {
               </select>
             </div>
 
-          {/* Thanh điều hướng chính, dựng từ DIEM_DEN nên luôn khớp với thanh dưới trên điện thoại. */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/*
+            Thanh điều hướng chính, dựng từ DIEM_DEN nên luôn khớp với thanh dưới trên điện thoại.
+
+            MỐC CHUYỂN DỜI TỪ `md` (768px) LÊN `lg` (1024px), ngày 28/07/2026.
+
+            Đo trên bản chạy thật ở bề rộng cửa sổ 864px: hàng trong header rộng 859px nhưng ba
+            cụm con của nó đòi tổng cộng **954px** (cụm logo 281 + thanh này 603 + cụm phải 70).
+            Thừa 95px, nên cụm phải bị đẩy tới toạ độ 978 và **cả trang tràn ngang**, cuộn được
+            sang phải. Lỗi này có sẵn từ trước, không phải do đợt sửa giao diện: đo trên bản
+            gốc chưa đụng gì cũng đã tràn 928px so với 864px.
+
+            Gốc rễ: thanh này bật từ 768px trong khi tự nó cần khoảng 825px mới đủ chỗ.
+
+            Dời mốc lên `lg` KHÔNG làm mất điểm đến nào, vì thanh dưới đáy màn hình dựng từ
+            đúng cùng một mảng DIEM_DEN và nay nhận luôn khoảng 768 tới 1024. Dưới 1024px người
+            học điều hướng bằng thanh đáy, từ 1024px trở lên bằng thanh này. Ba chỗ phải dời
+            cùng lúc nếu không sẽ hở: thanh này, thanh đáy, và lớp đệm dưới của `main`.
+          */}
+          <nav className="hidden lg:flex items-center gap-1">
             {DIEM_DEN.map(({ view, nhan, Icon }) => {
               const dangMo = currentView === view;
               return (
@@ -216,7 +237,7 @@ export default function App() {
           từ cùng một DIEM_DEN với thanh trên máy tính nên không thể trôi ra khác nhau nữa.
           Bản cũ dán nó ngay dưới header, ăn mất hai dải cố định ở đỉnh màn hình. */}
       {!isDeepFocus && (
-        <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-bg-card/95 backdrop-blur-md border-t border-border-primary pb-[env(safe-area-inset-bottom)]">
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-bg-card/95 backdrop-blur-md border-t border-border-primary pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-stretch justify-around">
             {DIEM_DEN.map(({ view, nhan, Icon }) => {
               const dangMo = currentView === view;
@@ -239,7 +260,7 @@ export default function App() {
       )}
 
       {/* Main workspace */}
-      <main className="min-h-[calc(100vh-3rem)] pb-20 md:pb-0">
+      <main className="min-h-[calc(100vh-3rem)] pb-20 lg:pb-0">
         {/* Session Recovery Banner */}
         {!isDeepFocus && unfinishedSession && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">

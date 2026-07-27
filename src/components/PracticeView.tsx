@@ -371,8 +371,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
   const dbStats = dbService.getStatistics();
   const activeBookmarked = dbStats.bookmarks.includes(activeQuestion?.id);
   const activeFlagged = dbStats.flags.includes(activeQuestion?.id);
+  // MỘT CỘT ĐỌC DUY NHẤT cho cả phiên học.
+  //
+  // Trước 28/07/2026 khung là `max-w-5xl` (1024px), nên thẻ câu hỏi rộng 679px và câu hỏi trải
+  // 77 ký tự mỗi dòng, đo bằng `Range.getClientRects` trên bản chạy thật. Vùng đọc thoải mái
+  // là 45 tới 75 ký tự.
+  //
+  // Đã thử cách chặn riêng bề rộng của câu hỏi, nhưng nó đẻ ra lỗi khác nhìn thấy ngay trên
+  // màn hình: câu hỏi hẹp 565px trong khi ô phương án vẫn trải hết 780px, nên mắt vừa thu hẹp
+  // để đọc câu hỏi lại phải mở rộng ra để đọc phương án. Hai bề rộng đọc trong cùng một luồng
+  // còn tệ hơn một bề rộng hơi quá dài.
+  //
+  // Nay thu cả cột về `max-w-4xl` (896px) để chỉ còn MỘT bề rộng đọc cho cả câu hỏi lẫn
+  // phương án, đúng lối một cột nội dung của các sản phẩm đọc dài.
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 animate-fade-in-up">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-fade-in-up">
       {/* Top Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
         <div className="flex items-center gap-3.5">
@@ -632,7 +645,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     return null;
                   })()}
                 </div>
-                <h3 className="text-md font-medium text-text-primary leading-relaxed font-sans">
+                {/*
+                  Câu hỏi là thứ mắt phải chạm đầu tiên và đọc kỹ nhất, nên nó phải LỚN NHẤT
+                  trên màn hình này.
+
+                  Ba điều đã sửa ngày 28/07/2026, đo trên bản chạy thật:
+                  1. Lớp cũ là `text-md`, KHÔNG phải lớp Tailwind hợp lệ (chỉ có sm, base, lg).
+                     Nghĩa là cỡ chữ câu hỏi bấy lâu nay là 16px do thừa kế mặc định của thẻ
+                     body, tức một sự tình cờ chứ không phải một lựa chọn thiết kế.
+                  2. Nâng lên 18px để tách bạch khỏi phương án trả lời (16px) và dòng chủ đề
+                     (13px), tạo đúng ba bậc thay vì hai bậc lẫn nhau.
+                  Bề rộng dòng KHÔNG chặn ở đây mà chặn ở cột nội dung ngoài cùng, xem chú
+                  thích dài tại thẻ `max-w-4xl` đầu component. Lý do: chặn riêng câu hỏi sẽ
+                  làm nó hẹp hơn ô phương án, tạo hai bề rộng đọc trong cùng một luồng.
+                */}
+                <h3 className="text-lg font-medium text-text-primary leading-relaxed font-sans">
                   {activeQuestion.question}
                 </h3>
               </div>
@@ -696,7 +723,13 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         }`}>
                           {key.toUpperCase()}
                         </span>
-                        <span className="text-xs leading-relaxed font-sans">{optionText}</span>
+                        {/*
+                          Phương án trả lời là đoạn chữ người học phải SO SÁNH kỹ nhất để ra
+                          quyết định, nhưng nó vốn là `text-xs`, tức 12px, nhỏ hơn câu hỏi tới
+                          bốn điểm. Thứ bậc đọc bị đảo ngược: đọc câu hỏi ở cỡ lớn rồi phải hạ
+                          mắt xuống cỡ nhỏ hơn để làm phần việc khó hơn. Nay 16px.
+                        */}
+                        <span className="text-base leading-relaxed font-sans">{optionText}</span>
                       </div>
 
                       {reveal && isCorrect && (
@@ -717,14 +750,30 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <div className="flex items-center gap-2 border-b border-brand-success-border/30 pb-2.5">
                     <CheckCircle2 className="w-5 h-5 text-brand-success animate-pulse" />
                     <div>
-                      <h4 className="text-xs font-semibold text-brand-success">Chính xác! Bạn đã chọn đúng đáp án</h4>
-                      <p className="text-[10px] text-text-muted font-sans">Dùng mũi tên trái phải để chuyển câu.</p>
+                      <h4 className="text-sm font-semibold text-brand-success">Chính xác! Bạn đã chọn đúng đáp án</h4>
+                      <p className="text-xs text-text-muted font-sans">Dùng mũi tên trái phải để chuyển câu.</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-xs font-sans text-text-secondary">
-                    <span className="text-brand-success font-semibold uppercase tracking-wider text-[9px] block">Giải nghĩa từ giáo trình:</span>
-                    <p className="bg-bg-card border border-border-primary/50 p-3 rounded-lg text-text-primary leading-relaxed">
+                  {/*
+                    BẢNG PHẢN HỒI LÀ NƠI DẠY THẬT SỰ, nên đoạn giải nghĩa phải là nhân vật
+                    chính của khối này.
+
+                    Đo trên bản chạy thật trước khi sửa (28/07/2026): thân giải nghĩa 13px và
+                    trải **87 ký tự mỗi dòng**, tức vừa là chữ nhỏ nhất trong các đoạn có
+                    nghĩa, vừa là dòng dài nhất màn hình. Còn nhãn dẫn nó thì để `text-[9px]`
+                    viết hoa giãn chữ, cỡ chữ nhỏ nhất toàn sản phẩm.
+
+                    Ba điều sửa, đều thuần thị giác:
+                    1. Thân giải nghĩa lên 15px và chặn bề rộng, cho về vùng 45 tới 75 ký tự.
+                    2. Nhãn bỏ viết hoa, về 13px chữ thường. Chữ hoa toàn phần mất đường viền
+                       trên dưới của từ nên mắt phải đọc từng chữ cái thay vì nhận dạng cả
+                       hình khối từ, chậm hơn hẳn ở cỡ nhỏ.
+                    3. Tiêu đề phản hồi lên 15px để lớn hơn nhãn phụ bên dưới nó.
+                  */}
+                  <div className="space-y-2 font-sans text-text-secondary">
+                    <span className="text-brand-success font-medium text-xs block">Giải nghĩa từ giáo trình</span>
+                    <p className="bg-bg-card border border-border-primary/50 p-4 rounded-lg text-text-primary text-sm leading-relaxed max-w-[38rem]">
                       {activeQuestion.explanation}
                     </p>
                   </div>
@@ -739,21 +788,22 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <div className="flex items-center gap-2 border-b border-brand-error-border/30 pb-2.5">
                     <AlertCircle className="w-5 h-5 text-brand-error" />
                     <div>
-                      <h4 className="text-xs font-semibold text-brand-error">Chưa đúng. Cùng xem lại nhé</h4>
-                      <p className="text-[10px] text-text-muted font-sans">
+                      <h4 className="text-sm font-semibold text-brand-error">Chưa đúng. Cùng xem lại nhé</h4>
+                      <p className="text-xs text-text-muted font-sans">
                         Bạn chọn {String(exam.answers[activeQuestion.id]).toUpperCase()}. Đáp án đúng là{" "}
                         <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>. Dùng mũi tên trái phải để chuyển câu.
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-xs font-sans">
-                    <span className="text-brand-success font-semibold uppercase tracking-wider text-[9px] block">Đáp án đúng:</span>
-                    <p className="bg-brand-success-bg/40 border border-brand-success-border/40 p-3 rounded-lg text-text-primary leading-relaxed">
+                  {/* Cùng lý do như bảng trả lời đúng, xem chú thích dài ở khối trên. */}
+                  <div className="space-y-2 font-sans">
+                    <span className="text-brand-success font-medium text-xs block">Đáp án đúng</span>
+                    <p className="bg-brand-success-bg/40 border border-brand-success-border/40 p-4 rounded-lg text-text-primary text-sm leading-relaxed max-w-[38rem]">
                       <strong>{activeQuestion.correctAnswer.toUpperCase()}.</strong> {activeQuestion.options[activeQuestion.correctAnswer]}
                     </p>
-                    <span className="text-text-muted font-semibold uppercase tracking-wider text-[9px] block pt-1">Giải nghĩa từ giáo trình:</span>
-                    <p className="bg-bg-card border border-border-primary/50 p-3 rounded-lg text-text-secondary leading-relaxed">
+                    <span className="text-text-muted font-medium text-xs block pt-1">Giải nghĩa từ giáo trình</span>
+                    <p className="bg-bg-card border border-border-primary/50 p-4 rounded-lg text-text-secondary text-sm leading-relaxed max-w-[38rem]">
                       {activeQuestion.explanation}
                     </p>
                   </div>
