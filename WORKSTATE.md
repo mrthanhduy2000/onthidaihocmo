@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 28/07/2026, sau lượt rà toàn bộ liên kết giữa các thành phần.
+**Cập nhật lần cuối**: 28/07/2026, sau lượt rà soát trải nghiệm trên trình duyệt thật.
 
 ---
 
@@ -15,17 +15,60 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Rà liên kết toàn hệ thống, **ĐÃ HOÀN THÀNH** năm hạng mục |
+| **Current Milestone** | Rà soát trải nghiệm trên trình duyệt thật, **ĐÃ HOÀN THÀNH** sáu commit |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Bốn commit của lượt này đã push, kèm bản cập nhật tài liệu |
+| **Bản đang chạy thật** | Sáu commit của lượt này đã push, kèm bản cập nhật tài liệu |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
 ---
 
-## Lượt mới nhất: rà toàn bộ liên kết giữa các thành phần
+## Lượt mới nhất: rà soát trải nghiệm trên trình duyệt thật
+
+Yêu cầu: tự mở trình duyệt, rà toàn bộ trải nghiệm trên bản chạy thật chứ không đọc mã, rồi sửa
+thẳng vào mã theo triết lý Calm Academic Operating System. Sáu commit, nhóm kiểm mới **AD**.
+
+### Phát hiện quan trọng nhất: bất biến 4.9 lâu nay chỉ được áp cho tầng engine
+
+Ba lượt trước đã dọn sạch số bịa trong các engine, nhưng **màn hình vẫn vẽ ra con số không có
+thật**, vì mọi phép kiểm đều dừng ở tầng dịch vụ. Nhật ký rèn luyện tô ba ngày đã học cho người
+**chưa làm câu nào**, sắc độ lấy từ `idx % 4` tức từ vị trí ô; "+6% tuần này" là chuỗi viết cứng;
+điểm dự kiến hiện 5,0 khi chưa có bài nào. Nhóm kiểm **AD** nay canh ở mức mã nguồn.
+
+### Số đo trước và sau, lấy từ bản chạy thật
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Tràn ngang trên khung 375px | **122px**, 44 phần tử vượt khung | **0** |
+| Hai thanh điều hướng | máy tính 7 mục, điện thoại 6 mục, khác thứ tự lẫn nhãn | cùng một mảng `DIEM_DEN` |
+| Vòng tiêu điểm bàn phím | 9 file tắt outline, **0 chỗ** có `focus-visible` | một quy tắc dùng chung |
+| Bộ chọn môn | lặp hai lần trên cùng màn hình | một |
+| Nút cộng nổi | 4/6 mục trùng thanh điều hướng, 2 mục bấm không mở gì | đã gỡ |
+| "Đặt lại tiến trình" | ba lối vào, một nằm ở góc tiêu đề màn Báo cáo | một, trong Cài đặt |
+
+### Một sự cố thật của chính tôi, giữ lại để khỏi lặp
+
+Tôi đã **commit và push khi bộ kiểm đang đỏ**, do lệnh nối chuỗi bằng `&&` và `grep` chỉ bắt dòng
+tổng kết chặng. Truy ra là phép kiểm **AB6 chập chờn 1 trên 5 lượt**. Kịch bản của nó rút đề ngẫu
+nhiên rồi quyết định đúng sai bằng `id % 2`, nên đúng sai phụ thuộc mã câu mà mã nào rơi vào phần
+nào lại do bốc thăm. Đã dựng lại tất định, **không nới ngưỡng**, kết quả từ 10 đến 21 tùy lượt nay
+xuống đúng **0,0** mọi lượt.
+
+**Khi chạy `npm run check` trong lệnh nối chuỗi, phải bắt cả dòng `  HONG` của từng phép kiểm,
+không chỉ dòng tổng kết chặng.**
+
+### Còn nợ, cố ý chưa làm
+
+Nhãn chữ hoa giãn cách kiểu bảng số liệu vẫn còn ở màn Báo cáo, khối "Liên kết kiến thức đang
+học" và các bảng quan trắc; màn Báo cáo vẫn dẫn dắt bằng ba con số cỡ lớn và vài câu động viên
+viết sẵn không đúng với người chưa làm bài. `QuickActionFAB.tsx` chỉ thôi render, file vẫn nằm
+trên đĩa vì dọn mã chết là quyết định của chủ dự án.
+
+---
+
+## Lượt trước: rà toàn bộ liên kết giữa các thành phần
 
 Yêu cầu: liên kết toàn bộ thành phần với nhau, không để rời rạc, mọi dữ liệu phải đồng bộ.
 Bốn commit, năm nhóm kiểm mới **Y, Z, AA, AB, AC**. Số phép kiểm 152 lên **182**.

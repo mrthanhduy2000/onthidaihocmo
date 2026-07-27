@@ -59,6 +59,89 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Rà soát trải nghiệm trên trình duyệt thật, sáu commit
+
+**Commit**: `0d57531`, `f55ef80`, `b0b32af`, `b2aefc0`, `0ed0cac`, `f270f6c`. Nhóm kiểm mới
+**AD**, tổng phép kiểm 182 lên **185**.
+
+**Yêu cầu**: tự mở trình duyệt, rà toàn bộ trải nghiệm trên bản chạy thật chứ không đọc mã, rồi
+sửa thẳng vào mã theo triết lý Calm Academic Operating System.
+
+#### Điều quan trọng nhất học được: bất biến 4.9 lâu nay chỉ được áp cho tầng engine
+
+Ba lượt trước đã dọn sạch số bịa trong các engine. Nhưng **màn hình vẫn vẽ ra con số không có
+thật** mà không phép kiểm nào chạm tới, vì mọi phép kiểm đều dừng ở tầng dịch vụ:
+
+| Chỗ | Bản cũ | Sau |
+|---|---|---|
+| Nhật ký rèn luyện | `isDone = idx < studyStreak + 3` nên người **chưa làm câu nào** vẫn thấy ba ngày sáng màu; sắc độ lấy từ `idx % 4`, tức từ **vị trí ô** | đọc `dbService.getHistory()`, đậm nhạt theo số câu thật trong ngày |
+| "+6% tuần này" | chuỗi **viết cứng**, hiện y hệt cho mọi người học mọi thời điểm | đã gỡ |
+| Điểm dự kiến | hiện **5,0 ± 0,5** khi chưa làm câu nào, đó là mốc khởi động nguội | "Chưa đủ dữ liệu" |
+
+Ba ngày sáng màu kia còn nằm ở **đầu** lưới, tức ba ngày xa nhất, ngược hẳn ý nghĩa chuỗi ngày
+học. Không lỗi nào trong ba lỗi này lộ ra khi đọc mã dịch vụ.
+
+**Bài học: bất biến 4.9 phải áp cho cả tầng hiển thị.** Nhóm kiểm **AD** nay canh ở mức mã nguồn.
+
+#### Một sự cố thật của chính tôi, giữ lại để khỏi lặp
+
+Tôi đã **commit và push trong khi bộ kiểm đang đỏ**. Nguyên nhân: lệnh nối chuỗi bằng `&&` và
+`grep` chỉ bắt dòng tổng kết chặng chứ không bắt dòng từng phép kiểm, nên tôi không thấy màu đỏ.
+Đây là vi phạm đúng quy tắc quan trọng nhất của dự án.
+
+Truy ra thì đó là phép kiểm **AB6 chập chờn**, hỏng khoảng **1 trên 5 lượt**, và khi hỏng thì
+hỏng nặng (chỉ số 71 so với ngưỡng 20). Nguồn chập chờn: kịch bản rút đề ngẫu nhiên rồi quyết
+định đúng sai nhóm "Trung bình" bằng `id % 2`, tức đúng sai phụ thuộc **mã câu**, mà mã nào rơi
+vào phần đầu hay cuối lại do bốc ngẫu nhiên.
+
+**Lần thử đầu của tôi còn làm tệ hơn**: đổi sang xen kẽ theo thứ tự trong nhóm, nhưng bố cục số
+câu Trung bình mỗi phần là 1/3/2 nên tỷ lệ đúng của chính nhóm đó thành 100%/33%/50% theo phần
+đề, tức **tự tay tạo ra đúng cái nhiễu cần khử**. Phép kiểm chuyển từ chập chờn sang hỏng đều.
+
+Bản cuối: bố cục 4/2/1, 2/2/3, 1/2/4; Dễ đúng hết, Khó sai hết, Trung bình đúng nửa đầu **của
+chính phần đó**. Mỗi nhóm độ khó có tỷ lệ đúng y hệt nhau ở cả ba phần: 100%, 50%, 0%. Kết quả
+giống hệt qua 5 lượt: đo ngây thơ tụt 42,9 điểm phần trăm, sau khi khử độ khó còn **0,0**.
+**Không nới ngưỡng.** Phép kiểm nay còn mạnh hơn trước, vì bản cũ từng xanh một phần nhờ may.
+
+#### Sửa trên giao diện
+
+| Hạng mục | Đo được trước | Sau |
+|---|---|---|
+| Tràn ngang trên khung 375px | **122px**, một phần ba bề ngang nằm ngoài vùng nhìn, 44 phần tử vượt khung | **0** |
+| Hai thanh điều hướng | máy tính **7 mục**, điện thoại **6 mục**, khác cả thứ tự lẫn nhãn | cùng một mảng `DIEM_DEN`, 6 mục khớp nhau |
+| Nhãn điều hướng | xuống hai dòng ngay ở 1440px | không xuống dòng |
+| Vòng tiêu điểm bàn phím | **9 file** dùng `focus:outline-none`, **0 chỗ** có `focus-visible` | một quy tắc dùng chung, đã soi thấy trên ảnh chụp |
+| Bộ chọn môn | lặp **hai lần** cách nhau chưa tới trăm điểm ảnh | một, ở thanh đầu trang |
+| Ba thẻ nhiệm vụ | ngang hàng nhau, ba nút xám như nhau | một nút đặc, hai nút nền |
+| Sổ câu sai rỗng | "Sửa **0 câu**" kèm nút bấm được | "Sổ câu sai đang sạch", không nút |
+| Nút cộng nổi | 4/6 mục trùng thanh điều hướng, 2 mục còn lại **bấm không mở gì** | đã gỡ |
+| "Đặt lại tiến trình" | nằm ở góc tiêu đề màn Báo cáo, **ba lối vào** cho một việc xóa sạch | còn một lối trong Cài đặt, có xác nhận |
+
+Bộ chọn giao diện Sáng/Tối chuyển vào Cài đặt: nó chiếm ba nút giữa vùng đắt nhất màn hình cho
+một hành động vài tháng mới làm một lần, và chính nó gây tràn ngang. Thanh điều hướng điện thoại
+chuyển xuống đáy cho vừa tầm ngón cái.
+
+#### Còn nợ, cố ý chưa làm
+
+- **Nhãn chữ hoa giãn cách kiểu bảng số liệu** vẫn còn ở nhiều màn (Báo cáo, khối "Liên kết kiến
+  thức đang học", các bảng quan trắc). Đã sửa ở Bàn học và Luyện câu; phần còn lại là việc lặp
+  lại cùng một khuôn, nên tách thành lượt riêng cho gọn.
+- **Màn Báo cáo** vẫn dẫn dắt bằng ba con số cỡ lớn và vài câu động viên viết sẵn không đúng với
+  người chưa làm bài. Chưa đụng.
+- `QuickActionFAB.tsx` **chỉ thôi render**, file vẫn nằm trên đĩa. Dọn mã chết là quyết định của
+  chủ dự án (Nợ 1).
+
+#### Nghiệm thu
+
+Cả 6 chặng xanh với 185 phép kiểm, chạy lại 5 lượt liên tiếp đều giống nhau. Ba phép kiểm mới
+đều đã thử phá. Toàn bộ số đo trên đây lấy từ bản chạy thật trong trình duyệt, không phải suy
+từ mã.
+
+**Dữ liệu học của Đàm không bị đụng tới**: máy chủ xem thử chạy ở cổng 60177 trong khi dữ liệu
+thật nằm ở cổng 3000, mà `localStorage` tách theo cổng, nên đó là hai kho hoàn toàn riêng.
+
+---
+
 ### 28/07/2026 — Rà toàn bộ liên kết: nối lại những chỗ dữ liệu chảy rời nhau
 
 **Yêu cầu của Đàm**: "Rà soát mọi thứ, liên kết toàn bộ thành phần với nhau, không để mọi thứ
