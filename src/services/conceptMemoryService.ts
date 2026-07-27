@@ -161,6 +161,101 @@ export interface BangChungTriNho {
   daVungOnDinh?: boolean;
   /** Các mốc thời gian đã học, dạng chuỗi ISO. Dùng để đo hiệu ứng giãn cách. */
   mocHocISO?: string[];
+  /** Các lần nhớ lại thật sau một quãng nghỉ, dùng để HIỆU CHUẨN công thức. */
+  capNhoLai?: CapNhoLai[];
+}
+
+/** Một lần thử nhớ lại thật: nghỉ bấy nhiêu ngày rồi quay lại, có nhớ được không. */
+export interface CapNhoLai {
+  soNgayNghi: number;
+  nhoDuoc: boolean;
+}
+
+/**
+ * Quãng nghỉ tối thiểu để một lần làm bài được coi là PHÉP THỬ TRÍ NHỚ. Hai câu cách nhau vài
+ * giây trong cùng một buổi không kiểm tra trí nhớ dài hạn, chúng chỉ đo sự chú ý.
+ */
+const NGUONG_NGHI_NGAY = 0.5;
+
+/** Số cặp tối thiểu để dám ước lượng. Dưới mức này thì trả "chưa đủ dữ liệu", không đoán. */
+const TOI_THIEU_CAP_NHO_LAI = 3;
+
+export interface KetQuaHieuChuanTriNho {
+  duDuLieu: boolean;
+  soCap: number;
+  doBenNgay: number | null;
+  tyLeNhoLai: number | null;
+  soNgayNghiTrungBinh: number | null;
+}
+
+/**
+ * Rút các lần thử nhớ lại thật ra khỏi lịch sử điểm của một khái niệm.
+ *
+ * Dữ liệu vốn nằm sẵn không ai đọc: mỗi mục `scoreHistory` có mốc thời gian và điểm độ thạo
+ * ngay sau lượt đó. Hai mục liên tiếp cho ra đúng thứ cần để hiệu chuẩn đường cong quên: nghỉ
+ * bao nhiêu ngày, rồi quay lại có nhớ được không.
+ *
+ * Đúng hay sai suy từ DẤU của mức thay đổi điểm, vì `studentEvolutionEngine` cộng 10 khi đúng
+ * và trừ 8 khi sai, cộng thêm điều chỉnh tự tin tối đa 2,5. Nên trả lời đúng luôn làm điểm
+ * TĂNG, trả lời sai luôn làm điểm GIẢM. Trường hợp duy nhất nhập nhằng là điểm đứng yên do
+ * chạm trần 100 hoặc chạm sàn 0; những cặp đó bị BỎ chứ không đoán, vì đoán sai một cặp ở đây
+ * làm lệch cả đường cong.
+ */
+export function rutCapNhoLai(lichSu: Array<{ timestamp: string; score: number }> | undefined): CapNhoLai[] {
+  const ds = lichSu || [];
+  const ra: CapNhoLai[] = [];
+  for (let i = 1; i < ds.length; i++) {
+    const truoc = new Date(ds[i - 1].timestamp).getTime();
+    const sau = new Date(ds[i].timestamp).getTime();
+    if (!Number.isFinite(truoc) || !Number.isFinite(sau)) continue;
+    const soNgayNghi = (sau - truoc) / 86400000;
+    if (soNgayNghi < NGUONG_NGHI_NGAY) continue;
+    const delta = ds[i].score - ds[i - 1].score;
+    if (delta === 0) continue; // nhập nhằng, bỏ
+    ra.push({ soNgayNghi, nhoDuoc: delta > 0 });
+  }
+  return ra;
+}
+
+/**
+ * ĐỘ BỀN TRÍ NHỚ ĐO ĐƯỢC từ chính người học, thay vì suy ra từ công thức.
+ *
+ * Vì sao cần: cho tới 27/07/2026, đường cong quên của dự án chưa từng được đối chiếu với một
+ * lần nhớ lại thật nào. Nó dự đoán "sau 7 ngày còn nhớ 58%" rồi không bao giờ hỏi lại xem
+ * người học có thật sự nhớ không. Đây đúng là kiểu vòng hở đã sửa cho bộ dự báo điểm thi.
+ *
+ * Cách ước lượng, cố ý chọn dạng đóng và giải thích được thay vì dò số:
+ *
+ *     R(t) = e^(-t/S)  =>  S = -ngayNghiTrungBinh / ln(tyLeNhoLai)
+ *
+ * `tyLeNhoLai` làm trơn Laplace (cộng 1 lần nhớ được và 2 lượt) đúng theo lối đã dùng ở
+ * `transferQualityScore`, để vài quan sát đầu không đẩy ra kết luận cực đoan và để tỷ lệ không
+ * bao giờ chạm 0 hay 1 làm logarit nổ.
+ *
+ * NÓI RÕ GIỚI HẠN: lấy trung bình quãng nghỉ rồi mới nghịch đảo logarit là ước lượng bậc một,
+ * không phải hợp lý cực đại. Nó lệch nhẹ khi các quãng nghỉ chênh nhau rất xa. Chấp nhận được
+ * vì kết quả còn bị co về phía tiên nghiệm theo `w = 1 - e^(-n/6)`, nên vài cặp đầu chỉ hiệu
+ * chỉnh nhẹ chứ không lật ngược công thức.
+ */
+export function doBenTriNhoDoDuoc(cap: CapNhoLai[]): KetQuaHieuChuanTriNho {
+  const ds = cap || [];
+  if (ds.length < TOI_THIEU_CAP_NHO_LAI) {
+    return { duDuLieu: false, soCap: ds.length, doBenNgay: null, tyLeNhoLai: null, soNgayNghiTrungBinh: null };
+  }
+
+  const soNho = ds.filter(c => c.nhoDuoc).length;
+  const tyLeNhoLai = (soNho + 1) / (ds.length + 2);
+  const soNgayNghiTrungBinh = ds.reduce((s, c) => s + c.soNgayNghi, 0) / ds.length;
+
+  const doBenNgay = Math.max(0.25, Math.min(180, -soNgayNghiTrungBinh / Math.log(tyLeNhoLai)));
+
+  return {
+    duDuLieu: true,
+    soCap: ds.length,
+    doBenNgay: Number(doBenNgay.toFixed(2)),
+    tyLeNhoLai: Number(tyLeNhoLai.toFixed(3)),
+    soNgayNghiTrungBinh: Number(soNgayNghiTrungBinh.toFixed(2)),
+  };
 }
 
 /**
@@ -217,7 +312,18 @@ export function doBenTriNhoNgay(bc: BangChungTriNho): number {
   const heSoDoKho = Math.max(0.6, 8.0 / Math.max(4.0, bc.doKhoKhaiNiem || 5.0));
   const thuongOnDinh = bc.daVungOnDinh ? 2.2 : 1.0;
 
-  return nen * heSoGianCach * phatQuenLai * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh;
+  const tienNghiem = nen * heSoGianCach * phatQuenLai * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh;
+
+  // HIỆU CHUẨN bằng chính lịch sử nhớ lại của người học. Toàn bộ phần trên vẫn chỉ là công thức
+  // suy ra; đây là chỗ duy nhất đường cong được đối chiếu với việc người học có thật sự nhớ hay
+  // không. Co về tiên nghiệm theo đúng một cách co duy nhất của dự án `w = 1 - e^(-n/6)`: chưa
+  // có cặp nào thì w bằng 0 nên giữ nguyên công thức, càng nhiều lần nhớ lại thật thì số đo càng
+  // lấn át. Thiếu dữ liệu thì `duDuLieu` bằng false và không có gì thay đổi.
+  const doDuoc = doBenTriNhoDoDuoc(bc.capNhoLai || []);
+  if (!doDuoc.duDuLieu || doDuoc.doBenNgay === null) return tienNghiem;
+
+  const w = 1 - Math.exp(-doDuoc.soCap / MOC_BANG_CHUNG_CO);
+  return tienNghiem * (1 - w) + doDuoc.doBenNgay * w;
 }
 
 /** Quy độ bền ra tỷ lệ còn nhớ sau `soNgay` ngày. Một chỗ duy nhất áp sàn. */
@@ -263,6 +369,7 @@ function memoryStrengthDays(profile: ConceptMemoryProfile): number {
     soLanTuiLui: profile.regressionCount,
     daVungOnDinh: profile.isStableMastered,
     mocHocISO: (profile.scoreHistory || []).map(h => h.timestamp),
+    capNhoLai: rutCapNhoLai(profile.scoreHistory),
   });
 }
 

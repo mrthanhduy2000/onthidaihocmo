@@ -17,7 +17,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
 
 import { dbService, setConceptMasteryBothKeys, questionMap } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
-import { conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem } from "./conceptMemoryService";
+import { conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "./conceptMemoryService";
 import { TimeService } from "./time";
 
 export interface ConceptProfile {
@@ -632,12 +632,18 @@ export const learnerModelService = {
     // `conceptMemoryService`, để hai bên không thể lệch nhau vì lý do độ khó.
     const doKhoKhaiNiem = doKhoTienNghiem(profile.conceptName) ?? 5.0;
 
+    // Lịch sử nhớ lại thật nằm ở hồ sơ trí nhớ khái niệm, vì chỉ bên đó mới ghi ĐIỂM sau mỗi
+    // lượt (`reviewHistory` của hồ sơ này chỉ có mốc thời gian, không suy ra được đúng hay sai).
+    // Đọc chung một nguồn để hai đường cong không thể lệch nhau vì lý do hiệu chuẩn.
+    const hoSoTriNho = conceptMemoryService.getAllConceptProfiles()[profile.conceptName];
+
     const doBenNgay = doBenTriNhoNgay({
       soLanNhoLaiDung: profile.correctCount,
       soLanNhoLaiSai: profile.incorrectCount,
       dinhCaoDoThao,
       doKhoKhaiNiem,
       mocHocISO: profile.reviewHistory,
+      capNhoLai: rutCapNhoLai(hoSoTriNho?.scoreHistory),
     });
 
     const forgettingScore = Math.min(1.0, conNhoSauNgay(doBenNgay, elapsedDays));

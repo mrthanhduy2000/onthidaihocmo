@@ -24,7 +24,7 @@ import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
-import { conceptMemoryService, doKhoTienNghiem } from "../../src/services/conceptMemoryService";
+import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "../../src/services/conceptMemoryService";
 import { studentEvolutionEngine } from "../../src/services/studentEvolutionEngine";
 import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvaluationEngine";
 import { TimeService } from "../../src/services/time";
@@ -1880,6 +1880,132 @@ check("Mới luyện một khái niệm thì 6 tiếng sau chưa bị coi là c�
   `sau 6 tiếng còn nhớ ${Math.round(moiHoc * 100)}%, ngưỡng khẩn là dưới 60%`);
 
 localStorage.removeItem(`poly_econ_concept_memory_${subV}`);
+
+// ===========================================================================
+g("W. Hiệu chuẩn đường cong quên bằng lần nhớ lại thật");
+// ===========================================================================
+// Cho tới 27/07/2026, đường cong quên chưa từng được đối chiếu với một lần nhớ lại thật nào.
+// Nó dự đoán "sau 7 ngày còn nhớ 58%" rồi không bao giờ hỏi lại xem người học có nhớ không.
+// Đây đúng là kiểu vòng hở đã sửa cho bộ dự báo điểm thi.
+
+const subW = dbService.getActiveSubjectId();
+const tenW = kbService.getKnowledgeGraph(subW)[0]?.concept || "";
+const danhGiaW: any = { ...danhGiaT, bloomLevel: "Understand" };
+
+/**
+ * Dựng lịch sử học thật rồi giãn các mốc thời gian ra `cachNgay` ngày một lượt.
+ * Điểm số vẫn là điểm ENGINE THẬT tính ra, chỉ mốc thời gian được giãn, nên phép suy đúng/sai
+ * từ dấu của mức thay đổi điểm vẫn được kiểm trên dữ liệu thật.
+ */
+function dungLichHocW(ketQua: boolean[], cachNgay: number) {
+  localStorage.removeItem(`poly_econ_concept_memory_${subW}`);
+  localStorage.removeItem(`poly_econ_evolution_timeline_${subW}`);
+  for (const dung of ketQua) {
+    studentEvolutionEngine.processInteraction({
+      conceptName: tenW,
+      update: { wasCorrect: dung, responseTimeSeconds: 20, confidence: 0.6, teachingStrategy: "Academic", explanationLength: "medium" },
+      evaluation: danhGiaW, subjectId: subW,
+    });
+  }
+  const bang = conceptMemoryService.getAllConceptProfiles(subW);
+  const hs = bang[tenW];
+  const n = (hs.scoreHistory || []).length;
+  hs.scoreHistory = (hs.scoreHistory || []).map((m, i) => ({
+    ...m,
+    timestamp: new Date(TimeService.now().getTime() - (n - 1 - i) * cachNgay * NGAY_MS).toISOString(),
+  }));
+  bang[tenW] = hs;
+  conceptMemoryService.saveAllConceptProfiles(bang, subW);
+  return hs;
+}
+
+// W1. Giả định nền của cả tầng: suy đúng hay sai từ DẤU của mức thay đổi điểm.
+//     Sai giả định này là sai toàn bộ phần hiệu chuẩn, nên phải kiểm bằng sự thật đã biết.
+const ketQuaThatW = [true, false, true, true, false, true, false, true, true, false];
+dungLichHocW(ketQuaThatW, 5);
+const capW = rutCapNhoLai(conceptMemoryService.getAllConceptProfiles(subW)[tenW].scoreHistory);
+const soKhopW = capW.filter((c, i) => c.nhoDuoc === ketQuaThatW[i + 1]).length;
+check("Suy đúng hay sai từ dấu của mức thay đổi điểm là chính xác",
+  capW.length >= 8 && soKhopW === capW.length,
+  `${soKhopW}/${capW.length} cặp khớp với kết quả thật đã biết trước`);
+
+// W2. Ba kiểu người học phải cho ba độ bền khác nhau, và theo đúng chiều.
+const kichBanW: Array<{ ten: string; kq: boolean[] }> = [
+  { ten: "nhớ dai", kq: [true, true, true, true, true, true, true, true, true, false] },
+  { ten: "trung bình", kq: [true, false, true, true, false, true, true, false, true, true] },
+  { ten: "quên nhanh", kq: [true, false, false, false, true, false, false, false, false, false] },
+];
+const benTheoKieuW = kichBanW.map(kb => {
+  const hs = dungLichHocW(kb.kq, 5);
+  return conceptMemoryService.generateForgetCurve(hs).find(c => c.daysAhead === 7)!.retention;
+});
+check("Đường cong quên phân hóa theo lịch sử nhớ lại thật của từng người",
+  new Set(benTheoKieuW).size === 3 && benTheoKieuW[0] > benTheoKieuW[1] && benTheoKieuW[1] > benTheoKieuW[2],
+  `nhớ dai ${Math.round(benTheoKieuW[0] * 100)}%, trung bình ${Math.round(benTheoKieuW[1] * 100)}%, quên nhanh ${Math.round(benTheoKieuW[2] * 100)}% sau 7 ngày`);
+
+// W3. Thiếu dữ liệu thì phải NÓI THẲNG là chưa đủ, không được trả một con số cho đẹp.
+const duoiNguong = [0, 1, 2].map(n => doBenTriNhoDoDuoc(
+  Array.from({ length: n }, (_, i) => ({ soNgayNghi: 3 + i, nhoDuoc: i % 2 === 0 }))));
+const tuNguong = doBenTriNhoDoDuoc([
+  { soNgayNghi: 3, nhoDuoc: true }, { soNgayNghi: 4, nhoDuoc: false }, { soNgayNghi: 5, nhoDuoc: true }]);
+check("Dưới 3 lần nhớ lại thì trả chưa đủ dữ liệu, không trả con số",
+  duoiNguong.every(k => !k.duDuLieu && k.doBenNgay === null) && tuNguong.duDuLieu && tuNguong.doBenNgay !== null,
+  `0/1/2 cặp đều chưa đủ; từ 3 cặp mới ước lượng, ra ${tuNguong.doBenNgay} ngày`);
+
+// W4. Các lượt trong CÙNG một buổi không phải phép thử trí nhớ dài hạn, phải bị loại.
+const hsCungBuoi = dungLichHocW([true, true, true, true, true, true], 0.02);
+check("Các lượt trong cùng một buổi không bị tính là lần nhớ lại",
+  rutCapNhoLai(hsCungBuoi.scoreHistory).length === 0,
+  "6 lượt cách nhau khoảng 30 phút cho 0 cặp");
+
+// W5. Sau khi thêm hiệu chuẩn, hai đường cong vẫn phải bám sát nhau trên lịch sử học THẬT.
+//     Đây là phép kiểm ở điều kiện thực tế, khác V1 vốn ép hai bên cùng bằng chứng. Không thể
+//     bằng 0 vì hai kho hồ sơ ghi lượng bằng chứng khác nhau (một bên có đỉnh độ thạo và độ khó
+//     đo được, bên kia không), nhưng phải nhỏ hơn hẳn mức 55 điểm của bản cũ.
+dungLichHocW(kichBanW[1].kq, 5);
+const hsThatW = conceptMemoryService.getAllConceptProfiles(subW)[tenW];
+learnerModelService.getOrCreateProfile(tenW);
+const lechThatW = [1, 3, 7, 14].map(d => {
+  const a = conceptMemoryService.calculateRetentionScore({
+    ...hsThatW, lastReviewAt: new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString(),
+  } as any);
+  const b = learnerModelService.recalculateForgettingScore({
+    ...learnerModelService.getOrCreateProfile(tenW),
+    attemptsCount: 10, correctCount: 6, incorrectCount: 4,
+    lastStudiedAt: new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString(),
+  } as any).forgettingScore;
+  return Math.abs(a - b);
+});
+const lechThatMaxW = Math.max(...lechThatW);
+check("Trên lịch sử học thật, hai đường cong vẫn bám sát nhau",
+  lechThatMaxW <= 0.08,
+  `lệch lớn nhất ${(lechThatMaxW * 100).toFixed(0)} điểm phần trăm; bản cũ lệch tới 55 điểm`);
+
+// W6. Phép kiểm canh THẲNG sợi dây hiệu chuẩn.
+//
+// Vì sao cần thêm dù đã có W2 và W5: khi thử phá bằng cách cắt sợi dây hiệu chuẩn, W2 VẪN XANH,
+// vì phần phân hóa giữa ba kiểu người học còn đến từ hệ số giãn cách và phạt quên lại. Một phép
+// kiểm trông như đang canh hiệu chuẩn mà thật ra không canh gì cả thì nguy hiểm hơn là không có.
+// Ở đây giữ nguyên MỌI bằng chứng khác, chỉ đổi đúng danh sách lần nhớ lại thật.
+const bangChungNenW = {
+  soLanNhoLaiDung: 6, soLanNhoLaiSai: 4, dinhCaoDoThao: 70, doKhoKhaiNiem: 5,
+  mocHocISO: [10, 8, 6, 4, 2, 0].map(d => new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString()),
+};
+const benKhongHieuChuan = doBenTriNhoNgay({ ...bangChungNenW });
+const benQuenNhanh = doBenTriNhoNgay({
+  ...bangChungNenW,
+  capNhoLai: [3, 4, 5, 6, 7].map(g => ({ soNgayNghi: g, nhoDuoc: false })),
+});
+const benNhoDai = doBenTriNhoNgay({
+  ...bangChungNenW,
+  capNhoLai: [3, 4, 5, 6, 7].map(g => ({ soNgayNghi: g, nhoDuoc: true })),
+});
+check("Lần nhớ lại thật kéo được độ bền đi cả hai chiều",
+  benQuenNhanh < benKhongHieuChuan && benNhoDai > benKhongHieuChuan,
+  `cùng bằng chứng nền cho ${benKhongHieuChuan.toFixed(1)} ngày; 5 lần quên kéo xuống ${benQuenNhanh.toFixed(1)}, 5 lần nhớ được kéo lên ${benNhoDai.toFixed(1)}`);
+
+localStorage.removeItem(`poly_econ_concept_memory_${subW}`);
+localStorage.removeItem(`poly_econ_evolution_timeline_${subW}`);
 
 // ===========================================================================
 // Kết quả
