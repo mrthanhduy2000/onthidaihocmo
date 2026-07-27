@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { dbService } from "./db";
+import { dbService, dangKyDonDuLieuSuyRa } from "./db";
 import { TimeService } from "./time";
 import { conceptMemoryService, ConceptMemoryProfile, ConceptMemoryUpdate } from "./conceptMemoryService";
-import { studentModelService } from "./learnerModel";
+import { studentModelService, doTuTinTuCoNghiVan } from "./learnerModel";
 import { PedagogicalEvaluation } from "./pedagogicalEvaluationEngine";
 import { kbService } from "./kbService";
 
@@ -126,6 +126,12 @@ export const studentEvolutionEngine = {
     profile.averageConfidence = Number(
       ((profile.averageConfidence * (profile.timesStudied - 1) + params.update.confidence) / profile.timesStudied).toFixed(2)
     );
+
+    // Đếm riêng số lượt có tín hiệu tự khai THẬT. `conceptMemoryService` chỉ dám xếp loại
+    // hiệu chuẩn khi con số này đủ lớn, xem `TOI_THIEU_TIN_HIEU_TU_TIN`.
+    if (params.update.coTinHieuTuTin !== false) {
+      profile.confidenceSignalCount = (profile.confidenceSignalCount || 0) + 1;
+    }
 
     // Update Peak & Lowest
     profile.historicalPeak = Math.max(profile.historicalPeak, newMastery);
@@ -530,13 +536,18 @@ dbService.addOnSubmit((attempt) => {
     const isCorrect = q.correctAnswer === answer;
     const conceptNode = kbService.getConceptForQuestion(activeSubjectId, q);
     const conceptName = conceptNode ? conceptNode.concept : (q.knowledgeMapping?.[0] || q.concept || "Khái niệm môn học");
+    // Độ tự tin lấy từ nút cờ nghi vấn người học tự bấm, KHÔNG suy ngược từ đúng sai.
+    // Lý do và cách chọn ba mức nằm ở `doTuTinTuCoNghiVan` trong learnerModel.ts.
+    const doTuTin = doTuTinTuCoNghiVan(attempt.flags, qId);
+    const coTinHieuTuTin = (attempt.flags || []).length > 0;
 
     studentEvolutionEngine.processInteraction({
       conceptName,
       subjectId: activeSubjectId,
       update: {
         wasCorrect: isCorrect,
-        confidence: isCorrect ? 0.85 : 0.4,
+        confidence: doTuTin,
+        coTinHieuTuTin,
         responseTimeSeconds: timeSpentPerQ,
         teachingStrategy: "STORY_METAPHOR",
         explanationLength: "balanced",
@@ -576,4 +587,12 @@ dbService.addOnSubmit((attempt) => {
       }
     });
   });
+});
+
+// Dòng thời gian tiến hóa, nhật ký và các mốc đều suy ra từ lịch sử làm bài, nên xóa tiến
+// trình thì phải dọn cùng. Xem chú thích ở `dangKyDonDuLieuSuyRa` trong db.ts.
+dangKyDonDuLieuSuyRa("studentEvolution", (subjectId) => {
+  localStorage.removeItem(`${EVOLUTION_TIMELINE_KEY}${subjectId}`);
+  localStorage.removeItem(`${MILESTONES_KEY}${subjectId}`);
+  localStorage.removeItem(`${AUDIT_LOG_KEY}${subjectId}`);
 });

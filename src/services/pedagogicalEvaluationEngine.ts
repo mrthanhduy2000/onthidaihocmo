@@ -7,6 +7,7 @@ import { LearningPlan } from "./learningPlanner";
 import { TeachingDecision } from "./teachingDecisionEngine";
 import { StudentModel } from "./learnerModel";
 import { Question } from "../types";
+import { dangKyDonDuLieuSuyRa } from "./db";
 
 export interface StrategyStats {
   strategyName: string;
@@ -356,3 +357,10 @@ export const pedagogicalEvaluationEngine = {
     localStorage.setItem(EVALUATION_HISTORY_KEY, JSON.stringify(history));
   }
 };
+
+// Lịch sử chấm sư phạm và bảng hiệu quả chiến lược đều suy ra từ lịch sử học.
+// LƯU Ý: hai khóa này KHÔNG gắn mã môn, xem chú thích cùng loại ở adaptiveTeachingPolicy.
+dangKyDonDuLieuSuyRa("pedagogicalEvaluation", () => {
+  localStorage.removeItem(EVALUATION_HISTORY_KEY);
+  localStorage.removeItem(STRATEGY_STATS_KEY);
+});

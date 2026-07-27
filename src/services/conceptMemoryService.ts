@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { dbService } from "./db";
+import { dbService, dangKyDonDuLieuSuyRa } from "./db";
 import { kbService } from "./kbService";
 import { TimeService } from "./time";
 
@@ -65,8 +65,14 @@ export interface ConceptMemoryProfile {
   learningGainPerSession?: number;
   efficiencyScore?: number; // 0.0 to 10.0
   persistentErrorPenalty?: number; // multiplier >= 1.0
-  calibrationState?: "overconfident" | "underconfident" | "calibrated";
+  calibrationState?: "overconfident" | "underconfident" | "calibrated" | "chua-du-du-lieu";
   calibrationScore?: number; // 0.0 to 1.0
+  /**
+   * Số lượt có TÍN HIỆU TỰ KHAI thật về mức chắc chắn, tức người học có bấm nút cờ nghi vấn
+   * trong lượt làm bài đó. Lượt không có tín hiệu nào vẫn được ghi nhận độ tự tin trung lập
+   * 0,5, nhưng KHÔNG được tính là bằng chứng, nếu không thì "im lặng" bị đọc thành "tự tin".
+   */
+  confidenceSignalCount?: number;
   scoreHistory?: Array<{
     timestamp: string;
     score: number;
@@ -81,6 +87,11 @@ export interface ConceptMemoryUpdate {
   wasCorrect: boolean;
   responseTimeSeconds: number;
   confidence: number; // 0.0 to 1.0
+  /**
+   * `confidence` ở trên có phải tín hiệu ĐO ĐƯỢC hay chỉ là giá trị trung lập thay thế.
+   * Bỏ trống được hiểu là có tín hiệu, để đường gọi cũ từ gia sư AI không đổi hành vi.
+   */
+  coTinHieuTuTin?: boolean;
   detectedMisconception?: string;
   teachingStrategy: string;
   explanationLength: string;
@@ -88,6 +99,12 @@ export interface ConceptMemoryUpdate {
 }
 
 const STORAGE_PREFIX = "poly_econ_concept_memory_";
+
+/**
+ * Số lượt tối thiểu CÓ tín hiệu tự khai mới dám xếp loại hiệu chuẩn cho một khái niệm.
+ * Đặt bằng 3 vì dưới mức đó một lần bấm cờ lỡ tay đã đủ lật ngược nhãn.
+ */
+const TOI_THIEU_TIN_HIEU_TU_TIN = 3;
 
 /**
  * Mốc bằng chứng cho phép co. Dùng CÙNG hằng số 6 với `db.recomputeStatistics` và
@@ -616,13 +633,23 @@ export const conceptMemoryService = {
     const persistentErrorPenalty = Number((1.0 + 0.4 * unresolvedCount + 0.5 * relapseFrequency).toFixed(2));
 
     // 9. Confidence Calibration
+    //
+    // Chỉ được kết luận khi có TÍN HIỆU TỰ KHAI thật. Người học không bấm nút cờ nghi vấn lần
+    // nào thì `averageConfidence` bằng 0,5 trung lập, và đem 0,5 đó so với tỷ lệ đúng 0,9 sẽ ra
+    // chênh lệch -0,4, tức bị dán nhãn "thiếu tự tin" cho một người chưa hề nói gì về mức chắc
+    // chắn của mình. Đó vẫn là bịa, chỉ đổi chiều. Đo được trước khi chặn: hồ sơ đúng 90% không
+    // gắn cờ cho **13/15 khái niệm mang nhãn underconfident**.
+    const soTinHieuTuTin = profile.confidenceSignalCount || 0;
     const objectiveAccuracy = N > 0 ? profile.timesCorrect / N : 0.5;
     const diff = profile.averageConfidence - objectiveAccuracy;
-    let calibrationState: ConceptMemoryProfile["calibrationState"] = "calibrated";
-    if (diff > 0.20) calibrationState = "overconfident";
+    let calibrationState: ConceptMemoryProfile["calibrationState"];
+    if (soTinHieuTuTin < TOI_THIEU_TIN_HIEU_TU_TIN) calibrationState = "chua-du-du-lieu";
+    else if (diff > 0.20) calibrationState = "overconfident";
     else if (diff < -0.20) calibrationState = "underconfident";
     else calibrationState = "calibrated";
-    const calibrationScore = Number((1.0 - Math.min(1.0, Math.abs(diff))).toFixed(2));
+    const calibrationScore = soTinHieuTuTin < TOI_THIEU_TIN_HIEU_TU_TIN
+      ? 0
+      : Number((1.0 - Math.min(1.0, Math.abs(diff))).toFixed(2));
 
     return {
       ...profile,
@@ -765,3 +792,8 @@ export const conceptMemoryService = {
     return profile.preferredTeachingStyle || defaultStrategy;
   }
 };
+
+// Dọn kho hồ sơ trí nhớ dài hạn khi người học xóa tiến trình.
+dangKyDonDuLieuSuyRa("conceptMemory", (subjectId) => {
+  localStorage.removeItem(`${STORAGE_PREFIX}${subjectId}`);
+});

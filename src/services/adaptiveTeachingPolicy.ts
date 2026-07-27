@@ -5,6 +5,7 @@
 
 import { AdaptiveMemory, studentModelService, StudentModel } from "./learnerModel";
 import { PedagogicalEvaluation, pedagogicalEvaluationEngine } from "./pedagogicalEvaluationEngine";
+import { dangKyDonDuLieuSuyRa } from "./db";
 
 export interface PolicyAuditEntry {
   id: string;
@@ -146,3 +147,10 @@ export const adaptiveTeachingPolicy = {
     localStorage.setItem(POLICY_AUDIT_LOG_KEY, JSON.stringify(logs));
   }
 };
+
+// Nhật ký điều chỉnh chính sách giảng dạy cũng suy ra từ lịch sử học, nên phải dọn cùng.
+// LƯU Ý: khóa này KHÔNG gắn mã môn, tức nó gộp chung mọi môn. Đây là thiếu sót có sẵn từ
+// trước, ghi lại ở đây để người sau biết mà tách khi cần.
+dangKyDonDuLieuSuyRa("policyAudit", () => {
+  localStorage.removeItem(POLICY_AUDIT_LOG_KEY);
+});

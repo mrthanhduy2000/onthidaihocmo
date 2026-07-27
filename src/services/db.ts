@@ -288,6 +288,42 @@ function doThiCuaMon(subjectId: string): NutTriThucToiThieu[] {
   return subjectId === "customer_behavior" ? cbKnowledgeGraph : [];
 }
 
+// ===========================================================================
+// DỌN DỮ LIỆU SUY RA khi người học xóa tiến trình. Cũng dùng mẫu đăng ký trễ như trên.
+//
+// VÌ SAO CẦN (27/07/2026). `clearAllHistory` cũ chỉ xóa 4 khóa: lịch sử, thống kê và hai khóa
+// phiên dở dang. Nhưng lịch sử làm bài còn sinh ra **bảy kho dẫn xuất khác**, và không kho nào
+// được dọn:
+//
+//   poly_econ_concept_profiles_*     hồ sơ khái niệm của learnerModel
+//   poly_econ_concept_memory_*       hồ sơ trí nhớ dài hạn, đường cong quên, độ thạo
+//   poly_econ_evolution_timeline_*   dòng thời gian tiến hóa
+//   poly_econ_evolution_audit_*      nhật ký tiến hóa
+//   poly_econ_student_milestones_*   các mốc đạt được
+//   poly_econ_student_model_extras_* lịch sử hiểu sai và lịch sử tự tin
+//   poly_econ_adaptive_memory_*      bộ nhớ thích ứng
+//
+// Hậu quả người học thấy trực tiếp: bấm "Làm mới tiến trình" thì màn Thống kê về 0, nhưng màn
+// Tiến hóa, bản đồ độ thạo, đường cong quên và lịch ôn vẫn giữ nguyên người học cũ. Hai nửa
+// ứng dụng mô tả hai người khác nhau. Riêng `StatsView` còn hiện thông báo "Đã đặt lại và làm
+// sạch toàn bộ tiến trình học tập", một lời hứa mà mã nguồn không thực hiện.
+//
+// Cách làm: mỗi service TỰ đăng ký hàm dọn kho của chính nó, vì chỉ nó biết mình giữ khóa nào.
+// `db.ts` không được nhập ngược các service đó (vòng nhập, xem chú thích ngay bên trên).
+// ===========================================================================
+type HamDon = (subjectId: string) => void;
+const cacHamDonDuLieuSuyRa: { ten: string; don: HamDon }[] = [];
+
+export function dangKyDonDuLieuSuyRa(ten: string, don: HamDon): void {
+  if (cacHamDonDuLieuSuyRa.some(h => h.ten === ten)) return;
+  cacHamDonDuLieuSuyRa.push({ ten, don });
+}
+
+/** Danh sách tên các kho đã đăng ký dọn. Nhóm kiểm **Y** dùng để canh việc đăng ký có thật. */
+export function danhSachKhoDuocDon(): string[] {
+  return cacHamDonDuLieuSuyRa.map(h => h.ten);
+}
+
 /**
  * Ghi độ thành thạo của một khái niệm dưới CẢ HAI khóa: mã khái niệm (ví dụ CB_C1_N1) và tên
  * khái niệm (ví dụ "Hành vi khách hàng (Consumer Behavior)").
@@ -913,13 +949,21 @@ export const dbService = {
     // banner "phiên chưa hoàn thành" tồn đọng sau khi làm mới tiến trình.
     localStorage.removeItem("poly_econ_unfinished_session");
     localStorage.removeItem(`poly_econ_unfinished_session_${activeSubjectId}`);
+    // Xóa lịch sử mà để lại các kho dẫn xuất thì hai nửa ứng dụng sẽ mô tả hai người học khác
+    // nhau. Xem chú thích dài ở `dangKyDonDuLieuSuyRa` để biết bảy kho nào và vì sao.
+    cacHamDonDuLieuSuyRa.forEach(h => {
+      try { h.don(activeSubjectId); } catch (e) { console.error(`[db] Lỗi khi dọn kho ${h.ten}:`, e); }
+    });
     this.recomputeStatistics();
   },
 
+  /**
+   * Giữ lại vì `StatsView` đang gọi. Trước 27/07/2026 hàm này xóa ÍT hơn `clearAllHistory`
+   * (không dọn phiên dở dang, không dọn kho dẫn xuất) trong khi thông báo trên màn hình lại
+   * hứa "làm sạch toàn bộ tiến trình học tập". Nay ủy quyền hẳn để chỉ còn MỘT đường xóa.
+   */
   resetProgress(): void {
-    localStorage.removeItem(HISTORY_KEY());
-    localStorage.removeItem(STATS_KEY());
-    this.getStatistics();
+    this.clearAllHistory();
   }
 };
 

@@ -70,6 +70,21 @@ export const contextWindowBuilder = {
       learningPlan.strategy || "Academic"
     );
 
+    // Hiệu chuẩn nhận thức của CHÍNH khái niệm này, suy từ nút cờ nghi vấn người học tự bấm.
+    // Ba trạng thái đòi ba cách dạy khác hẳn nhau, nên đáng đưa vào lời nhắc:
+    //   - thừa tự tin: người học không hề nghi ngờ mà vẫn sai, nên sẽ KHÔNG tự ôn lại phần này
+    //   - thiếu tự tin: đã làm đúng nhưng vẫn tự đánh dấu, cần được khẳng định chỗ đã nắm chắc
+    //   - chưa đủ dữ liệu: im lặng không phải bằng chứng, không nói gì thêm về mức chắc chắn
+    const hieuChuanKhaiNiem = conceptProfile.calibrationState;
+    const moTaHieuChuan =
+      hieuChuanKhaiNiem === "overconfident"
+        ? "Thừa tự tin ở khái niệm này (thường không tự đánh dấu nghi vấn nhưng vẫn trả lời sai), cần chỉ rõ chỗ hiểu lệch thay vì chỉ khen"
+        : hieuChuanKhaiNiem === "underconfident"
+          ? "Thiếu tự tin ở khái niệm này (hay tự đánh dấu nghi vấn dù trả lời đúng), nên khẳng định lại phần đã nắm chắc"
+          : hieuChuanKhaiNiem === "calibrated"
+            ? "Tự đánh giá khớp với kết quả thật"
+            : "Chưa đủ dữ liệu để nói về mức tự tin";
+
     const studentSummary = [
       `Mức độ tinh thông hiện tại: ${mastery}% (Đỉnh lịch sử: ${conceptProfile.historicalPeak}%)`,
       `Độ ghi nhớ (Retention): ${Math.round(conceptProfile.retentionScore * 100)}%`,
@@ -77,7 +92,8 @@ export const contextWindowBuilder = {
       `Số lần ôn tập: ${conceptProfile.timesStudied}`,
       `Phong cách giảng dạy đề xuất: ${rotatedStrategy}`,
       `Chỉ số mệt mỏi nhận thức: ${fatigue}%`,
-      `Xu hướng đoán mò: ${guessFreq > 0.3 ? "Có khả năng" : "Thấp"}`
+      `Xu hướng đoán mò: ${guessFreq > 0.3 ? "Có khả năng" : "Thấp"}`,
+      `Hiệu chuẩn tự đánh giá: ${moTaHieuChuan}`
     ].join(" | ");
 
     // 3. Compress Learning Plan Instructions

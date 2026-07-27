@@ -15,7 +15,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
   };
 }
 
-import { dbService, setConceptMasteryBothKeys, questionMap } from "./db";
+import { dbService, setConceptMasteryBothKeys, questionMap, dangKyDonDuLieuSuyRa } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
 import { conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "./conceptMemoryService";
 import { TimeService } from "./time";
@@ -360,6 +360,40 @@ const MOC_BANG_CHUNG_CO = 6;
 const TOI_THIEU_CAU_XET = 20;
 /** Số câu gắn cờ tối thiểu. Không có cờ nào thì không thể nói gì về hiệu chuẩn. */
 const TOI_THIEU_CAU_GAN_CO = 5;
+
+/**
+ * Mức tự tin của người học trên MỘT câu, suy từ nút cờ nghi vấn họ tự bấm khi làm bài.
+ *
+ * VÌ SAO CẦN HÀM NÀY (27/07/2026). Cây cầu duy nhất nối "làm bài" với tầng trí nhớ khái niệm
+ * là hook nộp bài trong `studentEvolutionEngine`, và nó vốn truyền `confidence = đúng ? 0,85 :
+ * 0,4`. Tức độ tự tin được SUY NGƯỢC từ kết quả đúng sai, chứ không phải đo từ người học.
+ *
+ * Hậu quả đo được: `conceptMemoryService` lấy chính con số đó so lại với tỷ lệ đúng để xếp
+ * loại hiệu chuẩn. Thay `averageConfidence ≈ 0,4 + 0,45a` vào `diff = averageConfidence - a`
+ * ra `diff = 0,4 - 0,55a`, nên `diff < -0,20` đòi `a > 1,09`, một điều không thể xảy ra:
+ * nhãn **"underconfident" vĩnh viễn không bao giờ xuất hiện**, còn "overconfident" chỉ là cách
+ * gọi khác của "tỷ lệ đúng dưới 36,4%". Chỉ số tự nhận đo mức tự tin nhưng thực chất đo lại
+ * đúng cái nó đang so sánh, tức một vòng luẩn quẩn.
+ *
+ * Trong khi đó tín hiệu THẬT đã nằm sẵn: `attempt.flags` là danh sách câu người học tự đánh
+ * dấu "chưa chắc" ngay lúc làm bài. Đây là dữ liệu tự khai, thứ đắt nhất trong đo lường học
+ * tập, và trước lượt này không tầng nào ở mức khái niệm đọc tới.
+ *
+ * Ba mức trả về được chọn để rơi đúng vào các ngưỡng `pedagogicalEvaluationEngine` đang dùng
+ * sẵn (`confidence > 0,7` là chắc, `confidence < 0,4` là không chắc), không phải số tự đặt:
+ *   - có gắn cờ            -> 0,25, nằm dưới ngưỡng "không chắc"
+ *   - không gắn cờ         -> 0,80, nằm trên ngưỡng "chắc"
+ *   - cả lượt không cờ nào -> 0,50, nằm giữa hai ngưỡng, tức KHÔNG kết luận gì
+ *
+ * Mức giữa quan trọng không kém hai mức kia: người học không bấm nút cờ lần nào thì "không
+ * gắn cờ" không phải bằng chứng của sự tự tin, nó chỉ là im lặng. Đọc im lặng thành tự tin
+ * chính là kiểu bịa mà bất biến 4.9 cấm.
+ */
+export function doTuTinTuCoNghiVan(coNghiVanCuaLuot: number[] | undefined, questionId: number): number {
+  const co = coNghiVanCuaLuot || [];
+  if (co.length === 0) return 0.5;
+  return co.includes(questionId) ? 0.25 : 0.8;
+}
 
 /** Kết quả đo nhịp làm bài và mức đoán mò suy ra từ đó. */
 export interface NhipLamBai {
@@ -868,4 +902,12 @@ dbService.addOnSubmit((attempt) => {
       learnerModelService.logConceptAttempt(conceptNode.concept, isCorrect, timeSpentPerQ);
     }
   });
+});
+
+// Dọn các kho dẫn xuất do file này sở hữu khi người học xóa tiến trình.
+// Xem chú thích ở `dangKyDonDuLieuSuyRa` trong db.ts để biết vì sao phải làm.
+dangKyDonDuLieuSuyRa("learnerModel", (subjectId) => {
+  localStorage.removeItem(`poly_econ_concept_profiles_${subjectId}`);
+  localStorage.removeItem(`poly_econ_student_model_extras_${subjectId}`);
+  localStorage.removeItem(`poly_econ_adaptive_memory_${subjectId}`);
 });

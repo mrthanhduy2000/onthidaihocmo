@@ -15,7 +15,7 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { dbService, loadSubject, questions, questionMap, chapters, topics, suyRaMucBloom, daDangKyDoThiTriThuc, setConceptMasteryBothKeys } from "../../src/services/db";
+import { dbService, loadSubject, questions, questionMap, chapters, topics, suyRaMucBloom, daDangKyDoThiTriThuc, setConceptMasteryBothKeys, danhSachKhoDuocDon } from "../../src/services/db";
 import { EvidenceBasedPipeline } from "../../src/services/evidencePipeline";
 import { productObservabilityService } from "../../src/services/productObservabilityService";
 import { curriculumIntelligenceEngine } from "../../src/services/curriculumIntelligenceEngine";
@@ -586,6 +586,13 @@ const meanAbsErr = errors.reduce((a, b) => a + Math.abs(b), 0) / errors.length;
 // Ngưỡng siết từ 1,2 xuống 0,6 ngày 27/07/2026, sau khi gỡ hiện tượng nén về giữa. Đo được lúc
 // siết: lệch lớn nhất 0,3 và lệch trung bình 0,24, nên 0,6 vẫn còn gấp đôi khoảng đệm. Đặt
 // ngưỡng theo hành vi ĐÃ ĐO, không đoán.
+//
+// CẬP NHẬT 27/07/2026, đọc kỹ trước khi so số với mốc cũ. Con số 0,3 và 0,24 ở trên được đo khi
+// `clearAllHistory` còn BỎ SÓT bảy kho dẫn xuất, nên năm kịch bản trong `curveF` chạy nối đuôi
+// nhau và mỗi kịch bản thừa hưởng tầng trí nhớ của kịch bản trước. Sau khi việc dọn trở nên
+// thật, cùng bộ mã dự báo cho **0,4 và 0,32**. Đã tách nguyên nhân bằng cách bẻ riêng từng
+// thay đổi: giữ nguyên công thức độ tự tin cũ mà chỉ dọn kho cho đúng thì con số đã là 0,4.
+// Nói cách khác 0,3 là số ĐO SAI chứ không phải chất lượng bị tụt. Đừng "khôi phục" nó.
 check("Sai lệch dự báo nằm trong giới hạn", maxAbsErr <= 0.6,
   `lệch lớn nhất ${maxAbsErr.toFixed(1)} điểm, lệch trung bình ${meanAbsErr.toFixed(2)} điểm`);
 
@@ -2062,6 +2069,146 @@ check("Vừa học xong thì gợi ý không dọa là đang trôi",
 
 dbService.clearAllHistory();
 localStorage.removeItem("poly_econ_concept_profiles");
+
+// ===========================================================================
+// NHÓM Y. Xóa tiến trình phải dọn HẾT các kho suy ra từ lịch sử
+//
+// Trước 27/07/2026 `clearAllHistory` chỉ xóa 4 khóa (lịch sử, thống kê, hai khóa phiên dở
+// dang) trong khi lịch sử làm bài còn sinh ra bảy kho dẫn xuất khác. Người học bấm "Làm mới
+// tiến trình" thì màn Thống kê về 0 nhưng màn Tiến hóa, bản đồ độ thạo và lịch ôn vẫn giữ
+// nguyên người học cũ. Nhóm này canh đúng chỗ đó.
+// ===========================================================================
+g("Y. Xóa tiến trình dọn sạch mọi kho dẫn xuất");
+
+const KHO_DAN_XUAT = [
+  `poly_econ_concept_profiles_${dbService.getActiveSubjectId()}`,
+  `poly_econ_concept_memory_${dbService.getActiveSubjectId()}`,
+  `poly_econ_evolution_timeline_${dbService.getActiveSubjectId()}`,
+  `poly_econ_evolution_audit_${dbService.getActiveSubjectId()}`,
+  `poly_econ_student_milestones_${dbService.getActiveSubjectId()}`,
+  `poly_econ_adaptive_memory_${dbService.getActiveSubjectId()}`,
+];
+
+// Y1. Bốn service phải đăng ký được hàm dọn. Không đăng ký thì mọi thứ bên dưới vô nghĩa.
+const khoDaDangKy = danhSachKhoDuocDon();
+check("Các service có đăng ký hàm dọn dữ liệu suy ra",
+  khoDaDangKy.length >= 5,
+  `đã đăng ký: ${khoDaDangKy.join(", ") || "KHÔNG CÓ"}`);
+
+// Y2. Làm bài xong thì các kho dẫn xuất phải CÓ dữ liệu, nếu không thì Y3 đạt một cách rỗng.
+moPhongCoGanCo(3, 0.6, 4);
+const khoCoDuLieuTruoc = KHO_DAN_XUAT.filter(k => localStorage.getItem(k) !== null);
+check("Làm bài xong thì các kho dẫn xuất có dữ liệu thật",
+  khoCoDuLieuTruoc.length >= 4,
+  `${khoCoDuLieuTruoc.length}/${KHO_DAN_XUAT.length} kho có dữ liệu`);
+
+// Y3. Xóa tiến trình rồi thì KHÔNG kho nào còn sót.
+dbService.clearAllHistory();
+const khoConSot = KHO_DAN_XUAT.filter(k => localStorage.getItem(k) !== null);
+check("Xóa tiến trình rồi thì không kho dẫn xuất nào còn sót",
+  khoConSot.length === 0,
+  khoConSot.length === 0 ? `đã dọn đủ ${KHO_DAN_XUAT.length} kho` : `còn sót: ${khoConSot.join(", ")}`);
+
+// Y4. Tầng trí nhớ phải trắng đúng nghĩa, không chỉ mất khóa mà vẫn còn hồ sơ trong bộ nhớ.
+const hoSoSauXoa = conceptMemoryService.getAllConceptProfiles();
+check("Xóa tiến trình rồi thì không còn hồ sơ trí nhớ khái niệm nào",
+  Object.keys(hoSoSauXoa).length === 0,
+  `còn ${Object.keys(hoSoSauXoa).length} hồ sơ`);
+
+// Y5. `resetProgress` từng xóa ÍT hơn `clearAllHistory` trong khi thông báo trên màn Thống kê
+// lại hứa "làm sạch toàn bộ tiến trình học tập". Nay hai đường phải cho cùng một kết quả.
+moPhongCoGanCo(3, 0.6, 4);
+dbService.resetProgress();
+const sotSauReset = KHO_DAN_XUAT.filter(k => localStorage.getItem(k) !== null);
+check("resetProgress dọn ngang bằng clearAllHistory",
+  sotSauReset.length === 0 && dbService.getHistory().length === 0,
+  `còn sót ${sotSauReset.length} kho, lịch sử còn ${dbService.getHistory().length} lượt`);
+
+// ===========================================================================
+// NHÓM Z. Hiệu chuẩn nhận thức theo TỪNG khái niệm, lấy từ cờ nghi vấn thật
+//
+// Cây cầu nối làm bài với tầng trí nhớ vốn truyền `confidence = đúng ? 0,85 : 0,4`, tức độ tự
+// tin suy ngược từ đúng sai. Thay vào công thức xếp loại ra `diff = 0,4 - 0,55a`, nên nhãn
+// "underconfident" đòi tỷ lệ đúng trên 109%, một điều không thể xảy ra. Đo được: nhãn đó
+// KHÔNG BAO GIỜ xuất hiện, còn "overconfident" chỉ là cách gọi khác của "đúng dưới 36,4%".
+// ===========================================================================
+g("Z. Hiệu chuẩn nhận thức theo khái niệm bám cờ nghi vấn");
+
+/** Làm bài với cách đặt cờ theo ý đồ, rồi trả về bảng đếm trạng thái hiệu chuẩn. */
+function demTrangThaiHieuChuan(tyLeDung: number, kieuGanCo: "khong" | "khi-sai" | "khi-dung" | "deu") {
+  dbService.clearAllHistory();
+  for (let e = 0; e < 5; e++) {
+    const de = aiService.generateExam({ type: "random", count: 20 });
+    de.answers = {};
+    de.flags = [];
+    de.timeSpent = 600;
+    de.questions.forEach((id, i) => {
+      const q = questionMap.get(id);
+      if (!q) return;
+      const dung = (i / de.questions.length) < tyLeDung;
+      de.answers[id] = dung ? q.correctAnswer : LETTERS.find(k => k !== q.correctAnswer)!;
+      const nen = kieuGanCo === "khong" ? false
+        : kieuGanCo === "deu" ? i % 3 === 0
+        : kieuGanCo === "khi-sai" ? !dung
+        : dung;
+      if (nen) de.flags!.push(id);
+    });
+    de.isSubmitted = true;
+    de.score = de.questions.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+    dbService.saveAttempt(de);
+  }
+  const dem: Record<string, number> = {};
+  for (const p of Object.values(conceptMemoryService.getAllConceptProfiles()) as any[]) {
+    const k = String(p.calibrationState || "khong-co");
+    dem[k] = (dem[k] || 0) + 1;
+  }
+  return dem;
+}
+
+// Z1. Không bấm cờ lần nào thì KHÔNG được kết luận gì, dù tỷ lệ đúng cao hay thấp.
+// Đây là chỗ tôi tự làm sai một lần: bản đầu trả về 0,5 trung lập rồi vẫn đem so với tỷ lệ
+// đúng, nên hồ sơ đúng 90% không gắn cờ bị dán nhãn "thiếu tự tin" ở 13/15 khái niệm.
+const zKhongCo = demTrangThaiHieuChuan(0.9, "khong");
+check("Không gắn cờ lần nào thì hiệu chuẩn tự nhận chưa đủ dữ liệu",
+  Object.keys(zKhongCo).length === 1 && (zKhongCo["chua-du-du-lieu"] || 0) > 0,
+  JSON.stringify(zKhongCo));
+
+// Z2. Hay đánh cờ đúng vào câu mình làm sai, tức tự biết mình yếu, phải ra "khớp".
+const zBietYeu = demTrangThaiHieuChuan(0.3, "khi-sai");
+check("Tự đánh dấu đúng câu mình sai thì được xếp là tự đánh giá khớp",
+  (zBietYeu["calibrated"] || 0) > (zBietYeu["overconfident"] || 0),
+  JSON.stringify(zBietYeu));
+
+// Z3. Làm đúng mà vẫn đánh cờ, tức lo lắng thừa, phải ra "thiếu tự tin".
+const zLoThua = demTrangThaiHieuChuan(0.9, "khi-dung");
+check("Làm đúng mà vẫn đánh cờ thì được xếp là thiếu tự tin",
+  (zLoThua["underconfident"] || 0) > 0,
+  JSON.stringify(zLoThua));
+
+// Z4. Cả bốn trạng thái phải cùng đạt tới được. Bản cũ chỉ đạt tới hai.
+const zDeu = demTrangThaiHieuChuan(0.6, "deu");
+const tapTrangThai = new Set([...Object.keys(zKhongCo), ...Object.keys(zBietYeu), ...Object.keys(zLoThua), ...Object.keys(zDeu)]);
+check("Cả bốn trạng thái hiệu chuẩn đều đạt tới được",
+  tapTrangThai.size === 4,
+  `${tapTrangThai.size} trạng thái: ${[...tapTrangThai].sort().join(", ")}`);
+
+// Z5. Thử phá: nếu độ tự tin quay về lối suy ngược từ đúng sai thì Z3 phải đỏ. Kiểm bằng
+// chính công thức, không bằng niềm tin: với confidence = 0,85 khi đúng và 0,4 khi sai thì
+// trung bình là 0,4 + 0,45a, nên chênh lệch so với a luôn là 0,4 - 0,55a, không bao giờ
+// xuống dưới -0,20 với a trong khoảng 0 tới 1.
+const chenhLechCu = [0, 0.25, 0.5, 0.75, 1].map(a => 0.4 - 0.55 * a);
+check("Công thức cũ không thể sinh ra nhãn thiếu tự tin",
+  chenhLechCu.every(d => d >= -0.20),
+  `chênh lệch tại 5 mức tỷ lệ đúng: ${chenhLechCu.map(d => d.toFixed(2)).join(", ")}, không mức nào dưới -0,20`);
+
+// Z6. Tín hiệu phải chảy tới tận lời nhắc gửi gia sư AI, không dừng ở kho dữ liệu.
+demTrangThaiHieuChuan(0.9, "khi-dung");
+const nguonCtx = readFileSync(path.join(process.cwd(), "src/services/contextWindowBuilder.ts"), "utf8");
+check("Lời nhắc gửi gia sư AI có mang theo hiệu chuẩn tự đánh giá",
+  nguonCtx.includes("calibrationState") && nguonCtx.includes("Hiệu chuẩn tự đánh giá"),
+  "contextWindowBuilder đọc calibrationState và đưa vào phần tóm tắt người học");
+
+dbService.clearAllHistory();
 
 // ===========================================================================
 // Kết quả
