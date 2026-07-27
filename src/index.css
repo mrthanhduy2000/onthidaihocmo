@@ -171,3 +171,21 @@ input[type="text"], select {
 .option-card {
   @apply flex items-start gap-3.5 p-4 rounded-xl border transition-all duration-150 cursor-pointer text-left w-full relative overflow-hidden;
 }
+
+/*
+  VÒNG TIÊU ĐIỂM BÀN PHÍM.
+
+  Rà soát ngày 28/07/2026 trên bản chạy thật: toàn dự án có 9 file dùng `focus:outline-none`
+  nhưng KHÔNG một chỗ nào định nghĩa `focus-visible`. Nghĩa là người dùng bàn phím gõ Tab đi
+  khắp ứng dụng mà không hề thấy mình đang đứng ở đâu. Đây là lỗi tiếp cận, chuẩn WCAG 2.4.7.
+
+  Đặt ở đây, một chỗ duy nhất, thay vì đi sửa từng nút: quy tắc dùng `:focus-visible` nên chỉ
+  hiện khi điều hướng bằng bàn phím, bấm chuột thì không hiện, tức không đổi cảm giác nhìn của
+  người dùng chuột. Dùng `outline` thay cho `ring` để không bị `overflow-hidden` của thẻ cha
+  cắt mất, và luôn thắng được `focus:outline-none` nhờ đặt sau trong cùng lớp.
+*/
+:where(button, a, select, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-info, #4f46e5);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}

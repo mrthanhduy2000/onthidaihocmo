@@ -280,13 +280,16 @@ export default function StatsView() {
           </p>
         </div>
 
-        <button 
-          onClick={() => setShowConfirmReset(true)}
-          className="sm:self-start bg-brand-danger-bg hover:opacity-90 text-brand-danger text-xs font-medium font-mono px-4 py-2 rounded-lg transition flex items-center gap-1.5 border border-brand-danger-border cursor-pointer"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>Đặt lại tiến trình</span>
-        </button>
+        {/*
+          Nút "Đặt lại tiến trình" đã rút khỏi đây ngày 28/07/2026.
+
+          Nó xóa sạch toàn bộ lịch sử học, không hoàn lại được, mà lại nằm ngay góc phải tiêu đề
+          của một màn hình người học mở thường xuyên, cạnh đúng chỗ mắt hay dừng. Một hành động
+          phá hủy không nên nằm ở vị trí đẹp nhất trang.
+
+          Nó cũng KHÔNG mất đi: cùng hành động đó đã có sẵn trong Cài đặt, kèm bước xác nhận.
+          Ba lối vào cho một việc xóa sạch dữ liệu là thừa hai lối.
+        */}
       </div>
 
       {/* ACTIONABLE EXECUTIVE SUMMARY CARDS */}
