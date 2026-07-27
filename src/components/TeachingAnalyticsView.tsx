@@ -81,8 +81,8 @@ export default function TeachingAnalyticsView() {
           </div>
           <p className="text-xs text-text-muted">
             {report.totalInteractions > 0
-              ? `Đo lường mức độ tiếp thu khái niệm sau giải thích, trên ${report.totalInteractions} lượt hỏi gia sư AI`
-              : "Hãy hỏi gia sư AI vài lần để bảng này có căn cứ mà đo"}
+              ? `Đo trên ${report.totalInteractions} lượt trả lời, gồm cả câu bạn tự làm lẫn câu có gia sư AI giảng`
+              : "Hãy làm vài câu hoặc hỏi gia sư AI để bảng này có căn cứ mà đo"}
           </p>
         </div>
 

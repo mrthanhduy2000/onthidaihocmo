@@ -2415,6 +2415,55 @@ check("Độ khó dồn về cuối đề KHÔNG bị đọc nhầm thành mỏi
 dbService.clearAllHistory();
 
 // ===========================================================================
+// NHÓM AC. Không màn hình nào được gắn cứng khái niệm của MÔN ĐÃ ĐÓNG
+//
+// Tìm ra bằng mắt khi mở `npm run dev` ngày 28/07/2026, sau khi 179 phép kiểm đều xanh:
+// màn Bàn học của môn Hành vi khách hàng hiện bốn khái niệm gắn cứng của môn Kinh tế chính
+// trị đã đóng, kèm bốn ô số liệu cũng cứng ("Slide CH2 (Trang 14)", "12 câu trong Ngân
+// hàng"...), dưới một dòng nhãn ghi "Tự tổng hợp từ tài liệu đã có".
+//
+// Đây là lần thứ ba trong dự án một lỗi lọt qua toàn bộ bộ kiểm và chỉ lộ ra khi nhìn giao
+// diện. Nhóm này quét NGUỒN của các component để lần sau bắt được bằng máy.
+// ===========================================================================
+g("AC. Giao diện không gắn cứng khái niệm môn đã đóng");
+
+const TU_KHOA_MON_DA_DONG = [
+  "Hàng hóa & Giá trị", "Giá trị Thặng dư", "Tích lũy Tư bản", "Cạnh tranh Độc quyền",
+  "Giá trị thặng dư", "Tư bản bất biến", "Tư bản khả biến",
+];
+const thuMucComponent = path.join(process.cwd(), "src/components");
+const dinhCuKhaiNiem: string[] = [];
+for (const ten of readdirSync(thuMucComponent)) {
+  if (!ten.endsWith(".tsx")) continue;
+  const nguon = readFileSync(path.join(thuMucComponent, ten), "utf8");
+  // Chỉ soi CHUỖI trong mã, bỏ qua dòng chú thích (chú thích được phép nhắc lại lỗi cũ).
+  const dongMa = nguon.split("\n").filter(d => !d.trim().startsWith("//") && !d.trim().startsWith("*"));
+  for (const tu of TU_KHOA_MON_DA_DONG) {
+    if (dongMa.some(d => d.includes(`"${tu}"`) || d.includes(`'${tu}'`))) {
+      dinhCuKhaiNiem.push(`${ten}: "${tu}"`);
+    }
+  }
+}
+check("Không component nào viết cứng tên khái niệm của môn đã đóng",
+  dinhCuKhaiNiem.length === 0,
+  dinhCuKhaiNiem.length === 0 ? "đã quét toàn bộ src/components" : dinhCuKhaiNiem.join(" | "));
+
+// AC2. Khối "Liên kết kiến thức" phải lấy khái niệm từ đồ thị của MÔN ĐANG MỞ.
+const nguonBanHoc = readFileSync(path.join(thuMucComponent, "PersonalWorkspaceView.tsx"), "utf8");
+check("Khối Liên kết kiến thức lấy khái niệm từ đồ thị môn đang mở",
+  nguonBanHoc.includes("kbService.getKnowledgeGraph(activeSubId)"),
+  "PersonalWorkspaceView tra đồ thị theo activeSubId");
+
+// AC3. Bốn ô số liệu của khối đó phải ĐẾM THẬT, không còn con số viết sẵn.
+const conSoCu = ["Slide CH2 (Trang 14)", "Chương 2 (Mục 2.1)", "12 câu trong Ngân hàng", "1 câu cần sửa"];
+// Bỏ qua dòng chú thích: chính chú thích giải thích lỗi cũ có nhắc lại các chuỗi này.
+const maBanHoc = nguonBanHoc.split("\n").filter(d => !d.trim().startsWith("//") && !d.trim().startsWith("*")).join("\n");
+const conSotLai = conSoCu.filter(s => maBanHoc.includes(`>${s}<`) || maBanHoc.includes(`"${s}"`));
+check("Bốn ô số liệu của khối Liên kết kiến thức không còn viết sẵn",
+  conSotLai.length === 0,
+  conSotLai.length === 0 ? "cả bốn ô đều tính từ dữ liệu" : `còn: ${conSotLai.join(", ")}`);
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

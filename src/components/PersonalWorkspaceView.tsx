@@ -35,7 +35,8 @@ import {
   Shuffle,
   X
 } from "lucide-react";
-import { dbService, chapters } from "../services/db";
+import { dbService, chapters, questions, topicMap } from "../services/db";
+import { kbService } from "../services/kbService";
 import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
 import { examForecaster } from "../services/examForecaster";
@@ -98,8 +99,39 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
   // Snapshot Slider
   const [selectedSnapshotIdx, setSelectedSnapshotIdx] = useState(snapshots.length - 1);
 
-  // Concept Relation Graph Selection
-  const [selectedConceptForGraph, setSelectedConceptForGraph] = useState<string | null>("Hàng hóa & Giá trị");
+  // Liên kết kiến thức đang học.
+  //
+  // VÌ SAO VIẾT LẠI (28/07/2026). Cả khối này vốn là hằng số viết tay nhưng lại dán nhãn "Tự
+  // tổng hợp từ tài liệu đã có". Danh sách khái niệm gắn cứng bốn tên của môn KINH TẾ CHÍNH
+  // TRỊ **đã đóng** ("Hàng hóa & Giá trị", "Giá trị Thặng dư", "Tích lũy Tư bản", "Cạnh tranh
+  // Độc quyền"), nên người học môn Hành vi khách hàng mở màn Bàn học ra là thấy khái niệm của
+  // môn khác. Bốn ô số liệu bên dưới cũng cứng: "Slide CH2 (Trang 14)", "Chương 2 (Mục 2.1)",
+  // "12 câu trong Ngân hàng", "1 câu cần sửa", không đổi dù chọn khái niệm nào.
+  //
+  // Theo cách phân loại ở AGENTS.md mục 3, đây là loại "trả về dữ liệu của môn SAI", tức phải
+  // sửa ngay chứ không được ghi nợ.
+  const doThiKhaiNiem = React.useMemo(
+    () => kbService.getKnowledgeGraph(activeSubId).slice(0, 4),
+    [activeSubId]
+  );
+  const [selectedConceptForGraph, setSelectedConceptForGraph] = useState<string | null>(null);
+  const nutDangChon = doThiKhaiNiem.find(n => n.concept === selectedConceptForGraph) || doThiKhaiNiem[0] || null;
+
+  // Số câu trong ngân hàng và số câu đang nằm trong sổ tay câu sai, ĐẾM THẬT theo bộ tra
+  // khái niệm chính thống chứ không phải hai con số viết sẵn.
+  const soLieuKhaiNiem = React.useMemo(() => {
+    if (!nutDangChon) return { soCau: 0, soCauSai: 0 };
+    const soSai = dbService.getStatistics().incorrectQuestionHistory || {};
+    let soCau = 0;
+    let soCauSai = 0;
+    for (const q of questions) {
+      const nut = kbService.getConceptForQuestion(activeSubId, q);
+      if (!nut || nut.concept !== nutDangChon.concept) continue;
+      soCau++;
+      if ((soSai as any)[q.id]) soCauSai++;
+    }
+    return { soCau, soCauSai };
+  }, [activeSubId, nutDangChon, prediction]);
 
   useEffect(() => {
     setGoal(dbService.getSubjectGoal(activeSubId));
@@ -472,47 +504,56 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
             <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
               <span className="text-xs text-text-muted shrink-0">Chọn khái niệm:</span>
-              {["Hàng hóa & Giá trị", "Giá trị Thặng dư", "Tích lũy Tư bản", "Cạnh tranh Độc quyền"].map(concept => (
+              {doThiKhaiNiem.length === 0 ? (
+                <span className="text-xs text-text-muted">Môn này chưa có khái niệm nào để liên kết.</span>
+              ) : doThiKhaiNiem.map(nut => (
                 <button
-                  key={concept}
-                  onClick={() => setSelectedConceptForGraph(concept)}
+                  key={nut.id}
+                  onClick={() => setSelectedConceptForGraph(nut.concept)}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-                    selectedConceptForGraph === concept 
-                      ? "bg-text-primary text-bg-card font-semibold" 
+                    nutDangChon?.concept === nut.concept
+                      ? "bg-text-primary text-bg-card font-semibold"
                       : "bg-bg-surface text-text-muted hover:text-text-primary border border-border-primary/60"
                   }`}
                 >
-                  {concept}
+                  {nut.concept}
                 </button>
               ))}
             </div>
 
             <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-3">
               <div className="flex items-center justify-between text-xs font-mono text-brand-info">
-                <span>Nguồn học liên quan tới: <strong>{selectedConceptForGraph}</strong></span>
-                <span className="text-text-muted font-normal">Tự tổng hợp từ tài liệu đã có</span>
+                <span>Nguồn học liên quan tới: <strong>{nutDangChon?.concept || "chưa có khái niệm"}</strong></span>
+                <span className="text-text-muted font-normal">Đếm thật từ đồ thị tri thức và ngân hàng câu hỏi</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center text-xs font-mono">
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
                   <span className="text-[10px] text-text-muted uppercase block">Khái niệm</span>
-                  <span className="font-semibold text-text-primary">{selectedConceptForGraph}</span>
+                  <span className="font-semibold text-text-primary">{nutDangChon?.concept || "—"}</span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Slide bài giảng</span>
-                  <span className="font-semibold text-brand-info">Slide CH2 (Trang 14)</span>
+                  <span className="text-[10px] text-text-muted uppercase block">Chuyên đề</span>
+                  {/* `node.topic` giữ MÃ chuyên đề (ví dụ CB_T1.1), tra sang tên cho người đọc. */}
+                  <span className="font-semibold text-brand-info">
+                    {nutDangChon ? (topicMap.get(nutDangChon.topic)?.title || nutDangChon.topic) : "—"}
+                  </span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Giáo trình PDF</span>
-                  <span className="font-semibold text-brand-info">Chương 2 (Mục 2.1)</span>
+                  <span className="text-[10px] text-text-muted uppercase block">Nguồn tài liệu</span>
+                  <span className="font-semibold text-brand-info">
+                    {nutDangChon ? `${nutDangChon.source || "Chưa ghi nguồn"}${nutDangChon.page ? ` (${nutDangChon.page})` : ""}` : "—"}
+                  </span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
                   <span className="text-[10px] text-text-muted uppercase block">Câu hỏi tương ứng</span>
-                  <span className="font-semibold text-text-primary">12 câu trong Ngân hàng</span>
+                  <span className="font-semibold text-text-primary">{soLieuKhaiNiem.soCau} câu trong Ngân hàng</span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
                   <span className="text-[10px] text-text-muted uppercase block">Sổ tay Câu sai</span>
-                  <span className="font-semibold text-brand-warning">1 câu cần sửa</span>
+                  <span className={`font-semibold ${soLieuKhaiNiem.soCauSai > 0 ? "text-brand-warning" : "text-text-muted"}`}>
+                    {soLieuKhaiNiem.soCauSai} câu cần sửa
+                  </span>
                 </div>
               </div>
             </div>
