@@ -98,8 +98,23 @@ const stageLabelVN = (key: string): string => STAGE_LABEL_VN[key] || key;
 // ===========================================================================
 
 /** Hình phạt điểm do câu sai chưa chữa. Phần lõi dự báo TRỪ THẲNG số này khỏi điểm. */
-function hinhPhatNoHocTap(soCauNo: number): number {
-  return Math.min(1.0, (Math.max(0, soCauNo) / 12) * 0.9);
+function hinhPhatNoHocTap(soCauNo: number, tongCauDaLam = 0): number {
+  // Phạt theo TỶ LỆ nợ, không theo số tuyệt đối.
+  //
+  // Vì sao đổi (đo ngày 27/07/2026): bản cũ là `min(1,0; soCauNo/12 * 0,9)`, tức chỉ cần 13 câu
+  // sai chưa ôn lại là chạm trần phạt 1,0 điểm. Người học chăm làm 500 câu với 90% đúng vẫn có
+  // khoảng 50 câu sai, nên **bị phạt kịch trần y hệt người đúng 20%**. Đó là phạt theo khối
+  // lượng luyện tập chứ không theo chất lượng, và nó trừng phạt đúng người chăm nhất.
+  //
+  // Thêm nữa, số câu sai ĐÃ được phản ánh trong tỷ lệ đúng, vốn là neo của điểm dự báo. Trừ
+  // thêm một lần nữa theo số tuyệt đối là đếm trùng cùng một bằng chứng.
+  //
+  // Chưa biết tổng số câu đã làm thì giữ nguyên cách cũ để không đổi hành vi ở nơi gọi khác.
+  const no = Math.max(0, soCauNo);
+  if (tongCauDaLam <= 0) return Math.min(1.0, (no / 12) * 0.9);
+
+  const tyLeNo = Math.min(1, no / tongCauDaLam);
+  return Math.min(1.0, tyLeNo * 0.9);
 }
 
 /**
@@ -162,6 +177,14 @@ function tron1(x: number): number {
 }
 
 export const examForecaster = {
+  /**
+   * Phơi hàm phạt nợ ra để bộ tự kiểm chứng kiểm được trực tiếp. Không dùng trong luồng chạy
+   * thật, phần lõi gọi thẳng `hinhPhatNoHocTap`.
+   */
+  hinhPhatNoHocTapCongKhai(soCauNo: number, tongCauDaLam = 0): number {
+    return hinhPhatNoHocTap(soCauNo, tongCauDaLam);
+  },
+
   /**
    * Retrieves or initializes the persistent Forecast Calibration Profile for a subject.
    */
@@ -576,7 +599,7 @@ export const examForecaster = {
     // LAYER 5: Study Debt Penalty
     // -------------------------------------------------------------
     const studyDebtCount = Object.keys(stats.incorrectQuestionHistory || {}).length;
-    const debtPenalty = hinhPhatNoHocTap(studyDebtCount);
+    const debtPenalty = hinhPhatNoHocTap(studyDebtCount, totalSolved);
 
     // -------------------------------------------------------------
     // LAYER 6: Deadline Proximity & Non-Linear Pressure Curve Stage
@@ -623,13 +646,48 @@ export const examForecaster = {
     const bloomScore10 = Math.min(10, overallAccuracy * 11);
     const retentionScore10 = Math.min(10, (streak / 7) * 2 + overallAccuracy * 8);
 
-    let baseAccumulatedScore = (
-      (masteryScore10 * weights.masteryWeight) +
-      (retentionScore10 * weights.retentionWeight) +
-      (coverageScore10 * weights.coverageWeight) +
-      (mockScore10 * weights.mockWeight) +
-      (bloomScore10 * weights.bloomWeight)
-    );
+    // Điểm nền KHÔNG gộp độ phủ vào.
+    //
+    // Vì sao (đo ngày 27/07/2026, in năm điểm thành phần ở năm mức năng lực): `coverageScore10`
+    // bằng **10,00 ở cả năm mức**, từ người đúng 20% tới người đúng 100%. Nó đo BỀ RỘNG đã đụng
+    // tới chương trình, không đo NĂNG LỰC, nên gộp nó vào phần định mức điểm là nhầm loại đại
+    // lượng. Hậu quả đo được: độ dốc của điểm nền chỉ còn **0,66** thay vì 1,0, tức cứ 1 điểm
+    // năng lực thật thì dự báo chỉ nhúc nhích 0,66 điểm. Đó chính là hiện tượng nén về giữa,
+    // khiến người giỏi bị hạ tới 1,1 điểm.
+    //
+    // Độ phủ vẫn được dùng, nhưng ở đúng chỗ của nó: `coverageUncertainty` trong LAYER 10, tức
+    // nó làm dự báo KÉM CHẮC CHẮN hơn chứ không kéo mức điểm xuống. Học lệch thì biên độ rộng
+    // ra, không phải bị trừ điểm.
+    //
+    // Cấu trúc NEO cộng HIỆU CHỈNH, thay cho trung bình có trọng số của năm thành phần.
+    //
+    // Vì sao đổi cấu trúc chứ không chỉ chỉnh trọng số: độ dốc đo được của từng thành phần khi
+    // năng lực thật đi từ 20% lên 100% lần lượt là mastery 0,68, retention 0,80, mock 1,00,
+    // bloom 0,98, còn coverage đúng **0,00**. Trung bình có trọng số của các đại lượng dốc dưới
+    // 1 thì chắc chắn cũng dốc dưới 1, nên dự báo luôn bị nén về giữa dù chỉnh trọng số kiểu gì.
+    // Đo được độ dốc tổng hợp cũ là 0,66, tức mỗi 1 điểm năng lực thật chỉ đổi 0,66 điểm dự báo.
+    //
+    // Cách sửa: lấy điểm thi thử làm NEO, vì đó là ước lượng không thiên lệch của điểm thi (độ
+    // dốc đúng 1,00). Ba thành phần còn lại chỉ được HIỆU CHỈNH quanh neo, có giảm chấn, nên
+    // chúng vẫn góp tiếng nói mà không kéo tụt độ dốc.
+    //
+    // Chưa có bài thi thử nào thì neo bằng chính tỷ lệ đúng tổng thể, cũng là ước lượng không
+    // thiên lệch, chứ không rơi về trung bình có trọng số cũ.
+    const GIAM_CHAN_HIEU_CHINH = 0.35;
+    const neo = mockAttempts.length > 0 ? mockScore10 : overallAccuracy * 10;
+
+    const tongTrongSoPhu = weights.masteryWeight + weights.retentionWeight + weights.bloomWeight;
+    const diemPhu = tongTrongSoPhu > 0
+      ? (
+          (masteryScore10 * weights.masteryWeight) +
+          (retentionScore10 * weights.retentionWeight) +
+          (bloomScore10 * weights.bloomWeight)
+        ) / tongTrongSoPhu
+      : neo;
+
+    let baseAccumulatedScore = totalSolved > 0
+      ? neo + GIAM_CHAN_HIEU_CHINH * (diemPhu - neo)
+      : 5.0;
 
     // Non-linear Acceleration Growth S-Curve
     const roomToGrow = 10.0 - baseAccumulatedScore;
@@ -1074,8 +1132,13 @@ export const examForecaster = {
     const chenhThem60 = tron1(loiIchNhieuLuot(loiIchTotNhat, 2));
 
     // --- Kịch bản 3: chữa hết câu sai. Đây là con số CHÍNH XÁC chứ không phải ước lượng: phần
-    // lõi trừ thẳng `hinhPhatNoHocTap(soCauNo)` khỏi điểm, nên chữa hết nợ lấy lại đúng ngần đó.
-    const chenhChuaNo = tron1(hinhPhatNoHocTap(soCauNo));
+    // lõi trừ thẳng `hinhPhatNoHocTap(soCauNo, tongCauDaLam)` khỏi điểm, nên chữa hết nợ lấy lại
+    // đúng ngần đó.
+    //
+    // BẮT BUỘC truyền cả `daLam` giống hệt phần lõi. Thiếu tham số thứ hai thì hàm rơi về công
+    // thức cũ theo số tuyệt đối, và bảng lợi ích sẽ hứa nhiều hơn thứ phần lõi thật sự trả lại.
+    // Hai nơi nói hai con số khác nhau cho cùng một việc là lỗi đã từng xảy ra trong file này.
+    const chenhChuaNo = tron1(hinhPhatNoHocTap(soCauNo, daLam));
 
     // --- Kịch bản 4: làm 2 đề thi thử, tức hai lượt của hoạt động thi thử.
     const chenhThiThu = tron1(loiIchNhieuLuot(loiIch30.thiThu, 2));

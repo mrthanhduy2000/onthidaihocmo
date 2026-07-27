@@ -59,6 +59,83 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Gỡ hiện tượng nén dự báo về giữa, độ dốc từ 0,66 lên 1,00
+
+**Objective**: phần hai của việc nâng độ chính xác dự đoán. Bộ tự kiểm chứng đã in ra đường cong
+sai lệch từ lâu mà chưa ai xử lý: dự báo **nâng người yếu và hạ người giỏi**.
+
+**Chẩn đoán bằng số, không đoán**: in năm điểm thành phần của LAYER 7 ở năm mức năng lực.
+
+| Thành phần | 20% | 100% | Độ dốc |
+|---|---|---|---|
+| mastery | 3,66 | 9,06 | 0,68 |
+| retention | 1,89 | 8,29 | 0,80 |
+| **coverage** | **10,00** | **10,00** | **0,00** |
+| mock | 2,00 | 10,00 | 1,00 |
+| bloom | 2,20 | 10,00 | 0,98 |
+
+Độ dốc tổng hợp **0,66**: cứ 1 điểm năng lực thật thì dự báo chỉ nhúc nhích 0,66 điểm. Đó chính
+là định nghĩa của nén về giữa.
+
+**Ba lỗi, ba loại khác nhau**:
+
+1. **Nhầm loại đại lượng.** `coverageScore10` đo BỀ RỘNG đã đụng tới chương trình, không đo năng
+   lực, nhưng chiếm 20% trọng số định mức điểm. Đã chuyển nó về đúng chỗ: `coverageUncertainty`
+   trong LAYER 10. Học lệch thì biên độ tin cậy rộng ra, chứ không bị trừ điểm.
+2. **Sai cấu trúc.** Trung bình có trọng số của các đại lượng dốc dưới 1 thì chắc chắn cũng dốc
+   dưới 1, chỉnh trọng số kiểu gì cũng không cứu được. Đổi sang **neo cộng hiệu chỉnh**: lấy
+   điểm thi thử làm neo (ước lượng không thiên lệch, độ dốc đúng 1,00), ba thành phần còn lại
+   chỉ hiệu chỉnh quanh neo với giảm chấn 0,35.
+3. **Đếm trùng và phạt theo khối lượng.** `hinhPhatNoHocTap` dùng SỐ TUYỆT ĐỐI câu sai, trần
+   1,0 điểm ở 13 câu. Người làm 500 câu đúng 90% có khoảng 50 câu sai nên **bị phạt kịch trần y
+   hệt người đúng 20%**. Đó là phạt người chăm nhất. Thêm nữa số câu sai đã nằm trong tỷ lệ đúng,
+   vốn là neo, nên trừ lần nữa là đếm trùng. Đổi sang phạt theo TỶ LỆ nợ.
+
+**Đo được, trước và sau**:
+
+| Năng lực thật | Trước | Sau |
+|---|---|---|
+| 20% | **+0,5** | −0,2 |
+| 40% | 0,0 | −0,2 |
+| 60% | −0,4 | −0,3 |
+| 80% | **−0,7** | −0,2 |
+| 100% | −0,6 | −0,2 |
+| **Lệch lớn nhất** | 0,7 | **0,3** |
+| **Lệch trung bình** | 0,44 | **0,22** |
+| **Độ dốc** | 0,66 | **1,00** |
+
+Sai lệch nay **đều một mức −0,2** thay vì lệch theo năng lực. Đây là hình dạng lỗi lành tính hơn
+hẳn: nó là độ thận trọng cố định, dự đoán được, và chính là thứ vòng phản hồi hiệu chuẩn ở mục
+trên sẽ hấp thụ dần khi Đàm tích đủ lịch sử thi thật.
+
+**Hai lượt thử đầu của tôi đều làm số liệu XẤU ĐI, ghi lại vì đó là phần đáng học nhất**:
+
+- Bỏ coverage rồi chuẩn hóa lại trọng số: độ dốc lên 0,825 nhưng lệch trung bình từ 0,42 lên
+  0,50. Lý do: coverage vốn cộng một hằng số +2,0 cho mọi người, âm thầm bù cho `debtPenalty`.
+  Bỏ nó đi thì khoản phạt lộ ra.
+- Đổi sang neo cộng hiệu chỉnh: lệch lên 0,56 nhưng **hình dạng lỗi đổi hẳn**, từ nén thành lệch
+  đều. Chính điều đó chỉ thẳng ra thủ phạm còn lại là `debtPenalty`.
+
+Bài học: **một thay đổi làm chỉ số tổng xấu đi vẫn có thể là bước đi đúng, nếu nó đổi HÌNH DẠNG
+của lỗi theo hướng dễ chẩn đoán hơn.** Nhưng tuyệt đối không dừng và đẩy đi ở giữa chừng.
+
+**Giữ cho hai nơi nói cùng một con số**: kịch bản "chữa hết câu sai" trong bảng lợi ích cũng phải
+gọi `hinhPhatNoHocTap` với đủ hai tham số. Thiếu tham số thứ hai thì nó rơi về công thức cũ và
+bảng lợi ích sẽ hứa nhiều hơn phần lõi thật sự trả lại.
+
+**Nghiệm thu**: nhóm kiểm **S** thêm 5 phép, tổng lên **131**, `npm run check` đủ 6 chặng. Siết
+ngưỡng sai lệch tối đa từ 1,2 xuống **0,6** để khóa lại thành quả, đặt theo số ĐÃ ĐO chứ không
+đoán. Đã thử phá hai lần: khôi phục công thức phạt cũ thì phép kiểm phạt nợ đỏ; khôi phục trung
+bình có trọng số cũ thì cả phép kiểm nguồn lẫn ngưỡng sai lệch đỏ. Mở `npm run dev` xem màn Bàn
+học và Kế hoạch, không lỗi trên bảng điều khiển.
+
+**Còn nợ**: hai phép kiểm tôi viết lần đầu ở nhóm S là **đạt rỗng** (một cái khẳng định
+`coverageUncertainty >= 0`, luôn đúng; một cái không tìm thấy kịch bản để so nên bỏ qua). Đã
+thay bằng phép kiểm đọc mã nguồn và phép kiểm gọi thẳng hàm phạt. Nhắc lại vì đây là lần thứ ba
+trong ngày tôi suýt để lọt một phép kiểm không nói lên điều gì.
+
+---
+
 ### 27/07/2026 — Bộ dự báo "tự hiệu chuẩn" chưa từng hiệu chuẩn lần nào, đã nối vòng phản hồi
 
 **Objective**: Đàm muốn nâng độ chính xác của dự đoán cá nhân hóa. Thay vì đoán nên làm gì, tôi

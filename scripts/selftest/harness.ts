@@ -578,7 +578,11 @@ check("Học tốt hơn thì dự báo phải cao hơn", monotoneOk,
 const errors = curveF.map(c => c.predicted - c.realAccuracy * 10);
 const maxAbsErr = Math.max(...errors.map(Math.abs));
 const meanAbsErr = errors.reduce((a, b) => a + Math.abs(b), 0) / errors.length;
-check("Sai lệch dự báo nằm trong giới hạn", maxAbsErr <= 1.2,
+
+// Ngưỡng siết từ 1,2 xuống 0,6 ngày 27/07/2026, sau khi gỡ hiện tượng nén về giữa. Đo được lúc
+// siết: lệch lớn nhất 0,3 và lệch trung bình 0,24, nên 0,6 vẫn còn gấp đôi khoảng đệm. Đặt
+// ngưỡng theo hành vi ĐÃ ĐO, không đoán.
+check("Sai lệch dự báo nằm trong giới hạn", maxAbsErr <= 0.6,
   `lệch lớn nhất ${maxAbsErr.toFixed(1)} điểm, lệch trung bình ${meanAbsErr.toFixed(2)} điểm`);
 
 // Sai lệch không được PHÌNH TO theo năng lực: đó là dấu hiệu thang điểm bị nén.
@@ -1604,6 +1608,63 @@ check("Chưa đủ lượt hiệu chuẩn thì trọng số nằm im",
 
 dbService.clearAllHistory();
 localStorage.removeItem(KHOA_DU_BAO_CU);
+
+// ===========================================================================
+g("S. Chống nén dự báo về giữa");
+// ===========================================================================
+// Bối cảnh đo ngày 27/07/2026: in năm điểm thành phần của LAYER 7 ở năm mức năng lực thì thấy
+// `coverageScore10` bằng **10,00 ở cả năm mức**, tức không mang tin gì về năng lực mà vẫn chiếm
+// 20% trọng số định mức điểm. Độ dốc tổng hợp chỉ còn **0,66**, nên cứ 1 điểm năng lực thật thì
+// dự báo chỉ nhúc nhích 0,66 điểm. Đó là hiện tượng nén về giữa, khiến người giỏi bị hạ tới
+// 1,1 điểm còn người yếu được nâng lên.
+
+// S1. ĐỘ DỐC phải gần 1. Đây là phép kiểm chính của nhóm, và nó đo trực tiếp thứ đã hỏng.
+const diemTheoNangLuc = [0.3, 0.9].map(nl => {
+  const r = playAndForecast(nl, 4);
+  return { that: r.realAccuracy * 10, duBao: r.predicted };
+});
+const doDoc = (diemTheoNangLuc[1].duBao - diemTheoNangLuc[0].duBao) /
+  Math.max(0.01, diemTheoNangLuc[1].that - diemTheoNangLuc[0].that);
+check("Dự báo bám năng lực với độ dốc gần 1",
+  doDoc >= 0.8 && doDoc <= 1.2,
+  `năng lực ${diemTheoNangLuc[0].that.toFixed(1)} cho dự báo ${diemTheoNangLuc[0].duBao.toFixed(1)}, năng lực ${diemTheoNangLuc[1].that.toFixed(1)} cho ${diemTheoNangLuc[1].duBao.toFixed(1)}, độ dốc ${doDoc.toFixed(2)} (bản cũ 0,66)`);
+
+// S2. Phạt nợ học tập không được phạt theo KHỐI LƯỢNG luyện tập.
+// Hai hồ sơ cùng tỷ lệ đúng nhưng khác hẳn số câu đã làm phải nhận mức phạt tương đương.
+const itDe = playAndForecast(0.8, 2);
+const nhieuDe = playAndForecast(0.8, 8);
+check("Người luyện nhiều không bị phạt nặng hơn người luyện ít khi cùng tỷ lệ đúng",
+  Math.abs(nhieuDe.predicted - itDe.predicted) <= 0.6,
+  `cùng đúng khoảng 80%: làm 2 đề cho dự báo ${itDe.predicted.toFixed(1)}, làm 8 đề cho ${nhieuDe.predicted.toFixed(1)}`);
+
+// S3. Độ phủ chương trình KHÔNG được nằm trong công thức định mức điểm.
+//
+// Kiểm ở mức mã nguồn vì đây là bất biến cấu trúc, và kiểm qua hành vi thì rất khó cô lập độ phủ
+// khỏi năng lực. Độ phủ vẫn phải còn trong phần bất định, nơi nó thuộc về.
+const nguonDuBao = readFileSync(path.join(process.cwd(), "src/services/examForecaster.ts"), "utf8");
+const khoiDiemNen = nguonDuBao.slice(
+  nguonDuBao.indexOf("let baseAccumulatedScore"),
+  nguonDuBao.indexOf("Non-linear Acceleration Growth")
+);
+check("Độ phủ không nằm trong công thức định mức điểm",
+  khoiDiemNen.length > 0 && !khoiDiemNen.includes("coverageScore10"),
+  khoiDiemNen.includes("coverageScore10")
+    ? "coverageScore10 vẫn được cộng vào điểm nền, hiện tượng nén sẽ quay lại"
+    : "điểm nền chỉ gồm các thành phần bám năng lực");
+check("Độ phủ vẫn được dùng ở phần bất định",
+  nguonDuBao.includes("coverageUncertainty"),
+  "độ phủ thấp phải làm dự báo kém chắc chắn hơn, chứ không bị trừ điểm");
+
+// S4. Phạt nợ học tập phải theo TỶ LỆ, không theo số tuyệt đối.
+// Kiểm thẳng hàm phạt: người làm 500 câu đúng 90% có 50 câu nợ, không được phạt bằng người làm
+// 60 câu đúng 20% có 48 câu nợ.
+const phatNguoiCham = examForecaster.hinhPhatNoHocTapCongKhai(50, 500);
+const phatNguoiYeu = examForecaster.hinhPhatNoHocTapCongKhai(48, 60);
+check("Phạt nợ theo tỷ lệ, không phạt người luyện nhiều",
+  phatNguoiCham < phatNguoiYeu * 0.4,
+  `người chăm (50 nợ trên 500 câu) bị phạt ${phatNguoiCham.toFixed(2)}; người yếu (48 nợ trên 60 câu) bị phạt ${phatNguoiYeu.toFixed(2)}; bản cũ cả hai đều kịch trần 1,00`);
+
+dbService.clearAllHistory();
 
 // ===========================================================================
 // Kết quả
