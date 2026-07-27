@@ -195,12 +195,18 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                       {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-brand-info">Chương {ch.id}</span>
+                    {/*
+                      Chip trạng thái phải `whitespace-nowrap shrink-0`: trên điện thoại nó nằm
+                      cùng hàng với tên chương và không có gì chặn co lại, nên "Cần ôn chương
+                      trước" bị bóp thành BA dòng chữ vụn. Nay chip giữ nguyên một dòng, phần
+                      nhường chỗ là tên chương (`min-w-0` cho phép nó co và cắt cụt gọn gàng).
+                    */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <span className="text-2xs font-mono uppercase tracking-wider text-brand-info">Chương {ch.id}</span>
                         <h4 className="text-sm font-semibold text-text-primary">{ch.title}</h4>
                       </div>
-                      <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
+                      <span className={`text-2xs font-mono px-2 py-0.5 rounded border whitespace-nowrap shrink-0 ${
                         isUnlocked ? "bg-brand-success/10 text-brand-success border-brand-success/20" : "bg-bg-surface text-text-muted border-border-primary"
                       }`}>
                         {isUnlocked ? "Đã đủ điều kiện" : "Cần ôn chương trước"}
@@ -218,18 +224,18 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                             key={node.id} 
                             className="bg-bg-surface border border-border-primary hover:border-brand-info/50 rounded-xl p-3.5 transition space-y-2"
                           >
-                            <div className="flex items-center justify-end text-[11px]">
+                            <div className="flex items-center justify-end text-2xs">
                               <span className={`font-mono font-bold ${statusColor}`}>{score}% nắm chắc</span>
                             </div>
                             <h5 className="text-xs font-semibold text-text-primary leading-snug">{node.concept}</h5>
-                            <div className="text-[10px] text-text-muted line-clamp-2">{node.definition}</div>
+                            <div className="text-2xs text-text-muted line-clamp-2">{node.definition}</div>
                             
                             <button
                               onClick={() => {
                                 const exam = aiService.generateExam({ type: "chapter", chapterId: ch.id, count: 5 });
                                 onStartExam(exam);
                               }}
-                              className="w-full mt-2 py-1.5 px-2 bg-bg-card hover:bg-bg-surface border border-border-primary rounded-lg text-[11px] font-medium text-text-primary transition flex items-center justify-center gap-1"
+                              className="w-full mt-2 py-1.5 px-2 bg-bg-card hover:bg-bg-surface border border-border-primary rounded-lg text-2xs font-medium text-text-primary transition flex items-center justify-center gap-1"
                             >
                               <Play className="w-3 h-3 fill-current text-brand-info" />
                               <span>Ôn khái niệm này</span>
@@ -269,7 +275,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-text-primary">Trợ lý Hỏi đáp Học thuật AI</h3>
-              <p className="text-[11px] text-text-muted">Được huấn luyện trực tiếp trên giáo trình chuẩn</p>
+              <p className="text-2xs text-text-muted">Được huấn luyện trực tiếp trên giáo trình chuẩn</p>
             </div>
           </div>
 
@@ -291,7 +297,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                     : "bg-bg-surface border border-border-primary text-text-primary"
                 }`}>
                   <SimpleMarkdown content={msg.text} />
-                  <div className={`text-[9px] mt-1.5 font-mono ${msg.sender === "user" ? "text-bg-card/70 text-right" : "text-text-muted"}`}>
+                  <div className={`text-2xs mt-1.5 font-mono ${msg.sender === "user" ? "text-bg-card/70 text-right" : "text-text-muted"}`}>
                     {msg.time}
                   </div>
                 </div>
@@ -309,7 +315,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
           <div className="p-3 bg-bg-surface border-t border-border-primary space-y-2">
             {/* Quick Prompt Chips for Teacher Conversation Flow */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              <span className="text-[10px] font-mono text-text-muted shrink-0">Hỏi nhanh:</span>
+              <span className="text-2xs font-mono text-text-muted shrink-0">Hỏi nhanh:</span>
               {[
                 "Giải thích đơn giản hơn",
                 "Cho ví dụ thực tế khác",
@@ -322,7 +328,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                   onClick={() => {
                     setChatInput(chip);
                   }}
-                  className="px-2.5 py-1 text-[10px] bg-bg-card hover:bg-bg-surface border border-border-primary rounded-full text-text-muted hover:text-text-primary whitespace-nowrap transition cursor-pointer"
+                  className="px-2.5 py-1 text-2xs bg-bg-card hover:bg-bg-surface border border-border-primary rounded-full text-text-muted hover:text-text-primary whitespace-nowrap transition cursor-pointer"
                 >
                   {chip}
                 </button>

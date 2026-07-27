@@ -153,7 +153,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 <div className="w-10 h-10 rounded-xl bg-brand-info/10 text-brand-info flex items-center justify-center font-bold">
                   <Brain className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20">
+                <span className="text-2xs font-mono font-medium px-2 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20">
                   Phổ biến nhất
                 </span>
               </div>
@@ -184,7 +184,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 <div className="w-10 h-10 rounded-xl bg-text-primary text-bg-app flex items-center justify-center font-bold">
                   <Award className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-mono text-text-muted">
+                <span className="text-2xs font-mono text-text-muted">
                   Phủ {chaptersWithQuestions}/{chapters.length} chương
                 </span>
               </div>
@@ -200,13 +200,13 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
               {/* Chọn quy mô đề (chặn nổi bọt để không kích hoạt vào thi ngay) */}
               <div onClick={(e) => e.stopPropagation()} className="pt-1">
-                <span className="text-[10px] text-text-muted font-mono block mb-1">Quy mô đề:</span>
+                <span className="text-2xs text-text-muted font-mono block mb-1">Quy mô đề:</span>
                 <div className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60 w-fit">
                   {[25, 40, 50].map((n) => (
                     <button
                       key={n}
                       onClick={() => setMockCount(n)}
-                      className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition ${
+                      className={`px-2.5 py-0.5 rounded text-2xs font-medium transition ${
                         mockCount === n
                           ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary"
                           : "text-text-muted hover:text-text-primary"
@@ -237,7 +237,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 <div className="w-10 h-10 rounded-xl bg-brand-warning/10 text-brand-warning flex items-center justify-center font-bold">
                   <RotateCcw className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning font-semibold">
+                <span className="text-2xs font-mono px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning font-semibold">
                   {incorrectCount} câu sai
                 </span>
               </div>
@@ -291,7 +291,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
               <button
                 key={n}
                 onClick={() => setRandomCount(n)}
-                className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
+                className={`px-2.5 py-1 rounded text-2xs font-medium transition ${
                   randomCount === n
                     ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary"
                     : "text-text-muted hover:text-text-primary"
@@ -330,13 +330,13 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
               {/* Bộ chọn số câu mỗi đề */}
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-text-muted font-mono">Số câu:</span>
+                <span className="text-2xs text-text-muted font-mono">Số câu:</span>
                 <div className="flex items-center gap-0.5 bg-bg-surface p-0.5 rounded-lg border border-border-primary/60">
                   {[5, 10, 15, 0].map((n) => (
                     <button
                       key={n}
                       onClick={() => setChapterCount(n)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+                      className={`px-2 py-0.5 rounded text-2xs font-medium transition ${
                         chapterCount === n
                           ? "bg-bg-card text-text-primary shadow-[0_1px_1px_rgba(0,0,0,0.03)] border border-border-primary"
                           : "text-text-muted hover:text-text-primary"
@@ -349,7 +349,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
               </div>
             </div>
 
-            <p className="text-[11px] text-text-muted leading-relaxed">
+            <p className="text-2xs text-text-muted leading-relaxed">
               Học xong chương nào, giải đề riêng chương đó để củng cố. Chương được gợi ý làm tiếp có viền xanh.
             </p>
 
@@ -377,14 +377,14 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         className={`space-y-1 min-w-0 flex-1 text-left ${isEmpty ? "cursor-default" : "cursor-pointer"}`}
                       >
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-mono text-brand-info font-semibold">Chương {ch.id}</span>
+                          <span className="text-2xs font-mono text-brand-info font-semibold">Chương {ch.id}</span>
                           {isSuggested && !isEmpty && (
-                            <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
+                            <span className="text-2xs font-mono uppercase px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" /> Nên làm tiếp
                             </span>
                           )}
                           {accuracy !== null && (
-                            <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${
+                            <span className={`text-2xs font-mono px-1.5 py-0.5 rounded border ${
                               accuracy >= 80
                                 ? "bg-brand-success/10 text-brand-success border-brand-success/20"
                                 : accuracy >= 50
@@ -396,7 +396,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                           )}
                         </div>
                         <div className="text-xs font-medium text-text-primary truncate">{ch.title}</div>
-                        <div className="text-[10px] text-text-muted font-mono">
+                        <div className="text-2xs text-text-muted font-mono">
                           {isEmpty ? "Chưa có câu hỏi" : `${available} câu có sẵn • đã làm ${solved} câu`}
                         </div>
                       </button>
@@ -406,18 +406,18 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         <button
                           onClick={() => setGenChapter({ id: ch.id, title: ch.title })}
                           title={`Dùng AI tạo câu hỏi cho Chương ${ch.id}`}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info/10 transition cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-2xs font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info/10 transition cursor-pointer"
                         >
                           <Sparkles className="w-3 h-3" />
                           <span className="hidden sm:inline">{isEmpty ? "Tạo bằng AI" : "Tạo thêm"}</span>
                         </button>
 
                         {isEmpty ? (
-                          <span className="text-[10px] text-text-muted font-mono hidden sm:inline">Chưa có đề</span>
+                          <span className="text-2xs text-text-muted font-mono hidden sm:inline">Chưa có đề</span>
                         ) : (
                           <button
                             onClick={() => handleStartChapter(ch.id)}
-                            className="flex items-center gap-1 text-[10px] font-mono text-brand-info cursor-pointer"
+                            className="flex items-center gap-1 text-2xs font-mono text-brand-info cursor-pointer"
                           >
                             <span className="hidden sm:inline">Giải {willDo} câu</span>
                             <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-brand-info group-hover:translate-x-0.5 transition-transform" />

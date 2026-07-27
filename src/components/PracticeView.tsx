@@ -403,7 +403,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                exam.examType === "topic" ? `Luyện tập Chủ đề ${exam.topicId}` :
                exam.examType === "random" ? "Luyện tập Ngẫu nhiên" : "Luyện tập theo Thứ tự gốc"}
             </h1>
-            <p className="text-[11px] text-text-muted mt-0.5 font-sans">
+            <p className="text-2xs text-text-muted mt-0.5 font-sans">
               {exam.isSubmitted ? "Xem lại đáp án và phân tích lý luận từ hệ thống AI" : `Phiên ôn luyện: ${examQuestions.length} câu hỏi lý thuyết`}
             </p>
           </div>
@@ -490,28 +490,28 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
           {/* 4 Core Summary Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-[10px] font-mono uppercase text-text-muted">Kết quả bài thi</span>
+              <span className="text-2xs font-mono uppercase text-text-muted">Kết quả bài thi</span>
               <p className="text-lg font-display font-semibold text-text-primary">
                 {correctCount} / {examQuestions.length} <span className="text-xs font-sans font-normal text-text-muted">đúng</span>
               </p>
             </div>
 
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-[10px] font-mono uppercase text-text-muted">Khái niệm đã thông thạo</span>
+              <span className="text-2xs font-mono uppercase text-text-muted">Khái niệm đã thông thạo</span>
               <p className="text-lg font-display font-semibold text-brand-success">
                 +{Math.max(1, Math.floor(correctCount / 3))} <span className="text-xs font-sans font-normal text-text-muted">khái niệm</span>
               </p>
             </div>
 
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-[10px] font-mono uppercase text-text-muted">Hiểu sai đã sửa</span>
+              <span className="text-2xs font-mono uppercase text-text-muted">Hiểu sai đã sửa</span>
               <p className="text-lg font-display font-semibold text-brand-warning">
                 {incorrectCount > 0 ? "1 hiểu sai" : "0 bẫy sai"}
               </p>
             </div>
 
             <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-[10px] font-mono uppercase text-text-muted">Độ ghi nhớ dự đoán</span>
+              <span className="text-2xs font-mono uppercase text-text-muted">Độ ghi nhớ dự đoán</span>
               <p className="text-lg font-display font-semibold text-brand-info">
                 71% &rarr; {Math.min(96, 71 + Math.round((correctCount / examQuestions.length) * 18))}%
               </p>
@@ -535,7 +535,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <span className="bg-bg-surface border border-border-primary text-text-secondary text-xs font-medium px-2.5 py-0.5 rounded-md whitespace-nowrap">
                     Câu {currentIdx + 1} / {examQuestions.length}
                   </span>
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                  <span className={`text-2xs font-medium px-2 py-0.5 rounded-full border ${
                     activeQuestion.difficulty === "Dễ" ? "bg-brand-success-bg text-brand-success border-brand-success-border/30" :
                     activeQuestion.difficulty === "Trung bình" ? "bg-brand-info-bg text-brand-info border-brand-info-border/30" :
                     activeQuestion.difficulty === "Khó" ? "bg-brand-warning-bg text-brand-warning border-brand-warning-border/30" :
@@ -543,7 +543,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   } whitespace-nowrap`}>
                     Mức {activeQuestion.difficulty}
                   </span>
-                  <span className="text-[11px] text-text-muted font-mono hidden sm:inline">
+                  <span className="text-2xs text-text-muted font-mono hidden sm:inline">
                     ID: #{activeQuestion.id}
                   </span>
                 </div>
@@ -569,7 +569,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           xuống ba dòng ở khung 375px, đẩy cả hàng đầu thẻ thành một mớ rối.
                           Vẫn có nhãn cho trình đọc màn hình và cho chuột dừng lại. */}
                       <span
-                        className="text-[10px] font-medium text-text-secondary flex items-center gap-1 whitespace-nowrap"
+                        className="text-2xs font-medium text-text-secondary flex items-center gap-1 whitespace-nowrap"
                         title="Giáo viên AI Coaching"
                       >
                         <Sparkles className="w-3 h-3 text-brand-success shrink-0" />
@@ -616,7 +616,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   Nay hạ nó xuống đúng vai trò ngữ cảnh: chữ thường, không tô đậm, màu nhạt.
                   Câu hỏi trở thành thứ dẫn dắt, đúng như nó phải thế.
                 */}
-                <div className="text-[11px] text-text-muted flex flex-wrap items-center gap-1.5">
+                <div className="text-2xs text-text-muted flex flex-wrap items-center gap-1.5">
                   <span>Chủ đề: {topics.find(t => t.id === activeQuestion.topicId)?.title}</span>
                   {(() => {
                     const activeSubjectId = dbService.getActiveSubjectId();
@@ -821,7 +821,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                     Đo trên bản chạy thật trước khi sửa (28/07/2026): thân giải nghĩa 13px và
                     trải **87 ký tự mỗi dòng**, tức vừa là chữ nhỏ nhất trong các đoạn có
-                    nghĩa, vừa là dòng dài nhất màn hình. Còn nhãn dẫn nó thì để `text-[9px]`
+                    nghĩa, vừa là dòng dài nhất màn hình. Còn nhãn dẫn nó thì để `text-2xs`
                     viết hoa giãn chữ, cỡ chữ nhỏ nhất toàn sản phẩm.
 
                     Ba điều sửa, đều thuần thị giác:
@@ -871,7 +871,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   {/* Gia sư AI phân tích sâu theo đúng câu hỏi (gọi khi người học yêu cầu) */}
                   {aiExplanations[activeQuestion.id] ? (
                     <div className="space-y-1.5">
-                      <span className="text-brand-info font-semibold uppercase tracking-wider text-[9px] block flex items-center gap-1">
+                      <span className="text-brand-info font-semibold uppercase tracking-wider text-2xs block flex items-center gap-1">
                         <Sparkles className="w-3.5 h-3.5 text-brand-info" />
                         Gia sư AI phân tích sâu:
                       </span>
@@ -884,7 +884,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <button
                         onClick={() => handleRequestAIExplanation(activeQuestion.id)}
                         disabled={aiLoading[activeQuestion.id]}
-                        className="bg-brand-info/10 text-brand-info border border-brand-info/30 text-[11px] font-semibold px-4 py-2 rounded-lg hover:bg-brand-info/20 transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="bg-brand-info/10 text-brand-info border border-brand-info/30 text-2xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-info/20 transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>{aiLoading[activeQuestion.id] ? "Đang phân tích..." : "Nhờ gia sư AI phân tích sâu"}</span>
@@ -892,7 +892,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     </div>
                   )}
                   {aiError[activeQuestion.id] && (
-                    <p className="text-[11px] text-brand-error">{aiError[activeQuestion.id]}</p>
+                    <p className="text-2xs text-brand-error">{aiError[activeQuestion.id]}</p>
                   )}
                 </div>
               )}
@@ -914,15 +914,15 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   Chỉ hiện khi chưa nộp bài, vì lúc xem lại thì không còn chọn đáp án nữa.
                 */}
                 {!exam.isSubmitted && (
-                  <div className="text-[11px] text-text-muted hidden sm:flex items-center gap-1.5">
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">A</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">B</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">C</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">D</kbd>
+                  <div className="text-2xs text-text-muted hidden sm:flex items-center gap-1.5">
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-2xs">A</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-2xs">B</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-2xs">C</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-2xs">D</kbd>
                     <span>để chọn</span>
                     <span className="text-border-primary">•</span>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">←</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-[10px]">→</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-2xs">←</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded font-mono text-2xs">→</kbd>
                     <span>để chuyển câu</span>
                   </div>
                 )}
@@ -953,7 +953,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <Sparkles className="w-4 h-4 text-brand-success animate-pulse" />
                       <span>Bài giảng giải thích chi tiết bằng AI (Trực tuyến)</span>
                     </h4>
-                    <p className="text-[11px] text-text-secondary leading-relaxed max-w-xl font-sans">
+                    <p className="text-2xs text-text-secondary leading-relaxed max-w-xl font-sans">
                       Sử dụng trí tuệ nhân tạo Gemini để giải mã câu hỏi theo **Mức độ giải thích** được chọn bên dưới. AI phân tích sâu bẫy tư duy và các đáp án nhiễu.
                     </p>
                   </div>
@@ -961,7 +961,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <button 
                     disabled={aiLoading[activeQuestion.id]}
                     onClick={() => handleRequestAIExplanation(activeQuestion.id, explanationLevel)}
-                    className="shrink-0 bg-text-primary hover:opacity-95 text-bg-card disabled:opacity-50 text-[11px] font-medium px-4 py-2 rounded-lg transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="shrink-0 bg-text-primary hover:opacity-95 text-bg-card disabled:opacity-50 text-2xs font-medium px-4 py-2 rounded-lg transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{aiExplanations[activeQuestion.id] ? "Làm mới bài giảng AI" : "Yêu cầu Trực tuyến"}</span>
@@ -991,13 +991,13 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-xs font-sans">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-text-muted text-[10px] uppercase font-mono font-bold">Chiến lược sư phạm</span>
-                            <span className="bg-brand-success-bg text-brand-success px-2 py-0.5 rounded text-[10px] font-semibold border border-brand-success-border/20">
+                            <span className="text-text-muted text-2xs uppercase font-mono font-bold">Chiến lược sư phạm</span>
+                            <span className="bg-brand-success-bg text-brand-success px-2 py-0.5 rounded text-2xs font-semibold border border-brand-success-border/20">
                               {aiPipelineMetadata[activeQuestion.id].strategyUsed}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-text-muted text-[10px] uppercase font-mono font-bold">Xác suất đoán bừa</span>
+                            <span className="text-text-muted text-2xs uppercase font-mono font-bold">Xác suất đoán bừa</span>
                             <span className={`font-semibold font-mono ${
                               aiPipelineMetadata[activeQuestion.id].guessingProbability >= 0.6 ? "text-brand-error" : "text-text-secondary"
                             }`}>
@@ -1006,7 +1006,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           </div>
                           {/* Guessing warning */}
                           {aiPipelineMetadata[activeQuestion.id].guessingProbability >= 0.6 && (
-                            <p className="text-[10px] text-brand-error leading-relaxed">
+                            <p className="text-2xs text-brand-error leading-relaxed">
                               ⚠️ Phát hiện hành vi trả lời siêu tốc hoặc chưa vững lý thuyết nền tảng. Hãy làm chậm lại nhé!
                             </p>
                           )}
@@ -1014,17 +1014,17 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                         <div className="space-y-3">
                           <div>
-                            <span className="text-text-muted text-[10px] uppercase font-mono font-bold block mb-1">Kiểm định học thuật</span>
-                            <div className="flex items-center gap-1.5 text-[11px]">
+                            <span className="text-text-muted text-2xs uppercase font-mono font-bold block mb-1">Kiểm định học thuật</span>
+                            <div className="flex items-center gap-1.5 text-2xs">
                               <span className="w-2 h-2 rounded-full bg-brand-success"></span>
                               <span className="text-text-secondary font-medium">Bằng chứng xác thực nguồn Slide</span>
                             </div>
                             {aiPipelineMetadata[activeQuestion.id].unmasteredPrerequisites?.length > 0 ? (
-                              <div className="text-[10px] text-brand-warning leading-normal mt-1">
+                              <div className="text-2xs text-brand-warning leading-normal mt-1">
                                 ⚠️ Khuyết hụt lý thuyết tiên quyết: {aiPipelineMetadata[activeQuestion.id].unmasteredPrerequisites.join(", ")}
                               </div>
                             ) : (
-                              <div className="text-[10px] text-brand-success leading-normal mt-1">
+                              <div className="text-2xs text-brand-success leading-normal mt-1">
                                 ✓ Đã kiểm tra kiến thức tiên quyết (Đạt)
                               </div>
                             )}
@@ -1034,14 +1034,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         {/* Cross Subject Intelligence Alert Card */}
                         {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel && (
                           <div className="md:col-span-2 bg-brand-info-bg/5 border border-brand-info-border/20 p-3 rounded-lg space-y-1 mt-1">
-                            <div className="flex items-center gap-1 text-[10px] font-bold text-brand-info uppercase font-mono">
+                            <div className="flex items-center gap-1 text-2xs font-bold text-brand-info uppercase font-mono">
                               <Brain className="w-3.5 h-3.5" />
                               <span>Kết nối tư duy liên môn (Cross-Subject Intelligence)</span>
                             </div>
-                            <p className="text-[11px] text-text-primary font-medium">
+                            <p className="text-2xs text-text-primary font-medium">
                               Liên hệ: {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel.connectedSubject} &rarr; {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel.topic}
                             </p>
-                            <p className="text-[10px] text-text-muted leading-relaxed">
+                            <p className="text-2xs text-text-muted leading-relaxed">
                               {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel.explanation}
                             </p>
                           </div>
@@ -1051,7 +1051,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                     {/* The main AI Lecture body */}
                     <div className="bg-bg-card p-5 rounded-lg border border-border-primary/60 text-xs text-text-secondary leading-relaxed font-sans prose dark:prose-invert max-w-none">
-                      <div className="flex items-center gap-1.5 mb-3 text-[10px] uppercase font-mono text-brand-info font-bold">
+                      <div className="flex items-center gap-1.5 mb-3 text-2xs uppercase font-mono text-brand-info font-bold">
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Bài giảng AI (Góc nhìn: {
                           explanationLevel === "simple" ? "Dễ hiểu" :
@@ -1079,7 +1079,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   </div>
                   
                   {/* Multi-Level Explanation Switcher (6 Tiers) */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1 bg-bg-surface border border-border-primary rounded-xl p-1 text-[10px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1 bg-bg-surface border border-border-primary rounded-xl p-1 text-2xs">
                     {[
                       { key: "simple", label: "Dễ hiểu 💡" },
                       { key: "academic", label: "Chuẩn đại học 🎓" },
@@ -1159,7 +1159,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                             Đáp án đúng: {activeQuestion.correctAnswer.toUpperCase()} - {activeQuestion.options[activeQuestion.correctAnswer]}
                           </span>
                           {isMetadataFound && (
-                            <span className="text-[9px] bg-brand-success-bg text-brand-success px-2 py-0.5 rounded font-mono border border-brand-success-border/20">
+                            <span className="text-2xs bg-brand-success-bg text-brand-success px-2 py-0.5 rounded font-mono border border-brand-success-border/20">
                               Bản đồ tri thức: Mapped KB
                             </span>
                           )}
@@ -1169,7 +1169,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         </div>
                         
                         {conceptNode?.explanation?.analogy && (
-                          <div className="text-[11px] italic text-text-muted pl-2.5 border-l-2 border-text-muted">
+                          <div className="text-2xs italic text-text-muted pl-2.5 border-l-2 border-text-muted">
                             💡 Phép ẩn dụ: {conceptNode.explanation.analogy}
                           </div>
                         )}
@@ -1180,22 +1180,22 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {conceptNode.teaching?.misconception && (
                             <div className="border border-brand-error-border/30 bg-brand-error-bg/5 p-3 rounded-xl space-y-1">
-                              <span className="text-[9px] font-bold text-brand-error uppercase font-mono block">Cảnh báo hiểu sai</span>
-                              <p className="text-[11px] text-text-primary leading-relaxed font-sans">{conceptNode.teaching.misconception}</p>
+                              <span className="text-2xs font-bold text-brand-error uppercase font-mono block">Cảnh báo hiểu sai</span>
+                              <p className="text-2xs text-text-primary leading-relaxed font-sans">{conceptNode.teaching.misconception}</p>
                             </div>
                           )}
 
                           {conceptNode.teaching?.counterExample && (
                             <div className="border border-brand-warning-border/30 bg-brand-warning-bg/5 p-3 rounded-xl space-y-1">
-                              <span className="text-[9px] font-bold text-brand-warning uppercase font-mono block">Ví dụ phản chứng tránh học vẹt</span>
-                              <p className="text-[11px] text-text-primary leading-relaxed font-sans">{conceptNode.teaching.counterExample}</p>
+                              <span className="text-2xs font-bold text-brand-warning uppercase font-mono block">Ví dụ phản chứng tránh học vẹt</span>
+                              <p className="text-2xs text-text-primary leading-relaxed font-sans">{conceptNode.teaching.counterExample}</p>
                             </div>
                           )}
 
                           {conceptNode.teaching?.learningObjective && (
                             <div className="border border-brand-info-border/30 bg-brand-info-bg/5 p-3 rounded-xl space-y-1 sm:col-span-2">
-                              <span className="text-[9px] font-bold text-brand-info uppercase font-mono block">Chuẩn đầu ra năng lực</span>
-                              <p className="text-[11px] text-text-primary leading-relaxed font-sans">Sau khi ôn tập xong khái niệm này, sinh viên phải: {conceptNode.teaching.learningObjective}</p>
+                              <span className="text-2xs font-bold text-brand-info uppercase font-mono block">Chuẩn đầu ra năng lực</span>
+                              <p className="text-2xs text-text-primary leading-relaxed font-sans">Sau khi ôn tập xong khái niệm này, sinh viên phải: {conceptNode.teaching.learningObjective}</p>
                             </div>
                           )}
                         </div>
@@ -1215,43 +1215,43 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     const relatedNodes = graphNodes.filter(g => conceptNode.dependencies?.relatedConcepts?.includes(g.concept) || conceptNode.dependencies?.relatedConcepts?.includes(g.id));
                     
                     return (
-                      <div className="border border-border-primary/60 p-4 rounded-lg space-y-2 text-[11px] font-sans">
+                      <div className="border border-border-primary/60 p-4 rounded-lg space-y-2 text-2xs font-sans">
                         <span className="text-text-primary font-semibold block">Bản đồ liên kết tri thức</span>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                           <div className="bg-bg-surface/50 border border-border-primary/30 p-2.5 rounded-md">
-                            <span className="text-text-muted font-mono text-[9px] block uppercase tracking-wider mb-1">Tri thức tiên quyết:</span>
+                            <span className="text-text-muted font-mono text-2xs block uppercase tracking-wider mb-1">Tri thức tiên quyết:</span>
                             {reqNodes.length > 0 ? (
                               <div className="flex flex-wrap gap-1.5">
                                 {reqNodes.map(rn => (
-                                  <span key={rn.id} className="bg-brand-warning-bg/40 text-brand-warning border border-brand-warning-border/20 text-[10px] px-1.5 py-0.5 rounded">
+                                  <span key={rn.id} className="bg-brand-warning-bg/40 text-brand-warning border border-brand-warning-border/20 text-2xs px-1.5 py-0.5 rounded">
                                     {rn.concept}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-text-muted text-[10px]">Không có yêu cầu đặc thù</span>
+                              <span className="text-text-muted text-2xs">Không có yêu cầu đặc thù</span>
                             )}
                           </div>
 
                           <div className="bg-bg-surface/50 border border-border-primary/30 p-2.5 rounded-md">
-                            <span className="text-text-muted font-mono text-[9px] block uppercase tracking-wider mb-1">Khái niệm hiện tại:</span>
-                            <span className="bg-brand-info-bg text-brand-info border border-brand-info-border/20 text-[10px] px-1.5 py-0.5 rounded font-medium">
+                            <span className="text-text-muted font-mono text-2xs block uppercase tracking-wider mb-1">Khái niệm hiện tại:</span>
+                            <span className="bg-brand-info-bg text-brand-info border border-brand-info-border/20 text-2xs px-1.5 py-0.5 rounded font-medium">
                               {conceptNode.concept}
                             </span>
                           </div>
 
                           <div className="bg-bg-surface/50 border border-border-primary/30 p-2.5 rounded-md">
-                            <span className="text-text-muted font-mono text-[9px] block uppercase tracking-wider mb-1">Khái niệm liên quan:</span>
+                            <span className="text-text-muted font-mono text-2xs block uppercase tracking-wider mb-1">Khái niệm liên quan:</span>
                             {relatedNodes.length > 0 || conceptNode.dependencies?.relatedConcepts?.length ? (
                               <div className="flex flex-wrap gap-1.5">
                                 {(relatedNodes.length > 0 ? relatedNodes.map(rn => rn.concept) : conceptNode.dependencies?.relatedConcepts || []).slice(0, 2).map((c, i) => (
-                                  <span key={i} className="bg-bg-card border border-border-primary text-text-secondary text-[10px] px-1.5 py-0.5 rounded">
+                                  <span key={i} className="bg-bg-card border border-border-primary text-text-secondary text-2xs px-1.5 py-0.5 rounded">
                                     {c}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-text-muted text-[10px]">Chưa ánh xạ liên kết</span>
+                              <span className="text-text-muted text-2xs">Chưa ánh xạ liên kết</span>
                             )}
                           </div>
                         </div>
@@ -1261,7 +1261,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   return null;
                 })()}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-2xs pt-1">
                   <div className="border border-border-primary/60 p-3 rounded-lg">
                     <span className="text-text-muted block mb-0.5 font-mono">Ánh xạ tài liệu chính thức:</span>
                     <span className="font-medium text-text-secondary">{activeQuestion.sourcePdf} (Slide trang {activeQuestion.sourcePage})</span>
@@ -1307,11 +1307,11 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 </svg>
                 <div className="absolute flex flex-col items-center">
                   <span className="text-md font-mono font-bold text-text-primary">{scorePercent}%</span>
-                  <span className="text-[8px] text-text-muted font-mono uppercase">Đúng</span>
+                  <span className="text-2xs text-text-muted font-mono uppercase">Đúng</span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5 text-[11px] font-sans">
+              <div className="grid grid-cols-2 gap-1.5 text-2xs font-sans">
                 <div className="bg-brand-success-bg border border-brand-success-border/20 py-1.5 rounded-md text-brand-success font-medium">
                   Đúng: {correctCount}
                 </div>
@@ -1375,7 +1375,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               })}
             </div>
 
-            <div className="border-t border-border-primary/60 pt-3.5 space-y-2 text-[10px] text-text-muted font-mono">
+            <div className="border-t border-border-primary/60 pt-3.5 space-y-2 text-2xs text-text-muted font-mono">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-bg-card border border-border-primary rounded-sm" />
                 <span>Chưa trả lời</span>
@@ -1442,14 +1442,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 <button 
                   type="button"
                   onClick={() => setShowSubmitModal(false)}
-                  className="w-full sm:w-auto border border-border-primary hover:bg-bg-surface text-text-secondary text-[11px] font-medium px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer"
+                  className="w-full sm:w-auto border border-border-primary hover:bg-bg-surface text-text-secondary text-2xs font-medium px-3 py-1.5 rounded-lg transition duration-150 cursor-pointer"
                 >
                   Tiếp tục làm
                 </button>
                 <button 
                   type="button"
                   onClick={submitExam}
-                  className="w-full sm:w-auto bg-text-primary hover:opacity-95 text-bg-card text-[11px] font-medium px-4 py-1.5 rounded-lg transition duration-150 cursor-pointer"
+                  className="w-full sm:w-auto bg-text-primary hover:opacity-95 text-bg-card text-2xs font-medium px-4 py-1.5 rounded-lg transition duration-150 cursor-pointer"
                 >
                   Nộp & xem kết quả
                 </button>

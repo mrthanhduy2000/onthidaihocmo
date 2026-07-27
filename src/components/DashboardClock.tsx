@@ -44,13 +44,13 @@ export default function DashboardClock() {
           <span className="text-sm font-semibold font-mono tracking-wider text-text-primary">
             {timeStr}
           </span>
-          <span className="text-[10px] text-text-muted font-medium">
+          <span className="text-2xs text-text-muted font-medium">
             {weekdayStr}
           </span>
         </div>
-        <div className="flex justify-between items-center text-[10px] text-text-muted font-mono mt-0.5">
+        <div className="flex justify-between items-center text-2xs text-text-muted font-mono mt-0.5">
           <span>{dateStr}</span>
-          <span className="text-[9px] text-brand-info font-medium uppercase tracking-tight">
+          <span className="text-2xs text-brand-info font-medium uppercase tracking-tight">
             TP. Hồ Chí Minh
           </span>
         </div>

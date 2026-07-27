@@ -125,7 +125,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
               <p className="text-xs text-text-muted">
                 Bạn có thể giải đề riêng chương này ngay để củng cố kiến thức.
               </p>
-              {note && <p className="text-[11px] text-brand-warning pt-1">{note}</p>}
+              {note && <p className="text-2xs text-brand-warning pt-1">{note}</p>}
             </div>
             <div className="flex items-center justify-center gap-2 pt-1">
               <button
@@ -145,7 +145,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
         ) : (
           <>
             <div className="space-y-3 text-xs">
-              <div className="p-2.5 bg-brand-info/5 border border-brand-info/20 rounded-xl text-[11px] text-text-muted">
+              <div className="p-2.5 bg-brand-info/5 border border-brand-info/20 rounded-xl text-2xs text-text-muted">
                 Câu hỏi tạo ra sẽ được gán trọn vào <strong className="text-brand-info">Chương {chapterId} - {chapterTitle}</strong>.
               </div>
 
@@ -160,7 +160,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
                   placeholder="Để trống: AI tự soạn thêm câu mới từ nội dung chương đã có. Hoặc dán tài liệu mới để AI bám sát tài liệu đó."
                   className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-text-primary focus:outline-none resize-y leading-relaxed"
                 />
-                <div className="text-[10px] text-text-muted mt-1 font-mono">
+                <div className="text-2xs text-text-muted mt-1 font-mono">
                   {materialText.trim().length > 0
                     ? `${materialText.trim().length.toLocaleString("vi-VN")} ký tự`
                     : "Để trống cũng được — AI sẽ tự sinh thêm từ ngân hàng câu hỏi của chương này."}
@@ -188,7 +188,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
 
               {isBusy && (
                 <div className="p-3 bg-bg-surface border border-border-primary rounded-xl space-y-2 font-mono">
-                  <div className="flex justify-between text-[10px] text-brand-info">
+                  <div className="flex justify-between text-2xs text-brand-info">
                     <span>{step}</span>
                     <span>{progress}%</span>
                   </div>
@@ -199,7 +199,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
               )}
 
               {error && (
-                <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-[11px] text-brand-error flex items-start gap-2">
+                <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-2xs text-brand-error flex items-start gap-2">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>

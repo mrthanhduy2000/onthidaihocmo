@@ -80,7 +80,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           <span className="font-bold flex items-center gap-1.5 text-brand-info">
             <Brain className="w-3.5 h-3.5" /> Adaptive Exam
           </span>
-          <span className="text-[10px] text-text-muted">Định hướng lỗ hổng kiến thức & trí nhớ</span>
+          <span className="text-2xs text-text-muted">Định hướng lỗ hổng kiến thức & trí nhớ</span>
         </button>
 
         <button
@@ -92,7 +92,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           <span className="font-bold flex items-center gap-1.5 text-text-primary">
             <ShieldCheck className="w-3.5 h-3.5" /> Mock Exam
           </span>
-          <span className="text-[10px] text-text-muted">Mô phỏng chuẩn cấu trúc kỳ thi thật</span>
+          <span className="text-2xs text-text-muted">Mô phỏng chuẩn cấu trúc kỳ thi thật</span>
         </button>
 
         <button
@@ -104,7 +104,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           <span className="font-bold flex items-center gap-1.5 text-brand-warning">
             <RefreshCw className="w-3.5 h-3.5" /> Revision Exam
           </span>
-          <span className="text-[10px] text-text-muted">Ưu tiên câu từng sai & điểm chưa thông thạo</span>
+          <span className="text-2xs text-text-muted">Ưu tiên câu từng sai & điểm chưa thông thạo</span>
         </button>
 
         <button
@@ -116,7 +116,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           <span className="font-bold flex items-center gap-1.5 text-brand-success">
             <Layers className="w-3.5 h-3.5" /> Chapter Focus
           </span>
-          <span className="text-[10px] text-text-muted">Chuyên sâu 100% vào 1 chương chọn lọc</span>
+          <span className="text-2xs text-text-muted">Chuyên sâu 100% vào 1 chương chọn lọc</span>
         </button>
       </div>
 
@@ -142,14 +142,14 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           <div className="flex items-center gap-2 text-xs font-semibold text-text-primary">
             <FileCheck className="w-4 h-4 text-brand-success" />
             <span>Báo cáo kiểm định đề thi</span>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+            <span className={`px-2 py-0.5 rounded text-2xs font-mono font-bold ${
               reviewResult.passed ? "bg-brand-success/10 text-brand-success border border-brand-success/20" : "bg-brand-warning/10 text-brand-warning border border-brand-warning/20"
             }`}>
               Điểm: {reviewResult.overallScore}/100 ({reviewResult.passed ? "ĐẠT" : "CẢNH BÁO"})
             </span>
           </div>
 
-          <div className="text-[10px] font-mono text-text-muted">
+          <div className="text-2xs font-mono text-text-muted">
             Thời gian dự kiến: <strong className="text-text-primary">{spec.plannedTimeMinutes} phút</strong>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                   isPass ? "bg-brand-success/5 border-brand-success/20 text-brand-success" : "bg-brand-warning/5 border-brand-warning/20 text-brand-warning"
                 }`}
               >
-                <div className="text-[9px] font-mono uppercase text-text-muted">{key}</div>
+                <div className="text-2xs font-mono uppercase text-text-muted">{key}</div>
                 <div className="text-xs font-bold mt-0.5 flex items-center justify-center gap-1">
                   {isPass ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
                   <span>{check.status}</span>
@@ -183,13 +183,13 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-4 space-y-3">
           <h4 className="text-xs font-semibold text-text-primary flex items-center justify-between">
             <span>Thang đo Bloom</span>
-            <span className="font-mono text-[10px] text-text-muted">Mục tiêu: 30-30-20-15-5</span>
+            <span className="font-mono text-2xs text-text-muted">Mục tiêu: 30-30-20-15-5</span>
           </h4>
 
           <div className="space-y-2 text-xs">
             {Object.entries(spec.bloomDistribution).map(([bloom, data]) => (
               <div key={bloom} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-2xs">
                   <span className="text-text-muted">{bloom}</span>
                   <span className="font-mono font-medium text-text-primary">{data.count} câu ({data.percentage}%)</span>
                 </div>
@@ -205,13 +205,13 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-4 space-y-3">
           <h4 className="text-xs font-semibold text-text-primary flex items-center justify-between">
             <span>Phân bổ Độ khó</span>
-            <span className="font-mono text-[10px] text-text-muted">Mục tiêu: 25-50-25</span>
+            <span className="font-mono text-2xs text-text-muted">Mục tiêu: 25-50-25</span>
           </h4>
 
           <div className="space-y-2 text-xs">
             {Object.entries(spec.difficultyDistribution).map(([diff, data]) => (
               <div key={diff} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-2xs">
                   <span className="text-text-muted">{diff}</span>
                   <span className="font-mono font-medium text-text-primary">{data.count} câu ({data.percentage}%)</span>
                 </div>
@@ -232,13 +232,13 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-4 space-y-3">
           <h4 className="text-xs font-semibold text-text-primary flex items-center justify-between">
             <span>Cơ cấu dạng bài</span>
-            <span className="font-mono text-[10px] text-text-muted">Đa dạng hóa 100%</span>
+            <span className="font-mono text-2xs text-text-muted">Đa dạng hóa 100%</span>
           </h4>
 
           <div className="space-y-2 text-xs">
             {Object.entries(spec.blueprintDistribution).map(([bp, data]) => (
               <div key={bp} className="space-y-1">
-                <div className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center justify-between text-2xs">
                   <span className="text-text-muted truncate max-w-[150px]">{bp}</span>
                   <span className="font-mono font-medium text-text-primary">{data.count} câu ({data.percentage}%)</span>
                 </div>
@@ -264,10 +264,10 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
               key={idx} 
               className="shrink-0 p-2.5 bg-bg-surface border border-border-primary/60 rounded-xl text-center space-y-1 min-w-[110px]"
             >
-              <div className="text-[10px] font-mono text-brand-info font-bold">Câu {q.questionIndex}</div>
+              <div className="text-2xs font-mono text-brand-info font-bold">Câu {q.questionIndex}</div>
               <div className="text-xs font-semibold text-text-primary">{q.difficulty}</div>
-              <div className="text-[9px] font-mono text-text-muted">{q.bloom}</div>
-              <div className="text-[9px] text-text-primary/80 truncate">{q.blueprint}</div>
+              <div className="text-2xs font-mono text-text-muted">{q.bloom}</div>
+              <div className="text-2xs text-text-primary/80 truncate">{q.blueprint}</div>
             </div>
           ))}
         </div>
@@ -277,12 +277,12 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
       <div className="space-y-3 pt-2">
         <h4 className="text-xs font-semibold text-text-primary flex items-center justify-between">
           <span>Danh sách Question Specifications ({spec.questionSpecs.length} chỉ tiêu)</span>
-          <span className="text-[11px] text-text-muted">Sinh bởi bộ thiết kế đề thi</span>
+          <span className="text-2xs text-text-muted">Sinh bởi bộ thiết kế đề thi</span>
         </h4>
 
         <div className="overflow-x-auto border border-border-primary/60 rounded-xl">
           <table className="w-full text-left text-xs">
-            <thead className="bg-bg-surface text-text-muted font-mono uppercase text-[10px] border-b border-border-primary/60">
+            <thead className="bg-bg-surface text-text-muted font-mono uppercase text-2xs border-b border-border-primary/60">
               <tr>
                 <th className="p-3">#</th>
                 <th className="p-3">Khái niệm</th>
@@ -300,7 +300,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                   <td className="p-3 font-medium text-text-primary">{q.concept}</td>
                   <td className="p-3 font-mono text-text-muted">{q.bloom}</td>
                   <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                    <span className={`px-2 py-0.5 rounded text-2xs font-mono font-bold ${
                       q.difficulty === "Dễ" ? "bg-brand-success/10 text-brand-success" : q.difficulty === "Trung bình" ? "bg-brand-warning/10 text-brand-warning" : "bg-brand-error/10 text-brand-error"
                     }`}>
                       {q.difficulty}
@@ -308,7 +308,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                   </td>
                   <td className="p-3 text-text-muted">{q.blueprint}</td>
                   <td className="p-3 font-mono text-text-muted">Chương {q.chapterId}</td>
-                  <td className="p-3 text-text-muted text-[11px]">{q.reason}</td>
+                  <td className="p-3 text-text-muted text-2xs">{q.reason}</td>
                 </tr>
               ))}
             </tbody>

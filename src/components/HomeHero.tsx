@@ -75,7 +75,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
             </div>
             <div>
               <h3 className="text-xs font-semibold text-text-primary">Gợi ý nghỉ ngơi 5 phút</h3>
-              <p className="text-[11px] text-text-muted mt-0.5">
+              <p className="text-2xs text-text-muted mt-0.5">
                 Bạn đã học hơn 30 phút liên tục. Tạm nghỉ 5 phút giúp não bộ củng cố vết in ký ức tốt hơn.
               </p>
             </div>
@@ -98,7 +98,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
               <span>{timeOfRhythm.label} • {timeOfRhythm.strategy}</span>
             </span>
 
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg-surface text-text-muted border border-border-primary text-[11px] font-mono rounded-full">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg-surface text-text-muted border border-border-primary text-2xs font-mono rounded-full">
               <Clock className="w-3 h-3 text-brand-info" />
               <span>{action.estimatedTimeMinutes} phút</span>
             </span>
@@ -117,7 +117,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
               <span className="font-semibold text-text-primary">Tiến trình tới kỳ thi:</span>
               <span className="text-brand-warning font-bold">Còn {daysLeft} ngày</span>
             </div>
-            <div className="flex items-center gap-3 text-[11px] text-text-muted">
+            <div className="flex items-center gap-3 text-2xs text-text-muted">
               <span>Đã hoàn thành: <strong className="text-text-primary">{completionPercent}%</strong></span>
               <span>•</span>
               <span>Sẵn sàng đi thi: <strong className="text-brand-success">{readiness}%</strong></span>
@@ -132,7 +132,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
                 style={{ width: `${readiness}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] font-sans">
+            <div className="flex items-center justify-between text-2xs font-sans">
               <span className="text-text-muted font-mono flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-success" />
                 <span>Độ tự tin: <strong className="text-text-primary font-medium">{confidenceText}</strong></span>

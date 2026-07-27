@@ -303,7 +303,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             <div className="flex items-center gap-2 pt-1">
               <span className="text-sm text-text-muted">{dbService.getActiveSubjectName()}</span>
               {isArchived && (
-                <span className="px-2 py-0.5 text-[10px] bg-text-muted/20 text-text-muted rounded-full">
+                <span className="px-2 py-0.5 text-2xs bg-text-muted/20 text-text-muted rounded-full">
                   Đã lưu trữ
                 </span>
               )}
@@ -352,11 +352,11 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
         {/* Progress & Countdown Bar */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 border-t border-border-primary/60">
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] text-text-muted block">Còn tới kỳ thi</span>
+            <span className="text-2xs text-text-muted block">Còn tới kỳ thi</span>
             <div className="flex items-center gap-2 pt-0.5">
               <Clock className="w-4 h-4 text-brand-warning shrink-0" />
               <span className="text-sm font-semibold text-brand-warning">Còn {remainingDays} ngày</span>
-              <span className="text-[10px] text-text-muted">{ngayThiTiengViet}</span>
+              <span className="text-2xs text-text-muted">{ngayThiTiengViet}</span>
             </div>
           </div>
 
@@ -367,7 +367,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             không ghi mốc theo tuần, nên chưa có gì để đo cho tử tế.
           */}
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] text-text-muted block">Nắm chắc kiến thức</span>
+            <span className="text-2xs text-text-muted block">Nắm chắc kiến thức</span>
             <div className="flex items-center justify-between pt-0.5">
               <span className="text-sm font-display font-semibold text-text-primary">{prediction.metricsBreakdown.masteryScore}%</span>
             </div>
@@ -378,24 +378,24 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             đúng mốc khởi động nguội 5,0, và hiện nó ra kèm biên độ trông y như một phép đo thật.
           */}
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] text-text-muted block">Điểm dự kiến</span>
+            <span className="text-2xs text-text-muted block">Điểm dự kiến</span>
             <div className="flex items-center justify-between pt-0.5">
               {daCoBaiLam ? (
                 <span className="text-sm font-display font-bold text-brand-info">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</span>
               ) : (
                 <span className="text-sm text-text-muted">Chưa đủ dữ liệu</span>
               )}
-              <span className="text-[10px] text-text-muted">Mục tiêu: {goal.targetScore.toFixed(1)}</span>
+              <span className="text-2xs text-text-muted">Mục tiêu: {goal.targetScore.toFixed(1)}</span>
             </div>
           </div>
 
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] text-text-muted block">Câu cần sửa</span>
+            <span className="text-2xs text-text-muted block">Câu cần sửa</span>
             <div className="flex items-center justify-between pt-0.5">
               <span className="text-sm font-semibold text-brand-warning">{prediction.metricsBreakdown.studyDebtCount} câu</span>
               <button 
                 onClick={() => onNavigateView("review")}
-                className="text-[10px] font-medium text-brand-info hover:underline cursor-pointer"
+                className="text-2xs font-medium text-brand-info hover:underline cursor-pointer"
               >
                 Sửa ngay &rarr;
               </button>
@@ -429,7 +429,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               <Icon className="w-3.5 h-3.5" />
               <span>{tab.label}</span>
               {tab.count !== undefined && (
-                <span className="px-1.5 py-0.2 text-[10px] rounded-full font-mono bg-bg-card text-text-muted">
+                <span className="px-1.5 py-0.2 text-2xs rounded-full font-mono bg-bg-card text-text-muted">
                   {tab.count}
                 </span>
               )}
@@ -571,28 +571,28 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center text-xs font-mono">
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Khái niệm</span>
+                  <span className="text-2xs text-text-muted uppercase block">Khái niệm</span>
                   <span className="font-semibold text-text-primary">{nutDangChon?.concept || "—"}</span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Chuyên đề</span>
+                  <span className="text-2xs text-text-muted uppercase block">Chuyên đề</span>
                   {/* `node.topic` giữ MÃ chuyên đề (ví dụ CB_T1.1), tra sang tên cho người đọc. */}
                   <span className="font-semibold text-brand-info">
                     {nutDangChon ? (topicMap.get(nutDangChon.topic)?.title || nutDangChon.topic) : "—"}
                   </span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Nguồn tài liệu</span>
+                  <span className="text-2xs text-text-muted uppercase block">Nguồn tài liệu</span>
                   <span className="font-semibold text-brand-info">
                     {nutDangChon ? `${nutDangChon.source || "Chưa ghi nguồn"}${nutDangChon.page ? ` (${nutDangChon.page})` : ""}` : "—"}
                   </span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Câu hỏi tương ứng</span>
+                  <span className="text-2xs text-text-muted uppercase block">Câu hỏi tương ứng</span>
                   <span className="font-semibold text-text-primary">{soLieuKhaiNiem.soCau} câu trong Ngân hàng</span>
                 </div>
                 <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-[10px] text-text-muted uppercase block">Sổ tay Câu sai</span>
+                  <span className="text-2xs text-text-muted uppercase block">Sổ tay Câu sai</span>
                   <span className={`font-semibold ${soLieuKhaiNiem.soCauSai > 0 ? "text-brand-warning" : "text-text-muted"}`}>
                     {soLieuKhaiNiem.soCauSai} câu cần sửa
                   </span>
@@ -638,10 +638,10 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="px-2 py-0.5 text-[10px] font-mono uppercase rounded-full bg-bg-card border border-border-primary text-text-muted">
+                    <span className="px-2 py-0.5 text-2xs font-mono uppercase rounded-full bg-bg-card border border-border-primary text-text-muted">
                       {res.type}
                     </span>
-                    <span className={`px-2 py-0.2 text-[10px] font-mono rounded-full font-bold ${
+                    <span className={`px-2 py-0.2 text-2xs font-mono rounded-full font-bold ${
                       res.status === "available" ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
                     }`}>
                       {res.status === "available" ? "Đã có ✓" : "Còn thiếu"}
@@ -650,7 +650,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
                   <h4 className="text-xs font-semibold text-text-primary leading-snug">{res.title}</h4>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-text-muted border-t border-border-primary/60 pt-2">
+                  <div className="flex items-center justify-between text-2xs font-mono text-text-muted border-t border-border-primary/60 pt-2">
                     <span>{res.conceptCount} khái niệm</span>
                     <span>{res.fileSize || "—"}</span>
                   </div>
@@ -684,12 +684,12 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   </div>
 
                   {item.missingConcepts.length > 0 ? (
-                    <div className="text-[11px] font-mono text-brand-warning flex items-center gap-1">
+                    <div className="text-2xs font-mono text-brand-warning flex items-center gap-1">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                       <span>Thiếu khái niệm: {item.missingConcepts.join(", ")}</span>
                     </div>
                   ) : (
-                    <span className="text-[11px] font-mono text-brand-success block">Đã phủ 100% khái niệm trọng tâm ✓</span>
+                    <span className="text-2xs font-mono text-brand-success block">Đã phủ 100% khái niệm trọng tâm ✓</span>
                   )}
                 </div>
               ))}
@@ -711,7 +711,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                     <span className="text-brand-success">Độ phủ: {ver.coveragePercentage}%</span>
                   </div>
                   <p className="text-text-primary font-sans">{ver.description}</p>
-                  <div className="flex items-center gap-4 text-[11px] text-text-muted pt-1 border-t border-border-primary/60">
+                  <div className="flex items-center gap-4 text-2xs text-text-muted pt-1 border-t border-border-primary/60">
                     <span>+ {ver.addedConceptsCount} khái niệm mới</span>
                     <span>- {ver.removedDuplicatesCount} khái niệm trùng lặp</span>
                   </div>
@@ -772,19 +772,19 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
           <div className="p-5 bg-bg-surface border border-border-primary rounded-xl grid grid-cols-2 sm:grid-cols-4 gap-4 text-center font-mono">
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Mức nắm chắc</span>
+              <span className="text-2xs text-text-muted uppercase block">Mức nắm chắc</span>
               <span className="text-xl font-bold text-brand-success">{snapshots[selectedSnapshotIdx].masteryPct}%</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Điểm dự báo</span>
+              <span className="text-2xs text-text-muted uppercase block">Điểm dự báo</span>
               <span className="text-xl font-bold text-brand-info">{snapshots[selectedSnapshotIdx].forecastScore.toFixed(1)}</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Sổ câu sai</span>
+              <span className="text-2xs text-text-muted uppercase block">Sổ câu sai</span>
               <span className="text-xl font-bold text-brand-warning">{snapshots[selectedSnapshotIdx].debtCount} câu</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Đã giải tổng cộng</span>
+              <span className="text-2xs text-text-muted uppercase block">Đã giải tổng cộng</span>
               <span className="text-xl font-bold text-text-primary">{snapshots[selectedSnapshotIdx].solvedQuestions} câu</span>
             </div>
           </div>
@@ -814,7 +814,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                 >
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold text-text-primary">{sub.name}</h4>
-                    <span className="text-[10px] font-mono text-brand-warning font-bold">
+                    <span className="text-2xs font-mono text-brand-warning font-bold">
                       Còn {subPrediction.metricsBreakdown.remainingDays} ngày
                     </span>
                   </div>
@@ -853,19 +853,19 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center font-mono bg-bg-surface p-4 rounded-xl border border-border-primary/80">
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Độ phủ kiến thức</span>
+              <span className="text-2xs text-text-muted uppercase block">Độ phủ kiến thức</span>
               <span className="text-2xl font-bold text-brand-success">98%</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Tỷ lệ trùng lặp</span>
+              <span className="text-2xs text-text-muted uppercase block">Tỷ lệ trùng lặp</span>
               <span className="text-2xl font-bold text-brand-info">1.2%</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Tổng số câu hỏi</span>
+              <span className="text-2xs text-text-muted uppercase block">Tổng số câu hỏi</span>
               <span className="text-2xl font-bold text-text-primary">{dbService.getQuestions().length}</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Cân bằng mức độ</span>
+              <span className="text-2xs text-text-muted uppercase block">Cân bằng mức độ</span>
               <span className="text-2xl font-bold text-brand-success">Tốt</span>
             </div>
           </div>
@@ -903,9 +903,9 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               ) : (
                 searchResults.slice(0, 5).map((q) => (
                   <div key={q.id} className="p-3 bg-bg-surface border border-border-primary rounded-xl space-y-1">
-                    <span className="text-[10px] font-mono text-brand-info uppercase">{q.concept || `Câu #${q.id}`}</span>
+                    <span className="text-2xs font-mono text-brand-info uppercase">{q.concept || `Câu #${q.id}`}</span>
                     <p className="text-xs font-medium text-text-primary">{q.question}</p>
-                    <span className="text-[10px] text-text-muted font-mono block">Nguồn: {q.sourcePdf}</span>
+                    <span className="text-2xs text-text-muted font-mono block">Nguồn: {q.sourcePdf}</span>
                   </div>
                 ))
               )}
@@ -940,7 +940,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                     Câu hỏi đã được thêm vào ngân hàng môn <strong>{activeSubject?.name}</strong>. Bạn có thể luyện tập hoặc giải đề theo chương ngay.
                   </p>
                   {successNote && (
-                    <p className="text-[11px] text-brand-warning pt-1">{successNote}</p>
+                    <p className="text-2xs text-brand-warning pt-1">{successNote}</p>
                   )}
                 </div>
                 <div className="flex items-center justify-center gap-2 pt-1">
@@ -1002,7 +1002,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                         </option>
                       ))}
                     </select>
-                    <div className="text-[10px] text-text-muted mt-1">
+                    <div className="text-2xs text-text-muted mt-1">
                       {genChapterId > 0
                         ? "Toàn bộ câu tạo ra sẽ được ép vào đúng chương này, phục vụ luyện đề theo chương."
                         : "Nên chọn chương nếu bạn đang dán tài liệu của riêng một chương."}
@@ -1020,7 +1020,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                       placeholder="Dán nội dung bài giảng, tóm tắt chương, ghi chú... AI sẽ dựa hoàn toàn vào nội dung này để tạo câu hỏi."
                       className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-text-primary focus:outline-none resize-y leading-relaxed"
                     />
-                    <div className="text-[10px] text-text-muted mt-1 font-mono">
+                    <div className="text-2xs text-text-muted mt-1 font-mono">
                       {materialText.trim().length.toLocaleString("vi-VN")} ký tự
                       {materialText.trim().length > 0 && materialText.trim().length < 200 && (
                         <span className="text-brand-warning"> • nên dán ít nhất vài đoạn để câu hỏi chất lượng hơn</span>
@@ -1046,7 +1046,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                       ))}
                     </div>
                     {genCount > 8 && (
-                      <div className="text-[10px] text-text-muted mt-1 font-mono">
+                      <div className="text-2xs text-text-muted mt-1 font-mono">
                         Tài liệu sẽ được chia nhỏ và gọi AI nhiều lượt tự động.
                       </div>
                     )}
@@ -1055,7 +1055,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   {/* Thanh tiến trình khi đang gọi AI */}
                   {isImporting && (
                     <div className="p-3 bg-bg-surface border border-border-primary rounded-xl space-y-2 font-mono">
-                      <div className="flex justify-between text-[10px] text-brand-info">
+                      <div className="flex justify-between text-2xs text-brand-info">
                         <span>{importStep}</span>
                         <span>{importProgress}%</span>
                       </div>
@@ -1067,7 +1067,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
                   {/* Báo lỗi */}
                   {importError && (
-                    <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-[11px] text-brand-error flex items-start gap-2">
+                    <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-2xs text-brand-error flex items-start gap-2">
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                       <span>{importError}</span>
                     </div>
@@ -1075,7 +1075,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                 </div>
 
                 <div className="flex items-center justify-between gap-2 pt-2">
-                  <span className="text-[10px] text-text-muted">
+                  <span className="text-2xs text-text-muted">
                     {materialText.trim() ? "AI sẽ tạo câu hỏi từ nội dung trên." : "Không dán nội dung thì chỉ lưu tên tài liệu."}
                   </span>
                   <div className="flex items-center gap-2">

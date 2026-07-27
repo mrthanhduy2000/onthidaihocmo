@@ -130,7 +130,7 @@ export const LearningObservatoryView: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-brand-info/10 text-brand-info border border-brand-info/20">
+              <span className="px-2.5 py-0.5 rounded-full text-2xs font-mono font-semibold bg-brand-info/10 text-brand-info border border-brand-info/20">
                 PHASE NEXT — PRODUCT INTELLIGENCE
               </span>
               <span className="text-xs text-text-muted font-mono">
@@ -153,7 +153,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <span>{health.systemHealthScore}</span>
                 <span className="text-sm font-normal text-text-muted">/100</span>
               </div>
-              <div className="text-[11px] font-medium text-brand-success flex items-center justify-center sm:justify-end gap-1">
+              <div className="text-2xs font-medium text-brand-success flex items-center justify-center sm:justify-end gap-1">
                 <CheckCircle2 className="w-3 h-3" />
                 <span>Trạng thái: {health.status}</span>
               </div>
@@ -173,34 +173,34 @@ export const LearningObservatoryView: React.FC = () => {
         {/* High-Level Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-6 border-t border-border-primary/60">
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-[11px] text-text-muted font-medium">Chất lượng Nội dung</div>
+            <div className="text-2xs text-text-muted font-medium">Chất lượng Nội dung</div>
             <div className="text-lg font-bold font-mono text-text-primary mt-0.5">{health.contentQualityScore}%</div>
-            <div className="text-[10px] text-text-muted">Cổng chất lượng đã đạt</div>
+            <div className="text-2xs text-text-muted">Cổng chất lượng đã đạt</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-[11px] text-text-muted font-medium">Độ phủ Khái niệm</div>
+            <div className="text-2xs text-text-muted font-medium">Độ phủ Khái niệm</div>
             <div className="text-lg font-bold font-mono text-text-primary mt-0.5">{health.coverageScore}%</div>
-            <div className="text-[10px] text-text-muted">{deadConcepts.length} Dead Concepts</div>
+            <div className="text-2xs text-text-muted">{deadConcepts.length} Dead Concepts</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-[11px] text-text-muted font-medium">Hiệu quả Phương án nhiễu</div>
+            <div className="text-2xs text-text-muted font-medium">Hiệu quả Phương án nhiễu</div>
             <div className="text-lg font-bold font-mono text-text-primary mt-0.5">{health.distractorHealthScore}%</div>
-            <div className="text-[10px] text-text-muted">Hiệu quả phương án nhiễu</div>
+            <div className="text-2xs text-text-muted">Hiệu quả phương án nhiễu</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-[11px] text-text-muted font-medium">Cân bằng Bloom</div>
+            <div className="text-2xs text-text-muted font-medium">Cân bằng Bloom</div>
             <div className="text-lg font-bold font-mono text-text-primary mt-0.5">{health.bloomBalanceScore}%</div>
-            <div className="text-[10px] text-text-muted">{bloomHealth.lowerOrderOverload ? "Cần tăng Vận dụng" : "Cân bằng tốt"}</div>
+            <div className="text-2xs text-text-muted">{bloomHealth.lowerOrderOverload ? "Cần tăng Vận dụng" : "Cân bằng tốt"}</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-[11px] text-text-muted font-medium">Nợ Kỹ thuật Học thuật</div>
+            <div className="text-2xs text-text-muted font-medium">Nợ Kỹ thuật Học thuật</div>
             <div className="text-lg font-bold font-mono text-brand-warning mt-0.5">{techDebts.length} Mục</div>
-            <div className="text-[10px] text-text-muted">Cần hoàn thiện</div>
+            <div className="text-2xs text-text-muted">Cần hoàn thiện</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-[11px] text-text-muted font-medium">Sẵn sàng Phát hành</div>
+            <div className="text-2xs text-text-muted font-medium">Sẵn sàng Phát hành</div>
             <div className="text-lg font-bold font-mono text-brand-info mt-0.5">{readiness.overallReadinessScore}%</div>
-            <div className="text-[10px] text-text-muted">{readiness.isReady ? "Sẵn sàng thi" : "Đang kiểm duyệt"}</div>
+            <div className="text-2xs text-text-muted">{readiness.isReady ? "Sẵn sàng thi" : "Đang kiểm duyệt"}</div>
           </div>
         </div>
       </div>
@@ -230,7 +230,7 @@ export const LearningObservatoryView: React.FC = () => {
           <Brain className="w-3.5 h-3.5" />
           <span>Sức khỏe Khái niệm & Câu hỏi</span>
           {(deadConcepts.length > 0 || overusedConcepts.length > 0) && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-brand-warning/20 text-brand-warning font-mono">
+            <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-warning/20 text-brand-warning font-mono">
               {deadConcepts.length + overusedConcepts.length}
             </span>
           )}
@@ -259,7 +259,7 @@ export const LearningObservatoryView: React.FC = () => {
           <FileText className="w-3.5 h-3.5" />
           <span>Khu vực Tác giả & Nợ Kỹ thuật</span>
           {techDebts.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-brand-info/20 text-brand-info font-mono">
+            <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-info/20 text-brand-info font-mono">
               {techDebts.length}
             </span>
           )}
@@ -387,12 +387,12 @@ export const LearningObservatoryView: React.FC = () => {
                     <div key={idx} className="p-3 bg-bg-surface rounded-lg border border-border-primary/80 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-text-primary">{dc.concept}</span>
-                        <span className="text-[10px] font-mono font-semibold text-brand-warning bg-brand-warning/10 px-2 py-0.5 rounded">
+                        <span className="text-2xs font-mono font-semibold text-brand-warning bg-brand-warning/10 px-2 py-0.5 rounded">
                           {dc.questionCount} Câu hỏi (Rủi ro: {dc.exposureRisk})
                         </span>
                       </div>
-                      <p className="text-[11px] text-text-muted">{dc.reason}</p>
-                      <div className="text-[10px] font-mono text-brand-info bg-brand-info/5 p-2 rounded border border-brand-info/10">
+                      <p className="text-2xs text-text-muted">{dc.reason}</p>
+                      <div className="text-2xs font-mono text-brand-info bg-brand-info/5 p-2 rounded border border-brand-info/10">
                         {dc.explainability.formula}
                       </div>
                     </div>
@@ -432,7 +432,7 @@ export const LearningObservatoryView: React.FC = () => {
                 ))}
               </div>
 
-              <div className="text-[11px] text-text-muted p-2.5 bg-bg-surface rounded-lg border border-border-primary">
+              <div className="text-2xs text-text-muted p-2.5 bg-bg-surface rounded-lg border border-border-primary">
                 {bloomHealth.explainability.rationale}
               </div>
             </div>
@@ -463,7 +463,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <div key={idx} className="p-4 bg-bg-surface rounded-xl border border-border-primary space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-sm font-bold text-text-primary">{dc.concept}</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-warning/15 text-brand-warning font-semibold">
+                    <span className="text-2xs font-mono px-2 py-0.5 rounded bg-brand-warning/15 text-brand-warning font-semibold">
                       Chapter {dc.chapterId}
                     </span>
                   </div>
@@ -471,11 +471,11 @@ export const LearningObservatoryView: React.FC = () => {
                   <p className="text-xs text-text-muted">{dc.reason}</p>
 
                   <div className="p-2.5 bg-bg-card rounded-lg border border-border-primary/80 space-y-1">
-                    <div className="text-[10px] font-bold uppercase text-brand-info">Đề xuất Tác giả:</div>
+                    <div className="text-2xs font-bold uppercase text-brand-info">Đề xuất Tác giả:</div>
                     <p className="text-xs text-text-primary font-medium">{dc.suggestedAction}</p>
                   </div>
 
-                  <div className="text-[10px] font-mono text-text-muted bg-bg-surface/80 p-2 rounded border border-border-primary/60">
+                  <div className="text-2xs font-mono text-text-muted bg-bg-surface/80 p-2 rounded border border-border-primary/60">
                     <div>{dc.explainability.formula}</div>
                     <div className="mt-0.5 text-brand-info">{dc.explainability.proof}</div>
                   </div>
@@ -510,14 +510,14 @@ export const LearningObservatoryView: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-text-primary">{oc.concept}</span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-warning/15 text-brand-warning font-semibold">
+                        <span className="text-2xs font-mono px-2 py-0.5 rounded bg-brand-warning/15 text-brand-warning font-semibold">
                           {oc.representationRatioPct}% Tỷ trọng
                         </span>
                       </div>
                       <p className="text-xs text-text-muted">Chiếm {oc.questionCount}/{oc.totalQuestions} câu hỏi. Tỷ lệ dự kiến chuẩn: {oc.expectedRatioPct}%.</p>
                     </div>
 
-                    <div className="text-[11px] font-mono text-brand-info bg-bg-card p-2.5 rounded-lg border border-border-primary max-w-md">
+                    <div className="text-2xs font-mono text-brand-info bg-bg-card p-2.5 rounded-lg border border-border-primary max-w-md">
                       {oc.explainability.proof}
                     </div>
                   </div>
@@ -563,8 +563,8 @@ export const LearningObservatoryView: React.FC = () => {
                           </span>
                           <span>{opt.selectionRatePct}% chọn</span>
                         </div>
-                        <p className="text-[11px] text-text-muted truncate">{opt.text}</p>
-                        <div className="text-[10px] text-text-muted italic pt-1 border-t border-border-primary/40">
+                        <p className="text-2xs text-text-muted truncate">{opt.text}</p>
+                        <div className="text-2xs text-text-muted italic pt-1 border-t border-border-primary/40">
                           {opt.recommendation}
                         </div>
                       </div>
@@ -597,7 +597,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <div key={idx} className="p-4 bg-bg-surface rounded-xl border border-border-primary space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">{bp.blueprintType}</span>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                    <span className={`text-2xs font-mono font-bold px-2 py-0.5 rounded ${
                       bp.status === "BALANCED" ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
                     }`}>
                       {bp.status} ({bp.alignmentScore}/100)
@@ -642,16 +642,16 @@ export const LearningObservatoryView: React.FC = () => {
 
                   <div className="flex items-center gap-4 text-right">
                     <div>
-                      <div className="text-text-muted text-[10px]">Độ khó Thiết kế</div>
+                      <div className="text-text-muted text-2xs">Độ khó Thiết kế</div>
                       <div className="font-mono font-bold text-text-primary">{dd.designedDifficultyLabel}</div>
                     </div>
 
                     <div>
-                      <div className="text-text-muted text-[10px]">Tỷ lệ Lỗi Thực tế</div>
+                      <div className="text-text-muted text-2xs">Tỷ lệ Lỗi Thực tế</div>
                       <div className="font-mono font-bold text-brand-warning">{dd.actualErrorRatePct}% Sai</div>
                     </div>
 
-                    <div className={`px-2.5 py-1 rounded font-mono font-bold text-[11px] ${
+                    <div className={`px-2.5 py-1 rounded font-mono font-bold text-2xs ${
                       dd.driftType === "CALIBRATED" ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
                     }`}>
                       Độ lệch: {dd.driftDeltaPct}% ({dd.driftType})
@@ -684,7 +684,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <div key={idx} className="p-4 bg-bg-surface rounded-xl border border-border-primary space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">{rec.title}</span>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
+                    <span className={`text-2xs font-mono px-2 py-0.5 rounded font-bold ${
                       rec.priority === "URGENT" ? "bg-red-500/10 text-red-500" : "bg-brand-warning/10 text-brand-warning"
                     }`}>
                       {rec.priority}
@@ -693,7 +693,7 @@ export const LearningObservatoryView: React.FC = () => {
 
                   <p className="text-xs text-text-muted">{rec.description}</p>
 
-                  <div className="text-[10px] font-mono text-brand-info bg-bg-card p-2 rounded border border-border-primary">
+                  <div className="text-2xs font-mono text-brand-info bg-bg-card p-2 rounded border border-border-primary">
                     {rec.explainability}
                   </div>
                 </div>
@@ -722,14 +722,14 @@ export const LearningObservatoryView: React.FC = () => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-text-primary">Mục Nợ #{debt.id}: {debt.debtCategory}</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning">
+                      <span className="text-2xs font-mono px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning">
                         -{debt.debtPoints} điểm
                       </span>
                     </div>
                     <p className="text-text-muted">{debt.remediationPlan}</p>
                   </div>
 
-                  <div className="text-[10px] font-mono text-text-muted bg-bg-card p-2 rounded border border-border-primary max-w-xs">
+                  <div className="text-2xs font-mono text-text-muted bg-bg-card p-2 rounded border border-border-primary max-w-xs">
                     {debt.explainability.impact}
                   </div>
                 </div>
@@ -774,7 +774,7 @@ export const LearningObservatoryView: React.FC = () => {
                     <span>Yêu cầu: {gate.required}</span>
                     <span className="font-bold text-text-primary">Thực tế: {gate.actual}</span>
                   </div>
-                  <p className="text-[11px] text-text-muted pt-1 border-t border-border-primary/40">{gate.explainability}</p>
+                  <p className="text-2xs text-text-muted pt-1 border-t border-border-primary/40">{gate.explainability}</p>
                 </div>
               ))}
             </div>
@@ -799,7 +799,7 @@ export const LearningObservatoryView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-brand-info">[{item.type}]</span>
                       <span className="font-semibold text-text-primary">{item.author}</span>
-                      <span className="text-text-muted font-mono text-[10px]">({item.timestamp})</span>
+                      <span className="text-text-muted font-mono text-2xs">({item.timestamp})</span>
                     </div>
                     <p className="text-text-muted">{item.details}</p>
                   </div>

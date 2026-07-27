@@ -133,7 +133,7 @@ export default function App() {
               <select
                 value={activeSubjectId}
                 onChange={(e) => handleSubjectChange(e.target.value)}
-                className="bg-bg-surface hover:bg-bg-surface-hover text-text-primary border border-border-primary rounded-md px-2 py-1 text-[11px] font-sans font-medium cursor-pointer transition focus:outline-none focus:ring-1 focus:ring-text-primary/10 max-w-[130px] sm:max-w-[220px] truncate"
+                className="bg-bg-surface hover:bg-bg-surface-hover text-text-primary border border-border-primary rounded-md px-2 py-1 text-2xs font-sans font-medium cursor-pointer transition focus:outline-none focus:ring-1 focus:ring-text-primary/10 max-w-[130px] sm:max-w-[220px] truncate"
               >
                 {dbService.getSubjects().map((sub) => (
                   <option key={sub.id} value={sub.id}>
@@ -193,7 +193,7 @@ export default function App() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="px-2 py-1 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-[11px] font-mono text-text-muted hover:text-text-primary flex items-center gap-1 transition cursor-pointer"
+              className="px-2 py-1 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-2xs font-mono text-text-muted hover:text-text-primary flex items-center gap-1 transition cursor-pointer"
               title="Mở tìm nhanh (Ctrl + K)"
             >
               <Command className="w-3 h-3 text-brand-info" />
@@ -251,7 +251,7 @@ export default function App() {
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
-                  <span className="text-[10px] leading-none whitespace-nowrap">{nhan}</span>
+                  <span className="text-2xs leading-none whitespace-nowrap">{nhan}</span>
                 </button>
               );
             })}

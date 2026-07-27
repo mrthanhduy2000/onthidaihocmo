@@ -31,7 +31,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
           </div>
           <div>
             <div className="text-lg font-bold font-mono text-text-primary">{story.solvedCountToday} câu</div>
-            <div className="text-[11px] text-text-muted">Đã hoàn thành</div>
+            <div className="text-2xs text-text-muted">Đã hoàn thành</div>
           </div>
         </div>
 
@@ -41,7 +41,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
           </div>
           <div>
             <div className="text-lg font-bold font-mono text-text-primary">{story.misconceptionsFixedToday} lỗi</div>
-            <div className="text-[11px] text-text-muted">Khắc phục hiểu sai</div>
+            <div className="text-2xs text-text-muted">Khắc phục hiểu sai</div>
           </div>
         </div>
 
@@ -51,7 +51,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
           </div>
           <div>
             <div className="text-lg font-bold font-mono text-text-primary">{story.conceptsRetainedToday} khái niệm</div>
-            <div className="text-[11px] text-text-muted">Củng cố trí nhớ</div>
+            <div className="text-2xs text-text-muted">Củng cố trí nhớ</div>
           </div>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
       {/* Proposed Next Step Callout */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-bg-surface border border-border-primary/80 rounded-xl p-3.5 text-xs">
         <div className="space-y-0.5">
-          <span className="text-[10px] font-mono text-brand-info uppercase font-bold">Gợi ý vi bước tiếp theo</span>
+          <span className="text-2xs font-mono text-brand-info uppercase font-bold">Gợi ý vi bước tiếp theo</span>
           <div className="font-semibold text-text-primary">{story.proposedNextStep}</div>
         </div>
 

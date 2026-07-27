@@ -51,7 +51,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
             Chương {question.chapterId} • {question.concept || "Chưa gán khái niệm"}
           </span>
 
-          <span className="text-[11px] font-mono text-text-muted bg-bg-surface px-2 py-0.5 rounded border border-border-primary">
+          <span className="text-2xs font-mono text-text-muted bg-bg-surface px-2 py-0.5 rounded border border-border-primary">
             {question.bloomLevel || "Remember"}
           </span>
         </div>
@@ -59,12 +59,12 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
         <div className="flex items-center gap-3">
           {/* Quality Gate Badge */}
           {profile.gatePassed ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-brand-success bg-brand-success/10 border border-brand-success/30 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-2xs font-mono font-bold text-brand-success bg-brand-success/10 border border-brand-success/30 px-2.5 py-1 rounded-full">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Gate PASSED</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-brand-error bg-brand-error/10 border border-brand-error/30 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-2xs font-mono font-bold text-brand-error bg-brand-error/10 border border-brand-error/30 px-2.5 py-1 rounded-full">
               <XCircle className="w-3.5 h-3.5" />
               <span>Gate FAILED ({profile.gateViolations.length})</span>
             </span>
@@ -107,7 +107,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
             <AlertTriangle className="w-4 h-4" />
             <span>Vi phạm tiêu chuẩn Quality Gate:</span>
           </div>
-          <ul className="list-disc list-inside space-y-0.5 text-[11px] pl-1">
+          <ul className="list-disc list-inside space-y-0.5 text-2xs pl-1">
             {profile.gateViolations.map((v, idx) => (
               <li key={idx}><strong>[{v.gate}]:</strong> {v.message}</li>
             ))}
@@ -119,7 +119,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
       <div className="flex items-center justify-between pt-1 border-t border-border-primary/60 text-xs">
         <div className="flex items-center gap-2">
           {/* Human Review Status Pill */}
-          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
+          <span className={`px-2.5 py-0.5 rounded-full text-2xs font-mono font-bold uppercase ${
             profile.humanReview.status === "APPROVED" ? "bg-brand-success/20 text-brand-success border border-brand-success/30" :
             profile.humanReview.status === "NEEDS_REVISION" ? "bg-brand-warning/20 text-brand-warning border border-brand-warning/30" :
             profile.humanReview.status === "REJECTED" ? "bg-brand-error/20 text-brand-error border border-brand-error/30" :
@@ -144,19 +144,19 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           {/* Detailed Metric Radar Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div className="p-2.5 bg-bg-surface border border-border-primary/60 rounded-xl">
-              <div className="text-[10px] font-mono text-text-muted">Đúng khái niệm</div>
+              <div className="text-2xs font-mono text-text-muted">Đúng khái niệm</div>
               <div className="text-sm font-mono font-bold text-text-primary">{profile.metrics.conceptCorrectness}%</div>
             </div>
             <div className="p-2.5 bg-bg-surface border border-border-primary/60 rounded-xl">
-              <div className="text-[10px] font-mono text-text-muted">Độ căn cứ</div>
+              <div className="text-2xs font-mono text-text-muted">Độ căn cứ</div>
               <div className="text-sm font-mono font-bold text-text-primary">{profile.metrics.evidenceCompleteness}%</div>
             </div>
             <div className="p-2.5 bg-bg-surface border border-border-primary/60 rounded-xl">
-              <div className="text-[10px] font-mono text-text-muted">Tính duy nhất đáp án</div>
+              <div className="text-2xs font-mono text-text-muted">Tính duy nhất đáp án</div>
               <div className="text-sm font-mono font-bold text-text-primary">{profile.metrics.answerUniqueness}%</div>
             </div>
             <div className="p-2.5 bg-bg-surface border border-border-primary/60 rounded-xl">
-              <div className="text-[10px] font-mono text-text-muted">Kiểm định lời giải</div>
+              <div className="text-2xs font-mono text-text-muted">Kiểm định lời giải</div>
               <div className="text-sm font-mono font-bold text-text-primary">{profile.explanationAudit.score}%</div>
             </div>
           </div>
@@ -168,16 +168,16 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
                 <BookOpen className="w-4 h-4 text-brand-info" />
                 Kiểm định lời giải & Dẫn nguồn
               </span>
-              <span className="text-[10px] font-mono text-text-muted">
+              <span className="text-2xs font-mono text-text-muted">
                 {question.sourcePdf} • Trang {question.sourcePage}
               </span>
             </div>
-            <p className="text-text-muted leading-relaxed italic text-[11px]">
+            <p className="text-text-muted leading-relaxed italic text-2xs">
               "{question.explanation}"
             </p>
 
             {profile.explanationAudit.feedback.length > 0 && (
-              <div className="pt-1 text-[11px] text-brand-warning space-y-0.5">
+              <div className="pt-1 text-2xs text-brand-warning space-y-0.5">
                 <div className="font-bold">Góp ý cải thiện lời giải:</div>
                 {profile.explanationAudit.feedback.map((f, i) => (
                   <div key={i}>• {f}</div>
@@ -187,7 +187,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           </div>
 
           {/* Versioning Metadata */}
-          <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-text-muted">
+          <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-2xs font-mono text-text-muted">
             <span>Ver: {profile.versionInfo.questionVersion}</span>
             <span>Generator: {profile.versionInfo.generatorVersion}</span>
             <span>KB: {profile.versionInfo.knowledgeBaseVersion}</span>
@@ -203,7 +203,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
               </span>
               <button 
                 onClick={() => setShowNotesInput(!showNotesInput)}
-                className="text-[10px] text-brand-info hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-2xs text-brand-info hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <MessageSquare className="w-3 h-3" />
                 <span>{showNotesInput ? "Ẩn ghi chú" : "Thêm ghi chú giảng viên"}</span>

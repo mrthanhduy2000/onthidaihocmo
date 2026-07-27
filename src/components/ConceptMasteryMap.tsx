@@ -89,7 +89,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
             <Brain className="w-5 h-5 text-text-muted animate-pulse" />
             <span>Bản đồ thông thạo khái niệm</span>
           </h3>
-          <p className="text-[11px] text-text-muted leading-relaxed font-sans max-w-xl">
+          <p className="text-2xs text-text-muted leading-relaxed font-sans max-w-xl">
             Không chỉ chấm điểm, hệ thống theo dõi mức độ thông thạo của từng khái niệm trong tài liệu để cá nhân hóa lộ trình và tự động cảnh báo điều kiện tiên quyết.
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                         {/* Concept Header */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="space-y-1">
-                            <span className="text-[10px] text-text-muted font-mono font-medium block">
+                            <span className="text-2xs text-text-muted font-mono font-medium block">
                               Mã tri thức: {node.id}
                             </span>
                             <h4 className="text-xs font-semibold text-text-primary leading-tight font-sans">
@@ -154,7 +154,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                                 <AlertTriangle className="w-3.5 h-3.5" />
                               </div>
                             )}
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium font-sans ${
+                            <span className={`text-2xs px-2 py-0.5 rounded-full font-medium font-sans ${
                               score >= 90 ? "bg-brand-success-bg text-brand-success border border-brand-success-border/30" :
                               score >= 60 ? "bg-brand-info-bg text-brand-info border border-brand-info-border/30" :
                               score > 0 ? "bg-brand-warning-bg text-brand-warning border border-brand-warning-border/30" :
@@ -177,7 +177,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                               style={{ width: `${score}%` }}
                             ></div>
                           </div>
-                          <div className="flex justify-between items-center text-[10px] text-text-muted font-sans">
+                          <div className="flex justify-between items-center text-2xs text-text-muted font-sans">
                             <span>{getMasteryLabel(score)}</span>
                             {node.review?.reviewPriority === "high" && (
                               <span className="text-brand-error flex items-center gap-1 font-medium">
@@ -189,7 +189,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
 
                         {/* Unmet prerequisites Alert */}
                         {unmetPrereqs.length > 0 && (
-                          <div className="bg-brand-warning-bg border border-brand-warning-border/40 p-2.5 rounded-lg text-[10px] text-brand-warning leading-relaxed font-sans flex items-start gap-1.5">
+                          <div className="bg-brand-warning-bg border border-brand-warning-border/40 p-2.5 rounded-lg text-2xs text-brand-warning leading-relaxed font-sans flex items-start gap-1.5">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <div>
                               <strong>Cảnh báo tiên quyết:</strong> Hãy ôn luyện đạt ≥60% khái niệm gốc <strong>{unmetPrereqs.join(", ")}</strong> trước để hiểu sâu bài học này hơn.
@@ -199,27 +199,27 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
 
                         {/* Expandable details */}
                         {isExpanded && (
-                          <div className="pt-3 border-t border-border-primary/60 space-y-3 text-[11px] text-text-secondary leading-relaxed font-sans animate-fade-in">
+                          <div className="pt-3 border-t border-border-primary/60 space-y-3 text-2xs text-text-secondary leading-relaxed font-sans animate-fade-in">
                             <div className="space-y-1">
-                              <span className="text-text-muted font-semibold uppercase tracking-wider text-[9px] block">Định nghĩa tài liệu chính thức:</span>
+                              <span className="text-text-muted font-semibold uppercase tracking-wider text-2xs block">Định nghĩa tài liệu chính thức:</span>
                               <p className="whitespace-pre-line text-text-primary bg-bg-surface p-2.5 rounded-lg border border-border-primary/40">{node.definition}</p>
                             </div>
                             
                             {node.teaching?.misconception && (
                               <div className="space-y-1">
-                                <span className="text-brand-error font-semibold uppercase tracking-wider text-[9px] block">Lỗi sai học viên thường mắc:</span>
+                                <span className="text-brand-error font-semibold uppercase tracking-wider text-2xs block">Lỗi sai học viên thường mắc:</span>
                                 <p className="text-text-secondary bg-brand-error-bg/20 border border-brand-error-border/20 p-2.5 rounded-lg">{node.teaching.misconception}</p>
                               </div>
                             )}
 
                             {node.teaching?.memoryHook && (
                               <div className="space-y-1">
-                                <span className="text-brand-success font-semibold uppercase tracking-wider text-[9px] block">Mẹo ghi nhớ nhanh:</span>
+                                <span className="text-brand-success font-semibold uppercase tracking-wider text-2xs block">Mẹo ghi nhớ nhanh:</span>
                                 <p className="text-brand-success bg-brand-success-bg/10 border border-brand-success-border/20 p-2.5 rounded-lg italic">"{node.teaching.memoryHook}"</p>
                               </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono text-text-muted pt-1">
+                            <div className="grid grid-cols-2 gap-2 text-2xs font-mono text-text-muted pt-1">
                               <div>Slide nguồn: {node.source || "Tài liệu môn"}</div>
                               <div>Trang số: {node.page || "N/A"}</div>
                             </div>
@@ -230,7 +230,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                         <div className="flex items-center justify-between pt-1">
                           <button 
                             onClick={() => setExpandedConcept(isExpanded ? null : node.id)}
-                            className="text-[10px] text-text-muted hover:text-text-primary font-medium flex items-center gap-1.5 transition duration-150 cursor-pointer"
+                            className="text-2xs text-text-muted hover:text-text-primary font-medium flex items-center gap-1.5 transition duration-150 cursor-pointer"
                           >
                             {isExpanded ? (
                               <><span>Thu gọn</span><ChevronUp className="w-3.5 h-3.5" /></>
@@ -241,7 +241,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
 
                           <button 
                             onClick={() => handlePracticeConcept(node)}
-                            className="bg-bg-surface hover:bg-border-primary/80 text-text-secondary hover:text-text-primary border border-border-primary/80 font-medium text-[10px] px-3 py-1 rounded-lg transition duration-150 flex items-center gap-1 cursor-pointer"
+                            className="bg-bg-surface hover:bg-border-primary/80 text-text-secondary hover:text-text-primary border border-border-primary/80 font-medium text-2xs px-3 py-1 rounded-lg transition duration-150 flex items-center gap-1 cursor-pointer"
                           >
                             <Play className="w-2.5 h-2.5 text-text-muted" />
                             <span>Luyện tập</span>

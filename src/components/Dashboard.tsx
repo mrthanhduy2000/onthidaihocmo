@@ -101,7 +101,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-text-muted uppercase">1. Thời gian tới kỳ thi</div>
+            <div className="text-2xs font-mono text-text-muted uppercase">1. Thời gian tới kỳ thi</div>
             <div className="text-sm font-semibold text-text-primary">
               {simplified.timeToExamText}
             </div>
@@ -115,7 +115,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             <Target className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-text-muted uppercase">2. Việc nên làm ngay</div>
+            <div className="text-2xs font-mono text-text-muted uppercase">2. Việc nên làm ngay</div>
             <div className="text-sm font-semibold text-text-primary">
               {simplified.todayGoalText}
             </div>
@@ -129,7 +129,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-text-muted uppercase">3. Tiến độ hiện tại</div>
+            <div className="text-2xs font-mono text-text-muted uppercase">3. Tiến độ hiện tại</div>
             <div className="text-sm font-semibold text-text-primary">
               {simplified.progressSummary}
             </div>
@@ -203,7 +203,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
           <div className="lg:col-span-2 bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
             <div className="text-xs font-semibold text-text-primary flex items-center justify-between">
               <span>Ôn theo chương</span>
-              <span className="text-[10px] font-mono text-text-muted">6 chương trọng tâm</span>
+              <span className="text-2xs font-mono text-text-muted">6 chương trọng tâm</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -217,7 +217,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
                   className="p-3 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary/60 rounded-xl text-left transition flex items-center justify-between cursor-pointer"
                 >
                   <div>
-                    <div className="text-[10px] font-mono text-brand-info font-bold">Chương {ch.id}</div>
+                    <div className="text-2xs font-mono text-brand-info font-bold">Chương {ch.id}</div>
                     <div className="text-xs font-medium text-text-primary truncate max-w-[200px]">{ch.title}</div>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
@@ -235,7 +235,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
               </span>
               <button 
                 onClick={() => onNavigate("progress")}
-                className="text-[11px] text-brand-info hover:underline font-mono cursor-pointer"
+                className="text-2xs text-brand-info hover:underline font-mono cursor-pointer"
               >
                 Tất cả
               </button>
@@ -257,7 +257,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
                         <div className="font-medium text-text-primary">
                           {att.examType === "ai-smart" ? "Thi thử" : att.examType === "adaptive" ? "Thích ứng" : "Chương " + (att.chapterId || "")}
                         </div>
-                        <div className="text-[10px] text-text-muted font-mono">{att.startTime.slice(0, 10)}</div>
+                        <div className="text-2xs text-text-muted font-mono">{att.startTime.slice(0, 10)}</div>
                       </div>
                       <div className="text-right">
                         <div className={`font-mono font-semibold ${percent >= 80 ? "text-brand-success" : "text-brand-warning"}`}>

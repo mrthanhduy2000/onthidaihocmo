@@ -46,27 +46,27 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
       {/* Key Metric Gauges Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 space-y-1 text-center">
-          <div className="text-[10px] font-mono uppercase text-text-muted">Chất lượng trung bình</div>
+          <div className="text-2xs font-mono uppercase text-text-muted">Chất lượng trung bình</div>
           <div className="text-2xl font-mono font-bold text-brand-info">{report.averageQualityScore}/100</div>
-          <div className="text-[10px] text-text-muted">Điểm chuẩn học thuật</div>
+          <div className="text-2xs text-text-muted">Điểm chuẩn học thuật</div>
         </div>
 
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 space-y-1 text-center">
-          <div className="text-[10px] font-mono uppercase text-text-muted">Độ tin cậy đề thi</div>
+          <div className="text-2xs font-mono uppercase text-text-muted">Độ tin cậy đề thi</div>
           <div className="text-2xl font-mono font-bold text-brand-success">{report.estimatedExamReliability}</div>
-          <div className="text-[10px] text-text-muted">Chỉ số Cronbach's Alpha</div>
+          <div className="text-2xs text-text-muted">Chỉ số Cronbach's Alpha</div>
         </div>
 
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 space-y-1 text-center">
-          <div className="text-[10px] font-mono uppercase text-text-muted">Tỷ lệ qua Gate</div>
+          <div className="text-2xs font-mono uppercase text-text-muted">Tỷ lệ qua Gate</div>
           <div className="text-2xl font-mono font-bold text-text-primary">{report.gatePassRatePct}%</div>
-          <div className="text-[10px] text-text-muted">Không vi phạm tiêu chuẩn</div>
+          <div className="text-2xs text-text-muted">Không vi phạm tiêu chuẩn</div>
         </div>
 
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 space-y-1 text-center">
-          <div className="text-[10px] font-mono uppercase text-text-muted">Bao phủ Chương</div>
+          <div className="text-2xs font-mono uppercase text-text-muted">Bao phủ Chương</div>
           <div className="text-2xl font-mono font-bold text-brand-warning">{report.chapterCoveragePct}%</div>
-          <div className="text-[10px] text-text-muted">Ma trận kiến thức</div>
+          <div className="text-2xs text-text-muted">Ma trận kiến thức</div>
         </div>
       </div>
 
@@ -90,13 +90,13 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
                 <div key={idx} className="p-3 bg-bg-surface border border-border-primary/60 rounded-xl space-y-1 text-xs">
                   <div className="flex items-center justify-between font-semibold text-text-primary">
                     <span>{risk.title}</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                    <span className={`px-2 py-0.5 rounded text-2xs font-mono font-bold ${
                       risk.level === "CRITICAL" ? "bg-brand-error/20 text-brand-error" : "bg-brand-warning/20 text-brand-warning"
                     }`}>
                       {risk.level}
                     </span>
                   </div>
-                  <p className="text-[11px] text-text-muted leading-relaxed">{risk.description}</p>
+                  <p className="text-2xs text-text-muted leading-relaxed">{risk.description}</p>
                 </div>
               ))}
             </div>
@@ -131,11 +131,11 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
           {/* Bloom Distribution */}
           <div className="space-y-2">
-            <div className="text-[11px] font-mono text-text-muted uppercase">Thang đo Bloom</div>
+            <div className="text-2xs font-mono text-text-muted uppercase">Thang đo Bloom</div>
             <div className="space-y-1.5">
               {Object.entries(report.bloomDistribution).map(([bloom, val]) => (
                 <div key={bloom} className="space-y-1">
-                  <div className="flex justify-between text-[11px]">
+                  <div className="flex justify-between text-2xs">
                     <span className="text-text-primary font-medium">{bloom}</span>
                     <span className="font-mono text-text-muted">{val.count} câu ({val.percentage}%)</span>
                   </div>
@@ -149,11 +149,11 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
 
           {/* Difficulty Distribution */}
           <div className="space-y-2">
-            <div className="text-[11px] font-mono text-text-muted uppercase">Mức độ khó</div>
+            <div className="text-2xs font-mono text-text-muted uppercase">Mức độ khó</div>
             <div className="space-y-1.5">
               {Object.entries(report.difficultyDistribution).map(([diff, val]) => (
                 <div key={diff} className="space-y-1">
-                  <div className="flex justify-between text-[11px]">
+                  <div className="flex justify-between text-2xs">
                     <span className="text-text-primary font-medium">{diff}</span>
                     <span className="font-mono text-text-muted">{val.count} câu ({val.percentage}%)</span>
                   </div>

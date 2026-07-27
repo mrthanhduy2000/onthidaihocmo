@@ -159,6 +159,23 @@
 
     Vẫn giữ 10px và 11px ở các nhãn siêu nhỏ dùng lớp tùy biến, sẽ xử lý riêng ở vòng sau.
   */
+  /*
+    BẬC NHỎ NHẤT, ĐẶT SÀN Ở 12px.
+
+    Kiểm kê ngày 28/07/2026: dự án có **245 chỗ viết thẳng `text-[10px]`** và **120 chỗ
+    `text-[11px]`**. Vì viết thẳng số nên chúng vượt mặt tầng token, sửa thang chữ ở trên không
+    chạm tới được chúng.
+
+    Đo trên Khan Academy: cỡ nhỏ nhất tồn tại trong toàn bộ sản phẩm là **12px**, và chỉ dùng
+    cho chú thích kiểu thời lượng video "3:13". Không có gì dưới 12px.
+
+    Gộp cả 10px lẫn 11px về đúng một bậc 12px, và đặt tên token thay vì viết thẳng số, để lần
+    sau muốn chỉnh thì sửa MỘT dòng ở đây chứ không phải đi lại 365 chỗ. Chiều cao dòng 1,45
+    vì chữ càng nhỏ càng cần khoảng trắng giữa dòng để mắt bắt lại đầu dòng kế mà không đọc lặp.
+  */
+  --text-2xs: 0.75rem;       /* 10px và 11px -> 12px */
+  --text-2xs--line-height: 1.45;
+
   --text-xs: 0.8125rem;      /* 12px -> 13px */
   --text-xs--line-height: 1.5;
   --text-sm: 0.9375rem;      /* 14px -> 15px */

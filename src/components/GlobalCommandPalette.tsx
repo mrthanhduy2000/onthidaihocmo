@@ -152,7 +152,7 @@ export default function GlobalCommandPalette({
             placeholder="Gõ việc cần làm, ví dụ: ôn, câu sai, thi thử..."
             className="w-full bg-transparent text-xs font-medium text-text-primary focus:outline-none placeholder:text-text-muted"
           />
-          <span className="px-1.5 py-0.5 bg-bg-card border border-border-primary rounded text-[10px] font-mono text-text-muted shrink-0">
+          <span className="px-1.5 py-0.5 bg-bg-card border border-border-primary rounded text-2xs font-mono text-text-muted shrink-0">
             ESC
           </span>
         </div>
@@ -177,11 +177,11 @@ export default function GlobalCommandPalette({
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-mono text-text-muted uppercase block">{cmd.category}</span>
+                      <span className="text-2xs font-mono text-text-muted uppercase block">{cmd.category}</span>
                       <span className="text-xs font-semibold text-text-primary group-hover:text-brand-info transition">{cmd.title}</span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-text-muted group-hover:text-text-primary transition">
+                  <span className="text-2xs font-mono text-text-muted group-hover:text-text-primary transition">
                     Enter &rarr;
                   </span>
                 </button>
@@ -191,7 +191,7 @@ export default function GlobalCommandPalette({
         </div>
 
         {/* Palette Footer */}
-        <div className="p-3 bg-bg-surface border-t border-border-primary flex items-center justify-between text-[10px] font-mono text-text-muted">
+        <div className="p-3 bg-bg-surface border-t border-border-primary flex items-center justify-between text-2xs font-mono text-text-muted">
           <span>Chọn nhanh việc muốn làm</span>
           <div className="flex items-center gap-2">
             <span className="px-1.5 py-0.5 bg-bg-card border border-border-primary rounded">Ctrl + K</span>

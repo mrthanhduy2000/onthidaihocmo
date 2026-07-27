@@ -59,6 +59,51 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Đặt sàn cỡ chữ ở 12px, gỡ 405 chỗ viết thẳng số
+
+Vòng tiếp theo của đợt tái thiết kế theo Khan Academy.
+
+**Đã làm**: gộp toàn bộ cỡ chữ dưới 12px về một token duy nhất `text-2xs` bằng 12px.
+
+| Cỡ cũ | Số chỗ |
+|---|---|
+| `text-[8px]` | 7 |
+| `text-[9px]` | 34 |
+| `text-[10px]` | 245 |
+| `text-[11px]` | 120 |
+| **Tổng** | **406** |
+
+**Vì sao**: đây là nguồn mỏi mắt lớn nhất còn lại của sản phẩm. Đo trên Khan Academy, cỡ nhỏ
+nhất tồn tại trong toàn bộ sản phẩm là **12px**, và chỉ dùng cho chú thích kiểu thời lượng
+video. Không có gì dưới 12px. Ở đây có tới **41 chỗ dùng 8px và 9px**, phần lớn là nhãn mục
+trong bảng giảng giải của gia sư AI, tức đúng thứ người học phải đọc kỹ nhất sau mỗi câu sai.
+
+Quan trọng không kém: chúng **viết thẳng số** nên vượt mặt tầng token, sửa thang chữ không
+chạm tới được. Nay đặt tên token, muốn chỉnh thì sửa một dòng trong `index.css` thay vì đi lại
+406 chỗ.
+
+**Hai chỗ vỡ phát hiện khi kiểm chứng ở 375px**, đều do chữ to lên mà khung không nới:
+
+1. Hàng chú giải biểu đồ ở màn Báo cáo: hàng rộng 293px chia cho bốn mục, mỗi mục còn 70px nên
+   "Dưới 10 câu" gãy thành **ba dòng, mỗi dòng bốn ký tự**. Chữ gãy vụn như vậy còn khó đọc
+   hơn cả chữ nhỏ. Sửa bằng `flex-wrap` cho cả hàng cộng `whitespace-nowrap` cho từng mục.
+2. Chip trạng thái ở màn Hỏi AI: "Cần ôn chương trước" cũng gãy ba dòng vì nằm cùng hàng với
+   tên chương mà không có gì chặn co lại. Sửa bằng `whitespace-nowrap shrink-0` cho chip và
+   `min-w-0` cho tên chương, tức đảo lại thứ tự ưu tiên: tên chương cắt cụt, chip giữ nguyên.
+
+**Kiểm chứng**: quét cả sáu màn (Bàn học, Luyện câu, Câu sai, Kế hoạch, Hỏi AI, Báo cáo) ở hai
+bề rộng 1280px và 375px bằng Claude Browser, dò ba loại lỗi: tràn ngang cấp trang, phần tử
+thoát khỏi khung cuộn, và chữ ngắn bị bóp xuống từ ba dòng trở lên. Kết quả sau khi sửa:
+**không màn nào còn lỗi, và không còn chữ nào dưới 12px trên toàn ứng dụng.**
+
+`npm run check` đạt toàn bộ 6 chặng.
+
+**Còn nợ ngay sau việc này**: 371 chỗ `font-mono`. Xem màn Luyện câu, các nhãn "TRUNG TÂM RÈN
+LUYỆN", "Phổ biến nhất", "Phủ 7/7 chương", "Quy mô đề", "25 câu / 40 câu / 50 câu" đều là
+**từ tiếng Việt đặt trong font đơn cách**, vốn rộng thêm 21% và mất hình bao từ.
+
+---
+
 ### 28/07/2026 — Phương án trả lời thành danh sách chữ, và một lỗi tương phản 1,85:1 lộ ra
 
 Vòng tiếp theo của đợt tái thiết kế theo Khan Academy, xem mục ngay dưới cho phần đo gốc.

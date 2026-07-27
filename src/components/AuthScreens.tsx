@@ -15,7 +15,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <div className="font-display font-medium text-sm tracking-wide">ÔN THI ĐẠI HỌC MỞ</div>
-            <div className="text-[11px] text-text-muted">Hệ thống luyện thi cá nhân</div>
+            <div className="text-2xs text-text-muted">Hệ thống luyện thi cá nhân</div>
           </div>
         </div>
         {children}
@@ -107,7 +107,7 @@ export function LoginScreen() {
           liên kết đăng nhập tới email (không cần mật khẩu).
         </p>
         <div>
-          <label className="text-[11px] text-text-muted block mb-1">Email của bạn</label>
+          <label className="text-2xs text-text-muted block mb-1">Email của bạn</label>
           <div className="flex items-center gap-2 bg-bg-surface border border-border-primary rounded-xl px-3">
             <Mail className="w-4 h-4 text-text-muted shrink-0" />
             <input
@@ -121,7 +121,7 @@ export function LoginScreen() {
           </div>
         </div>
         {status === "error" && (
-          <div className="text-[11px] text-brand-error flex items-start gap-1.5">
+          <div className="text-2xs text-brand-error flex items-start gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             {errorMsg}
           </div>

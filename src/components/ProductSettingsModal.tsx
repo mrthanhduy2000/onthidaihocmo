@@ -159,7 +159,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-bg-surface p-4 border border-border-primary/80 rounded-xl">
               <div>
-                <label className="text-[11px] text-text-muted block mb-1">Điểm mong muốn</label>
+                <label className="text-2xs text-text-muted block mb-1">Điểm mong muốn</label>
                 <select
                   value={goal.targetScore}
                   onChange={(e) => handleGoalUpdate("targetScore", Number(e.target.value))}
@@ -172,7 +172,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </div>
 
               <div>
-                <label className="text-[11px] text-text-muted block mb-1">Ngày thi chính thức</label>
+                <label className="text-2xs text-text-muted block mb-1">Ngày thi chính thức</label>
                 <input
                   type="date"
                   value={goal.examDate}
@@ -182,7 +182,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </div>
 
               <div>
-                <label className="text-[11px] text-text-muted block mb-1">Phút học mỗi ngày</label>
+                <label className="text-2xs text-text-muted block mb-1">Phút học mỗi ngày</label>
                 <select
                   value={goal.dailyStudyMinutes}
                   onChange={(e) => handleGoalUpdate("dailyStudyMinutes", Number(e.target.value))}
@@ -212,7 +212,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                 <div key={item.key} className="p-3 bg-bg-surface border border-border-primary/80 rounded-xl flex items-center justify-between">
                   <div>
                     <span className="text-xs font-semibold text-text-primary block">{item.label}</span>
-                    <span className="text-[11px] text-text-muted">{item.desc}</span>
+                    <span className="text-2xs text-text-muted">{item.desc}</span>
                   </div>
                   <input
                     type="checkbox"

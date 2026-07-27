@@ -438,7 +438,7 @@ export default function LearningEvolutionView() {
                             className="w-full bg-indigo-500/30 rounded-t hover:bg-indigo-500 transition-colors"
                             style={{ height: `${point.retention * 100}%` }}
                           />
-                          <span className="text-[10px] text-text-muted">+{point.daysAhead}d</span>
+                          <span className="text-2xs text-text-muted">+{point.daysAhead}d</span>
                         </div>
                       ))}
                     </div>
