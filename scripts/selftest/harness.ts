@@ -2008,6 +2008,62 @@ localStorage.removeItem(`poly_econ_concept_memory_${subW}`);
 localStorage.removeItem(`poly_econ_evolution_timeline_${subW}`);
 
 // ===========================================================================
+g("X. Gợi ý học tập bám môn đang mở và bám lịch ôn");
+// ===========================================================================
+
+dbService.clearAllHistory();
+localStorage.removeItem("poly_econ_concept_profiles");
+
+// X1. Câu chào đầu tiên phải nói đúng tên môn đang mở.
+//     Bản cũ chốt cứng "Kinh tế chính trị Mác - Lênin" trong khi môn đang mở là Hành vi Khách
+//     hàng, nên câu đầu tiên người học đọc được đã sai tên môn.
+const tenMonX = dbService.getActiveSubjectName();
+const recRongX = aiService.generateLocalRecommendation();
+check("Gợi ý cho người chưa làm bài nào nói đúng tên môn đang mở",
+  recRongX.recommendationText.includes(tenMonX) && !/Kinh tế chính trị/i.test(recRongX.recommendationText),
+  `nhắc đúng "${tenMonX}"`);
+
+// X2. Đúng 100% mà kiến thức đang trôi thì KHÔNG được khen suông.
+//     Dựng: làm đúng hết, rồi đẩy mốc học lùi 60 ngày để mọi khái niệm quá hạn ôn.
+const deX = aiService.generateExam({ type: "random", count: 20 });
+deX.answers = {};
+deX.questions.forEach(id => { const q = questionMap.get(id); if (q) deX.answers[id] = q.correctAnswer; });
+deX.isSubmitted = true;
+deX.score = deX.questions.length;
+deX.timeSpent = deX.questions.length * 40;
+dbService.saveAttempt(deX);
+
+const hoSoX = learnerModelService.getConceptProfiles();
+const mocCuX = new Date(TimeService.now().getTime() - 60 * NGAY_MS).toISOString();
+Object.keys(hoSoX).forEach(k => {
+  hoSoX[k] = { ...hoSoX[k], lastStudiedAt: mocCuX, reviewHistory: [mocCuX] };
+});
+learnerModelService.saveConceptProfiles(hoSoX);
+
+const soKhaiNiemX = Object.keys(hoSoX).length;
+const recTroiX = aiService.generateLocalRecommendation();
+check("Đúng 100% nhưng kiến thức đang trôi thì gợi ý phải cảnh báo, không khen suông",
+  soKhaiNiemX > 0 && /trôi|quá hạn|còn nhớ/i.test(recTroiX.recommendationText),
+  soKhaiNiemX > 0
+    ? `${soKhaiNiemX} khái niệm nghỉ 60 ngày, gợi ý bắt đầu bằng "${recTroiX.recommendationText.split("\n")[0].replace(/^#+\s*/, "")}"`
+    : "không dựng được hồ sơ khái niệm nào, phép kiểm này vô nghĩa");
+
+// X3. Ngược lại, vừa học xong thì không được dọa là đang trôi.
+const mocMoiX = TimeService.now().toISOString();
+const hoSoMoiX = learnerModelService.getConceptProfiles();
+Object.keys(hoSoMoiX).forEach(k => {
+  hoSoMoiX[k] = { ...hoSoMoiX[k], lastStudiedAt: mocMoiX, reviewHistory: [mocMoiX] };
+});
+learnerModelService.saveConceptProfiles(hoSoMoiX);
+const recTuoiX = aiService.generateLocalRecommendation();
+check("Vừa học xong thì gợi ý không dọa là đang trôi",
+  !/đang trôi|quá hạn ôn/i.test(recTuoiX.recommendationText),
+  `gợi ý mở đầu bằng "${recTuoiX.recommendationText.split("\n")[0].replace(/^#+\s*/, "")}"`);
+
+dbService.clearAllHistory();
+localStorage.removeItem("poly_econ_concept_profiles");
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

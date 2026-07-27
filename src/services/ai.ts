@@ -250,6 +250,12 @@ export const aiService = {
   generateLocalRecommendation(): AIRecommendation {
     const stats = dbService.getStatistics();
     const overview = dbService.getDashboardOverview();
+    // Tên môn và chương phải lấy từ môn ĐANG MỞ. Bản cũ chào người học bằng chuỗi cứng
+    // "Kinh tế chính trị Mác - Lênin" và "Chương 1", nên khi môn đang mở là Hành vi Khách hàng
+    // thì câu đầu tiên người học đọc được đã sai tên môn. Đây là kho luyện thi nhiều môn, mỗi
+    // chuỗi cứng như vậy là một lời nói dối chờ tới lượt.
+    const tenMonDangMo = dbService.getActiveSubjectName();
+    const chuongDau = chapters[0];
 
     if (stats.totalSolved === 0) {
       return {
@@ -257,10 +263,67 @@ export const aiService = {
         date: TimeService.now().toISOString(),
         weakChapters: [],
         weakTopics: [],
-        recommendationText: "Chào mừng bạn đến với Nền tảng luyện thi Kinh tế chính trị Mác - Lênin! Hệ thống ghi nhận bạn chưa làm bài tập nào. Hãy bắt đầu bằng cách làm đề luyện tập **Ngẫu nhiên 10 câu** hoặc ôn tập theo **Chương 1** để hệ thống thu thập dữ liệu chẩn đoán năng lực của bạn.",
+        recommendationText: `Chào mừng bạn đến với phần luyện thi môn **${tenMonDangMo}**! Hệ thống ghi nhận bạn chưa làm bài tập nào. Hãy bắt đầu bằng cách làm đề luyện tập **Ngẫu nhiên 10 câu**${chuongDau ? ` hoặc ôn tập theo **${chuongDau.title}**` : ""} để hệ thống thu thập dữ liệu chẩn đoán năng lực của bạn.`,
         suggestedAction: {
           type: "smart-exam",
           count: 10
+        }
+      };
+    }
+
+    // Các khái niệm ĐANG TRÔI, tính lại theo thời điểm hiện tại chứ không đọc con số cũ đã lưu.
+    //
+    // Vì sao thêm: gợi ý cũ chỉ nhìn tỷ lệ đúng theo chương và theo chủ đề, tức chỉ nhìn thứ đã
+    // xảy ra, không nhìn thứ đang mất dần. Người đúng 100% luôn nhận đúng một câu "chúc mừng
+    // phong độ xuất sắc" kể cả khi mọi khái niệm đã quá hạn ôn từ lâu. Mà toàn bộ hạ tầng đường
+    // cong quên thì có sẵn, chỉ là chưa ai nối vào chỗ ra lời khuyên.
+    const bayGio = TimeService.now().getTime();
+    const khaiNiemDangTroi = Object.values(learnerModelService.getConceptProfiles())
+      .filter(p => p.attemptsCount > 0 && p.lastStudiedAt)
+      .map(p => learnerModelService.recalculateForgettingScore(p))
+      .filter(p => p.forgettingScore < 0.6)
+      .map(p => ({
+        ten: p.conceptName,
+        conNho: p.forgettingScore,
+        soNgayQuaHan: p.nextReviewAt ? (bayGio - new Date(p.nextReviewAt).getTime()) / 86400000 : 0,
+      }))
+      .sort((a, b) => (a.conNho - b.conNho) || a.ten.localeCompare(b.ten));
+
+    const quaHan = khaiNiemDangTroi.filter(k => k.soNgayQuaHan > 0);
+
+    /** Một dòng cảnh báo trôi kiến thức, hoặc chuỗi rỗng nếu chưa có gì đáng lo. */
+    const dongCanhBaoTroi = khaiNiemDangTroi.length === 0
+      ? ""
+      : `\n\n### Kiến thức đang trôi:\n${khaiNiemDangTroi.slice(0, 3)
+        .map(k => `- **${k.ten}**: ước tính còn nhớ **${Math.round(k.conNho * 100)}%**${k.soNgayQuaHan > 0 ? `, đã quá hạn ôn ${Math.round(k.soNgayQuaHan)} ngày` : ""}`)
+        .join("\n")}${khaiNiemDangTroi.length > 3 ? `\n- và ${khaiNiemDangTroi.length - 3} khái niệm khác cùng nhóm.` : ""}`;
+
+    // Trôi kiến thức được ưu tiên TRƯỚC chương yếu, vì nó có tính thời điểm: chương yếu để tuần
+    // sau vẫn yếu y như vậy, còn khái niệm sắp trôi thì để càng lâu càng phải học lại từ đầu.
+    // Chỉ giành quyền ưu tiên khi đã quá hạn ít nhất 3 khái niệm, để một hai khái niệm lẻ không
+    // chiếm chỗ của chẩn đoán năng lực.
+    if (quaHan.length >= 3) {
+      const chuongCanOn = quaHan
+        .map(k => kbService.getKnowledgeGraph(dbService.getActiveSubjectId()).find(n => n.concept === k.ten)?.chapter)
+        .filter((c): c is number => typeof c === "number");
+      const demTheoChuong = new Map<number, number>();
+      chuongCanOn.forEach(c => demTheoChuong.set(c, (demTheoChuong.get(c) || 0) + 1));
+      const chuongNong = [...demTheoChuong.entries()].sort((a, b) => (b[1] - a[1]) || (a[0] - b[0]))[0];
+
+      return {
+        id: `local-rec-${TimeService.nowTimestamp()}`,
+        date: TimeService.now().toISOString(),
+        weakChapters: chuongNong ? [chuongNong[0]] : [],
+        weakTopics: [],
+        recommendationText: `### Ưu tiên ngay lúc này: ôn lại trước khi trôi
+Bạn có **${quaHan.length} khái niệm** đã quá hạn ôn tập. Theo đường cong quên được hiệu chuẩn từ chính lịch sử học của bạn, để càng lâu thì công sức học lại càng lớn, nên việc này nên làm trước cả việc luyện thêm câu mới.${dongCanhBaoTroi}
+
+### Gợi ý lộ trình:
+Làm một đề ôn tập ngắn phủ đúng các khái niệm trên. Trả lời đúng một lần lúc sắp quên có giá trị củng cố cao hơn nhiều so với đọc lại lý thuyết khi vẫn còn nhớ rõ.`,
+        suggestedAction: {
+          type: chuongNong ? "chapter-review" : "smart-exam",
+          chapterId: chuongNong ? chuongNong[0] : undefined,
+          count: 15
         }
       };
     }
@@ -309,7 +372,7 @@ export const aiService = {
       const chAcc = Math.round((stats.accuracyByChapter[primaryWeakChId].correct / stats.accuracyByChapter[primaryWeakChId].total) * 100);
 
       recommendationText = `### Phân tích Chẩn đoán năng lực:
-Hệ thống AI nhận diện bạn đang gặp khó khăn nhiều nhất ở **${primaryCh?.title}** với tỷ lệ làm đúng khá thấp (chỉ đạt **${chAcc}%**). 
+Hệ thống AI nhận diện bạn đang gặp khó khăn nhiều nhất ở **${primaryCh?.title}** với tỷ lệ làm đúng khá thấp (chỉ đạt **${chAcc}%**).${dongCanhBaoTroi}
 
 ### Gợi ý lộ trình ôn tập:
 1. **Ôn lại lý thuyết**: Bạn nên xem lại slide bài giảng và giáo trình liên quan đến chương này.
@@ -334,7 +397,7 @@ Chúng tôi khuyến nghị bạn thực hiện ngay một đề **Ôn tập tr�
       const tAcc = Math.round((stats.accuracyByTopic[primaryWeakTId].correct / stats.accuracyByTopic[primaryWeakTId].total) * 100);
 
       recommendationText = `### Phân tích Chẩn đoán năng lực:
-Năng lực tổng thể của bạn rất tốt! Tuy nhiên, bạn có một điểm khuyết nhỏ ở chủ đề **"${primaryTopic?.title}"** với tỷ lệ chính xác chỉ đạt **${tAcc}%**.
+Năng lực tổng thể của bạn rất tốt! Tuy nhiên, bạn có một điểm khuyết nhỏ ở chủ đề **"${primaryTopic?.title}"** với tỷ lệ chính xác chỉ đạt **${tAcc}%**.${dongCanhBaoTroi}
 
 ### Gợi ý lộ trình:
 Hãy làm một bộ đề luyện tập ngắn (10 câu) tập trung riêng biệt vào chủ đề này để lấp đầy lỗ hổng kiến thức và tối ưu hóa điểm số thi thật của bạn.`;
@@ -343,9 +406,17 @@ Hãy làm một bộ đề luyện tập ngắn (10 câu) tập trung riêng bi�
       actionTopicId = primaryWeakTId;
       actionCount = 10;
     } else {
-      // User is doing great!
-      recommendationText = `### Chúc mừng phong độ xuất sắc!
-Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ làm đúng trung bình đạt **${Math.round(overallAccuracy)}%** và không có chương yếu nào dưới 70%!
+      // Không còn chương yếu nào. Nhưng "không có chương yếu" KHÁC "không có gì phải làm": lời
+      // khen suông trong khi kiến thức đang trôi là lời khuyên tệ nhất, vì nó khiến người học
+      // yên tâm đúng lúc không nên yên tâm.
+      recommendationText = khaiNiemDangTroi.length > 0
+        ? `### Phong độ tốt, nhưng có vài chỗ đang nguội
+Tỷ lệ làm đúng trung bình của bạn đạt **${Math.round(overallAccuracy)}%** và không có chương nào dưới 70%. Điều còn lại cần giữ là **duy trì**: có ${khaiNiemDangTroi.length} khái niệm đang tụt dưới mức nhớ an toàn.${dongCanhBaoTroi}
+
+### Gợi ý lộ trình:
+Xen kẽ đề thi thử với vài lượt ôn ngắn cho đúng các khái niệm trên. Đề **AI Smart Exam** mô phỏng tỷ lệ phân bổ chương và độ khó như đề thi thật, thích hợp để kiểm tra tổng thể sau khi đã củng cố xong.`
+        : `### Chúc mừng phong độ xuất sắc!
+Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ làm đúng trung bình đạt **${Math.round(overallAccuracy)}%**, không có chương yếu nào dưới 70%, và không có khái niệm nào đang tụt dưới mức nhớ an toàn.
 
 ### Gợi ý lộ trình:
 Để chuẩn bị tốt nhất cho kỳ thi chính thức đạt điểm tối đa (A+), bạn hãy thử sức với chế độ **AI Smart Exam (Đề thi thử AI)** được thiết kế mô phỏng tỷ lệ phân bổ chương và độ khó chuẩn như một đề thi đại học chính thức.`;
