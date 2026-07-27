@@ -59,6 +59,73 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Giảm chi phí thao tác trong buổi ôn dài, ba commit
+
+**Commit**: `f1e3f7e` và hai commit kế. Nhóm kiểm mới **AE**, tổng phép kiểm 185 lên **191**.
+
+**Yêu cầu**: không thêm tính năng, chỉ nâng chất lượng trải nghiệm của thứ đã có, đo trên bản
+chạy thật, và chỉ giữ thay đổi nào giúp người học bắt đầu nhanh hơn, hiểu nhanh hơn, nhớ tốt
+hơn hoặc tập trung lâu hơn.
+
+#### Chỗ đáng sửa nhất không nằm ở các màn bảng biểu, mà ở màn làm bài
+
+Ba lượt rà trước đều dừng ở các màn tổng quan. Nhưng người học ngồi 2 đến 4 tiếng trong màn
+LÀM BÀI, nên mỗi thao tác thừa ở đó bị nhân lên hàng trăm lần.
+
+**Đo được**: màn làm bài chỉ có `,` và `.` để chuyển câu, còn việc CHỌN ĐÁP ÁN bắt buộc dùng
+chuột. Một đề 10 câu là 10 lần ngắm đúng một trong bốn ô rồi bấm, cộng 9 lần bấm "Câu sau".
+
+Điểm mấu chốt: **mỗi phương án vốn ĐÃ hiện sẵn chữ cái A, B, C, D ngay trên màn hình.** Người
+học nhìn thấy chữ A thì phản xạ đầu tiên là bấm phím A. Trước lượt này phím đó không làm gì cả,
+tức giao diện tự hứa rồi tự thất hứa.
+
+Nay `A/B/C/D` hoặc `1/2/3/4` chọn đáp án, mũi tên trái phải chuyển câu (giữ `,` và `.` cho ai đã
+quen). Kèm một dòng nhắc phím tắt đặt ngay dưới bốn phương án, đúng chỗ mắt dừng lại; nó thay
+cho dòng "Slide: tên file (Trang ...)" vốn ít giá trị mà lại chiếm đúng khoảng giữa hai nút.
+
+Kiểm trên ứng dụng đang chạy: bấm `b` ghi đúng **một** đáp án, đúng câu đang hiện (id 3020),
+không ghi trùng; `ArrowRight` chuyển đúng câu kế; bấm `d` trên câu đã chốt ở chế độ gia sư
+**không** ghi đè, đúng bất biến 4.10.
+
+#### Màn làm bài trên điện thoại
+
+| Chỗ | Đo được trước (khung 375px) | Sau |
+|---|---|---|
+| Chip "Câu 3 / 10" | xuống **ba dòng** | một dòng |
+| Chip "Mức Khó" | xuống hai dòng | một dòng |
+| Nhãn "Giáo viên AI Coaching" | xuống **ba dòng** | chỉ còn biểu tượng, vẫn có nhãn cho trình đọc màn hình |
+| Dòng chủ đề và khái niệm | chữ hoa giãn cách 10px kiểu mã máy, tô đậm, chiếm hai dòng **ngay trước câu hỏi** | chữ thường, màu nhạt, lùi về đúng vai trò ngữ cảnh |
+
+Dòng ngữ cảnh là thứ ÍT quan trọng nhất trên thẻ nhưng lại được viết bằng dạng chữ KHÓ ĐỌC
+NHẤT và đặt ở nơi mắt chạm đầu tiên. Nay câu hỏi mới là thứ dẫn dắt.
+
+#### Một chỗ đo xong rồi KHÔNG sửa
+
+Ban đầu tôi ước bề rộng dòng câu hỏi khoảng **86 ký tự**, tức vượt ngưỡng dễ đọc 45 đến 75, và
+định thu hẹp cột. Nhưng khi đo tử tế bằng số hình chữ nhật dòng thay vì ước theo bề rộng chia
+cỡ chữ, kết quả là **69 ký tự mỗi dòng**, cao dòng 1,63. Cả hai đều nằm gọn trong vùng tốt.
+
+Ước sai vì tôi lấy 0,5em làm bề rộng ký tự trung bình, quá hẹp so với tiếng Việt có dấu. **Bài
+học: đo bằng hình chữ nhật dòng thật, đừng ước từ bề rộng khối chia cỡ chữ.** Đã bỏ ý định sửa,
+đúng nguyên tắc không triển khai thay đổi không mang lại lợi ích.
+
+#### Copywriting
+
+Bảng phản hồi sau mỗi câu vẫn dạy `,` và `.` trong khi dòng nhắc mới dạy mũi tên: hai chỗ trên
+cùng một màn hình dạy hai bộ phím khác nhau. Đã đồng bộ về mũi tên; phím cũ vẫn chạy, chỉ thôi
+quảng cáo.
+
+#### Nghiệm thu
+
+Cả 6 chặng xanh với 191 phép kiểm. Nhóm **AE** có 6 phép, đã thử phá từng cái.
+
+**Bài học về chính bộ kiểm, lần thứ năm bắt được phép kiểm rỗng**: AE1 bản đầu viết là
+`/theoChuCai/ && /theoSo/ && /chonDapAnRef\.current\(/`, tức chỉ soi ba cái TÊN có tồn tại
+không. Khi thử phá bằng cách cắt phép tra bảng, ba cái tên vẫn còn nguyên nên phép kiểm **vẫn
+xanh**. Quy tắc rút ra: **khớp cả biểu thức nối, không khớp riêng lẻ từng danh từ.**
+
+---
+
 ### 28/07/2026 — Rà soát trải nghiệm trên trình duyệt thật, sáu commit
 
 **Commit**: `0d57531`, `f55ef80`, `b0b32af`, `b2aefc0`, `0ed0cac`, `f270f6c`. Nhóm kiểm mới

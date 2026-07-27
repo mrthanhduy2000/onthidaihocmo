@@ -11,7 +11,7 @@ Ba file nói ba việc khác nhau, đừng nhầm:
 
 Ba điều cần nhớ ngay:
 
-1. Sửa xong thì chạy `npm run check` để tự kiểm chứng. Có 185 phép kiểm chạy trên engine thật,
+1. Sửa xong thì chạy `npm run check` để tự kiểm chứng. Có 191 phép kiểm chạy trên engine thật,
    không phải kiểm kiểu suông. Vòng lặp nhanh thì dùng `npm run check:fast`.
 2. Chạy thử ứng dụng bằng `npm run dev` rồi mở http://localhost:3000. Đừng chạy Vite trần,
    nó **không có** các cổng `/api` nên AI sẽ hỏng vì cách chạy chứ không phải vì mã nguồn.

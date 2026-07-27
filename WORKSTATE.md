@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 28/07/2026, sau lượt rà soát trải nghiệm trên trình duyệt thật.
+**Cập nhật lần cuối**: 28/07/2026, sau lượt giảm chi phí thao tác trong buổi ôn dài.
 
 ---
 
@@ -15,7 +15,7 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Rà soát trải nghiệm trên trình duyệt thật, **ĐÃ HOÀN THÀNH** sáu commit |
+| **Current Milestone** | Giảm chi phí thao tác màn làm bài, **ĐÃ HOÀN THÀNH** ba commit |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
@@ -25,7 +25,37 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: rà soát trải nghiệm trên trình duyệt thật
+## Lượt mới nhất: giảm chi phí thao tác trong buổi ôn dài
+
+Yêu cầu: không thêm tính năng, chỉ nâng chất lượng thứ đã có, đo trên bản chạy thật, và chỉ giữ
+thay đổi nào giúp người học bắt đầu nhanh hơn, hiểu nhanh hơn, nhớ tốt hơn hoặc tập trung lâu
+hơn. Ba commit, nhóm kiểm mới **AE**.
+
+### Chỗ đáng sửa nhất nằm ở màn LÀM BÀI, không phải các màn bảng biểu
+
+Ba lượt rà trước đều dừng ở màn tổng quan. Nhưng người học ngồi 2 đến 4 tiếng trong màn làm bài,
+nên mỗi thao tác thừa ở đó bị nhân lên hàng trăm lần.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Chọn đáp án | **bắt buộc dùng chuột**, dù mỗi phương án đã hiện sẵn chữ A/B/C/D | phím `A/B/C/D` hoặc `1/2/3/4` |
+| Chuyển câu | chỉ `,` và `.`, khó đoán | thêm mũi tên trái phải |
+| Nhắc phím tắt | không có | một dòng ngay dưới bốn phương án |
+| Chip "Câu 3 / 10" trên khung 375px | xuống **ba dòng** | một dòng |
+| Nhãn "Giáo viên AI Coaching" | xuống **ba dòng** | chỉ biểu tượng, vẫn có nhãn cho trình đọc màn hình |
+| Dòng chủ đề, khái niệm | chữ hoa giãn cách kiểu mã máy, tô đậm, **đặt trên câu hỏi** | chữ thường màu nhạt, câu hỏi dẫn dắt |
+
+### Một chỗ đo xong rồi KHÔNG sửa
+
+Tôi ước bề rộng dòng câu hỏi khoảng 86 ký tự và định thu hẹp cột. Đo tử tế bằng số hình chữ nhật
+dòng thì ra **69 ký tự mỗi dòng**, cao dòng 1,63, cả hai nằm gọn trong vùng dễ đọc. Ước sai vì
+lấy 0,5em làm bề rộng ký tự trung bình, quá hẹp so với tiếng Việt có dấu. Đã bỏ ý định sửa.
+
+**Bài học: đo bằng hình chữ nhật dòng thật, đừng ước từ bề rộng khối chia cỡ chữ.**
+
+---
+
+## Lượt trước: rà soát trải nghiệm trên trình duyệt thật
 
 Yêu cầu: tự mở trình duyệt, rà toàn bộ trải nghiệm trên bản chạy thật chứ không đọc mã, rồi sửa
 thẳng vào mã theo triết lý Calm Academic Operating System. Sáu commit, nhóm kiểm mới **AD**.
@@ -305,7 +335,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **185**, chia 30 nhóm A đến AD, đạt toàn bộ |
+| Phép tự kiểm chứng | **191**, chia 31 nhóm A đến AE, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
