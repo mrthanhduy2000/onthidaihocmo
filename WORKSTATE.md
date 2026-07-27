@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 28/07/2026, sau lượt rà màu ngữ nghĩa.
+**Cập nhật lần cuối**: 28/07/2026, sau đợt tái thiết kế giao diện theo Khan Academy.
 
 ---
 
@@ -15,13 +15,53 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Rà màu ngữ nghĩa toàn ứng dụng, **ĐÃ HOÀN THÀNH** |
+| **Current Milestone** | Tái thiết kế giao diện theo triết lý Khan Academy, **5 vòng ĐÃ XONG** |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Sáu commit của lượt này đã push, kèm bản cập nhật tài liệu |
+| **Bản đang chạy thật** | Năm commit của đợt này đã push |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
+
+---
+
+## Đợt mới nhất: tái thiết kế giao diện theo Khan Academy
+
+Yêu cầu của Đàm: chỉ được đụng UX/UI, Design System, Component System, Presentation Layer.
+Không thêm tính năng, không đổi luồng sản phẩm, không đổi kiến trúc thông tin, không đụng
+engine hay thuật toán. Bắt buộc dùng Claude Browser quan sát ứng dụng thật. Kèm luật: thay đổi
+nào chỉ làm đẹp mà không giúp đọc nhanh hơn, hiểu hơn, nhớ hơn, học lâu hơn, giảm tải nhận
+thức hoặc tăng độ rõ thị giác thì không triển khai.
+
+Đã đo trực tiếp `vi.khanacademy.org` bằng trình duyệt (trang chủ, trang khoá học, trang làm bài
+có nộp và xem cả trạng thái đúng lẫn sai) rồi rút token thật, thay vì đọc tài liệu về nó.
+Chi tiết đầy đủ nằm trong [BANGIAO.md](BANGIAO.md), năm mục ngày 28/07/2026.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Phần tử làm mờ dần **màu chữ** khi phản hồi đúng sai | 94 trên 309, tức 30% cả trang | **35**, chỉ phần tử bấm được |
+| Số mức đổ bóng | **9** | **2** |
+| Giãn chữ nhãn viết hoa 10px | **âm 0,176px** | không còn nhãn viết hoa nào |
+| Trang tràn ngang ở bề rộng 864px | **có**, 928px so với 864px | **không**, ở mọi bề rộng |
+| Chỗ dùng cỡ chữ dưới 12px | **406** | **0** |
+| Chỗ dùng font đơn cách | **371** | **0**, thay bằng `tabular-nums` |
+| Chỗ dùng chữ viết hoa | **154** | **0**, trừ tên thương hiệu |
+| Tương phản phương án không chọn sau khi lộ đáp án | **1,85:1**, rớt AA | **5,27:1**, đạt AA |
+| Bốn phương án là bốn thẻ đóng lúc đang suy nghĩ | có | danh sách chữ ngăn bằng đường kẻ |
+
+**Đã cố ý KHÔNG làm**, để người sau khỏi làm lại: hạ `--text-primary` từ `#111111` (18,88:1)
+xuống cho dịu mắt, và đổi thang bo góc từ sáu mốc về ba mốc. Cả hai đều thuần thẩm mỹ, đúng
+loại mà luật Đàm đặt ra bắt phải loại. Lý do chi tiết trong BANGIAO.md.
+
+**Còn nợ của đợt này**:
+
+- Thẻ câu hỏi ở màn luyện câu còn **bảy phần tử chrome nằm phía trên câu hỏi** (chip số câu,
+  chip mức khó, mã ID, công tắc gia sư, nhãn gia sư, nút đánh dấu, nút báo lỗi). Khan Academy
+  không có gì phía trên câu hỏi. Nên rà xem cái nào thật sự cần đứng đó.
+- `--font-mono` và JetBrains Mono vẫn còn trong `index.css` dù không còn chỗ nào dùng. Gỡ khỏi
+  dòng `@import` sẽ tiết kiệm một lượt tải font.
+- Chưa rà các màn phụ: Tổng quan, Cài đặt, khung chương trình, kiểm tra học liệu, nhật ký hệ
+  thống. Năm vòng vừa rồi mới quét sáu màn chính.
 
 ---
 
