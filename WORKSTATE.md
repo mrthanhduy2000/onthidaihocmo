@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 27/07/2026, sau lượt nối bốn mạch dữ liệu đang bị bỏ không.
+**Cập nhật lần cuối**: 27/07/2026, sau lượt nâng độ chính xác dự báo.
 
 ---
 
@@ -15,17 +15,50 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Nối bốn mạch dữ liệu đang bị bỏ không, **ĐÃ HOÀN THÀNH 4/8 nhiệm vụ** được giao |
-| **Current Phase** | Dừng ở ranh giới commit sạch, còn 4 nhiệm vụ chưa làm (xem Next Major Step) |
+| **Current Milestone** | Nâng độ chính xác dự báo, **ĐÃ HOÀN THÀNH** cả hai phần |
+| **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Đã triển khai qua bốn lượt push: `1cb3787`, `c409520`, `9d6eb3a`, `ade2809` |
+| **Bản đang chạy thật** | Sáu lượt push gần nhất: `1cb3787`, `c409520`, `9d6eb3a`, `ade2809`, `bf02448`, `068c769` |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
 ---
 
-## Lượt mới nhất đổi hướng: nối mạch dữ liệu bị bỏ không
+## Lượt mới nhất: nâng độ chính xác dự báo
+
+Chủ dự án yêu cầu nâng độ chính xác của dự đoán cá nhân hóa. Dò trước rồi mới đề xuất, và tìm ra
+hai thứ, mỗi thứ một commit.
+
+**1. Bộ dự báo tự xưng "tự hiệu chuẩn" chưa từng hiệu chuẩn lần nào** (nhóm kiểm **R**).
+`registerActualExamResult` có **0 nơi gọi**, nên `calibrationCount` vĩnh viễn bằng 0, mà nhánh
+thích nghi lại yêu cầu `>= 2`. Đã dựng `doHieuChuanTuLichSu` tính lại tất định từ lịch sử thật.
+Đo được: hồ sơ đúng 90% cho sai lệch **+0,9 điểm**, tức hệ thống tự phát hiện nó đang hạ điểm.
+
+**2. Nén dự báo về giữa** (nhóm kiểm **S**). Đây là phần đáng giá hơn:
+
+| Năng lực thật | Trước | Sau |
+|---|---|---|
+| 20% | **+0,5** | −0,2 |
+| 80% | **−0,7** | −0,2 |
+| 100% | −0,6 | −0,2 |
+| Lệch lớn nhất | 0,7 | **0,3** |
+| Lệch trung bình | 0,44 | **0,22** |
+| **Độ dốc** | **0,66** | **1,00** |
+
+Ba nguyên nhân, ba loại lỗi khác nhau: độ phủ chương trình bị gộp vào phần định mức điểm dù độ
+dốc bằng 0 (nhầm loại đại lượng), trung bình có trọng số của các đại lượng dốc dưới 1 (sai cấu
+trúc, đã đổi sang **neo cộng hiệu chỉnh**), và phạt nợ theo số tuyệt đối nên người luyện nhiều bị
+phạt kịch trần (đếm trùng với tỷ lệ đúng).
+
+**Bài học phương pháp, đáng giữ**: hai lượt thử đầu đều làm chỉ số tổng **xấu đi** (0,42 rồi
+0,50 rồi 0,56) nhưng đổi **hình dạng** của lỗi từ nén thành lệch đều, và chính điều đó chỉ ra thủ
+phạm còn lại. Một thay đổi làm chỉ số xấu đi vẫn có thể là bước đúng, miễn là **không dừng và đẩy
+đi ở giữa chừng**.
+
+---
+
+## Lượt trước đó: nối mạch dữ liệu bị bỏ không
 
 Ba lượt trước hỏi "chỗ nào đang bịa số". Lượt này hỏi câu khác: **ứng dụng đang ghi dữ liệu gì mà
 không engine nào đọc?** Bốn mạch đã nối, mỗi mạch một commit riêng:
@@ -93,7 +126,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **118**, chia 17 nhóm A đến Q, đạt toàn bộ |
+| Phép tự kiểm chứng | **131**, chia 19 nhóm A đến S, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -223,6 +256,17 @@ soát `git status`, commit nêu rõ đổi gì và vì sao, ghi mục mới vào
 WORKSTATE.md này, rồi push.
 
 ## Next Major Step
+
+**Hai việc mới sinh ra từ lượt nâng độ chính xác dự báo, nên làm trước:**
+
+0a. **Ba loại sai lệch theo lát cắt vẫn chưa dựng lại**: `chapterBias`, `difficultyBias`,
+    `bloomBias` trong hồ sơ hiệu chuẩn vẫn giữ giá trị cũ. Chúng cần điểm thi thật tách theo
+    chương và theo mức Bloom, mà lượt làm bài hiện **không ghi đủ chiều đó**. Muốn làm thì phải
+    bổ sung dữ liệu lúc chấm trước.
+
+0b. **`calculateAdaptiveWeights` có vùng chết giữa 0,3 và 0,8**: sai lệch rơi vào dải đó thì
+    trọng số không đổi gì cả. Đó là ngưỡng có chủ ý nhưng đáng xem lại, vì phần lớn sai lệch thật
+    sẽ nằm đúng trong dải này. Nên thay bằng hàm liên tục.
 
 **Bốn nhiệm vụ còn lại trong danh sách tám đã giao**, xếp theo đúng thứ tự chủ dự án đề nghị.
 Cả bốn đều đã được xác minh là mạch dữ liệu có thật, nhưng **vẫn phải đo độ dày trước khi viết

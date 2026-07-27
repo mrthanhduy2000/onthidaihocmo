@@ -22,7 +22,7 @@ Chạy 6 chặng, hỏng chặng nào dừng ngay tại đó:
 |---|---|---|
 | 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
 | 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
-| 3 | **118 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 3 | **131 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
 | 6 | **Nạp thật từng gói hàm serverless trong Node** | vài giây |
