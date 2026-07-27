@@ -168,6 +168,15 @@ export const studentModelService = {
       adaptiveMemory.guessingFrequency = nhip.tyLeDoanMo;
     }
 
+    // Mỏi mệt: cùng lý do và cùng lối làm như trên. `questionFatigue` cũ chỉ cộng thêm 8 mỗi
+    // lần hỏi gia sư AI và không bao giờ giảm, còn `fatigueTrend` thì không nơi nào ghi.
+    const moiMoi = learnerModelService.doMoiMoiTheoViTri();
+    if (moiMoi.duDuLieu) {
+      adaptiveMemory.questionFatigue = moiMoi.chiSoMoiMoi;
+      // Giữ nguyên dấu: dương nghĩa là làm càng về cuối càng sai nhiều.
+      adaptiveMemory.fatigueTrend = Math.round(moiMoi.mucTutDaCo * 1000) / 1000;
+    }
+
     return {
       subjectId: activeSubjectId,
       conceptMastery,
@@ -267,7 +276,11 @@ export const studentModelService = {
     }
 
     // 5. Question Fatigue
-    memory.questionFatigue = Math.min(100, memory.questionFatigue + 8);
+    //
+    // KHÔNG cộng dồn nữa (28/07/2026). Cách cũ `questionFatigue + 8` chỉ tăng, không bao giờ
+    // giảm, nên sau 13 lần hỏi gia sư AI là ghim ở 100 vĩnh viễn dù người học vừa ngủ dậy.
+    // Nay chỉ số này được TÍNH LẠI tất định từ vị trí câu trong đề mỗi lần đọc, xem
+    // `doMoiMoiTheoViTri`. Ghi thêm ở đây sẽ tạo nguồn thứ hai nói ngược lại nguồn kia.
 
     // 6. Dynamic Explanation Style / Analogy adjustment based on performance
     if (params.isCorrect) {
@@ -395,6 +408,41 @@ export function doTuTinTuCoNghiVan(coNghiVanCuaLuot: number[] | undefined, quest
   return co.includes(questionId) ? 0.25 : 0.8;
 }
 
+/** Kết quả đo hiệu ứng mỏi mệt theo vị trí câu trong đề. */
+export interface MoiMoiTheoViTri {
+  duDuLieu: boolean;
+  /** Số câu được xét, chỉ tính lượt đã nộp và đề đủ dài. */
+  soCauXet: number;
+  /** Số lượt được xét. */
+  soLuotXet: number;
+  /** Tỷ lệ đúng ở một phần ba ĐẦU đề, thang 0 đến 1. */
+  tyLeDungDauDe: number;
+  /** Tỷ lệ đúng ở một phần ba CUỐI đề, thang 0 đến 1. */
+  tyLeDungCuoiDe: number;
+  /** Mức tụt đã KHỬ ảnh hưởng độ khó, dương nghĩa là làm càng về sau càng sai nhiều. */
+  mucTut: number;
+  /** Mức tụt sau khi co theo lượng bằng chứng. Đây là con số dùng được. */
+  mucTutDaCo: number;
+  /** Quy về thang 0 đến 100 để hợp với các nơi tiêu thụ sẵn có. */
+  chiSoMoiMoi: number;
+  giaiTrinh: string;
+}
+
+/** Số câu tối thiểu mới dám kết luận về mỏi mệt. */
+const TOI_THIEU_CAU_MOI_MOI = 30;
+/** Đề ngắn hơn mức này thì chia ba không còn nghĩa, bỏ qua. */
+const DO_DAI_DE_TOI_THIEU = 9;
+/**
+ * Mức tụt tỷ lệ đúng ứng với chỉ số mỏi mệt kịch trần 100.
+ *
+ * Đây là QUY ƯỚC THANG ĐO, không phải một phép đo. Phần đo được là `mucTut`, còn hằng số này
+ * chỉ trả lời câu hỏi "tụt bao nhiêu thì gọi là mỏi hết cỡ". Chọn 0,30 vì các nơi tiêu thụ sẵn
+ * có đang lấy mốc báo động ở 60 trên 100, tương ứng mức tụt 18 điểm phần trăm giữa đầu và cuối
+ * đề, một mức đã đủ lớn để thấy bằng mắt trên bảng kết quả. Đổi hằng số này thì phải đổi cả
+ * các mốc bên `adaptiveTeachingPolicy`, `teachingDecisionEngine` và `learningPlanner`.
+ */
+const MUC_TUT_KICH_TRAN = 0.30;
+
 /**
  * Một lượt làm bài có nhanh bất thường không, so với tổng thời gian ước tính của chính các câu
  * trong đề đó.
@@ -464,6 +512,91 @@ export const learnerModelService = {
    * 2. **Bỏ lượt dở dang.** `timeSpent` của phiên bị bỏ giữa chừng không phản ánh nhịp thật, vì
    *    đồng hồ vẫn chạy khi người học rời đi. Chỉ xét `isSubmitted`.
    */
+  /**
+   * Hiệu ứng mỏi mệt: người học làm càng về cuối đề thì càng sai nhiều hay không.
+   *
+   * VÌ SAO CẦN (28/07/2026). `attempt.questions` là mảng CÓ THỨ TỰ và `answers` tra theo id,
+   * nên tỷ lệ đúng theo vị trí tính được ngay, nhưng không nơi nào tính. Cùng lúc:
+   *   - `adaptiveMemory.fatigueTrend` được khai báo, khởi tạo 0, và KHÔNG nơi nào ghi cũng
+   *     không nơi nào đọc. Một trường chết hoàn toàn.
+   *   - `adaptiveMemory.questionFatigue` chỉ được cộng thêm 8 mỗi lần hỏi gia sư AI và không
+   *     bao giờ giảm, nên sau 13 lần hỏi là ghim ở 100 vĩnh viễn, còn người chỉ làm bài thì
+   *     mãi ở 0. Bốn nơi đang ra quyết định thật dựa trên con số đó: luật giảm tải của
+   *     `adaptiveTeachingPolicy` (mốc 60), `teachingDecisionEngine` (mốc 75),
+   *     `learningPlanner` (mốc 70) và ô "Cần nghỉ" trên màn Phân tích giảng dạy.
+   *
+   * KHỬ ẢNH HƯỞNG ĐỘ KHÓ. Nếu chỉ so tỷ lệ đúng đầu đề với cuối đề thì sẽ nhầm độ khó thành
+   * mỏi mệt. Đã đo trên 40 đề sinh ngẫu nhiên: độ khó trung bình theo ba phần đề là 1,932 và
+   * 1,971 và 1,864 trên thang 1 tới 3, tức lệch tối đa 0,107. Nhỏ nhưng khác 0, nên vẫn so
+   * TRONG TỪNG NHÓM ĐỘ KHÓ rồi mới gộp lại, thay vì so thẳng.
+   *
+   * Tính tất định tại mỗi lần đọc, không ghi vào ô trung bình trượt, cùng lý do đã nêu ở
+   * `guessingFrequency`: ghi vào đó thì con số phụ thuộc số lần mở màn hình.
+   */
+  doMoiMoiTheoViTri(): MoiMoiTheoViTri {
+    const lichSu = dbService.getHistory().filter(a => a.isSubmitted);
+
+    // Đếm theo (nhóm độ khó, phần đầu hay phần cuối đề).
+    const dau = new Map<string, { dung: number; tong: number }>();
+    const cuoi = new Map<string, { dung: number; tong: number }>();
+    let soCauXet = 0;
+    let soLuotXet = 0;
+    let dungDauTho = 0, tongDauTho = 0, dungCuoiTho = 0, tongCuoiTho = 0;
+
+    for (const luot of lichSu) {
+      const dsCau = luot.questions || [];
+      if (dsCau.length < DO_DAI_DE_TOI_THIEU) continue;
+      soLuotXet++;
+      const nguong = dsCau.length / 3;
+      dsCau.forEach((id, i) => {
+        const q = questionMap.get(id);
+        if (!q) return;
+        const traLoi = luot.answers?.[id];
+        if (traLoi === undefined) return;
+        const dungCau = traLoi === q.correctAnswer;
+        const nhom = String(q.difficulty || "Trung bình");
+        soCauXet++;
+        if (i < nguong) {
+          const o = dau.get(nhom) || { dung: 0, tong: 0 };
+          o.dung += dungCau ? 1 : 0; o.tong++; dau.set(nhom, o);
+          dungDauTho += dungCau ? 1 : 0; tongDauTho++;
+        } else if (i >= dsCau.length - nguong) {
+          const o = cuoi.get(nhom) || { dung: 0, tong: 0 };
+          o.dung += dungCau ? 1 : 0; o.tong++; cuoi.set(nhom, o);
+          dungCuoiTho += dungCau ? 1 : 0; tongCuoiTho++;
+        }
+      });
+    }
+
+    // Gộp các nhóm độ khó, cân theo số câu MỎNG NHẤT của mỗi nhóm để một nhóm chỉ có vài câu
+    // không kéo lệch kết quả.
+    let tuSo = 0, mauSo = 0;
+    for (const [nhom, oDau] of dau) {
+      const oCuoi = cuoi.get(nhom);
+      if (!oCuoi || oDau.tong === 0 || oCuoi.tong === 0) continue;
+      const canNang = Math.min(oDau.tong, oCuoi.tong);
+      tuSo += (oDau.dung / oDau.tong - oCuoi.dung / oCuoi.tong) * canNang;
+      mauSo += canNang;
+    }
+
+    const duDuLieu = soCauXet >= TOI_THIEU_CAU_MOI_MOI && mauSo > 0;
+    const mucTut = mauSo > 0 ? tuSo / mauSo : 0;
+    const trongSo = 1 - Math.exp(-soCauXet / MOC_BANG_CHUNG_CO);
+    const mucTutDaCo = duDuLieu ? mucTut * trongSo : 0;
+    const chiSoMoiMoi = duDuLieu
+      ? Math.round(Math.min(100, Math.max(0, mucTutDaCo / MUC_TUT_KICH_TRAN) * 100))
+      : 0;
+
+    const tyLeDungDauDe = tongDauTho > 0 ? dungDauTho / tongDauTho : 0;
+    const tyLeDungCuoiDe = tongCuoiTho > 0 ? dungCuoiTho / tongCuoiTho : 0;
+
+    const giaiTrinh = duDuLieu
+      ? `Xét ${soLuotXet} lượt và ${soCauXet} câu. Tỷ lệ đúng ${(tyLeDungDauDe * 100).toFixed(1)}% ở đầu đề so với ${(tyLeDungCuoiDe * 100).toFixed(1)}% ở cuối đề. Sau khi so trong từng nhóm độ khó rồi gộp lại, mức tụt là ${(mucTut * 100).toFixed(1)} điểm phần trăm, co theo lượng bằng chứng (w = ${trongSo.toFixed(3)}) còn ${(mucTutDaCo * 100).toFixed(1)}, tức chỉ số mỏi mệt ${chiSoMoiMoi}/100.`
+      : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_CAU_MOI_MOI} câu trong các đề dài từ ${DO_DAI_DE_TOI_THIEU} câu trở lên, hiện có ${soCauXet} câu qua ${soLuotXet} lượt.`;
+
+    return { duDuLieu, soCauXet, soLuotXet, tyLeDungDauDe, tyLeDungCuoiDe, mucTut, mucTutDaCo, chiSoMoiMoi, giaiTrinh };
+  },
+
   doNhipLamBai(): NhipLamBai {
     const lichSu = dbService.getHistory().filter(a => a.isSubmitted);
 

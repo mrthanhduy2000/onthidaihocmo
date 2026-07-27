@@ -2293,6 +2293,128 @@ check("Lỗi hay mắc không phải nguyên văn lời giải thích của câu
 dbService.clearAllHistory();
 
 // ===========================================================================
+// NHÓM AB. Mỏi mệt theo vị trí câu trong đề
+//
+// `fatigueTrend` được khai báo, khởi tạo 0, KHÔNG nơi nào ghi cũng không nơi nào đọc.
+// `questionFatigue` chỉ cộng thêm 8 mỗi lần hỏi gia sư AI và không bao giờ giảm, nên sau 13
+// lần là ghim 100 vĩnh viễn, còn người chỉ làm bài thì mãi 0. Bốn nơi ra quyết định thật dựa
+// vào nó: luật giảm tải (mốc 60), teachingDecisionEngine (75), learningPlanner (70) và ô
+// "Cần nghỉ" trên màn Phân tích giảng dạy.
+// ===========================================================================
+g("AB. Mỏi mệt đo từ vị trí câu trong đề");
+
+/** Chơi nhiều đề với mô hình đúng sai gắn với VỊ TRÍ theo ý đồ. */
+function moPhongMoiMoi(kieu: "deu" | "moi" | "nong") {
+  dbService.clearAllHistory();
+  for (let e = 0; e < 6; e++) {
+    const de = aiService.generateExam({ type: "random", count: 21 });
+    de.answers = {};
+    de.timeSpent = 700;
+    de.questions.forEach((id, i) => {
+      const q = questionMap.get(id);
+      if (!q) return;
+      const p = i / de.questions.length;
+      // Kiểu "đều" cố ý KHÔNG dùng vị trí làm mốc, để đúng sai rải đều theo id.
+      const dung = kieu === "deu" ? (id % 10) < 7
+        : kieu === "moi" ? (id % 10) < (p < 0.34 ? 9 : p < 0.67 ? 7 : 4)
+        : (id % 10) < (p < 0.34 ? 4 : p < 0.67 ? 7 : 9);
+      de.answers[id] = dung ? q.correctAnswer : LETTERS.find(k => k !== q.correctAnswer)!;
+    });
+    de.isSubmitted = true;
+    de.score = de.questions.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+    dbService.saveAttempt(de);
+  }
+}
+
+// AB1. Hồ sơ trắng phải nói thẳng là chưa đủ dữ liệu, không trả một con số.
+dbService.clearAllHistory();
+const abTrang = learnerModelService.doMoiMoiTheoViTri();
+check("Hồ sơ trắng: mỏi mệt tự nhận chưa đủ dữ liệu",
+  abTrang.duDuLieu === false && abTrang.chiSoMoiMoi === 0,
+  `duDuLieu=${abTrang.duDuLieu}, chỉ số ${abTrang.chiSoMoiMoi}, ${abTrang.soCauXet} câu`);
+
+// AB2. Càng về cuối đề càng sai thì phải phát hiện được.
+moPhongMoiMoi("moi");
+const abMoi = learnerModelService.doMoiMoiTheoViTri();
+check("Càng cuối đề càng sai thì chỉ số mỏi mệt lên cao",
+  abMoi.duDuLieu && abMoi.chiSoMoiMoi >= 60,
+  `chỉ số ${abMoi.chiSoMoiMoi}/100, tụt ${(abMoi.mucTut * 100).toFixed(1)} điểm phần trăm`);
+
+// AB3. Càng về cuối càng ĐÚNG thì tuyệt đối không được báo mỏi.
+moPhongMoiMoi("nong");
+const abNong = learnerModelService.doMoiMoiTheoViTri();
+check("Càng cuối đề càng đúng thì không báo mỏi mệt",
+  abNong.chiSoMoiMoi === 0 && abNong.mucTut < 0,
+  `chỉ số ${abNong.chiSoMoiMoi}/100, tụt ${(abNong.mucTut * 100).toFixed(1)} điểm phần trăm`);
+
+// AB4. Hai kiểu người học phải cho hai con số KHÁC nhau. Trước khi sửa cả hai đều bằng 0.
+check("Hai kiểu người học cho hai chỉ số mỏi mệt khác nhau",
+  abMoi.chiSoMoiMoi !== abNong.chiSoMoiMoi,
+  `mỏi ${abMoi.chiSoMoiMoi} so với nóng máy ${abNong.chiSoMoiMoi}`);
+
+// AB5. Chỉ số phải chảy tới nơi tiêu thụ, không dừng ở hàm đo.
+moPhongMoiMoi("moi");
+const abModel = studentModelService.getStudentModel();
+check("Chỉ số mỏi mệt chảy được vào mô hình người học",
+  abModel.adaptiveMemory.questionFatigue >= 60 && abModel.adaptiveMemory.fatigueTrend > 0,
+  `questionFatigue=${abModel.adaptiveMemory.questionFatigue}, fatigueTrend=${abModel.adaptiveMemory.fatigueTrend}`);
+
+// AB6. PHÉP KIỂM QUAN TRỌNG NHẤT của nhóm này: độ khó đội lốt mỏi mệt.
+//
+// Dựng thẳng một hồ sơ mà đúng sai CHỈ phụ thuộc độ khó, hoàn toàn không phụ thuộc vị trí,
+// nhưng đề lại xếp nhiều câu khó về cuối. Cách đo ngây thơ (so tỷ lệ đúng đầu đề với cuối đề)
+// sẽ báo mỏi mệt rất nặng, trong khi sự thật là người học không hề mỏi.
+//
+// Vì sao phép kiểm này cần thiết chứ không phải phòng xa: bản đầu tôi viết phép kiểm khác,
+// đo xem bộ sinh đề có dồn câu khó về cuối không, và nó CHẬP CHỜN. Có lượt độ khó trung bình
+// ba phần đề là 1,907 / 1,957 / 1,821, có lượt lại là 2,279 / 1,900 / 1,957, tức bộ sinh đề
+// thật sự có lúc dồn câu khó về một đầu tùy trạng thái trước đó.
+dbService.clearAllHistory();
+const NHOM_KHO_AB = ["Dễ", "Trung bình", "Khó"];
+for (let e = 0; e < 6; e++) {
+  const de = aiService.generateExam({ type: "random", count: 21 });
+  // Xếp lại: câu dễ dồn về đầu, câu khó dồn về cuối, nhưng mỗi phần ba VẪN có đủ ba nhóm để
+  // còn so được trong cùng nhóm.
+  const theoNhom: Record<string, number[]> = { "Dễ": [], "Trung bình": [], "Khó": [] };
+  de.questions.forEach(id => {
+    const q = questionMap.get(id);
+    if (q) theoNhom[NHOM_KHO_AB.includes(String(q.difficulty)) ? String(q.difficulty) : "Trung bình"].push(id);
+  });
+  const xepLai: number[] = [];
+  // Đầu đề: nhiều Dễ, ít Khó. Cuối đề: ngược lại. Mỗi phần vẫn có cả ba nhóm.
+  const lay = (nhom: string, n: number) => theoNhom[nhom].splice(0, n);
+  xepLai.push(...lay("Dễ", 5), ...lay("Trung bình", 1), ...lay("Khó", 1));
+  xepLai.push(...lay("Dễ", 2), ...lay("Trung bình", 3), ...lay("Khó", 2));
+  xepLai.push(...lay("Dễ", 1), ...lay("Trung bình", 2), ...lay("Khó", 4));
+  const conLai = [...theoNhom["Dễ"], ...theoNhom["Trung bình"], ...theoNhom["Khó"]];
+  const dsCuoi = [...xepLai, ...conLai].slice(0, 21);
+  if (dsCuoi.length < 18) continue;
+
+  de.questions = dsCuoi;
+  de.answers = {};
+  de.timeSpent = 700;
+  dsCuoi.forEach(id => {
+    const q = questionMap.get(id);
+    if (!q) return;
+    // Đúng sai CHỈ do độ khó quyết định, tuyệt đối không nhìn vị trí.
+    const dung = String(q.difficulty) === "Dễ" ? true
+      : String(q.difficulty) === "Trung bình" ? (id % 2 === 0)
+      : false;
+    de.answers[id] = dung ? q.correctAnswer : LETTERS.find(k => k !== q.correctAnswer)!;
+  });
+  de.isSubmitted = true;
+  de.score = dsCuoi.filter(id => questionMap.get(id)?.correctAnswer === de.answers[id]).length;
+  dbService.saveAttempt(de);
+}
+const abGia = learnerModelService.doMoiMoiTheoViTri();
+const tutTho = abGia.tyLeDungDauDe - abGia.tyLeDungCuoiDe;
+check("Độ khó dồn về cuối đề KHÔNG bị đọc nhầm thành mỏi mệt",
+  abGia.chiSoMoiMoi <= 20,
+  `cách đo ngây thơ sẽ thấy tụt ${(tutTho * 100).toFixed(1)} điểm phần trăm, sau khi khử độ khó chỉ còn ${(abGia.mucTut * 100).toFixed(1)}, chỉ số ${abGia.chiSoMoiMoi}/100`);
+
+dbService.clearAllHistory();
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {
