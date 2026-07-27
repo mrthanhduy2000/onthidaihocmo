@@ -707,7 +707,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     <CheckCircle2 className="w-5 h-5 text-brand-success animate-pulse" />
                     <div>
                       <h4 className="text-xs font-semibold text-brand-success">Chính xác! Bạn đã chọn đúng đáp án</h4>
-                      <p className="text-[10px] text-text-muted font-sans">Dùng phím Câu trước/Câu sau (hoặc phím , và .) để chuyển câu.</p>
+                      <p className="text-[10px] text-text-muted font-sans">Dùng mũi tên trái phải để chuyển câu.</p>
                     </div>
                   </div>
 
@@ -731,7 +731,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <h4 className="text-xs font-semibold text-brand-danger">Chưa đúng. Cùng xem lại nhé</h4>
                       <p className="text-[10px] text-text-muted font-sans">
                         Bạn chọn {String(exam.answers[activeQuestion.id]).toUpperCase()}. Đáp án đúng là{" "}
-                        <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>. Dùng phím , và . để chuyển câu.
+                        <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>. Dùng mũi tên trái phải để chuyển câu.
                       </p>
                     </div>
                   </div>

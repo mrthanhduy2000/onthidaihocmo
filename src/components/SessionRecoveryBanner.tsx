@@ -24,9 +24,11 @@ export default function SessionRecoveryBanner({ session, onResume, onDiscard }: 
           <AlertCircle className="w-5 h-5" />
         </div>
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          {/* Cho phép xuống dòng giữa tiêu đề và chip, nhưng KHÔNG cho vỡ chữ bên trong chip.
+              Trên khung 375px chip "1/10 câu đã làm" từng vỡ làm hai dòng và đè lên tiêu đề. */}
+          <div className="flex flex-wrap items-center gap-2">
             <h4 className="text-xs font-semibold text-text-primary">Phát hiện phiên thi chưa hoàn thành</h4>
-            <span className="px-2 py-0.2 text-[10px] font-mono bg-brand-info text-bg-card font-bold rounded-full">
+            <span className="px-2 py-0.5 text-[10px] bg-brand-info text-bg-card font-semibold rounded-full whitespace-nowrap">
               {answeredCount}/{totalCount} câu đã làm
             </span>
           </div>
