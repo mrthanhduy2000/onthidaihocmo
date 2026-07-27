@@ -223,6 +223,35 @@ export default function StatsView() {
         ? `Luyện tiếp ${questions.length - idDaLam.size} câu chưa gặp lần nào để phủ kín ngân hàng.`
         : "Đã phủ hết ngân hàng câu hỏi và sổ tay đang sạch. Chuyển sang thi thử để rèn phản xạ thời gian.";
 
+  /**
+   * Số câu đã làm trong từng ngày của 30 ngày gần nhất, dựng từ lịch sử làm bài thật.
+   * Ngày cũ nhất đứng trước, hôm nay đứng cuối, đúng chiều đọc của một cuốn nhật ký.
+   */
+  const soCauMoiNgay = React.useMemo(() => {
+    const MOT_NGAY = 86400000;
+    const homNay = TimeService.now();
+    const dauHomNay = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate()).getTime();
+
+    const demTheoNgay = new Map<number, number>();
+    dbService.getHistory().filter(a => a && a.isSubmitted).forEach(a => {
+      const t = new Date(a.startTime).getTime();
+      if (!Number.isFinite(t)) return;
+      const d = new Date(t);
+      const mocNgay = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      demTheoNgay.set(mocNgay, (demTheoNgay.get(mocNgay) || 0) + (a.questions || []).length);
+    });
+
+    return Array.from({ length: 30 }, (_, i) => {
+      const mocNgay = dauHomNay - (29 - i) * MOT_NGAY;
+      const d = new Date(mocNgay);
+      return {
+        nhan: `${d.getDate()}/${d.getMonth() + 1}`,
+        ngayTrongThang: d.getDate(),
+        soCau: demTheoNgay.get(mocNgay) || 0,
+      };
+    });
+  }, [history]);
+
   const filteredWrongQuestions = questions.filter(q => {
     if (!wrongQuestionIds.includes(q.id)) return false;
     
@@ -306,34 +335,43 @@ export default function StatsView() {
             <p className="text-xs text-text-muted">Theo dõi tần suất và mức độ đắc thụ theo ngày</p>
           </div>
 
-          <div className="flex items-center gap-3 text-[11px] font-mono text-text-muted">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-bg-surface border border-border-primary"></span> Chưa học</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-info/40"></span> Đang học</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-warning/60"></span> Vùng yếu</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-success"></span> Tinh thông</span>
+          <div className="flex items-center gap-3 text-[11px] text-text-muted">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-bg-surface border border-border-primary"></span> Nghỉ</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-info/25"></span> Dưới 10 câu</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-info/55"></span> 10 đến 29 câu</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-brand-info"></span> Từ 30 câu</span>
           </div>
         </div>
 
-        {/* 30-Day Grid */}
+        {/*
+          Lưới 30 ngày, đọc từ LỊCH SỬ LÀM BÀI THẬT.
+
+          Bản cũ vẽ `isDone = idx < studyStreak + 3`, nên người chưa làm câu nào vẫn thấy ba ngày
+          sáng màu; và sắc độ lấy từ `idx % 4`, tức từ VỊ TRÍ Ô chứ không từ dữ liệu, trong khi
+          chú giải lại ghi "Đang học / Vùng yếu / Tinh thông". Đây đúng khuôn lỗi ở bất biến 4.9:
+          trình bày một hằng số như thể là kết quả đo. Ba ngày sáng đó còn nằm ở đầu lưới, tức là
+          ba ngày XA NHẤT, ngược hẳn với ý nghĩa của chuỗi ngày học.
+
+          Nay mỗi ô là một ngày thật, đậm nhạt theo SỐ CÂU đã làm trong ngày đó, và chú giải nói
+          đúng thứ đang được tô.
+        */}
         <div className="grid grid-cols-7 sm:grid-cols-10 lg:grid-cols-15 gap-2 pt-2">
-          {Array.from({ length: 30 }).map((_, idx) => {
-            const isDone = idx < stats.studyStreak + 3;
-            const level = idx % 4;
-            const colorClass = !isDone 
-              ? "bg-bg-surface border border-border-primary/60" 
-              : level === 0 
-              ? "bg-brand-success border border-brand-success/40" 
-              : level === 1 
-              ? "bg-brand-info/50 border border-brand-info/40" 
-              : "bg-brand-warning/60 border border-brand-warning/40";
+          {soCauMoiNgay.map(ngay => {
+            const colorClass = ngay.soCau === 0
+              ? "bg-bg-surface border border-border-primary/60"
+              : ngay.soCau < 10
+              ? "bg-brand-info/25 border border-brand-info/30"
+              : ngay.soCau < 30
+              ? "bg-brand-info/55 border border-brand-info/40"
+              : "bg-brand-info border border-brand-info";
 
             return (
-              <div 
-                key={idx}
-                title={`Ngày -${30 - idx}: ${isDone ? "Đã luyện tập" : "Nghỉ"}`}
-                className={`h-8 rounded-lg ${colorClass} transition hover:scale-105 cursor-pointer flex items-center justify-center text-[9px] font-mono font-medium text-text-primary/70`}
+              <div
+                key={ngay.nhan}
+                title={`${ngay.nhan}: ${ngay.soCau === 0 ? "nghỉ" : `${ngay.soCau} câu`}`}
+                className={`h-8 rounded-lg ${colorClass} transition hover:scale-105 flex items-center justify-center text-[9px] font-medium ${ngay.soCau >= 30 ? "text-bg-card" : "text-text-primary/70"}`}
               >
-                {30 - idx}
+                {ngay.ngayTrongThang}
               </div>
             );
           })}

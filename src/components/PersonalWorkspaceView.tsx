@@ -268,6 +268,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
     : [];
 
   const remainingDays = prediction.metricsBreakdown.remainingDays;
+  /** Đã có bài làm nào chưa. Nhiều con số chỉ có nghĩa khi đã có bài, xem chỗ dùng bên dưới. */
+  const daCoBaiLam = dbService.getStatistics().totalSolved > 0;
   const isArchived = archivedIds.includes(activeSubId);
 
   return (
@@ -355,19 +357,32 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             </div>
           </div>
 
+          {/*
+            Bỏ chuỗi "+6% tuần này". Nó là chữ VIẾT CỨNG, hiện y hệt nhau cho mọi người học và
+            mọi thời điểm, kể cả người chưa làm câu nào; tức là khẳng định một mức tiến bộ chưa
+            hề đo. Đúng khuôn lỗi ở bất biến 4.9. Không thay bằng số khác vì lượt làm bài hiện
+            không ghi mốc theo tuần, nên chưa có gì để đo cho tử tế.
+          */}
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] font-mono text-text-muted uppercase block">Nắm chắc kiến thức</span>
+            <span className="text-[10px] text-text-muted block">Nắm chắc kiến thức</span>
             <div className="flex items-center justify-between pt-0.5">
               <span className="text-sm font-display font-semibold text-text-primary">{prediction.metricsBreakdown.masteryScore}%</span>
-              <span className="text-[10px] font-mono text-brand-success">+6% tuần này</span>
             </div>
           </div>
 
+          {/*
+            Điểm dự kiến chỉ có nghĩa khi đã có bài làm. Chưa làm câu nào thì bộ dự báo trả về
+            đúng mốc khởi động nguội 5,0, và hiện nó ra kèm biên độ trông y như một phép đo thật.
+          */}
           <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-[10px] font-mono text-text-muted uppercase block">Điểm dự kiến</span>
+            <span className="text-[10px] text-text-muted block">Điểm dự kiến</span>
             <div className="flex items-center justify-between pt-0.5">
-              <span className="text-sm font-display font-bold text-brand-info">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</span>
-              <span className="text-[10px] font-mono text-text-muted">Mục tiêu: {goal.targetScore.toFixed(1)}</span>
+              {daCoBaiLam ? (
+                <span className="text-sm font-display font-bold text-brand-info">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</span>
+              ) : (
+                <span className="text-sm text-text-muted">Chưa đủ dữ liệu</span>
+              )}
+              <span className="text-[10px] text-text-muted">Mục tiêu: {goal.targetScore.toFixed(1)}</span>
             </div>
           </div>
 

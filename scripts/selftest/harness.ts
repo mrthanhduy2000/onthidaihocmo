@@ -2464,6 +2464,50 @@ check("Bốn ô số liệu của khối Liên kết kiến thức không còn v
   conSotLai.length === 0 ? "cả bốn ô đều tính từ dữ liệu" : `còn: ${conSotLai.join(", ")}`);
 
 // ===========================================================================
+g("AD. Giao diện không được khẳng định con số chưa đo");
+// ===========================================================================
+// Bất biến 4.9 áp cho cả TẦNG HIỂN THỊ, không riêng tầng engine. Ba ca dưới đây do lượt rà soát
+// giao diện trên trình duyệt thật ngày 28/07/2026 tìm ra: engine tính đúng nhưng màn hình vẫn
+// vẽ ra con số không có thật.
+
+/**
+ * Đọc mã nguồn và BỎ HẾT CHÚ THÍCH trước khi soi.
+ *
+ * Bắt buộc phải bỏ: các phép kiểm dưới đây tìm dấu vết của mã cũ, mà chỗ sửa nào cũng có một
+ * đoạn chú thích chép lại nguyên văn mã cũ để giải thích vì sao phải sửa. Soi cả chú thích thì
+ * phép kiểm đỏ ngay khi mã đã đúng, và cách "sửa" duy nhất là xóa lời giải thích, tức là phạt
+ * đúng thứ đáng giữ nhất.
+ */
+function docNguon(duongDan: string): string {
+  return readFileSync(path.join(process.cwd(), duongDan), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
+// Y1. Nhật ký rèn luyện phải đọc lịch sử làm bài thật.
+//     Bản cũ: `isDone = idx < stats.studyStreak + 3` nên người chưa làm câu nào vẫn thấy ba ngày
+//     sáng màu, và sắc độ lấy từ `idx % 4`, tức từ VỊ TRÍ Ô chứ không từ dữ liệu, trong khi chú
+//     giải lại ghi "Đang học / Vùng yếu / Tinh thông".
+const nguonStats = docNguon("src/components/StatsView.tsx");
+check("Nhật ký rèn luyện đọc lịch sử làm bài thật, không tô theo vị trí ô",
+  !/studyStreak\s*\+\s*3/.test(nguonStats) && !/const\s+level\s*=\s*idx\s*%\s*4/.test(nguonStats)
+    && /soCauMoiNgay/.test(nguonStats),
+  "đã gỡ studyStreak + 3 và idx % 4, nay dựng từ dbService.getHistory()");
+
+// Y2. Không được chốt cứng một mức tiến bộ.
+const nguonWorkspace = docNguon("src/components/PersonalWorkspaceView.tsx");
+check("Bàn học không chốt cứng mức tiến bộ theo tuần",
+  !/\+6%\s*tuần này/.test(nguonWorkspace),
+  "đã gỡ chuỗi viết cứng \"+6% tuần này\" vốn hiện y hệt nhau cho mọi người học");
+
+// Y3. Điểm dự kiến chỉ hiện khi đã có bài làm.
+//     Chưa làm câu nào thì bộ dự báo trả về đúng mốc khởi động nguội 5,0; hiện nó ra kèm biên độ
+//     trông y như một phép đo thật.
+check("Điểm dự kiến chỉ hiện khi đã có bài làm",
+  /daCoBaiLam\s*\?/.test(nguonWorkspace) && /Chưa đủ dữ liệu/.test(nguonWorkspace),
+  "chưa có bài làm thì hiện \"Chưa đủ dữ liệu\" thay cho 5,0 kèm biên độ");
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {
