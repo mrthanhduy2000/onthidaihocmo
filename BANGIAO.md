@@ -59,6 +59,56 @@ sao, và còn nợ gì.
 
 ---
 
+### 27/07/2026 — Quét ba engine chưa ai soi, ra hai con số kẹt cứng
+
+**Objective**: chủ dự án yêu cầu tự chạy chẩn đoán rồi làm tiếp, không thêm tính năng mới. Áp bộ
+quét ở AGENTS.md mục 4.9b lên các engine chưa ai soi.
+
+**Cách quét**: cho engine chạy trên năm hồ sơ học từ đúng 0% tới 100%, trải phẳng đầu ra thành
+cặp đường dẫn và giá trị số, lọc ra trường nào không đổi qua cả năm lượt.
+
+| Nguồn | Kết quả quét |
+|---|---|
+| `studentEvolution.generateLearningJourney` | 10 trường số, **0 đứng yên**, sạch |
+| `studentEvolution.getTimelineSnapshots` | **`retention` đứng yên ở 1 qua cả năm hồ sơ** |
+| `studentEvolution.getMilestones` | sạch |
+| `pedagogicalEvaluation.getStrategyStats` | **56/56 trường đứng yên**, mọi thứ bằng 0 trừ `averageSessionCompletion` bằng 100 |
+| `teachingDecision.getDecisionHistory` | rỗng, chỉ được nuôi từ tương tác gia sư AI |
+
+**Lỗi 1: cột "Độ ghi nhớ" trên màn Tiến hóa vĩnh viễn hiện 100%.**
+
+Nguyên nhân chính xác: `processInteraction` đặt `profile.lastReviewAt = nowISO` ở dòng 122, RỒI
+mới gọi `calculateRetentionScore` ở dòng 125. Số ngày trôi qua vì thế luôn bằng 0, mà công thức
+là `e^(-soNgay/doBen)`, nên kết quả luôn đúng **1,00**. `LearningEvolutionView` dòng 270 hiển thị
+`Math.round(snap.retention * 100)%`, tức luôn ra "100%".
+
+Đã sửa: tính độ ghi nhớ **trước khi** cập nhật mốc ôn, tức mức người học còn nhớ **lúc quay lại**.
+Đó mới là con số một dòng thời gian tiến hóa cần ghi.
+
+Đo sau khi sửa, cho khái niệm nghỉ N ngày rồi học lại:
+
+| Số ngày nghỉ | 0 | 1 | 3 | 7 | 14 | 30 |
+|---|---|---|---|---|---|---|
+| Độ ghi nhớ ghi vào mốc | 100% | 91% | 75% | 52% | 27% | 8% |
+
+Từ **1 giá trị duy nhất** lên 6 giá trị, giảm đơn điệu đúng theo đường cong quên.
+
+**Lỗi 2: bảng hiệu quả chiến lược giảng dạy khẳng định "hoàn thành phiên 100%" cho chiến lược
+chưa dùng lần nào.** `averageSessionCompletion` khởi tạo cứng bằng 100 cho cả bảy chiến lược
+trong khi `totalInteractions` bằng 0. Đã đổi về 0, đúng bất biến 4.9.
+
+**Nghiệm thu**: nhóm kiểm **T** thêm 3 phép, tổng lên **134**, `npm run check` đủ 6 chặng. Đã
+thử phá cả hai: khôi phục `retention: profile.retentionScore` thì cả sáu mức nghỉ về lại 100% và
+phép kiểm đỏ; khôi phục số 100 thì phép kiểm chỉ đúng bảy chiến lược vi phạm. Mở `npm run dev`,
+gieo hai mốc có độ ghi nhớ 52% và 27%, màn Tiến hóa hiện đúng hai con số đó thay vì 100%.
+
+**Ghi nhận thêm, chưa xử lý**: `getEvaluationHistory` và `getDecisionHistory` đều rỗng sau khi
+làm bài, vì chúng chỉ được nuôi từ tương tác với gia sư AI chứ không từ lượt làm bài. Giống hệt
+khuôn `guessingFrequency` trước đây. Chưa sửa vì đó là quyết định phạm vi, không phải lỗi: có
+thể chủ ý chỉ đánh giá chiến lược giảng dạy khi thật sự có giảng dạy.
+
+---
+
 ### 27/07/2026 — Gỡ hiện tượng nén dự báo về giữa, độ dốc từ 0,66 lên 1,00
 
 **Objective**: phần hai của việc nâng độ chính xác dự đoán. Bộ tự kiểm chứng đã in ra đường cong

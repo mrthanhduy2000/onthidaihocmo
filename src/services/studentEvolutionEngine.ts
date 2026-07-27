@@ -89,6 +89,18 @@ export const studentEvolutionEngine = {
     const prevRetention = profile.retentionScore;
     const prevStable = profile.isStableMastered;
 
+    // Độ ghi nhớ LÚC QUAY LẠI HỌC, tính khi `lastReviewAt` vẫn còn là mốc của lần học trước.
+    //
+    // Vì sao phải tính ở đây: bên dưới, `lastReviewAt` được đặt thành thời điểm hiện tại rồi mới
+    // gọi `calculateRetentionScore`, nên số ngày trôi qua luôn bằng 0 và kết quả luôn đúng
+    // **1,00**. Bộ quét ngày 27/07/2026 bắt được: trường `retention` của mọi mốc thời gian đứng
+    // yên ở 1 qua cả năm hồ sơ học từ đúng 0% tới 100%. Mà `LearningEvolutionView` lại hiển thị
+    // nó thành phần trăm, nên cột "Độ ghi nhớ" trên màn Tiến hóa **vĩnh viễn hiện 100%**.
+    //
+    // Con số có ý nghĩa tại thời điểm này là: người học quay lại sau bao lâu thì còn nhớ được
+    // bao nhiêu. Đó mới là thứ một dòng thời gian tiến hóa cần ghi.
+    const doGhiNhoKhiQuayLai = conceptMemoryService.calculateRetentionScore(profile);
+
     // 1. Calculate new Mastery Score deterministically
     const performanceGain = params.update.wasCorrect ? 10 : -8;
     const confidenceModifier = (params.update.confidence - 0.5) * 5;
@@ -214,7 +226,9 @@ export const studentEvolutionEngine = {
       timestamp: nowISO,
       conceptName: params.conceptName,
       mastery: newMastery,
-      retention: profile.retentionScore,
+      // Ghi độ ghi nhớ ĐO TRƯỚC khi cập nhật mốc ôn, xem chú thích ở đầu hàm. Dùng
+      // `profile.retentionScore` ở đây là ghi lại đúng 1,00 mãi mãi.
+      retention: doGhiNhoKhiQuayLai,
       eventType,
       changeDelta: newMastery - prevMastery,
       note: `Tương tác làm bài: ${params.update.wasCorrect ? "Đúng" : "Sai"}. Tinh thông ${prevMastery} -> ${newMastery}.`

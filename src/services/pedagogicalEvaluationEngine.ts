@@ -268,14 +268,28 @@ export const pedagogicalEvaluationEngine = {
 
   getStrategyStats(): Record<string, StrategyStats> {
     const raw = localStorage.getItem(STRATEGY_STATS_KEY);
+    // `averageSessionCompletion` khởi tạo bằng 0, KHÔNG phải 100.
+    //
+    // Bản cũ đặt 100 cho cả bảy chiến lược trong khi `totalInteractions` bằng 0, tức khẳng định
+    // "hoàn thành phiên 100%" cho một chiến lược giảng dạy chưa từng được dùng lần nào. Bộ quét
+    // ngày 27/07/2026 bắt được: cả 56 trường số của bảng này đứng yên qua năm hồ sơ học khác
+    // hẳn nhau, và đây là trường duy nhất khác 0. Chưa có tương tác thì mọi chỉ số phải là 0,
+    // đúng bất biến 4.9: thiếu dữ liệu thì hiện 0 hoặc không hiện, tuyệt đối không điền số cho
+    // đẹp bảng.
+    const chiSoRong = {
+      totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0,
+      averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0,
+      averageSessionCompletion: 0,
+    };
+
     const defaults: Record<string, StrategyStats> = {
-      Simple: { strategyName: "Simple", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 },
-      Academic: { strategyName: "Academic", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 },
-      Expert: { strategyName: "Expert", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 },
-      Business: { strategyName: "Business", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 },
-      "Real-world": { strategyName: "Real-world", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 },
-      Analogy: { strategyName: "Analogy", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 },
-      Socratic: { strategyName: "Socratic", totalInteractions: 0, successRate: 0, averageMasteryGain: 0, averageRetryCount: 0, averageTimeImprovement: 0, averageConfidenceGain: 0, averageMisconceptionRecovery: 0, averageSessionCompletion: 100 }
+      Simple: { strategyName: "Simple", ...chiSoRong },
+      Academic: { strategyName: "Academic", ...chiSoRong },
+      Expert: { strategyName: "Expert", ...chiSoRong },
+      Business: { strategyName: "Business", ...chiSoRong },
+      "Real-world": { strategyName: "Real-world", ...chiSoRong },
+      Analogy: { strategyName: "Analogy", ...chiSoRong },
+      Socratic: { strategyName: "Socratic", ...chiSoRong },
     };
 
     if (raw) {

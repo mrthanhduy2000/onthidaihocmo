@@ -25,6 +25,9 @@ import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
 import { conceptMemoryService } from "../../src/services/conceptMemoryService";
+import { studentEvolutionEngine } from "../../src/services/studentEvolutionEngine";
+import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvaluationEngine";
+import { TimeService } from "../../src/services/time";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
 import { kbService } from "../../src/services/kbService";
 import { learnerModelService, studentModelService } from "../../src/services/learnerModel";
@@ -1665,6 +1668,75 @@ check("Phạt nợ theo tỷ lệ, không phạt người luyện nhiều",
   `người chăm (50 nợ trên 500 câu) bị phạt ${phatNguoiCham.toFixed(2)}; người yếu (48 nợ trên 60 câu) bị phạt ${phatNguoiYeu.toFixed(2)}; bản cũ cả hai đều kịch trần 1,00`);
 
 dbService.clearAllHistory();
+
+// ===========================================================================
+g("T. Dòng thời gian tiến hóa và bảng chiến lược");
+// ===========================================================================
+// Cả hai lỗi dưới đây do bộ quét ở AGENTS.md mục 4.9b tìm ra ngày 27/07/2026, khi cho các engine
+// chưa ai soi chạy trên năm hồ sơ học từ đúng 0% tới 100%.
+
+const subT = dbService.getActiveSubjectId();
+const tenKhaiNiemT = kbService.getKnowledgeGraph(subT)[0]?.concept || "";
+
+const danhGiaT: any = {
+  strategyUsed: "Academic", masteryGain: 5, retryCount: 0, timeImprovement: 0,
+  confidenceGain: 0.1, misconceptionRecovered: false, sessionCompleted: true,
+  effectivenessScore: 70, reasoning: "tự kiểm chứng",
+};
+
+/** Cho khái niệm nghỉ `soNgay` ngày rồi học lại, trả về độ ghi nhớ ghi vào mốc thời gian. */
+function doGhiNhoSauKhiNghi(soNgay: number): number {
+  localStorage.removeItem(`poly_econ_concept_memory_${subT}`);
+  localStorage.removeItem(`poly_econ_evolution_timeline_${subT}`);
+
+  const bang = conceptMemoryService.getAllConceptProfiles(subT);
+  const p = conceptMemoryService.getConceptProfile(tenKhaiNiemT, subT);
+  const mocCu = new Date(TimeService.now().getTime() - soNgay * 24 * 60 * 60 * 1000).toISOString();
+  bang[tenKhaiNiemT] = { ...p, timesStudied: 3, currentMastery: 60, historicalPeak: 60, lastReviewAt: mocCu };
+  conceptMemoryService.saveAllConceptProfiles(bang, subT);
+
+  return studentEvolutionEngine.processInteraction({
+    conceptName: tenKhaiNiemT,
+    update: { wasCorrect: true, responseTimeSeconds: 20, confidence: 0.7, teachingStrategy: "Academic", explanationLength: "medium" },
+    evaluation: danhGiaT,
+    subjectId: subT,
+  }).snapshot.retention;
+}
+
+// T1. Độ ghi nhớ ghi vào dòng thời gian phải PHÂN HÓA theo số ngày nghỉ.
+//
+// Bản cũ đặt `lastReviewAt` thành hiện tại RỒI mới tính độ ghi nhớ, nên số ngày trôi qua luôn
+// bằng 0 và kết quả luôn đúng 1,00. `LearningEvolutionView` hiển thị nó thành phần trăm, nên cột
+// "Độ ghi nhớ" trên màn Tiến hóa vĩnh viễn hiện 100%.
+const daiGhiNho = [0, 1, 3, 7, 14, 30].map(doGhiNhoSauKhiNghi);
+const soMucGhiNho = new Set(daiGhiNho.map(v => v.toFixed(3))).size;
+check("Độ ghi nhớ trên dòng thời gian phân hóa theo số ngày nghỉ",
+  soMucGhiNho >= 4,
+  `nghỉ 0/1/3/7/14/30 ngày cho ${daiGhiNho.map(v => `${Math.round(v * 100)}%`).join(", ")}; bản cũ luôn 100%`);
+
+// T2. Và phải GIẢM DẦN, nghỉ càng lâu càng quên nhiều.
+const ghiNhoGiamDan = daiGhiNho.every((v, i) => i === 0 || v <= daiGhiNho[i - 1] + 1e-9);
+check("Nghỉ càng lâu thì độ ghi nhớ càng thấp",
+  ghiNhoGiamDan,
+  daiGhiNho.map(v => v.toFixed(2)).join(" -> "));
+
+// T3. Bảng hiệu quả chiến lược không được khẳng định con số khi chưa có tương tác nào.
+// Bản cũ đặt `averageSessionCompletion: 100` cho cả bảy chiến lược trong khi
+// `totalInteractions` bằng 0, tức "hoàn thành phiên 100%" cho chiến lược chưa dùng lần nào.
+localStorage.removeItem("poly_econ_pedagogical_strategy_stats");
+const bangChienLuoc = pedagogicalEvaluationEngine.getStrategyStats();
+const chienLuocBia = Object.values(bangChienLuoc).filter(
+  (s: any) => (s.totalInteractions || 0) === 0 &&
+    Object.entries(s).some(([k, v]) => k !== "strategyName" && typeof v === "number" && v !== 0)
+);
+check("Chiến lược chưa dùng lần nào thì mọi chỉ số phải bằng 0",
+  chienLuocBia.length === 0,
+  chienLuocBia.length === 0
+    ? `${Object.keys(bangChienLuoc).length} chiến lược, chưa có tương tác nào, mọi chỉ số đều 0`
+    : `còn ${chienLuocBia.length} chiến lược mang số khác 0 dù chưa dùng: ${chienLuocBia.map((s: any) => s.strategyName).join(", ")}`);
+
+localStorage.removeItem(`poly_econ_concept_memory_${subT}`);
+localStorage.removeItem(`poly_econ_evolution_timeline_${subT}`);
 
 // ===========================================================================
 // Kết quả
