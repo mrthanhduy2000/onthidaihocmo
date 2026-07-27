@@ -526,7 +526,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     activeQuestion.difficulty === "Dễ" ? "bg-brand-success-bg text-brand-success border-brand-success-border/30" :
                     activeQuestion.difficulty === "Trung bình" ? "bg-brand-info-bg text-brand-info border-brand-info-border/30" :
                     activeQuestion.difficulty === "Khó" ? "bg-brand-warning-bg text-brand-warning border-brand-warning-border/30" :
-                    "bg-brand-danger-bg text-brand-danger border-brand-danger-border/30"
+                    "bg-brand-error-bg text-brand-error border-brand-error-border/30"
                   } whitespace-nowrap`}>
                     Mức {activeQuestion.difficulty}
                   </span>
@@ -657,10 +657,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   if (isSelected && !reveal) {
                     optionStyle = "bg-bg-surface/80 border-text-primary text-text-primary font-medium shadow-xs";
                   } else if (reveal) {
+                    // NỘI DUNG phương án giữ màu chữ thường, tín hiệu đúng sai nằm ở NỀN, VIỀN,
+                    // Ô CHỮ CÁI và BIỂU TƯỢNG.
+                    //
+                    // Vì sao đổi (28/07/2026): bản cũ tô luôn chữ nội dung theo màu ngữ nghĩa,
+                    // và đo được độ tương phản chỉ 3,15:1 cho phương án ĐÚNG (xanh trên nền xanh
+                    // nhạt) với 4,41:1 cho phương án SAI, đều dưới mức 4,5:1 của chuẩn WCAG AA.
+                    // Đó lại đúng là đoạn chữ người học phải đọc kỹ nhất sau mỗi câu, và đọc
+                    // suốt vài tiếng liền. Sau khi sửa: 18,04:1 và 17,26:1.
+                    //
+                    // Bốn tín hiệu còn lại vẫn thừa sức nói lên đúng hay sai mà không phải hạ
+                    // độ đọc được của chính nội dung.
                     if (isCorrect) {
-                      optionStyle = "bg-brand-success-bg border-brand-success-border text-brand-success font-medium";
+                      optionStyle = "bg-brand-success-bg border-brand-success-border text-text-primary font-medium";
                     } else if (isWrongSelection) {
-                      optionStyle = "bg-brand-danger-bg border-brand-danger-border text-brand-danger";
+                      optionStyle = "bg-brand-error-bg border-brand-error-border text-text-primary";
                     } else {
                       optionStyle = "border-border-primary/60 bg-bg-card opacity-40 text-text-muted";
                     }
@@ -680,7 +691,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                             : reveal && isCorrect
                             ? "bg-brand-success text-white"
                             : reveal && isWrongSelection
-                            ? "bg-brand-danger text-white"
+                            ? "bg-brand-error text-white"
                             : "bg-bg-surface group-hover:bg-border-primary text-text-muted border border-border-primary/60"
                         }`}>
                           {key.toUpperCase()}
@@ -692,7 +703,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <Check className="w-4 h-4 text-brand-success shrink-0" />
                       )}
                       {reveal && isWrongSelection && (
-                        <AlertCircle className="w-4 h-4 text-brand-danger shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-brand-error shrink-0" />
                       )}
                     </button>
                   );
@@ -724,11 +735,11 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   hiện thẳng đáp án đúng + lời giải giáo trình, và cho phép yêu cầu AI phân tích sâu. */}
               {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] !== undefined
                 && exam.answers[activeQuestion.id] !== activeQuestion.correctAnswer && (
-                <div className="border border-brand-danger-border/40 bg-brand-danger-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
-                  <div className="flex items-center gap-2 border-b border-brand-danger-border/30 pb-2.5">
-                    <AlertCircle className="w-5 h-5 text-brand-danger" />
+                <div className="border border-brand-error-border/40 bg-brand-error-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
+                  <div className="flex items-center gap-2 border-b border-brand-error-border/30 pb-2.5">
+                    <AlertCircle className="w-5 h-5 text-brand-error" />
                     <div>
-                      <h4 className="text-xs font-semibold text-brand-danger">Chưa đúng. Cùng xem lại nhé</h4>
+                      <h4 className="text-xs font-semibold text-brand-error">Chưa đúng. Cùng xem lại nhé</h4>
                       <p className="text-[10px] text-text-muted font-sans">
                         Bạn chọn {String(exam.answers[activeQuestion.id]).toUpperCase()}. Đáp án đúng là{" "}
                         <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>. Dùng mũi tên trái phải để chuyển câu.
@@ -771,7 +782,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     </div>
                   )}
                   {aiError[activeQuestion.id] && (
-                    <p className="text-[11px] text-brand-danger">{aiError[activeQuestion.id]}</p>
+                    <p className="text-[11px] text-brand-error">{aiError[activeQuestion.id]}</p>
                   )}
                 </div>
               )}
@@ -857,8 +868,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 )}
 
                 {aiError[activeQuestion.id] && (
-                  <div className="border-t border-brand-danger-border pt-3 text-xs text-brand-danger flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-brand-danger" />
+                  <div className="border-t border-brand-error-border pt-3 text-xs text-brand-error flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-brand-error" />
                     <span>{aiError[activeQuestion.id]}</span>
                   </div>
                 )}
@@ -878,14 +889,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           <div className="flex items-center justify-between">
                             <span className="text-text-muted text-[10px] uppercase font-mono font-bold">Xác suất đoán bừa</span>
                             <span className={`font-semibold font-mono ${
-                              aiPipelineMetadata[activeQuestion.id].guessingProbability >= 0.6 ? "text-brand-danger" : "text-text-secondary"
+                              aiPipelineMetadata[activeQuestion.id].guessingProbability >= 0.6 ? "text-brand-error" : "text-text-secondary"
                             }`}>
                               {Math.round(aiPipelineMetadata[activeQuestion.id].guessingProbability * 100)}%
                             </span>
                           </div>
                           {/* Guessing warning */}
                           {aiPipelineMetadata[activeQuestion.id].guessingProbability >= 0.6 && (
-                            <p className="text-[10px] text-brand-danger leading-relaxed">
+                            <p className="text-[10px] text-brand-error leading-relaxed">
                               ⚠️ Phát hiện hành vi trả lời siêu tốc hoặc chưa vững lý thuyết nền tảng. Hãy làm chậm lại nhé!
                             </p>
                           )}
@@ -1058,8 +1069,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       {conceptNode && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {conceptNode.teaching?.misconception && (
-                            <div className="border border-brand-danger-border/30 bg-brand-danger-bg/5 p-3 rounded-xl space-y-1">
-                              <span className="text-[9px] font-bold text-brand-danger uppercase font-mono block">Cảnh báo hiểu sai</span>
+                            <div className="border border-brand-error-border/30 bg-brand-error-bg/5 p-3 rounded-xl space-y-1">
+                              <span className="text-[9px] font-bold text-brand-error uppercase font-mono block">Cảnh báo hiểu sai</span>
                               <p className="text-[11px] text-text-primary leading-relaxed font-sans">{conceptNode.teaching.misconception}</p>
                             </div>
                           )}
@@ -1171,7 +1182,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <circle 
                     className={`${
                       scorePercent >= 80 ? "text-brand-success" :
-                      scorePercent >= 50 ? "text-brand-warning" : "text-brand-danger"
+                      scorePercent >= 50 ? "text-brand-warning" : "text-brand-error"
                     }`}
                     strokeWidth="3" 
                     strokeDasharray={2 * Math.PI * 28}
@@ -1194,7 +1205,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 <div className="bg-brand-success-bg border border-brand-success-border/20 py-1.5 rounded-md text-brand-success font-medium">
                   Đúng: {correctCount}
                 </div>
-                <div className="bg-brand-danger-bg border border-brand-danger-border/20 py-1.5 rounded-md text-brand-danger font-medium">
+                <div className="bg-brand-error-bg border border-brand-error-border/20 py-1.5 rounded-md text-brand-error font-medium">
                   Sai: {incorrectCount}
                 </div>
               </div>
@@ -1228,7 +1239,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   btnStyle = isAnswerCorrect 
                     ? "bg-brand-success text-white border-transparent cursor-pointer" 
                     : userAnswer 
-                    ? "bg-brand-danger text-white border-transparent cursor-pointer" 
+                    ? "bg-brand-error text-white border-transparent cursor-pointer" 
                     : "bg-bg-surface border-border-primary/60 text-text-muted cursor-pointer opacity-70";
                 } else if (isSelected) {
                   btnStyle = "bg-bg-surface border-text-muted/30 text-text-primary font-medium cursor-pointer";
@@ -1270,7 +1281,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     <span>Đáp án Đúng</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-brand-danger rounded-sm" />
+                    <span className="w-1.5 h-1.5 bg-brand-error rounded-sm" />
                     <span>Đáp án Sai</span>
                   </div>
                 </>

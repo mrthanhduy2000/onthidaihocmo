@@ -218,7 +218,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                 <div className="w-full h-1.5 bg-bg-card rounded-full overflow-hidden">
                   <div 
                     className={`h-full rounded-full ${
-                      diff === "Easy" ? "bg-brand-success" : diff === "Medium" ? "bg-brand-warning" : "bg-brand-danger"
+                      diff === "Easy" ? "bg-brand-success" : diff === "Medium" ? "bg-brand-warning" : "bg-brand-error"
                     }`} 
                     style={{ width: `${data.percentage}%` }} 
                   />
@@ -301,7 +301,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                   <td className="p-3 font-mono text-text-muted">{q.bloom}</td>
                   <td className="p-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                      q.difficulty === "Dễ" ? "bg-brand-success/10 text-brand-success" : q.difficulty === "Trung bình" ? "bg-brand-warning/10 text-brand-warning" : "bg-brand-danger/10 text-brand-danger"
+                      q.difficulty === "Dễ" ? "bg-brand-success/10 text-brand-success" : q.difficulty === "Trung bình" ? "bg-brand-warning/10 text-brand-warning" : "bg-brand-error/10 text-brand-error"
                     }`}>
                       {q.difficulty}
                     </span>

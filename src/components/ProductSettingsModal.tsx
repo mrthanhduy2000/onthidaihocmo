@@ -288,7 +288,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                   </span>
                   <button
                     onClick={handleResetProgress}
-                    className="px-3.5 py-1.5 bg-brand-danger text-white text-xs font-semibold rounded-xl hover:opacity-90 transition cursor-pointer"
+                    className="px-3.5 py-1.5 bg-brand-error text-white text-xs font-semibold rounded-xl hover:opacity-90 transition cursor-pointer"
                   >
                     Xóa và làm mới
                   </button>

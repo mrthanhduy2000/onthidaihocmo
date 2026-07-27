@@ -326,7 +326,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
               <span className="font-semibold text-text-primary">Khoảng {forecast.etaDays} ngày tiếp theo</span>
             </div>
             <span className={`text-[10px] font-mono px-2 py-1 rounded font-bold uppercase ${
-              forecast.decayRate > 20 ? "bg-brand-danger-bg text-brand-danger" : "bg-brand-success-bg text-brand-success"
+              forecast.decayRate > 20 ? "bg-brand-error-bg text-brand-error" : "bg-brand-success-bg text-brand-success"
             }`}>
               {forecast.status}
             </span>

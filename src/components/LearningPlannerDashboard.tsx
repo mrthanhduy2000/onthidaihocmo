@@ -250,7 +250,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     ? "bg-brand-success/10 text-brand-success" 
                     : prediction.riskReport.level === "Trung bình"
                     ? "bg-brand-warning/10 text-brand-warning"
-                    : "bg-brand-danger/10 text-brand-danger"
+                    : "bg-brand-error/10 text-brand-error"
                 }`}>
                   Mức nguy cơ: {prediction.riskReport.level}
                 </span>
@@ -563,7 +563,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-text-primary">{item.conceptName}</span>
                       <span className={`px-2 py-0.2 text-[10px] font-mono rounded-full ${
-                        item.priority === "Cao" ? "bg-brand-danger/10 text-brand-danger"
+                        item.priority === "Cao" ? "bg-brand-error/10 text-brand-error"
                           : item.priority === "Thấp" ? "bg-bg-card text-text-muted"
                           : "bg-brand-warning/10 text-brand-warning"
                       }`}>
@@ -675,7 +675,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                 <div key={idx} className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-2">
                   <span className="text-xs font-medium text-text-primary block">{sc.title}</span>
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs font-mono font-bold ${sc.type === "positive" ? "text-brand-success" : "text-brand-danger"}`}>
+                    <span className={`text-xs font-mono font-bold ${sc.type === "positive" ? "text-brand-success" : "text-brand-error"}`}>
                       {sc.impactText}
                     </span>
                     <span className="text-sm font-display font-bold text-text-primary">
@@ -701,7 +701,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             {sessions.length > 0 && (
               <button
                 onClick={() => setShowClearHistoryConfirm(true)}
-                className="px-3 py-1.5 bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-brand-error/10 text-brand-error hover:bg-brand-error/20 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Xóa toàn bộ lịch sử</span>
@@ -742,7 +742,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     </button>
                     <button
                       onClick={() => setSessionToDelete(sess.id)}
-                      className="px-3 py-1.5 bg-bg-card border border-border-primary text-brand-danger text-xs rounded-lg hover:bg-brand-danger/10 transition cursor-pointer"
+                      className="px-3 py-1.5 bg-bg-card border border-border-primary text-brand-error text-xs rounded-lg hover:bg-brand-error/10 transition cursor-pointer"
                     >
                       Xóa
                     </button>
@@ -767,7 +767,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   </button>
                   <button
                     onClick={() => handleDeleteSession(sessionToDelete)}
-                    className="px-3 py-1.5 bg-brand-danger text-bg-card text-xs font-semibold rounded-lg cursor-pointer"
+                    className="px-3 py-1.5 bg-brand-error text-bg-card text-xs font-semibold rounded-lg cursor-pointer"
                   >
                     Xóa
                   </button>
@@ -791,7 +791,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   </button>
                   <button
                     onClick={handleClearAllHistory}
-                    className="px-3 py-1.5 bg-brand-danger text-bg-card text-xs font-semibold rounded-lg cursor-pointer"
+                    className="px-3 py-1.5 bg-brand-error text-bg-card text-xs font-semibold rounded-lg cursor-pointer"
                   >
                     Xóa tất cả
                   </button>

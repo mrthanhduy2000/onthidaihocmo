@@ -180,7 +180,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                           <div className="flex justify-between items-center text-[10px] text-text-muted font-sans">
                             <span>{getMasteryLabel(score)}</span>
                             {node.review?.reviewPriority === "high" && (
-                              <span className="text-brand-danger flex items-center gap-1 font-medium">
+                              <span className="text-brand-error flex items-center gap-1 font-medium">
                                 <Calendar className="w-3 h-3" /> Ôn tập ưu tiên
                               </span>
                             )}
@@ -189,7 +189,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
 
                         {/* Unmet prerequisites Alert */}
                         {unmetPrereqs.length > 0 && (
-                          <div className="bg-brand-warning-bg border border-brand-warning-border/40 p-2.5 rounded-lg text-[10px] text-brand-warning-text leading-relaxed font-sans flex items-start gap-1.5">
+                          <div className="bg-brand-warning-bg border border-brand-warning-border/40 p-2.5 rounded-lg text-[10px] text-brand-warning leading-relaxed font-sans flex items-start gap-1.5">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <div>
                               <strong>Cảnh báo tiên quyết:</strong> Hãy ôn luyện đạt ≥60% khái niệm gốc <strong>{unmetPrereqs.join(", ")}</strong> trước để hiểu sâu bài học này hơn.
@@ -207,8 +207,8 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                             
                             {node.teaching?.misconception && (
                               <div className="space-y-1">
-                                <span className="text-brand-danger font-semibold uppercase tracking-wider text-[9px] block">Lỗi sai học viên thường mắc:</span>
-                                <p className="text-text-secondary bg-brand-danger-bg/20 border border-brand-danger-border/20 p-2.5 rounded-lg">{node.teaching.misconception}</p>
+                                <span className="text-brand-error font-semibold uppercase tracking-wider text-[9px] block">Lỗi sai học viên thường mắc:</span>
+                                <p className="text-text-secondary bg-brand-error-bg/20 border border-brand-error-border/20 p-2.5 rounded-lg">{node.teaching.misconception}</p>
                               </div>
                             )}
 

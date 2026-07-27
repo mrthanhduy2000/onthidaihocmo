@@ -517,7 +517,7 @@ export default function StatsView() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <h3 className="text-lg font-medium font-display text-text-primary flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-brand-danger" /> Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
+              <AlertTriangle className="w-5 h-5 text-brand-error" /> Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
             </h3>
             <p className="text-xs text-text-secondary">
               Tra cứu và ôn lý thuyết tại chỗ các câu hỏi bạn từng làm sai để khắc phục tuyệt đối.
@@ -631,7 +631,7 @@ export default function StatsView() {
                   >
                     <div className="space-y-1 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="bg-brand-danger-bg text-brand-danger text-[10px] font-bold px-2 py-0.5 rounded-md font-mono">
+                        <span className="bg-brand-error-bg text-brand-error text-[10px] font-bold px-2 py-0.5 rounded-md font-mono">
                           Sai {errorCount} lần
                         </span>
                         <span className="text-[10px] text-text-muted font-mono">
@@ -725,10 +725,10 @@ export default function StatsView() {
                             
                             if (userAnswer !== null && userAnswer !== q.correctAnswer) {
                               if (isUserSelected) {
-                                cardStyle = "border-brand-danger-border bg-brand-danger-bg text-brand-danger font-medium";
-                                iconBadge = "bg-brand-danger text-white";
+                                cardStyle = "border-brand-error-border bg-brand-error-bg text-brand-error font-medium";
+                                iconBadge = "bg-brand-error text-white";
                                 labelBadge = (
-                                  <span className="ml-auto text-[10px] font-medium bg-brand-danger-bg text-brand-danger px-2.5 py-0.5 rounded-full border border-brand-danger-border flex items-center gap-1 shrink-0 font-mono">
+                                  <span className="ml-auto text-[10px] font-medium bg-brand-error-bg text-brand-error px-2.5 py-0.5 rounded-full border border-brand-error-border flex items-center gap-1 shrink-0 font-mono">
                                     <X className="w-3 h-3" /> BẠN ĐÃ CHỌN
                                   </span>
                                 );
@@ -773,7 +773,7 @@ export default function StatsView() {
                       {userAnswer !== q.correctAnswer && (
                         <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
                           <h5 className="text-[10px] font-bold text-text-muted uppercase tracking-wider font-mono flex items-center gap-1.5">
-                            <AlertTriangle className="w-3.5 h-3.5 text-brand-danger" /> Phân tích lỗi sai
+                            <AlertTriangle className="w-3.5 h-3.5 text-brand-error" /> Phân tích lỗi sai
                           </h5>
                           
                           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
@@ -782,7 +782,7 @@ export default function StatsView() {
                               <div className="flex flex-col items-center gap-1">
                                 <span className="text-[9px] text-text-muted font-mono tracking-wider uppercase font-medium">BẠN CHỌN</span>
                                 <ArrowDown className="w-3 h-3 text-text-muted" />
-                                <span className="w-8 h-8 rounded-full bg-brand-danger-bg text-brand-danger flex items-center justify-center font-bold font-mono border border-brand-danger-border">
+                                <span className="w-8 h-8 rounded-full bg-brand-error-bg text-brand-error flex items-center justify-center font-bold font-mono border border-brand-error-border">
                                   {userAnswer?.toUpperCase()}
                                 </span>
                               </div>
@@ -799,11 +799,11 @@ export default function StatsView() {
                             </div>
 
                             {/* Chi tiết nguyên nhân nhầm lẫn */}
-                            <div className="md:col-span-8 p-4 rounded-xl border border-brand-danger-border bg-brand-danger-bg/20 flex flex-col justify-between text-xs space-y-2">
+                            <div className="md:col-span-8 p-4 rounded-xl border border-brand-error-border bg-brand-error-bg/20 flex flex-col justify-between text-xs space-y-2">
                               <div className="space-y-1">
                                 <div className="flex items-baseline gap-1.5 flex-wrap">
                                   <span className="font-semibold text-text-secondary shrink-0">Bạn đã chọn:</span>
-                                  <span className="text-brand-danger font-medium">[{userAnswer?.toUpperCase()}] {q.options[userAnswer as any]}</span>
+                                  <span className="text-brand-error font-medium">[{userAnswer?.toUpperCase()}] {q.options[userAnswer as any]}</span>
                                 </div>
                                 <div className="flex items-baseline gap-1.5 flex-wrap">
                                   <span className="font-semibold text-text-secondary shrink-0">Đáp án đúng là:</span>
@@ -895,9 +895,9 @@ export default function StatsView() {
                                 <span className="text-[9px] text-text-muted font-mono block uppercase">Lần đầu làm sai</span>
                                 <span className="font-bold text-text-primary font-mono">{timeline.firstAttempt}</span>
                               </div>
-                              <div className="p-3 bg-brand-danger-bg rounded-xl border border-brand-danger-border space-y-1">
-                                <span className="text-[9px] text-brand-danger font-mono block uppercase">Tần suất làm sai</span>
-                                <span className="font-bold text-brand-danger font-mono text-base leading-none">{timeline.count} lần</span>
+                              <div className="p-3 bg-brand-error-bg rounded-xl border border-brand-error-border space-y-1">
+                                <span className="text-[9px] text-brand-error font-mono block uppercase">Tần suất làm sai</span>
+                                <span className="font-bold text-brand-error font-mono text-base leading-none">{timeline.count} lần</span>
                               </div>
                               <div className="p-3 bg-bg-surface rounded-xl border border-border-primary space-y-1">
                                 <span className="text-[9px] text-text-muted font-mono block uppercase">Lần gần nhất sai</span>
@@ -1019,7 +1019,7 @@ export default function StatsView() {
             <div className="inline-block align-bottom bg-bg-card rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-border-primary font-sans">
               <div className="bg-bg-card px-6 pt-6 pb-4">
                 <div className="sm:flex sm:items-start gap-4">
-                  <div className="mx-auto shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-brand-danger-bg text-brand-danger sm:mx-0 sm:h-9 sm:w-9">
+                  <div className="mx-auto shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-brand-error-bg text-brand-error sm:mx-0 sm:h-9 sm:w-9">
                     <Trash2 className="w-5 h-5" />
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left space-y-2">
@@ -1041,7 +1041,7 @@ export default function StatsView() {
                 </button>
                 <button 
                   onClick={handleResetData}
-                  className="w-full sm:w-auto bg-brand-danger hover:opacity-90 text-white text-xs font-medium px-5 py-2 rounded-lg transition shadow-sm cursor-pointer"
+                  className="w-full sm:w-auto bg-brand-error hover:opacity-90 text-white text-xs font-medium px-5 py-2 rounded-lg transition shadow-sm cursor-pointer"
                 >
                   Xóa sạch & Đặt lại
                 </button>

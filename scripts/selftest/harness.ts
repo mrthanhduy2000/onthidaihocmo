@@ -2598,6 +2598,113 @@ check("Chip đầu thẻ làm bài không xuống dòng trên khung hẹp",
   "chip số câu, chip mức độ và nhãn công tắc gia sư đều giữ một dòng");
 
 // ===========================================================================
+g("AF. Mọi màu ngữ nghĩa dùng trong giao diện đều phải có định nghĩa");
+// ===========================================================================
+// VÌ SAO CÓ NHÓM NÀY. Ngày 28/07/2026, rà màu trên bản chạy thật phát hiện lớp `brand-danger`
+// được dùng **84 lần trong 11 file** nhưng KHÔNG hề được định nghĩa ở đâu; bộ token chỉ có
+// `brand-error`. Tailwind sinh lớp tiện ích từ token, không có token thì không sinh lớp, mà
+// không có lớp thì trình duyệt lặng lẽ dùng màu kế thừa.
+//
+// Đo được trước khi sửa: `text-brand-danger` cho ra rgb(17,17,17), tức ĐEN như chữ thường, và
+// `bg-brand-danger-bg` cho ra rgba(0,0,0,0), tức TRONG SUỐT. Hậu quả nặng nhất nằm ở màn làm
+// bài: phương án người học chọn SAI hiện y hệt một phương án chưa ai đụng tới, nên tín hiệu
+// quan trọng nhất của cả ứng dụng học tập bị mất trắng.
+//
+// Loại lỗi này không bao giờ báo lỗi biên dịch, không sai kiểu, không nổ ngoại lệ. Nó chỉ
+// lặng lẽ không tô màu. Phép kiểm dưới đây bắt CẢ HỌ lỗi đó, không riêng một tên.
+
+const cssTheme = readFileSync(path.join(process.cwd(), "src/index.css"), "utf8");
+const tokenDaDinhNghia = new Set(
+  Array.from(cssTheme.matchAll(/--color-(brand-[a-z-]+)\s*:/g)).map(m => m[1])
+);
+
+const tienToMau = ["text", "bg", "border", "from", "via", "to", "ring", "fill", "stroke", "decoration", "outline", "shadow", "accent", "caret", "divide"];
+const tokenDangDung = new Map<string, string[]>();
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  for (const m of noiDung.matchAll(/\b(?:hover:|focus:|active:|group-hover:|dark:|sm:|md:|lg:)*(text|bg|border|from|via|to|ring|fill|stroke)-(brand-[a-z-]+?)(?:\/\d+)?(?=[\s"'`}])/g)) {
+    const ten = m[2].replace(/-$/, "");
+    if (!tokenDangDung.has(ten)) tokenDangDung.set(ten, []);
+    if (!tokenDangDung.get(ten)!.includes(f)) tokenDangDung.get(ten)!.push(f);
+  }
+}
+void tienToMau;
+
+const tokenMoCoi = [...tokenDangDung.keys()].filter(t => !tokenDaDinhNghia.has(t)).sort();
+check("Không lớp màu ngữ nghĩa nào bị dùng mà thiếu định nghĩa",
+  tokenMoCoi.length === 0,
+  tokenMoCoi.length === 0
+    ? `${tokenDangDung.size} tên màu đang dùng, tất cả đều có token trong index.css`
+    : `${tokenMoCoi.length} tên KHÔNG có định nghĩa nên không tô được màu nào: ${tokenMoCoi.map(t => `${t} (${tokenDangDung.get(t)!.slice(0, 3).join(", ")})`).join(" | ")}`);
+
+// AF2. Chế độ tối phải định nghĩa ĐỦ mọi màu ngữ nghĩa mà chế độ sáng có.
+// Thiếu một biến ở khối .dark thì màu đó rơi về giá trị của chế độ sáng, cho ra chữ nhạt trên
+// nền tối hoặc ngược lại, và chỉ lộ ra khi có người thật bật chế độ tối lên nhìn.
+const bienSang = new Set(
+  Array.from((cssTheme.match(/:root\s*\{[\s\S]*?\n\}/) || [""])[0].matchAll(/(--color-[a-z-]+)\s*:/g)).map(m => m[1])
+);
+const bienToi = new Set(
+  Array.from((cssTheme.match(/\.dark\s*\{[\s\S]*?\n\}/) || [""])[0].matchAll(/(--color-[a-z-]+)\s*:/g)).map(m => m[1])
+);
+const thieuOToi = [...bienSang].filter(b => !bienToi.has(b)).sort();
+check("Chế độ tối định nghĩa đủ mọi màu ngữ nghĩa của chế độ sáng",
+  thieuOToi.length === 0,
+  thieuOToi.length === 0
+    ? `${bienSang.size} màu, chế độ tối có đủ cả`
+    : `thiếu ${thieuOToi.length} màu ở khối .dark: ${thieuOToi.join(", ")}`);
+
+// AF3. Bốn màu ngữ nghĩa phải ĐỌC ĐƯỢC trên chính nền cùng tông của chúng.
+//
+// Đây là cách chúng thật sự được dùng: chữ `text-brand-success` nằm trên nền `bg-brand-success-bg`.
+// Đo ngày 28/07/2026 trước khi sửa: xanh lá 3,15:1, cam 3,35:1, xanh dương 3,38:1, đỏ 4,41:1,
+// cả bốn đều dưới 4,5:1 của chuẩn WCAG AA cho chữ thường. Nặng nhất là xanh lá của ĐÁP ÁN ĐÚNG.
+//
+// Ngưỡng 4,5 là chuẩn ngoài, KHÔNG được hạ xuống cho vừa bảng màu. Muốn đổi màu thì đổi sao cho
+// vẫn đạt.
+function docBienMau(khoi: string, ten: string): string | null {
+  const m = khoi.match(new RegExp(`--color-${ten}\\s*:\\s*(#[0-9a-fA-F]{6})`));
+  return m ? m[1] : null;
+}
+function doSang(hex: string): number {
+  const v = [1, 3, 5].map(i => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+}
+function doTuongPhan(a: string, b: string): number {
+  const la = doSang(a), lb = doSang(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+const khoiSang = (cssTheme.match(/:root\s*\{[\s\S]*?\n\}/) || [""])[0];
+const capMau = ["success", "warning", "error", "info"];
+const capDat: string[] = [];
+const capHong: string[] = [];
+for (const ten of capMau) {
+  const chu = docBienMau(khoiSang, ten);
+  const nen = docBienMau(khoiSang, `${ten}-bg`);
+  if (!chu || !nen) { capHong.push(`${ten}: thiếu biến`); continue; }
+  const tp = doTuongPhan(chu, nen);
+  (tp >= 4.5 ? capDat : capHong).push(`${ten} ${tp.toFixed(2)}:1`);
+}
+check("Bốn màu ngữ nghĩa đọc được trên nền cùng tông của chúng",
+  capHong.length === 0,
+  capHong.length === 0
+    ? `đạt chuẩn WCAG AA: ${capDat.join(", ")}`
+    : `chưa đạt 4,5:1: ${capHong.join(", ")}`);
+
+// AF4. Nội dung phương án KHÔNG được tô theo màu ngữ nghĩa.
+// Tín hiệu đúng sai đã có ở nền, viền, ô chữ cái và biểu tượng; tô luôn cả đoạn chữ chỉ làm
+// tụt độ tương phản của chính thứ người học phải đọc kỹ nhất sau mỗi câu.
+check("Nội dung phương án giữ màu chữ thường, không tô theo màu ngữ nghĩa",
+  !/bg-brand-success-bg border-brand-success-border text-brand-success/.test(nguonPractice)
+    && !/bg-brand-error-bg border-brand-error-border text-brand-error\b/.test(nguonPractice)
+    && /bg-brand-success-bg border-brand-success-border text-text-primary/.test(nguonPractice),
+  "chữ nội dung dùng text-text-primary, tương phản 18:1 thay cho 3,15:1");
+
+// ===========================================================================
 // Kết quả
 // ===========================================================================
 function inKetQua(): void {

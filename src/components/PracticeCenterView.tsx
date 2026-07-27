@@ -389,7 +389,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                                 ? "bg-brand-success/10 text-brand-success border-brand-success/20"
                                 : accuracy >= 50
                                 ? "bg-brand-warning/10 text-brand-warning border-brand-warning/20"
-                                : "bg-brand-danger/10 text-brand-danger border-brand-danger/20"
+                                : "bg-brand-error/10 text-brand-error border-brand-error/20"
                             }`}>
                               Đúng {accuracy}%
                             </span>

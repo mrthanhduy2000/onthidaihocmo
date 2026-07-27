@@ -121,7 +121,7 @@ export function LoginScreen() {
           </div>
         </div>
         {status === "error" && (
-          <div className="text-[11px] text-brand-danger flex items-start gap-1.5">
+          <div className="text-[11px] text-brand-error flex items-start gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             {errorMsg}
           </div>

@@ -199,7 +199,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
               )}
 
               {error && (
-                <div className="p-3 bg-brand-danger-bg border border-brand-danger-border/40 rounded-xl text-[11px] text-brand-danger flex items-start gap-2">
+                <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-[11px] text-brand-error flex items-start gap-2">
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>

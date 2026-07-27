@@ -15,19 +15,33 @@
   --text-muted: #767680;     /* Muted gray */
   --text-dimmed: #aeaeae;    /* Subtle placeholder / disabled */
   
-  --color-success: #16a34a;  /* Emerald-600 */
-  --color-success-bg: #f0fdf4; /* Emerald-50 */
-  --color-success-border: #bbf7d0; /* Emerald-200 */
-  
-  --color-warning: #ea580c;  /* Orange-600 */
+  /*
+    Bốn màu ngữ nghĩa, chế độ sáng. Mỗi màu đậm hơn một bậc so với bản trước ngày 28/07/2026.
+
+    Vì sao đổi: đo độ tương phản của CHÍNH các cặp đang dùng thật trên màn hình cho thấy cả bốn
+    đều dưới mức 4,5:1 mà chuẩn WCAG AA đòi cho chữ thường, tức chữ màu trên nền cùng tông của
+    nó đọc không rõ. Nặng nhất là màu xanh của ĐÁP ÁN ĐÚNG, chỉ 3,15:1, mà đó lại là đoạn chữ
+    người học nhìn nhiều nhất sau mỗi câu.
+
+      xanh lá  3,15 -> 4,79      cam      3,35 -> 4,88
+      đỏ       4,41 -> 5,91      xanh dương 3,38 -> 4,75
+
+    Giữ nguyên tông màu, chỉ hạ độ sáng một bậc, nên tính cách giao diện không đổi mà chữ đọc
+    được ở mọi chỗ. Nền và viền nhạt giữ nguyên để mảng màu vẫn dịu.
+  */
+  --color-success: #15803d;  /* Green-700, tương phản 4,79:1 trên nền Green-50 */
+  --color-success-bg: #f0fdf4; /* Green-50 */
+  --color-success-border: #bbf7d0; /* Green-200 */
+
+  --color-warning: #c2410c;  /* Orange-700, tương phản 4,88:1 trên nền Orange-50 */
   --color-warning-bg: #fff7ed; /* Orange-50 */
   --color-warning-border: #ffedd5; /* Orange-200 */
-  
-  --color-error: #dc2626;    /* Red-600 */
+
+  --color-error: #b91c1c;    /* Red-700, tương phản 5,91:1 trên nền Red-50 */
   --color-error-bg: #fef2f2;   /* Red-50 */
   --color-error-border: #fee2e2; /* Red-200 */
-  
-  --color-info: #3b82f6;     /* Blue-600 */
+
+  --color-info: #2563eb;     /* Blue-600, tương phản 4,75:1 trên nền Blue-50 */
   --color-info-bg: #eff6ff;  /* Blue-50 */
   --color-info-border: #bfdbfe; /* Blue-200 */
 }
