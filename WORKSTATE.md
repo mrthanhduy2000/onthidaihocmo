@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 28/07/2026, sau lượt giảm chi phí thao tác trong buổi ôn dài.
+**Cập nhật lần cuối**: 28/07/2026, sau lượt rà màu ngữ nghĩa.
 
 ---
 
@@ -15,7 +15,7 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Giảm chi phí thao tác màn làm bài, **ĐÃ HOÀN THÀNH** ba commit |
+| **Current Milestone** | Rà màu ngữ nghĩa toàn ứng dụng, **ĐÃ HOÀN THÀNH** |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
@@ -25,7 +25,33 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: giảm chi phí thao tác trong buổi ôn dài
+## Lượt mới nhất: rà màu ngữ nghĩa, đáp án sai vốn không hề có màu đỏ
+
+`brand-danger` được dùng **84 lần trong 11 file** mà **chưa từng được định nghĩa**; bộ token chỉ
+có `brand-error`. Đo được `text-brand-danger` ra `rgb(17,17,17)` tức đen như chữ thường, và
+`bg-brand-danger-bg` ra `rgba(0,0,0,0)` tức trong suốt.
+
+**Hậu quả: phương án chọn SAI hiện y hệt phương án chưa ai đụng tới.** Tín hiệu quan trọng nhất
+của một ứng dụng học tập mất trắng. Không báo lỗi biên dịch, không sai kiểu, chỉ lặng lẽ không
+tô màu.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Lớp màu không có token | `brand-danger` (84 chỗ), `brand-warning-text` (1 chỗ) | 0, nhóm **AF** canh |
+| Tương phản xanh lá, đáp án đúng | **3,15:1** | 4,79:1 |
+| Tương phản cam / xanh dương / đỏ | 3,35 / 3,38 / 4,41 | 4,88 / 4,75 / 5,91 |
+| Chữ nội dung phương án ĐÚNG | 3,15:1 | **18,04:1** |
+| Chữ nội dung phương án SAI | 4,41:1 | **17,26:1** |
+
+Quy ước mới: **nội dung phương án không tô theo màu ngữ nghĩa**, tín hiệu đúng sai để ở nền,
+viền, ô chữ cái và biểu tượng. Xem AGENTS.md mục 4.9d.
+
+**Bộ quét tổng quát đáng giá hơn sửa một tên**: nó tìm ra `brand-warning-text` ngay lần chạy đầu,
+một ca tôi hoàn toàn chưa thấy.
+
+---
+
+## Lượt trước: giảm chi phí thao tác trong buổi ôn dài
 
 Yêu cầu: không thêm tính năng, chỉ nâng chất lượng thứ đã có, đo trên bản chạy thật, và chỉ giữ
 thay đổi nào giúp người học bắt đầu nhanh hơn, hiểu nhanh hơn, nhớ tốt hơn hoặc tập trung lâu
@@ -335,7 +361,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **191**, chia 31 nhóm A đến AE, đạt toàn bộ |
+| Phép tự kiểm chứng | **195**, chia 32 nhóm A đến AF, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

@@ -22,7 +22,7 @@ Chạy 6 chặng, hỏng chặng nào dừng ngay tại đó:
 |---|---|---|
 | 1 | Rào bảo mật, quét khóa bí mật lọt vào file đã commit | vài giây |
 | 2 | `tsc --noEmit`, kiểm tra kiểu dữ liệu | khoảng 10 giây |
-| 3 | **191 phép tự kiểm chứng chạy trên engine thật** | vài giây |
+| 3 | **195 phép tự kiểm chứng chạy trên engine thật** | vài giây |
 | 4 | `vite build` | khoảng 10 giây |
 | 5 | `node scripts/build-vercel.mjs`, đóng gói bản triển khai | khoảng 10 giây |
 | 6 | **Nạp thật từng gói hàm serverless trong Node** | vài giây |
@@ -381,6 +381,30 @@ giảm, nên sau 13 lần là ghim 100 vĩnh viễn. Nhóm kiểm **AB** canh m�
 Khi đo bất cứ hiệu ứng nào theo **vị trí câu trong đề**, phải khử độ khó trước bằng cách so
 trong từng nhóm độ khó rồi mới gộp. Bộ sinh đề có lúc dồn câu khó về một đầu tùy trạng thái
 trước đó, đã đo được chênh lệch tới 0,38 trên thang 1 tới 3 giữa các phần đề.
+
+### 4.9d. Màu ngữ nghĩa phải có token, và phải đọc được
+
+Lớp màu kiểu `text-brand-*` chỉ tồn tại nếu có token `--color-brand-*` trong `src/index.css`.
+Thiếu token thì Tailwind **không sinh lớp**, và trình duyệt lặng lẽ dùng màu kế thừa: không lỗi
+biên dịch, không sai kiểu, chỉ là không tô màu.
+
+Ngày 28/07/2026 phát hiện `brand-danger` được dùng **84 lần trong 11 file** mà chưa từng được
+định nghĩa. Đo được `text-brand-danger` cho ra rgb(17,17,17) tức đen như chữ thường, và
+`bg-brand-danger-bg` cho ra rgba(0,0,0,0) tức trong suốt. Hậu quả: **phương án chọn SAI ở màn
+làm bài hiện y hệt phương án chưa ai đụng tới**, mất trắng tín hiệu quan trọng nhất của một ứng
+dụng học tập. Nay chỉ còn MỘT tên là `brand-error`.
+
+Hai ràng buộc, nhóm kiểm **AF** canh cả hai:
+
+1. **Mọi lớp màu đang dùng phải có token.** Bộ quét đối chiếu toàn bộ `src/components` với
+   `index.css`. Ngay lần chạy đầu nó tìm thêm được `brand-warning-text`, một ca nữa cùng họ.
+2. **Bốn màu ngữ nghĩa phải đạt tương phản 4,5:1 trên chính nền cùng tông của chúng**, vì đó là
+   cách chúng được dùng thật. Ngưỡng này là chuẩn ngoài (WCAG AA), **không được hạ cho vừa bảng
+   màu**; muốn đổi màu thì đổi sao cho vẫn đạt.
+
+Một quy ước đi kèm: **nội dung phương án không tô theo màu ngữ nghĩa.** Tín hiệu đúng sai đã có
+ở nền, viền, ô chữ cái và biểu tượng. Tô luôn đoạn chữ chỉ kéo tương phản xuống 3,15:1 cho đúng
+thứ người học phải đọc kỹ nhất.
 
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 

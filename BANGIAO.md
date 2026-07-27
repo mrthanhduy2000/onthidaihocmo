@@ -59,6 +59,83 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Rà màu ngữ nghĩa: đáp án sai vốn không hề có màu đỏ
+
+**Commit**: một commit lớn, nhóm kiểm mới **AF**, tổng phép kiểm 191 lên **195**.
+
+**Yêu cầu**: rà màu trong từng tính năng, kể cả khi chọn câu đúng câu sai, đọc lại logic rồi
+chỉnh màu cho đúng và đồng bộ với chức năng.
+
+#### Phát hiện nặng nhất: một lớp màu dùng 84 lần mà chưa từng được định nghĩa
+
+`brand-danger` xuất hiện **84 lần trong 11 file**. Bộ token trong `index.css` chỉ có
+`brand-error`. Tailwind sinh lớp tiện ích **từ token**; không có token thì không sinh lớp, mà
+không có lớp thì trình duyệt lặng lẽ dùng màu kế thừa.
+
+Đo trên bản chạy thật trước khi sửa:
+
+| Lớp | Ra màu gì |
+|---|---|
+| `text-brand-danger` | `rgb(17,17,17)`, tức **đen như chữ thường** |
+| `bg-brand-danger-bg` | `rgba(0,0,0,0)`, tức **trong suốt** |
+| `text-brand-error` (đối chứng) | `rgb(220,38,38)`, đúng màu đỏ |
+
+Hậu quả ở màn làm bài: **phương án người học chọn SAI hiện y hệt một phương án chưa ai đụng
+tới.** Tín hiệu quan trọng nhất của cả một ứng dụng học tập bị mất trắng, mà không ai biết.
+
+Loại lỗi này không báo lỗi biên dịch, không sai kiểu, không nổ ngoại lệ. Nó **chỉ lặng lẽ không
+tô màu**. Cùng họ với "hằng số trá hình" đã gặp nhiều lần, chỉ khác là ở tầng CSS.
+
+Đã đổi hết 84 chỗ về `brand-error`, giữ **một tên duy nhất** thay vì thêm bí danh.
+
+#### Bộ quét bắt cả họ lỗi, không riêng một tên
+
+Nhóm **AF** quét mọi lớp màu ngữ nghĩa đang dùng trong `src/components` rồi đối chiếu với token
+trong `index.css`. **Ngay lần chạy đầu nó tìm ra thêm một ca tôi chưa hề thấy**:
+`brand-warning-text` trong `ConceptMasteryMap.tsx`, làm dòng cảnh báo tiên quyết mất màu. Đây
+là lý do phép kiểm tổng quát đáng giá hơn hẳn việc sửa đúng một tên.
+
+#### Độ tương phản: cả bốn màu đều dưới chuẩn
+
+Đo chính các cặp đang dùng thật (chữ màu trên nền cùng tông của nó):
+
+| Cặp màu | Trước | Sau | Ngưỡng WCAG AA |
+|---|---|---|---|
+| Xanh lá, **đáp án đúng** | **3,15:1** | 4,79:1 | 4,5:1 |
+| Cam, cảnh báo | 3,35:1 | 4,88:1 | 4,5:1 |
+| Xanh dương, thông tin | 3,38:1 | 4,75:1 | 4,5:1 |
+| Đỏ, đáp án sai | 4,41:1 | 5,91:1 | 4,5:1 |
+
+Nặng nhất là xanh lá của **đáp án đúng**, mà đó lại là đoạn chữ người học nhìn nhiều nhất sau
+mỗi câu. Đã hạ độ sáng mỗi màu xuống một bậc, **giữ nguyên tông** nên tính cách giao diện không
+đổi.
+
+#### Một quy ước mới về màu trong thẻ phương án
+
+**Nội dung phương án giữ màu chữ thường, không tô theo màu ngữ nghĩa.** Tín hiệu đúng sai đã có
+ở bốn chỗ khác: nền, viền, ô chữ cái và biểu tượng. Tô luôn đoạn chữ chỉ kéo tương phản xuống
+đáy cho đúng thứ cần đọc kỹ nhất.
+
+| | Trước | Sau |
+|---|---|---|
+| Chữ phương án ĐÚNG | 3,15:1 | **18,04:1** |
+| Chữ phương án SAI | 4,41:1 | **17,26:1** |
+
+Đo lại trên DOM thật sau khi sửa, không chỉ tính trên giấy.
+
+#### Nghiệm thu
+
+Cả 6 chặng xanh với 195 phép kiểm. Nhóm AF có 4 phép, đã thử phá từng cái: trả lại một lớp màu
+không định nghĩa, xóa một màu khỏi chế độ tối, trả lại màu nhạt, tô lại chữ nội dung. Chế độ tối
+kiểm riêng: đủ 12 màu, các biến 400 trên nền gần đen đều đúng chiều.
+
+**Một sự cố nhỏ của tôi, giữ lại**: lúc thử phá tôi khôi phục file bằng `git checkout` rồi `cp`
+từ một bản sao lưu cũ hơn, làm mất chính bản sửa vừa viết. Phát hiện nhờ soát lại `grep` từng
+dấu vết thay vì tin là đã khôi phục đúng. **Sau mỗi lượt thử phá, phải kiểm lại bằng dấu vết cụ
+thể chứ không tin vào thao tác khôi phục.**
+
+---
+
 ### 28/07/2026 — Giảm chi phí thao tác trong buổi ôn dài, ba commit
 
 **Commit**: `f1e3f7e` và hai commit kế. Nhóm kiểm mới **AE**, tổng phép kiểm 185 lên **191**.
