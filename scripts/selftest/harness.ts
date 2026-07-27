@@ -24,7 +24,7 @@ import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
-import { conceptMemoryService } from "../../src/services/conceptMemoryService";
+import { conceptMemoryService, doKhoTienNghiem } from "../../src/services/conceptMemoryService";
 import { studentEvolutionEngine } from "../../src/services/studentEvolutionEngine";
 import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvaluationEngine";
 import { TimeService } from "../../src/services/time";
@@ -1783,6 +1783,103 @@ check("Chọn khái niệm để ra đề là tất định khi độ thạo b�
   new Set(chonLap).size === 1
     ? `5 lần gọi liên tiếp đều chọn "${chonLap[0]}"`
     : `5 lần gọi cho ${new Set(chonLap).size} khái niệm khác nhau`);
+
+// ===========================================================================
+g("V. Đường cong quên: một nguồn duy nhất, có nhìn giãn cách và lần quên");
+// ===========================================================================
+// Đo ngày 27/07/2026: dự án có HAI đường cong quên khác hẳn nhau cho cùng một câu hỏi "còn nhớ
+// bao nhiêu phần trăm", lệch tới 55 điểm phần trăm. Cái hiện lên màn Tiến hóa là một cái, cái
+// điều khiển chọn câu ôn tập và cảnh báo ôn khẩn lại là cái kia.
+
+const subV = dbService.getActiveSubjectId();
+const tenV = kbService.getKnowledgeGraph(subV)[0]?.concept || "";
+const NGAY_MS = 24 * 60 * 60 * 1000;
+
+function hoSoTriNhoV(sua: Partial<ReturnType<typeof conceptMemoryService.getConceptProfile>>) {
+  return { ...conceptMemoryService.getConceptProfile(tenV, subV), ...sua };
+}
+
+// V1. Hai đường cong phải nói CÙNG một điều khi nhận cùng bằng chứng.
+//     Cố ý đặt difficultyScore đúng bằng tiên nghiệm biên soạn tay, vì đó là chỗ duy nhất hai
+//     bên có thể lệch một cách chính đáng (bên trí nhớ khái niệm còn pha thêm độ khó đo được).
+const doKhoV = doKhoTienNghiem(tenV) ?? 5.0;
+const mocHocV = [6, 4, 2, 1, 0].map(d => new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString());
+const lechHaiDuong: number[] = [];
+for (const nghi of [1, 3, 7, 14]) {
+  const benA = conceptMemoryService.calculateRetentionScore(hoSoTriNhoV({
+    timesStudied: 5, timesCorrect: 5, timesWrong: 0, historicalPeak: 70, currentMastery: 70,
+    difficultyScore: doKhoV, isStableMastered: false, recoveryCount: 0, regressionCount: 0,
+    scoreHistory: mocHocV.map(t => ({ timestamp: t, score: 70 })),
+    lastReviewAt: new Date(TimeService.now().getTime() - nghi * NGAY_MS).toISOString(),
+  }) as any);
+  const benB = learnerModelService.recalculateForgettingScore({
+    ...learnerModelService.getOrCreateProfile(tenV),
+    attemptsCount: 5, correctCount: 5, incorrectCount: 0, reviewHistory: mocHocV,
+    lastStudiedAt: new Date(TimeService.now().getTime() - nghi * NGAY_MS).toISOString(),
+  } as any).forgettingScore;
+  lechHaiDuong.push(Math.abs(benA - benB));
+}
+const lechLonNhatV = Math.max(...lechHaiDuong);
+check("Hai đường cong quên của dự án nói cùng một điều khi cùng bằng chứng",
+  lechLonNhatV <= 0.02,
+  `lệch lớn nhất ${(lechLonNhatV * 100).toFixed(0)} điểm phần trăm qua các mốc nghỉ 1/3/7/14 ngày; trước 27/07/2026 lệch tới 55 điểm`);
+
+// V2. Chặn ở mức mã nguồn: learnerModel không được có công thức suy giảm riêng nữa.
+const nguonLearnerModel = readFileSync(path.join(process.cwd(), "src/services/learnerModel.ts"), "utf8");
+check("learnerModel không tự dựng công thức quên riêng",
+  !/Math\.pow\(2\.2/.test(nguonLearnerModel) && /doBenTriNhoNgay\(/.test(nguonLearnerModel),
+  "nửa đời cũ 0,5 * 2,2^chuỗi_đúng đã gỡ, nay gọi doBenTriNhoNgay");
+
+// V3. Hiệu ứng giãn cách: ôn dồn một buổi phải kém bền hơn ôn giãn nhiều ngày.
+const chungV = { timesStudied: 5, timesCorrect: 5, timesWrong: 0, historicalPeak: 70, currentMastery: 70, difficultyScore: 5 };
+const benDon = conceptMemoryService.generateForgetCurve(hoSoTriNhoV({
+  ...chungV,
+  scoreHistory: [0, 0.01, 0.02, 0.03, 0.04].map(d => ({ timestamp: new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString(), score: 70 })),
+}) as any).find(c => c.daysAhead === 7)!.retention;
+const benGian = conceptMemoryService.generateForgetCurve(hoSoTriNhoV({
+  ...chungV,
+  scoreHistory: [0, 15, 30, 45, 60].map(d => ({ timestamp: new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString(), score: 70 })),
+}) as any).find(c => c.daysAhead === 7)!.retention;
+check("Ôn giãn cách bền hơn ôn dồn một buổi",
+  benGian > benDon,
+  `cùng 5 lượt đúng: dồn trong 1 giờ còn ${Math.round(benDon * 100)}%, giãn qua 60 ngày còn ${Math.round(benGian * 100)}% sau 7 ngày`);
+
+// V4. Nhớ lại THẤT BẠI phải làm trí nhớ kém bền đi.
+const benDung = conceptMemoryService.generateForgetCurve(hoSoTriNhoV({ timesStudied: 5, timesCorrect: 5, timesWrong: 0, historicalPeak: 70, difficultyScore: 5 }) as any).find(c => c.daysAhead === 7)!.retention;
+const benSai = conceptMemoryService.generateForgetCurve(hoSoTriNhoV({ timesStudied: 5, timesCorrect: 0, timesWrong: 5, historicalPeak: 70, difficultyScore: 5 }) as any).find(c => c.daysAhead === 7)!.retention;
+check("Nhớ lại thất bại làm trí nhớ kém bền đi",
+  benSai < benDung,
+  `5 lượt đúng hết còn ${Math.round(benDung * 100)}%, 5 lượt sai hết còn ${Math.round(benSai * 100)}% sau 7 ngày`);
+
+// V5. Hai hàm vẽ đường cong và chấm điểm trí nhớ phải dùng CHUNG một mức sàn.
+const hoSoSanV = hoSoTriNhoV({ timesStudied: 1, timesCorrect: 1, timesWrong: 0, historicalPeak: 30, difficultyScore: 8.5 });
+const lechSan = [0, 1, 3, 7, 14, 30].filter(d => {
+  const tren = conceptMemoryService.generateForgetCurve(hoSoSanV as any).find(c => c.daysAhead === d)!.retention;
+  const diem = conceptMemoryService.calculateRetentionScore({
+    ...hoSoSanV, lastReviewAt: new Date(TimeService.now().getTime() - d * NGAY_MS).toISOString(),
+  } as any);
+  return Math.abs(tren - diem) > 1e-9;
+});
+check("Đường cong vẽ ra và điểm trí nhớ dùng chung một mức sàn",
+  lechSan.length === 0,
+  lechSan.length === 0
+    ? "khớp ở cả 6 mốc; bản cũ dùng sàn 0,05 và 0,08 nên lệch từ mốc 14 ngày trở đi"
+    : `còn lệch ở mốc ${lechSan.join(", ")} ngày`);
+
+// V6. Người mới luyện một khái niệm KHÔNG được bị kết luận "cần ôn khẩn" sau vài tiếng.
+//     Ngưỡng khẩn của teachingDecisionEngine là forgettingScore < 0,6. Bản cũ cho nửa đời
+//     0,26 ngày khi chuỗi đúng bằng 0, tức chạm ngưỡng sau khoảng 6 tiếng.
+const moiHoc = learnerModelService.recalculateForgettingScore({
+  ...learnerModelService.getOrCreateProfile(tenV),
+  attemptsCount: 1, correctCount: 1, incorrectCount: 0, streak: 1, confidence: 0.3,
+  reviewHistory: [new Date(TimeService.now().getTime() - 0.25 * NGAY_MS).toISOString()],
+  lastStudiedAt: new Date(TimeService.now().getTime() - 0.25 * NGAY_MS).toISOString(),
+} as any).forgettingScore;
+check("Mới luyện một khái niệm thì 6 tiếng sau chưa bị coi là cần ôn khẩn",
+  moiHoc >= 0.6,
+  `sau 6 tiếng còn nhớ ${Math.round(moiHoc * 100)}%, ngưỡng khẩn là dưới 60%`);
+
+localStorage.removeItem(`poly_econ_concept_memory_${subV}`);
 
 // ===========================================================================
 // Kết quả

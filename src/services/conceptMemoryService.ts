@@ -113,7 +113,7 @@ const MOC_BANG_CHUNG_CO = 6;
  * động cũng bị loại, vì `review` của chúng là hằng số mặc định 3/7/14 và "medium" cho mọi khái
  * niệm, tức không mang thông tin gì.
  */
-function doKhoTienNghiem(conceptName: string): number | null {
+export function doKhoTienNghiem(conceptName: string): number | null {
   const subjectId = dbService.getActiveSubjectId();
   const node = kbService.getKnowledgeGraph(subjectId).find(n => n.concept === conceptName);
   if (!node || node.laNutTongHop || !node.review) return null;
@@ -131,25 +131,113 @@ function doKhoTienNghiem(conceptName: string): number | null {
 }
 
 /**
- * Độ bền trí nhớ của một khái niệm, tính bằng ngày. Đây là NGUỒN DUY NHẤT của công thức này.
+ * Sàn của mọi phép tính độ ghi nhớ. Không ai còn nhớ 0% tuyệt đối, và quan trọng hơn: hai hàm
+ * dùng hai sàn khác nhau thì đường cong vẽ ra màn hình sẽ mâu thuẫn với điểm số dùng xếp lịch
+ * ôn. Đo ngày 27/07/2026: `generateForgetCurve` chốt sàn 0,05 còn `calculateRetentionScore`
+ * chốt 0,08, nên từ mốc 14 ngày trở đi hai hàm lệch nhau 3 điểm phần trăm dù chú thích ngay
+ * trên chúng khẳng định là "dùng chung đúng công thức".
+ */
+const SAN_GHI_NHO = 0.05;
+
+/**
+ * Bằng chứng đầu vào để tính độ bền trí nhớ. Cố ý KHÔNG nhận nguyên hồ sơ, mà nhận đúng những
+ * đại lượng công thức thật sự cần, để hai kiểu hồ sơ khác nhau của dự án cùng dùng được một
+ * công thức duy nhất.
+ */
+export interface BangChungTriNho {
+  /** Số lần nhớ lại THÀNH CÔNG. Chỉ lần nhớ lại đúng mới bồi thêm độ bền. */
+  soLanNhoLaiDung: number;
+  /** Số lần nhớ lại THẤT BẠI. */
+  soLanNhoLaiSai: number;
+  /** Đỉnh cao độ thạo từng đạt, thang 0 đến 100. */
+  dinhCaoDoThao: number;
+  /** Độ khó ghi nhớ của khái niệm, thang 1 đến 10. */
+  doKhoKhaiNiem: number;
+  /** Số lần đã phục hồi sau khi tụt. */
+  soLanPhucHoi?: number;
+  /** Số lần tụt lùi đáng kể. */
+  soLanTuiLui?: number;
+  /** Đã đạt trạng thái thạo ổn định chưa. */
+  daVungOnDinh?: boolean;
+  /** Các mốc thời gian đã học, dạng chuỗi ISO. Dùng để đo hiệu ứng giãn cách. */
+  mocHocISO?: string[];
+}
+
+/**
+ * ĐỘ BỀN TRÍ NHỚ của một khái niệm, tính bằng ngày. Đây là NGUỒN DUY NHẤT của công thức này
+ * trong toàn dự án, kể cả cho `learnerModel`.
+ *
+ *     R(t) = e^(-t/S)
+ *     S = nen * heSoGianCach * phatQuenLai * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh
+ *     nen = max(1, 1,8*log2(soLanNhoLaiDung + 1) + dinhCaoDoThao/25)
+ *
+ * Ba điều bản trước bỏ sót, cả ba đều đo được ngày 27/07/2026:
+ *
+ * 1. **Hiệu ứng giãn cách bị bỏ qua hoàn toàn.** Ôn dồn 5 lần trong một giờ và ôn giãn 5 lần
+ *    trong 60 ngày đều cho đúng 55% sau 7 ngày. Đây là hiệu ứng vững chắc nhất của cả ngành
+ *    nghiên cứu trí nhớ, mà dữ liệu để đo nó (`scoreHistory` và `reviewHistory` đều có mốc thời
+ *    gian) thì nằm sẵn không ai đọc. Nay đếm số NGÀY LỊCH khác nhau đã học.
+ *
+ * 2. **Nhớ lại thất bại vô hình.** Học 5 lần đúng hết và học 5 lần sai hết đều cho 55%. Nay
+ *    phần nền chỉ lớn lên theo số lần nhớ lại ĐÚNG, cộng thêm phạt theo TỶ LỆ quên. Cố ý dùng
+ *    tỷ lệ chứ không dùng số tuyệt đối, đúng bài học đã rút ra ở hàm phạt nợ học tập của bộ dự
+ *    báo: đếm tuyệt đối thì ai luyện càng nhiều càng bị phạt nặng.
+ *
+ * 3. **Không có gì để hiệu chuẩn.** Xem `doBenTriNhoDoDuoc` bên dưới.
+ *
+ * Thiếu dữ liệu thì mọi hệ số mới đều trả về 1,0, tức giữ nguyên hành vi cũ, không đoán bừa.
+ */
+export function doBenTriNhoNgay(bc: BangChungTriNho): number {
+  const soDung = Math.max(0, bc.soLanNhoLaiDung || 0);
+  const soSai = Math.max(0, bc.soLanNhoLaiSai || 0);
+  const tongLuot = soDung + soSai;
+
+  const nen = Math.max(1.0, Math.log2(soDung + 1) * 1.8 + Math.max(0, bc.dinhCaoDoThao) / 25);
+
+  // Hiệu ứng giãn cách. Đếm số NGÀY LỊCH khác nhau chứ không đếm số lượt, vì 5 lượt trong cùng
+  // một buổi học chỉ là một lần gặp lại kiến thức. Bão hòa ở 5 ngày khác nhau, thưởng tối đa
+  // 1,5 lần: cố ý dè dặt hơn nhiều so với mức các nghiên cứu đo được, để nếu có sai thì sai về
+  // phía nhắc ôn sớm chứ không phải phía để người học quên mất.
+  const ngayKhacNhau = new Set(
+    (bc.mocHocISO || [])
+      .map(s => {
+        const t = new Date(s).getTime();
+        return Number.isFinite(t) ? Math.floor(t / 86400000) : null;
+      })
+      .filter((v): v is number => v !== null)
+  ).size;
+  const heSoGianCach = 1 + 0.5 * Math.max(0, Math.min(1, (ngayKhacNhau - 1) / 4));
+
+  // Phạt theo TỶ LỆ nhớ lại thất bại, không theo số tuyệt đối.
+  const tyLeQuen = tongLuot > 0 ? soSai / tongLuot : 0;
+  const phatQuenLai = 1 / (1 + 1.5 * tyLeQuen);
+
+  const heSoPhucHoi = 1.0 + 0.35 * Math.min(5, bc.soLanPhucHoi || 0);
+  const phatTuiLui = 1.0 / (1.0 + 0.40 * Math.min(5, bc.soLanTuiLui || 0));
+  const heSoDoKho = Math.max(0.6, 8.0 / Math.max(4.0, bc.doKhoKhaiNiem || 5.0));
+  const thuongOnDinh = bc.daVungOnDinh ? 2.2 : 1.0;
+
+  return nen * heSoGianCach * phatQuenLai * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh;
+}
+
+/** Quy độ bền ra tỷ lệ còn nhớ sau `soNgay` ngày. Một chỗ duy nhất áp sàn. */
+export function conNhoSauNgay(doBenNgay: number, soNgay: number): number {
+  const S = Math.max(0.05, doBenNgay);
+  return Math.max(SAN_GHI_NHO, Math.exp(-Math.max(0, soNgay) / S));
+}
+
+/**
+ * Độ bền trí nhớ cho một hồ sơ khái niệm. Gói lại việc rút bằng chứng từ hồ sơ.
  *
  * Trước đây công thức bị chép làm hai bản giống hệt nhau ở calculateRetentionScore và
  * generateForgetCurve. Hai bản chép tay như vậy chắc chắn sẽ lệch nhau khi ai đó chỉ sửa một
  * chỗ, và khi đó đường cong quên vẽ ra màn hình sẽ mâu thuẫn với điểm trí nhớ dùng để xếp
  * lịch ôn. Nay cả hai đều gọi hàm này.
  *
- *     S = S_nen * heSoPhucHoi * phatTuiLui * heSoDoKho * thuongOnDinh
- *     S_nen = max(1, 1,8*log2(soLanHoc + 1) + dinhCaoLichSu/25)
- *
- * Từ 27/07/2026 `heSoDoKho` không còn đọc thẳng `difficultyScore` nữa mà pha với tiên nghiệm
- * biên soạn tay, xem `doKhoTienNghiem` ngay trên.
+ * `heSoDoKho` không đọc thẳng `difficultyScore` mà pha với tiên nghiệm biên soạn tay, xem
+ * `doKhoTienNghiem` ở trên.
  */
 function memoryStrengthDays(profile: ConceptMemoryProfile): number {
-  const logStudied = Math.log2(Math.max(1, profile.timesStudied) + 1);
-  const baseStrength = Math.max(1.0, (logStudied * 1.8) + (profile.historicalPeak / 25));
-  const recoveryFactor = 1.0 + 0.35 * Math.min(5, profile.recoveryCount || 0);
-  const regressionPenalty = 1.0 / (1.0 + 0.40 * Math.min(5, profile.regressionCount || 0));
-
   // Độ khó dùng để chấm: pha giữa TIÊN NGHIỆM biên soạn tay và số ĐO ĐƯỢC từ lịch sử học, theo
   // đúng công thức co của dự án `w = 1 - e^(-n/6)`. Chưa học lần nào thì w bằng 0 nên tin hoàn
   // toàn vào tiên nghiệm; học nhiều rồi thì tiên nghiệm nhường chỗ cho dữ liệu thật.
@@ -160,9 +248,22 @@ function memoryStrengthDays(profile: ConceptMemoryProfile): number {
     ? doKhoDoDuoc
     : tienNghiem * (1 - w) + doKhoDoDuoc * w;
 
-  const difficultyFactor = Math.max(0.6, 8.0 / Math.max(4.0, doKhoHieuDung));
-  const stableBonus = profile.isStableMastered ? 2.2 : 1.0;
-  return baseStrength * recoveryFactor * regressionPenalty * difficultyFactor * stableBonus;
+  // Hồ sơ cũ có thể chưa tách được đúng và sai (cả hai cùng 0 trong khi đã học vài lần). Khi đó
+  // coi như nhớ lại đúng hết, tức giữ nguyên hành vi trước ngày 27/07/2026, không suy diễn thêm.
+  const daTachDungSai = (profile.timesCorrect || 0) + (profile.timesWrong || 0) > 0;
+  const soDung = daTachDungSai ? profile.timesCorrect : Math.max(0, profile.timesStudied);
+  const soSai = daTachDungSai ? profile.timesWrong : 0;
+
+  return doBenTriNhoNgay({
+    soLanNhoLaiDung: soDung,
+    soLanNhoLaiSai: soSai,
+    dinhCaoDoThao: profile.historicalPeak,
+    doKhoKhaiNiem: doKhoHieuDung,
+    soLanPhucHoi: profile.recoveryCount,
+    soLanTuiLui: profile.regressionCount,
+    daVungOnDinh: profile.isStableMastered,
+    mocHocISO: (profile.scoreHistory || []).map(h => h.timestamp),
+  });
 }
 
 /**
@@ -457,9 +558,9 @@ export const conceptMemoryService = {
     const diffMs = now.getTime() - last.getTime();
     const daysElapsed = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
 
-    // Dùng chung công thức độ bền trí nhớ, không chép lại (xem memoryStrengthDays ở đầu file).
-    const retention = Math.max(0.08, Math.exp(-daysElapsed / memoryStrengthDays(profile)));
-    return Number(retention.toFixed(2));
+    // Dùng chung công thức độ bền trí nhớ VÀ chung một mức sàn, không chép lại (xem
+    // memoryStrengthDays và conNhoSauNgay ở đầu file).
+    return Number(conNhoSauNgay(memoryStrengthDays(profile), daysElapsed).toFixed(2));
   },
 
   /**
@@ -494,7 +595,7 @@ export const conceptMemoryService = {
     const days = [0, 1, 3, 7, 14, 30];
     return days.map(d => ({
       daysAhead: d,
-      retention: Number(Math.max(0.05, Math.exp(-d / memoryStrength)).toFixed(2))
+      retention: Number(conNhoSauNgay(memoryStrength, d).toFixed(2))
     }));
   },
 

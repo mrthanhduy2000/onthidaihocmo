@@ -17,6 +17,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
 
 import { dbService, setConceptMasteryBothKeys, questionMap } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
+import { conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem } from "./conceptMemoryService";
 import { TimeService } from "./time";
 
 export interface ConceptProfile {
@@ -590,7 +591,29 @@ export const learnerModelService = {
   },
 
   /**
-   * Recalculates the forgetting score using half-life and elapsed time.
+   * Mức còn nhớ của một khái niệm và thời điểm tới hạn ôn lại.
+   *
+   * VÌ SAO VIẾT LẠI (27/07/2026). Dự án đang có HAI đường cong quên hoàn toàn khác nhau cho
+   * cùng một câu hỏi "còn nhớ bao nhiêu phần trăm", và chúng nói hai điều trái ngược:
+   *
+   *   người mới học, nghỉ 1 ngày   -> conceptMemoryService nói 87%, hàm này nói 32%
+   *   học 5 lần đúng, nghỉ 14 ngày -> conceptMemoryService nói 33%, hàm này nói 64%
+   *
+   * Lệch tới 55 điểm phần trăm. Cái hiện lên màn Tiến hóa là cái thứ nhất, còn cái ĐIỀU KHIỂN
+   * việc chọn câu hỏi ôn tập, cảnh báo ôn khẩn và kế hoạch học lại là cái thứ hai, tức bản
+   * cũ của chính hàm này.
+   *
+   * Bản cũ lấy nửa đời trí nhớ bằng `0,5 * 2,2^chuỗi_đúng * (0,5 + tự_tin)`. Ba chỗ hỏng:
+   *
+   *   1. Hàm mũ theo chuỗi đúng cho dải 0,26 ngày tới 29 ngày, tức chênh nhau 111 lần, chỉ do
+   *      một biến duy nhất. Người mới luyện một khái niệm bị kết luận là "cần ôn khẩn cấp"
+   *      sau đúng 6 TIẾNG, nên danh sách ôn tập lúc nào cũng đỏ rực và mất hết ý nghĩa.
+   *   2. Chuỗi đúng bị đứt là mất sạch, dù đã luyện khái niệm đó 50 lần. Toàn bộ khối lượng
+   *      luyện tập không hề vào công thức.
+   *   3. Không có mốc thời gian nào của các lần ôn trước, nên hiệu ứng giãn cách vô hình,
+   *      dù `reviewHistory` lưu sẵn 20 mốc gần nhất mà không ai đọc.
+   *
+   * Nay gọi thẳng `doBenTriNhoNgay`, đúng một nguồn công thức cho cả dự án.
    */
   recalculateForgettingScore(profile: ConceptProfile): ConceptProfile {
     if (!profile.lastStudiedAt) return { ...profile, forgettingScore: 1.0 };
@@ -599,15 +622,28 @@ export const learnerModelService = {
     const now = TimeService.now().getTime();
     const elapsedDays = (now - lastStudied) / (1000 * 60 * 60 * 24);
 
-    // Calculate half-life in days based on correctness streak and confidence
-    // baseline is 0.5 days, scaling exponentially up to 30 days
-    const halfLife = 0.5 * Math.pow(2.2, Math.min(6, profile.streak)) * (0.5 + profile.confidence);
+    // Đỉnh cao độ thạo: hồ sơ này không lưu đỉnh riêng, nên lấy độ thạo hiện tại trong thống kê
+    // làm thay. Không có thì dùng 50, đúng mốc trung tính mà `conceptMemoryService` dùng cho
+    // khái niệm chưa học, chứ không bịa một con số đẹp hơn.
+    const mastery = dbService.getStatistics().conceptMastery || {};
+    const dinhCaoDoThao = mastery[profile.conceptName] ?? mastery[profile.conceptId] ?? 50;
 
-    // Forgetting curve formula: R = e^(-t / h)
-    const forgettingScore = Math.max(0.01, Math.min(1.0, Math.exp(-elapsedDays / halfLife)));
+    // Độ khó khái niệm lấy từ tiên nghiệm biên soạn tay nếu có, giống hệt đường bên
+    // `conceptMemoryService`, để hai bên không thể lệch nhau vì lý do độ khó.
+    const doKhoKhaiNiem = doKhoTienNghiem(profile.conceptName) ?? 5.0;
 
-    // Spaced Repetition threshold for next review is when retention falls to 60%
-    const nextReviewDays = -Math.log(0.6) * halfLife; // ~0.51 * half-life
+    const doBenNgay = doBenTriNhoNgay({
+      soLanNhoLaiDung: profile.correctCount,
+      soLanNhoLaiSai: profile.incorrectCount,
+      dinhCaoDoThao,
+      doKhoKhaiNiem,
+      mocHocISO: profile.reviewHistory,
+    });
+
+    const forgettingScore = Math.min(1.0, conNhoSauNgay(doBenNgay, elapsedDays));
+
+    // Tới hạn ôn khi mức còn nhớ tụt xuống 60%.
+    const nextReviewDays = -Math.log(0.6) * doBenNgay;
     const nextReviewTime = lastStudied + nextReviewDays * (1000 * 60 * 60 * 24);
 
     return {
