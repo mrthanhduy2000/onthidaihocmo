@@ -59,6 +59,70 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Màn Luyện câu: dời chrome xuống đáy, bỏ cột phải, về một cột
+
+Chỉ thị của Đàm: tự quyết và triển khai mọi thay đổi thuộc Presentation Layer, Layout,
+Component Composition, Visual Hierarchy. Không dừng để xin xác nhận. Không xoá tính năng.
+Ưu tiên Component Composition trước tiên. Chỉ tập trung màn Luyện câu.
+
+#### Khác biệt lớn nhất vừa xử lý
+
+**Một: 11 phần tử chrome nằm TRÊN câu hỏi.** Đối chiếu trang bài tập của Khan ở khổ 1280px:
+phía trên câu hỏi của họ không có gì ngoài tiêu đề bài và một đường kẻ. Sản phẩm này đặt chip
+số câu, chip mức khó, mã ID, công tắc gia sư AI, nhãn gia sư, nút đánh dấu, nút báo lỗi ngay
+trên đó. Người học mở màn ra là chạm vào một hàng công cụ trước khi chạm được câu hỏi.
+
+**Hai: cột phải "Bảng câu hỏi".** Khan không có cột phải nào. Bố cục cũ là lưới 4 cột nên vùng
+làm bài chỉ được 642px thay vì 896px, và trong lúc đang cân nhắc đáp án thì một lưới 10 con số
+nằm ngay ngoại vi thị giác.
+
+#### Đã làm, không xoá một chức năng nào
+
+| | Trước | Sau |
+|---|---|---|
+| Phần tử phía trên câu hỏi | **11** | **3** (chỉ còn dòng chủ đề và khái niệm, Khan cũng có dòng tương đương) |
+| Bề rộng vùng làm bài | 642px | **864px** |
+| Bố cục | lưới 4 cột | **một cột** |
+| Công tắc gia sư, đánh dấu, báo lỗi | trên câu hỏi | **thanh hành động đáy** |
+| Vị trí câu và mức khó | hai cái chip có viền | **một câu chữ**: "Câu 1 trên 10 • Mức Trung bình" |
+| Bảng câu hỏi | cột phải, cạnh câu hỏi | **dưới vùng làm bài**, chức năng nhảy câu nguyên vẹn |
+| Mã câu hỏi | dòng chữ riêng | đưa vào chú giải của nút báo lỗi, đúng chỗ cần dùng nó |
+
+Thanh hành động đáy nay có ba cụm đúng như Khan: hành động phụ bên trái, vị trí trong phiên ở
+giữa, điều hướng câu bên phải. Đo lại: **một dòng**, không gãy.
+
+#### Vì sao việc này kéo giao diện gần Khan hơn
+
+Khan đặt mọi thứ phụ trợ ở đáy vì đó là chỗ mắt dừng lại **sau** khi đã đọc xong các phương án
+và cần quyết định làm gì tiếp. Đặt chúng ở đầu là bắt người học đi qua một hàng công cụ trước
+khi được đọc nội dung. Đây là khác biệt về thứ tự đọc, không phải về trang trí.
+
+#### Bộ tự kiểm chứng bắt được một lỗi tôi vừa gây ra
+
+Khi dồn gợi ý phím tắt vào giữa thanh đáy, tôi đặt mốc hiện là `2xl`. Nhóm **AE** báo hỏng ngay:
+các mốc của Tailwind tính theo bề rộng **cửa sổ**, nên đặt `2xl` là ẩn dòng nhắc ở gần như mọi
+khổ màn hình thật, tức xoá luôn phần dạy phím tắt. Đã tách ra một dòng riêng dưới thanh, luôn
+hiện từ `sm` trở lên.
+
+#### Cái bẫy cú pháp vấp lần thứ BA
+
+Đặt khối chú thích JSX ngay bên trong dấu ngoặc của biểu thức `&&`. Ba lần trong cùng một dự
+án. Quy tắc: **chú thích luôn nằm NGOÀI dấu ngoặc của biểu thức điều kiện.**
+
+#### Kiểm chứng
+
+`npm run check` đạt toàn bộ 6 chặng. Đo trên bản chạy thật: 3 phần tử trên câu hỏi, vùng làm
+bài 864px, thanh đáy một dòng, ba chức năng đã dời vẫn còn đủ (công tắc gia sư, nút đánh dấu,
+nút báo lỗi), Bảng câu hỏi vẫn tồn tại và nằm dưới câu hỏi, không tràn ngang.
+
+#### Còn khác Khan trên chính màn này
+
+- Bảng câu hỏi vẫn là một thẻ có viền; Khan trình bày tiến độ bằng chấm tròn nhỏ trong thanh đáy.
+- Nút "Nộp bài" vẫn ở góc trên phải; Khan đặt hành động chính ở đáy bên phải.
+- Chưa có dòng nhắc kiểu "Chọn 1 đáp án" ở 18px đậm dưới câu hỏi.
+
+---
+
 ### 28/07/2026 — Đối chiếu song song màn làm bài với Khan, bỏ thẻ bọc, nền trắng
 
 Chỉ thị của Đàm: coi Khan Academy là **Design Reference duy nhất**, không được tự sáng tác,

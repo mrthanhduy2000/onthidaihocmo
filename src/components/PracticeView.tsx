@@ -521,9 +521,9 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
       )}
 
       {/* Main Panel Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Left Column: Interactive Question Workspace (3/4 width) */}
-        <div className="lg:col-span-3 space-y-5">
+      <div className="space-y-8">
+        {/* Cột duy nhất: vùng làm bài chiếm trọn bề rộng, đúng như trang bài tập của Khan */}
+        <div className="space-y-5">
           
           {/*
             BỎ THẺ BỌC QUANH BÀI LÀM.
@@ -541,80 +541,6 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
           {activeQuestion && (
             <div className="bg-bg-card space-y-5 px-0 py-2">
               
-              {/* Question Index & Action Flags */}
-              <div className="flex items-center justify-between gap-4 border-b border-border-primary/60 pb-4">
-                <div className="flex items-center gap-2">
-                  <span className="bg-bg-surface border border-border-primary text-text-secondary text-xs font-medium px-2.5 py-0.5 rounded-md whitespace-nowrap">
-                    Câu {currentIdx + 1} / {examQuestions.length}
-                  </span>
-                  <span className={`text-2xs font-medium px-2 py-0.5 rounded-full border ${
-                    activeQuestion.difficulty === "Dễ" ? "bg-brand-success-bg text-brand-success border-brand-success-border/30" :
-                    activeQuestion.difficulty === "Trung bình" ? "bg-brand-info-bg text-brand-info border-brand-info-border/30" :
-                    activeQuestion.difficulty === "Khó" ? "bg-brand-warning-bg text-brand-warning border-brand-warning-border/30" :
-                    "bg-brand-error-bg text-brand-error border-brand-error-border/30"
-                  } whitespace-nowrap`}>
-                    Mức {activeQuestion.difficulty}
-                  </span>
-                  <span className="text-2xs text-text-muted tabular-nums hidden sm:inline">
-                    ID: #{activeQuestion.id}
-                  </span>
-                </div>
-
-                {/* Bookmark & suspicious doubt flags */}
-                <div className="flex items-center gap-3">
-                  {/* AI Tutor Toggle */}
-                  {!exam.isSubmitted && (
-                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                      <div className="relative">
-                        <input 
-                          type="checkbox" 
-                          checked={isTutorMode} 
-                          onChange={(e) => {
-                            setIsTutorMode(e.target.checked);
-                          }}
-                          className="sr-only" 
-                        />
-                        <div className={`w-8 h-4 rounded-full transition duration-150 ${isTutorMode ? "bg-brand-success" : "bg-bg-surface border border-border-primary"}`}></div>
-                        <div className={`absolute top-0.5 left-0.5 bg-white w-3 h-3 rounded-full shadow-md transition-transform duration-150 ${isTutorMode ? "transform translate-x-4 bg-white" : "bg-text-muted"}`}></div>
-                      </div>
-                      {/* Trên điện thoại chỉ giữ biểu tượng: cụm chữ "Giáo viên AI Coaching"
-                          xuống ba dòng ở khung 375px, đẩy cả hàng đầu thẻ thành một mớ rối.
-                          Vẫn có nhãn cho trình đọc màn hình và cho chuột dừng lại. */}
-                      <span
-                        className="text-2xs font-medium text-text-secondary flex items-center gap-1 whitespace-nowrap"
-                        title="Giáo viên AI Coaching"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-brand-success shrink-0" />
-                        <span className="hidden sm:inline">Giáo viên AI Coaching</span>
-                        <span className="sr-only">Giáo viên AI Coaching</span>
-                      </span>
-                    </label>
-                  )}
-
-                  <button 
-                    onClick={() => toggleBookmark(activeQuestion.id)}
-                    className={`p-1.5 rounded-md border transition duration-150 cursor-pointer ${
-                      activeBookmarked 
-                        ? "bg-brand-warning-bg border-brand-warning-border text-brand-warning" 
-                        : "border-border-primary bg-bg-card text-text-muted hover:bg-bg-surface hover:text-text-primary"
-                    }`}
-                    title="Đánh dấu câu hỏi trọng tâm"
-                  >
-                    <Bookmark className={`w-4 h-4 ${activeBookmarked ? "fill-current" : ""}`} />
-                  </button>
-                  <button 
-                    onClick={() => toggleFlag(activeQuestion.id)}
-                    className={`p-1.5 rounded-md border transition duration-150 cursor-pointer ${
-                      activeFlagged 
-                        ? "bg-brand-warning-bg border-brand-warning-border text-brand-warning" 
-                        : "border-border-primary bg-bg-card text-text-muted hover:bg-bg-surface hover:text-text-primary"
-                    }`}
-                    title="Đánh dấu câu nghi ngờ để rà soát lại"
-                  >
-                    <Flag className={`w-4 h-4 ${activeFlagged ? "fill-current" : ""}`} />
-                  </button>
-                </div>
-              </div>
 
               {/* Question Text */}
               <div className="space-y-2">
@@ -909,45 +835,128 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 </div>
               )}
 
-              {/* Navigation Controls: Back/Forward */}
-              <div className="flex items-center justify-between border-t border-border-primary/60 pt-5">
-                <button 
-                  onClick={handlePrev}
-                  disabled={currentIdx === 0}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border-primary bg-bg-card hover:bg-bg-surface text-text-secondary rounded-lg transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Câu trước</span>
-                </button>
+              {/*
+                THANH HÀNH ĐỘNG ĐÁY, thay cho cụm chrome cũ nằm TRÊN câu hỏi.
 
-                {/*
-                  Nhắc phím tắt, đặt đúng chỗ mắt dừng lại sau khi đọc xong bốn phương án.
-                  Một phím tắt không ai biết thì bằng không: người học sẽ vẫn với tay lấy chuột.
-                  Chỉ hiện khi chưa nộp bài, vì lúc xem lại thì không còn chọn đáp án nữa.
-                */}
-                {!exam.isSubmitted && (
-                  <div className="text-2xs text-text-muted hidden sm:flex items-center gap-1.5">
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums text-2xs">A</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums text-2xs">B</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums text-2xs">C</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums text-2xs">D</kbd>
-                    <span>để chọn</span>
-                    <span className="text-border-primary">•</span>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums text-2xs">←</kbd>
-                    <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums text-2xs">→</kbd>
-                    <span>để chuyển câu</span>
-                  </div>
-                )}
+                Đối chiếu song song với trang bài tập của Khan Academy ở khổ 1280px: phía trên
+                câu hỏi của họ **không có gì** ngoài tiêu đề bài và một đường kẻ. Mọi thứ phụ
+                trợ đều nằm ở một thanh ghim dưới đáy vùng nội dung: nút biểu tượng phụ bên
+                trái, chỉ báo tiến độ ở giữa, hành động chính bên phải.
 
-                <button 
-                  onClick={handleNext}
-                  disabled={currentIdx === examQuestions.length - 1}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium border border-border-primary bg-bg-card hover:bg-bg-surface text-text-secondary rounded-lg transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
-                >
-                  <span>Câu sau</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                Sản phẩm này trước đó đặt **11 phần tử** phía trên câu hỏi: chip số câu, chip
+                mức khó, mã ID, công tắc gia sư AI, nhãn gia sư, nút đánh dấu, nút báo lỗi, cùng
+                hai dòng chủ đề và khái niệm. Người học mở màn ra là chạm vào một hàng công cụ
+                trước khi chạm được vào câu hỏi.
+
+                **Không xoá một chức năng nào**, chỉ dời chỗ: toàn bộ cụm ấy nay nằm ở thanh
+                đáy này, đúng vị trí Khan đặt các nút phụ, tức đúng chỗ mắt dừng lại SAU khi đã
+                đọc xong bốn phương án và cần quyết định làm gì tiếp.
+              */}
+              <div className="border-t border-border-primary/60 pt-4 mt-2 flex flex-wrap items-center justify-between gap-3">
+
+                {/* Trái: các hành động phụ, đúng vị trí Khan đặt nút biểu tượng phụ */}
+                <div className="flex items-center gap-2 order-2 sm:order-1">
+                  {!exam.isSubmitted && (
+                    <label
+                      className="flex items-center gap-1.5 cursor-pointer select-none px-2 py-1.5 rounded-md hover:bg-bg-surface transition"
+                      title="Giáo viên AI Coaching: giảng ngay sau khi chọn đáp án"
+                    >
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={isTutorMode}
+                          onChange={(e) => { setIsTutorMode(e.target.checked); }}
+                          className="sr-only"
+                        />
+                        <div className={`w-8 h-4 rounded-full transition duration-150 ${isTutorMode ? "bg-brand-success" : "bg-bg-surface border border-border-primary"}`}></div>
+                        <div className={`absolute top-0.5 left-0.5 bg-white w-3 h-3 rounded-full shadow-md transition-transform duration-150 ${isTutorMode ? "transform translate-x-4 bg-white" : "bg-text-muted"}`}></div>
+                      </div>
+                      <Sparkles className="w-4 h-4 text-brand-success shrink-0" />
+                      <span className="text-xs text-text-secondary hidden lg:inline whitespace-nowrap">Gia sư AI</span>
+                      <span className="sr-only">Giáo viên AI Coaching</span>
+                    </label>
+                  )}
+
+                  <button
+                    onClick={() => toggleBookmark(activeQuestion.id)}
+                    className={`p-2 rounded-md transition duration-150 cursor-pointer ${
+                      activeBookmarked
+                        ? "bg-brand-warning-bg text-brand-warning"
+                        : "text-text-muted hover:bg-bg-surface hover:text-text-primary"
+                    }`}
+                    title="Đánh dấu câu hỏi trọng tâm"
+                  >
+                    <Bookmark className={`w-4 h-4 ${activeBookmarked ? "fill-current" : ""}`} />
+                  </button>
+
+                  <button
+                    onClick={() => toggleFlag(activeQuestion.id)}
+                    className={`p-2 rounded-md transition duration-150 cursor-pointer ${
+                      activeFlagged
+                        ? "bg-brand-warning-bg text-brand-warning"
+                        : "text-text-muted hover:bg-bg-surface hover:text-text-primary"
+                    }`}
+                    title={`Đánh dấu câu nghi ngờ để rà soát lại (mã câu #${activeQuestion.id})`}
+                  >
+                    <Flag className={`w-4 h-4 ${activeFlagged ? "fill-current" : ""}`} />
+                  </button>
+                </div>
+
+                {/* Giữa: vị trí trong phiên và mức khó, viết thành CÂU thay vì hai cái chip.
+                    Khan viết tiến độ thành câu ("Hoàn thành 7 câu hỏi") chứ không đóng khung. */}
+                <div className="flex items-center gap-2 text-xs text-text-muted order-1 sm:order-2 w-full sm:w-auto justify-center">
+                  <span className="tabular-nums whitespace-nowrap">
+                    Câu {currentIdx + 1} trên {examQuestions.length}
+                  </span>
+                  <span aria-hidden="true">•</span>
+                  <span className="whitespace-nowrap">Mức {activeQuestion.difficulty}</span>
+                </div>
+
+                {/* Phải: điều hướng câu, đúng vị trí Khan đặt hành động chính */}
+                <div className="flex items-center gap-2 order-3">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentIdx === 0}
+                    className="flex items-center gap-1 px-3 h-10 text-sm font-bold text-text-secondary rounded hover:bg-bg-surface transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Câu trước</span>
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    disabled={currentIdx === examQuestions.length - 1}
+                    className="flex items-center gap-1 px-4 h-10 text-sm font-bold border border-border-primary bg-bg-card hover:bg-bg-surface text-text-primary rounded transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
+                  >
+                    <span>Câu sau</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
+
+              {/*
+                NHẮC PHÍM TẮT, MỘT DÒNG RIÊNG DƯỚI THANH HÀNH ĐỘNG.
+
+                Ở lượt trước tôi nhét dòng này vào giữa thanh đáy rồi đặt mốc hiện là `2xl`.
+                Bộ tự kiểm chứng bắt được ngay: các mốc của Tailwind tính theo bề rộng CỬA SỔ,
+                nên đặt `2xl` là ẩn nó ở gần như mọi khổ màn hình thật, tức xoá luôn phần dạy
+                phím tắt. Một phím tắt không ai biết thì bằng không.
+
+                Nay tách ra một dòng riêng, luôn hiện từ `sm` trở lên, chữ nhạt để không tranh
+                chú ý với thanh hành động ngay trên nó.
+              */}
+              {!exam.isSubmitted && (
+                <div className="hidden sm:flex items-center justify-center gap-1.5 text-2xs text-text-muted pt-1">
+                  <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums">A</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums">B</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums">C</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums">D</kbd>
+                  <span>để chọn</span>
+                  <span aria-hidden="true">•</span>
+                  <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums">←</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-bg-surface border border-border-primary rounded tabular-nums">→</kbd>
+                  <span>để chuyển câu</span>
+                </div>
+              )}
 
             </div>
           )}
@@ -1291,7 +1300,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         </div>
 
         {/* Right Column: Sticky Question Palette & Statistics (1/4 width) */}
-        <div className="lg:sticky lg:top-4 space-y-5">
+        <div className="space-y-5">
           
           {/* Post Submission Summary Widget */}
           {exam.isSubmitted && (
