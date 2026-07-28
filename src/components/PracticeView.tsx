@@ -525,9 +525,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         {/* Left Column: Interactive Question Workspace (3/4 width) */}
         <div className="lg:col-span-3 space-y-5">
           
-          {/* Question Meta Box */}
+          {/*
+            BỎ THẺ BỌC QUANH BÀI LÀM.
+
+            Đo trên trang làm bài của Khan Academy ở cùng khổ 1280px: câu hỏi và các phương án
+            **nằm thẳng trên nền trắng**, không có thẻ bao, không viền bao, không bo góc bao.
+            Vùng làm bài được phân định bằng các đường kẻ 1px chứ không bằng một cái hộp.
+
+            Trước đây toàn bộ bài làm nằm trong một thẻ bo 8px có viền. Hệ quả khi đặt cạnh
+            Khan: bài làm trông như một tiện ích đặt trên trang, còn của Khan là chính trang đó.
+            Đây là khác biệt cấu trúc lớn nhất giữa hai màn.
+
+            Giữ `border-b` để vẫn còn ranh giới dưới cho thanh điều hướng câu.
+          */}
           {activeQuestion && (
-            <div className="bg-bg-card border border-border-primary rounded-xl p-6 space-y-5 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
+            <div className="bg-bg-card space-y-5 px-0 py-2">
               
               {/* Question Index & Action Flags */}
               <div className="flex items-center justify-between gap-4 border-b border-border-primary/60 pb-4">
@@ -659,7 +671,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   thích dài tại thẻ `max-w-4xl` đầu component. Lý do: chặn riêng câu hỏi sẽ
                   làm nó hẹp hơn ô phương án, tạo hai bề rộng đọc trong cùng một luồng.
                 */}
-                <h3 className="text-lg font-medium text-text-primary leading-relaxed font-sans">
+                <h3 className="text-lg font-bold text-text-primary leading-snug font-sans">
                   {activeQuestion.question}
                 </h3>
               </div>

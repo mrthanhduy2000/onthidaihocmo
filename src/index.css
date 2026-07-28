@@ -83,15 +83,35 @@
   --nav-vach: rgba(255, 255, 255, 0.18);
 
   /* Color System Light Mode - Crisp, Academic & Premium (Apple/Notion/Arc style) */
-  --bg-app: #fafafc;       /* Clean warm off-white */
-  --bg-card: #ffffff;      /* Pure white card */
-  --bg-surface: #f1f1f4;   /* Light gray surface */
-  --bg-surface-hover: #e4e4e7; /* Zinc-200 */
-  --border-primary: #e2e2e8; /* Super clean light border */
-  --border-secondary: #f1f1f4; /* Zinc-100 */
-  
-  --text-primary: #111111;   /* True high-contrast charcoal */
-  --text-secondary: #444446; /* Mid-tone gray */
+  /*
+    BẢNG MÀU TRUNG TÍNH KÉO SÁT VỀ KHAN ACADEMY (28/07/2026).
+
+    Chỉ thị mới của Đàm nói rõ "màu phải rất gần", khác với các đợt trước vốn yêu cầu tránh
+    trùng mã màu. Nên các giá trị dưới đây đặt sát ngưỡng đo được của Khan, chỉ lệch đủ để
+    không phải là bản sao từng ký tự:
+
+        nền trang     Khan trắng          -> #ffffff   (trước là #fafafc xám)
+        viền, đường kẻ Khan #dbdcdd        -> #dcdcde
+        chữ chính     Khan #21242c        -> #202430
+        chữ phụ       Khan #5f6167        -> #5d5f66
+        chữ mờ        Khan #717378        -> #6c6e75
+
+    Vì sao nền trang đổi từ xám sang trắng: đo trên trang làm bài của Khan, nền trang và nền
+    thẻ **cùng là màu trắng**, hai thứ tách nhau chỉ bằng một đường viền 1px. Khi nền trang xám
+    còn thẻ trắng thì thẻ nổi lên như một tiện ích đặt trên trang; khi cả hai cùng trắng thì
+    nội dung chính là trang.
+
+    Ba màu chữ đều đã kiểm tương phản lại sau khi đổi, xem phần kiểm chứng trong BANGIAO.md.
+  */
+  --bg-app: #ffffff;       /* Nền trang trắng, đúng như Khan */
+  --bg-card: #ffffff;      /* Nền thẻ cũng trắng, tách nhau bằng viền 1px */
+  --bg-surface: #f2f2f4;   /* Mảng lõm nhạt */
+  --bg-surface-hover: #e6e6e9;
+  --border-primary: #dcdcde; /* Sát #dbdcdd của Khan */
+  --border-secondary: #f0f0f2;
+
+  --text-primary: #202430;   /* Sát #21242c của Khan, 14,9:1 trên nền trắng */
+  --text-secondary: #5d5f66; /* Sát #5f6167 của Khan */
   /*
     Hạ sáng một bậc, từ #767680 xuống #6b6b75 (28/07/2026).
 
@@ -114,7 +134,7 @@
 
     Sau khi hạ: nền tệ nhất lên 4,62 và nền trắng lên 5,53. Chênh lệch màu mắt không nhận ra.
   */
-  --text-muted: #686871;     /* Muted gray, đạt AA trên cả 5 nền đang dùng thật */
+  --text-muted: #6c6e75;     /* Sát #717378 của Khan, đậm hơn một chút cho đạt AA trên nền pha sắc */
   --text-dimmed: #a1a1aa;    /* Subtle placeholder / disabled */
   
   /*

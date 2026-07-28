@@ -59,6 +59,65 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Đối chiếu song song màn làm bài với Khan, bỏ thẻ bọc, nền trắng
+
+Chỉ thị của Đàm: coi Khan Academy là **Design Reference duy nhất**, không được tự sáng tác,
+không được tự cho điểm phần trăm, phải lập **bảng khác biệt** rồi sửa cho tới khi đặt cạnh nhau
+không chỉ ra ngay được đâu là sản phẩm nào. **Không chuyển sang màn khác khi màn hiện tại chưa
+đạt.**
+
+Vòng này làm đúng một màn: **màn làm bài**, vì đó là trái tim của cả hai sản phẩm.
+
+#### Cách làm
+
+Mở hai tab cùng khổ 1280×900: một tab trang bài tập của Khan (đã dọn sạch lớp phủ cookie, hộp
+thoại hướng dẫn và dải quảng cáo đăng ký), một tab màn luyện câu của sản phẩm. Chụp cả hai rồi
+lập bảng.
+
+#### Bảng khác biệt màn làm bài
+
+| Yếu tố | Khan | Trước | Đã sửa | Còn khác |
+|---|---|---|---|---|
+| Khung bọc bài làm | **không có thẻ**, nằm thẳng trên nền trắng | thẻ bo 8px có viền | **bỏ thẻ** | hết |
+| Nền trang | trắng | `#fafafc` xám | **trắng** | hết |
+| Câu hỏi | 18px / **700** | 18px / 400 | **18px / 700** | tỷ lệ dòng 1,375 so với 1,22 |
+| Ô chữ cái | vuông bo 4px, viền 2px | như vậy | không cần sửa | hết |
+| Đường kẻ giữa phương án | 1px hết bề rộng | như vậy | không cần sửa | hết |
+| Viền, đường kẻ | `#dbdcdd` | `#e2e2e8` | **`#dcdcde`** | hết |
+| Chữ chính | `#21242c` | `#111111` | **`#202430`** | hết |
+| Chữ phụ | `#5f6167` | `#444446` | **`#5d5f66`** | hết |
+| Chữ mờ | `#717378` | `#686871` | **`#6c6e75`** | hết |
+| Chrome phía trên câu hỏi | **không có gì** | 11 phần tử | chưa sửa | **còn khác nhiều** |
+| Tiến độ | chấm tròn ở thanh đáy | lưới số 1 tới 10 ở cột phải | chưa sửa | **còn khác** |
+| Cột phải | **không có** | có bảng câu hỏi | chưa sửa | **còn khác** |
+| Dòng nhắc kiểu "Chọn 2 đáp án" | có, 18px/700 | không có | chưa sửa | còn khác |
+
+**Đổi hướng về màu so với các vòng trước.** Chỉ thị mới nói rõ "màu phải rất gần", trong khi
+các đợt trước yêu cầu tránh trùng mã màu của Khan. Nên bảng trung tính nay đặt sát ngưỡng đo
+được, chỉ lệch đủ để không phải bản sao từng ký tự. Đã ghi lý do ngay trong `index.css`.
+
+**Vì sao bỏ thẻ bọc là thay đổi lớn nhất**: khi nền trang xám còn thẻ trắng, bài làm trông như
+một tiện ích đặt trên trang. Khi cả hai cùng trắng và chỉ tách nhau bằng đường kẻ, nội dung
+chính **là** trang. Đó là khác biệt cấu trúc chứ không phải khác biệt trang trí.
+
+#### Kiểm chứng
+
+Đo lại trên bản chạy thật: nền trang `#ffffff`, câu hỏi 18px đậm 700, **chỉ còn hai độ đậm 400
+và 700**, **không chỗ nào rớt tương phản** sau khi đổi cả bốn màu chữ, không tràn ngang.
+`npm run check` đạt toàn bộ 6 chặng.
+
+#### Việc tiếp theo trên chính màn này, chưa đạt nên chưa chuyển màn
+
+1. **11 phần tử chrome phía trên câu hỏi.** Khan không có gì phía trên câu hỏi ngoài tiêu đề
+   bài và một đường kẻ. Phần lớn 11 phần tử này là tính năng thật (đánh dấu, báo lỗi, công tắc
+   gia sư) nên không được gỡ; hướng khả thi là dồn chúng xuống thanh đáy như cách Khan đặt các
+   nút phụ, nhưng việc đó chạm vào bố cục nên cần Đàm xác nhận.
+2. **Cột phải "Bảng câu hỏi".** Khan không có. Đây là tính năng nhảy câu, không được gỡ.
+3. **Thanh hành động đáy.** Khan ghim một thanh ở đáy vùng nội dung chứa nút chính, chấm tiến
+   độ và liên kết "Bỏ qua". Sản phẩm này để nút "Nộp bài" ở góc trên phải.
+
+---
+
 ### 28/07/2026 — Reverse engineer sáu tầng, viết NGONNGUTHIETKE.md, rồi mới sửa mã
 
 Chỉ thị của Đàm: **không được bắt đầu sửa code**, phải dành phần lớn thời gian reverse engineer
