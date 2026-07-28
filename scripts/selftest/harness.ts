@@ -2625,6 +2625,36 @@ check("Tổng kết sau khi nộp chỉ nói con số có thật",
     ? "chỉ còn số câu đúng và số câu cần xem lại, cả hai suy thẳng từ bài làm"
     : `${bipBia.length} con số bịa: ${bipBia.join(" | ")}`);
 
+// AE8. Thang trạng thái hiện cho người học đọc phải bằng tiếng Việt, và không được có màu báo
+//      lỗi trong một lộ trình học.
+//
+// Ngày 29/07/2026, mở màn Câu sai trên bản chạy thật thì bốn chặng của "đường gỡ lỗ hổng" in ra
+// nguyên văn "Weak", "Learning", "Recovered", "Mastered". Đợt dọn chuỗi tiếng Anh trước đó
+// không quét tới màn này.
+//
+// Nặng hơn là màu: quy ước cũ tô chặng ĐÃ QUA màu xanh lá và chặng ĐANG ĐỨNG màu đỏ cam. Một
+// câu đã gỡ được sau một lần sai vì thế hiện ra "Weak" xanh, "Learning" xanh, "Recovered" ĐỎ,
+// tức hai chặng yếu nhất được tô thành công còn chặng vừa gỡ được thì tô thành màu báo lỗi.
+const nguonSoSai = docNguon("src/components/ReviewNotebookView.tsx");
+const chuAnhConSot = ["Weak", "Learning", "Recovered", "Mastered"]
+  .filter(t => new RegExp(`label:\\s*"${t}"`).test(nguonSoSai));
+check("Thang gỡ lỗ hổng dùng nhãn tiếng Việt",
+  chuAnhConSot.length === 0 && /label: "Còn yếu"/.test(nguonSoSai) && /label: "Nắm chắc"/.test(nguonSoSai),
+  chuAnhConSot.length === 0
+    ? "bốn chặng là Còn yếu, Đang ôn, Đã gỡ, Nắm chắc"
+    : `còn ${chuAnhConSot.length} nhãn tiếng Anh: ${chuAnhConSot.join(", ")}`);
+
+check("Lộ trình học không tô màu báo lỗi",
+  !/isCurrent \? "bg-brand-warning"/.test(nguonSoSai) && !/isCurrent \? "bg-brand-error"/.test(nguonSoSai),
+  "chặng đạt tới thì tô, chặng chưa tới để trống, không dùng cam hay đỏ cho chặng đang đứng");
+
+// AE9. Chip chương không được in trùng tiền tố.
+// Đo trên bản chạy thật: `ch.title` đã chứa sẵn "Chương N: ..." nên việc ghép thêm
+// `Chương {q.chapterId}: ` ở đầu cho ra "Chương 1: Chương 1: Khái quát về hành vi khách hàng".
+check("Chip chương không in trùng tiền tố",
+  !/Chương \{q\.chapterId\}: \{ch\?\.title/.test(nguonSoSai),
+  "chỉ tự ghép tiền tố khi không tra được tên chương");
+
 // ===========================================================================
 g("AF. Mọi màu ngữ nghĩa dùng trong giao diện đều phải có định nghĩa");
 // ===========================================================================

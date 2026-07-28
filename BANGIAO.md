@@ -59,6 +59,57 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 6), màn Câu sai: thang tiến độ đang tô ĐỎ đúng chặng vừa gỡ được
+
+Màn thứ ba. Mở ra bằng mắt là thấy ngay bốn lỗi, hai trong số đó không phải chuyện thẩm mỹ.
+
+**1. Bốn chữ tiếng Anh lọt ra giao diện.** Bốn chặng của "lộ trình dứt điểm lỗ hổng" in nguyên
+văn **"Weak", "Learning", "Recovered", "Mastered"** cho người học đọc. Đợt dọn 154 chỗ chữ hoa
+và các chuỗi tiếng Anh trước đó không quét tới màn này.
+
+**2. Màu đang nói ngược, đây là lỗi nặng nhất của lượt.** Quy ước cũ: chặng ĐÃ QUA tô xanh lá,
+chặng ĐANG ĐỨNG tô đỏ cam. Nên một câu đã gỡ được sau một lần sai hiện ra như sau:
+
+| Chặng | Màu cũ | Người học đọc thành |
+|---|---|---|
+| Weak | **xanh lá** | "yếu" là một thành tựu |
+| Learning | **xanh lá** | đã xong |
+| Recovered | **ĐỎ** | **có lỗi ở đây** |
+| Mastered | xám | chưa tới |
+
+Tức hai chặng yếu nhất được tô màu thành công, còn chặng vừa gỡ được thì tô thành màu báo lỗi.
+Người học nhìn vào chỉ thấy một vệt đỏ ở đúng chỗ đáng lẽ phải là tin tốt.
+
+Dựng lại theo cách Khan làm với thang tinh thông: **chặng đạt tới thì được tô, chặng chưa tới
+thì để trống**, và không có màu báo lỗi ở bất cứ đâu trong một lộ trình học. Chặng đang đứng
+dùng màu hành động chính, chỉ chặng cuối mới dùng xanh lá. Nhãn tiếng Việt: **Còn yếu, Đang ôn,
+Đã gỡ, Nắm chắc**.
+
+**3. Chip chương in trùng tiền tố**: `ch.title` đã chứa sẵn "Chương N: ..." nên ghép thêm cho ra
+"Chương 1: Chương 1: Khái quát về hành vi khách hàng".
+
+**4. Đầu màn có ba dòng nói cùng một việc**: nhãn "Sổ tay củng cố & Khắc phục", tiêu đề "Sổ tay
+câu làm sai (5)", rồi một dòng quảng cáo tính năng. Nay một tiêu đề "Sổ câu sai" và một câu nói
+việc người học sắp làm. Nút chính đổi từ CAM sang xanh dương: ôn lại câu sai là việc thường
+ngày, không phải cảnh báo.
+
+**Hình minh hoạ đầu tiên của dự án.** Chỉ thị cho phép bổ sung minh hoạ cho trạng thái rỗng, và
+bản đặc tả phong cách đã chốt từ lượt reverse engineer: khối phẳng, hình học đơn giản, bo góc
+mềm, không mascot, không hoạt hình, không hình trẻ con. Vẽ một cuốn sổ mở với các dòng kẻ trống
+kèm dấu tích, dùng thẳng biến màu của bộ token nên tự đúng ở cả chế độ sáng lẫn tối, và
+`aria-hidden` vì nó không mang thông tin nào mà phần chữ chưa nói. Bỏ cái hộp bọc ngoài: một
+trạng thái rỗng không có gì để đóng khung.
+
+**Ba phép kiểm mới** (nhãn tiếng Việt, không màu báo lỗi trong lộ trình, chip chương không trùng
+tiền tố), đã thử phá và báo đỏ đúng lúc. Bộ kiểm 198 lên **201**.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, 201/201. Trên bản chạy thật: 0 chuỗi tiếng Anh
+còn sót, thanh chặng đo được ba đoạn `rgb(26,95,208)` và một đoạn nền trống, không còn chuỗi
+"Chương N: Chương N", 0 tràn ngang ở cả 1280px lẫn 375px, bốn nhãn chặng đều giữ một dòng ở khổ
+hẹp.
+
+---
+
 ### 29/07/2026 (lượt 5), màn Bàn học: bốn ô số liệu đóng khung đổi thành một dòng chữ
 
 Chuyển sang màn thứ hai sau bốn lượt trên màn Luyện câu.

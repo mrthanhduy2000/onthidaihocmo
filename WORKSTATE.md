@@ -25,7 +25,27 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Bàn học, bốn ô số liệu thành một dòng chữ
+## Lượt mới nhất: màn Câu sai, thang tiến độ đang tô ĐỎ đúng chặng vừa gỡ được
+
+Màn thứ ba của đợt. Bốn lỗi, hai trong số đó không phải chuyện thẩm mỹ:
+
+1. **Bốn chữ tiếng Anh lọt ra giao diện**: bốn chặng in nguyên văn "Weak", "Learning",
+   "Recovered", "Mastered". Đợt dọn chuỗi tiếng Anh trước không quét tới màn này.
+2. **Màu nói ngược**: chặng đã qua tô xanh lá, chặng đang đứng tô ĐỎ. Nên một câu đã gỡ được
+   hiện ra "Weak" xanh, "Learning" xanh, "Recovered" ĐỎ. Hai chặng yếu nhất được tô thành công,
+   chặng vừa gỡ được thì tô thành màu báo lỗi. Nay: chặng đạt tới thì tô, chặng chưa tới để
+   trống, không màu báo lỗi trong lộ trình học. Nhãn: Còn yếu, Đang ôn, Đã gỡ, Nắm chắc.
+3. **Chip chương in trùng tiền tố**: "Chương 1: Chương 1: Khái quát về hành vi khách hàng".
+4. **Đầu màn ba dòng nói cùng một việc**, nút chính màu cam. Nay một tiêu đề, một câu, nút xanh.
+
+**Hình minh hoạ đầu tiên của dự án**: trạng thái rỗng nay có một hình khối phẳng tự vẽ (cuốn sổ
+mở với dòng kẻ trống), đúng bản đặc tả phong cách đã chốt, không mascot không hoạt hình.
+
+Ba phép kiểm mới, bộ kiểm 198 lên **201**.
+
+---
+
+## Lượt trước: màn Bàn học, bốn ô số liệu thành một dòng chữ
 
 Màn thứ hai của đợt, sau bốn lượt trên màn Luyện câu. **Lần đầu áp nguyên tắc đã ghi trong
 NGONNGUTHIETKE.md mà chưa từng dùng ở đâu**: nội dung là chủ thể, số liệu là chú thích của nội
@@ -494,7 +514,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **198**, chia 32 nhóm A đến AF, đạt toàn bộ |
+| Phép tự kiểm chứng | **201**, chia 32 nhóm A đến AF, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

@@ -97,38 +97,82 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8 fade-in-up">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-6">
-        <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-warning mb-1">
-            <BookMarked className="w-4 h-4" />
-            Sổ tay củng cố & Khắc phục
-          </div>
-          <h1 className="text-2xl font-display font-light text-text-primary">
-            Sổ tay câu làm sai <span className="font-semibold text-brand-warning">({wrongQuestionsList.length})</span>
+        {/*
+          ĐẦU MÀN: MỘT TIÊU ĐỀ, MỘT CÂU.
+
+          Bản cũ có ba dòng nói gần như cùng một việc: dòng nhãn "Sổ tay củng cố & Khắc phục",
+          rồi tiêu đề "Sổ tay câu làm sai (5)", rồi một dòng quảng cáo tính năng "Tự động theo
+          dõi các bẫy khái niệm đã vấp phải • Lộ trình khắc phục thông minh". Khan viết đúng một
+          tiêu đề rồi vào thẳng nội dung; giọng của họ là câu hoàn chỉnh nói việc người học sắp
+          làm, không phải lời giới thiệu tính năng.
+
+          Nút chính đổi từ CAM sang xanh dương. Ôn lại câu sai là việc thường ngày của người
+          học, không phải một cảnh báo. Trên Khan hành động chính luôn xanh dương, còn cam chỉ
+          dành cho thứ thật sự cần chú ý ngay.
+        */}
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-bold text-text-primary font-sans">
+            Sổ câu sai
           </h1>
-          <p className="text-text-muted text-xs font-sans mt-1">
-            Tự động theo dõi các bẫy khái niệm đã vấp phải • Lộ trình khắc phục thông minh
+          <p className="text-base text-text-secondary font-sans max-w-[40rem]">
+            {wrongQuestionsList.length > 0
+              ? `Có ${wrongQuestionsList.length} câu bạn từng trả lời sai. Làm lại từng câu cho tới khi gỡ được lỗ hổng.`
+              : "Mọi câu bạn từng trả lời sai sẽ được giữ lại ở đây để làm lại."}
           </p>
         </div>
 
         {wrongQuestionsList.length > 0 && (
           <button
             onClick={handleStartReviewAllWrong}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-warning text-bg-app font-medium text-xs rounded-xl shadow-sm hover:opacity-95 transition"
+            className="flex items-center justify-center gap-2 px-4 h-10 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-bold text-sm rounded transition shrink-0 cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>Ôn lại tất cả {wrongQuestionsList.length} câu sai</span>
+            <span className="whitespace-nowrap">Ôn lại tất cả {wrongQuestionsList.length} câu</span>
           </button>
         )}
       </div>
 
       {wrongQuestionsList.length === 0 ? (
-        <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-12 text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-brand-success-bg text-brand-success mx-auto flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-medium text-text-primary">Tuyệt vời! Bạn chưa có câu làm sai nào</h3>
-          <p className="text-xs text-text-muted max-w-md mx-auto">
-            Hệ thống sẽ tự động lưu lại các câu trả lời chưa chính xác trong quá trình ôn luyện để giúp bạn khắc phục lỗ hổng kiến thức.
+        /*
+          TRẠNG THÁI RỖNG, VẼ HÌNH THAY VÌ ĐÓNG HỘP.
+
+          Đây là hình minh hoạ tự vẽ đầu tiên của dự án. Chỉ thị cho phép bổ sung minh hoạ cho
+          trạng thái rỗng, và bản đặc tả phong cách đã chốt từ lượt reverse engineer: hình khối
+          phẳng, hình học đơn giản, bo góc mềm, **không mascot, không hoạt hình, không hình trẻ
+          con**, vì người học ở đây là sinh viên đại học và người đi làm.
+
+          Hình vẽ ở đây là một cuốn sổ mở với ba dòng kẻ trống: nói đúng nghĩa "sổ này đang
+          trống", không cần chú thích. Dùng thẳng biến màu của bộ token nên nó tự đúng ở cả chế
+          độ sáng lẫn tối, và `aria-hidden` vì nó không mang thông tin nào mà phần chữ chưa nói.
+
+          Bỏ cái hộp bọc ngoài: một trạng thái rỗng không có gì để đóng khung cả.
+        */
+        <div className="py-16 text-center space-y-5">
+          <svg
+            viewBox="0 0 120 96"
+            className="w-32 h-auto mx-auto"
+            fill="none"
+            aria-hidden="true"
+          >
+            <rect x="8" y="16" width="48" height="66" rx="6" fill="var(--bg-surface)" />
+            <rect x="64" y="16" width="48" height="66" rx="6" fill="var(--bg-surface)" />
+            <rect x="56" y="12" width="8" height="74" rx="4" fill="var(--border-primary)" />
+            <rect x="18" y="32" width="28" height="4" rx="2" fill="var(--border-primary)" />
+            <rect x="18" y="44" width="20" height="4" rx="2" fill="var(--border-primary)" />
+            <rect x="74" y="32" width="28" height="4" rx="2" fill="var(--border-primary)" />
+            <rect x="74" y="44" width="20" height="4" rx="2" fill="var(--border-primary)" />
+            <circle cx="88" cy="64" r="12" fill="var(--color-success-bg)" />
+            <path
+              d="M82.5 64.5l4 4 7.5-8"
+              stroke="var(--color-success)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <h3 className="text-xl font-bold text-text-primary font-sans">Sổ câu sai đang trống</h3>
+          <p className="text-base text-text-secondary max-w-[34rem] mx-auto font-sans">
+            Câu nào bạn trả lời sai trong lúc luyện sẽ tự được giữ lại ở đây để làm lại.
           </p>
         </div>
       ) : (
@@ -198,8 +242,14 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                   >
                     <div className="space-y-2 flex-1">
                       <div className="flex flex-wrap items-center gap-2 text-2xs tabular-nums">
+                        {/*
+                          Sửa lỗi in trùng tiền tố. `ch.title` đã chứa sẵn chuỗi "Chương N: ..."
+                          nên ghép thêm "Chương {q.chapterId}: " ở đầu cho ra
+                          "Chương 1: Chương 1: Khái quát về hành vi khách hàng" trên bản chạy
+                          thật. Chỉ dùng tiền tố tự ghép khi không tra được tên chương.
+                        */}
                         <span className="px-2 py-0.5 rounded bg-bg-surface border border-border-primary text-text-muted">
-                          Chương {q.chapterId}: {ch?.title || ""}
+                          {ch?.title || `Chương ${q.chapterId}`}
                         </span>
                         {q.concept && (
                           <span className="px-2 py-0.5 rounded bg-brand-info-bg text-brand-info font-medium border border-brand-info/20">
@@ -215,45 +265,74 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                         {q.question}
                       </h4>
 
-                      {/* Concept Mastery Timeline (Weak -> Learning -> Recovered -> Mastered) & Verbal Confidence */}
+                      {/*
+                        THANG GỠ LỖ HỔNG. Dựng lại cả nhãn lẫn màu, cả hai đều đang sai.
+
+                        SAI THỨ NHẤT, BỐN CHỮ TIẾNG ANH LỌT RA GIAO DIỆN. Bốn chặng in ra
+                        nguyên văn "Weak", "Learning", "Recovered", "Mastered" cho người học
+                        đọc. Cùng họ với đợt dọn chuỗi tiếng Anh trước đó, chỉ là bộ dò lúc ấy
+                        chưa quét tới màn này.
+
+                        SAI THỨ HAI, NẶNG HƠN: MÀU ĐANG NÓI NGƯỢC. Quy ước cũ là chặng đã qua tô
+                        XANH LÁ, chặng hiện tại tô ĐỎ CAM. Nhìn trên bản chạy thật, một câu đã
+                        gỡ được sau một lần sai hiện ra: "Weak" xanh, "Learning" xanh, "Recovered"
+                        ĐỎ. Tức là hai chặng yếu nhất được tô màu thành công, còn chặng vừa gỡ
+                        được thì tô thành màu báo lỗi. Người học nhìn vào chỉ thấy một vệt đỏ ở
+                        đúng chỗ đáng lẽ phải là tin tốt.
+
+                        Dựng lại theo cách Khan làm với thang tinh thông của họ: **chặng đạt tới
+                        thì được tô, chặng chưa tới thì để trống**, và không có màu báo lỗi ở
+                        bất cứ đâu trong một lộ trình học. Chặng đang đứng dùng màu hành động
+                        chính (đang đi tiếp), chỉ chặng cuối cùng mới dùng xanh lá (đã xong).
+
+                        Bỏ luôn cái hộp bọc quanh thang: thẻ này vốn đã là một hộp, lồng thêm
+                        hộp nữa bên trong là đúng khuôn bảng điều khiển mà cả đợt đang dọn.
+                      */}
                       {(() => {
-                        let stageIdx = 0; // Weak
+                        let stageIdx = 0;
                         let confidenceText = "Phần này vẫn còn dễ nhầm";
 
                         if (status === "learned") {
-                          stageIdx = 3; // Mastered
+                          stageIdx = 3;
                           confidenceText = "Bạn đã rất chắc phần này";
                         } else if (count === 1) {
-                          stageIdx = 2; // Recovered
+                          stageIdx = 2;
                           confidenceText = "Đã củng cố sau lần sai";
                         } else if (count === 2) {
-                          stageIdx = 1; // Learning
+                          stageIdx = 1;
                           confidenceText = "Đang tích lũy tiến độ tốt";
                         }
+                        const daXong = stageIdx === 3;
 
                         return (
-                          <div className="bg-bg-surface/80 border border-border-primary/60 rounded-xl p-3 space-y-2 mt-2">
-                            <div className="flex items-center justify-between text-2xs tabular-nums">
-                              <span className="text-text-muted font-medium">Lộ trình dứt điểm lỗ hổng:</span>
-                              <span className="text-brand-warning font-semibold">{confidenceText}</span>
+                          <div className="space-y-2 pt-2 max-w-[34rem]">
+                            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
+                              <span className="text-text-muted">Đường gỡ lỗ hổng</span>
+                              <span className={daXong ? "text-brand-success" : "text-text-secondary"}>
+                                {confidenceText}
+                              </span>
                             </div>
 
-                            <div className="flex items-center gap-1 pt-0.5">
+                            <div className="flex items-start gap-1.5">
                               {[
-                                { key: "weak", label: "Weak" },
-                                { key: "learning", label: "Learning" },
-                                { key: "recovered", label: "Recovered" },
-                                { key: "mastered", label: "Mastered" }
+                                { key: "weak", label: "Còn yếu" },
+                                { key: "learning", label: "Đang ôn" },
+                                { key: "recovered", label: "Đã gỡ" },
+                                { key: "mastered", label: "Nắm chắc" }
                               ].map((stg, idx) => {
                                 const isCurrent = idx === stageIdx;
-                                const isPast = idx < stageIdx;
+                                const daQua = idx <= stageIdx;
                                 return (
-                                  <div key={stg.key} className="flex-1 flex flex-col items-center gap-1">
-                                    <div className={`h-1.5 w-full rounded-full transition-all ${
-                                      isCurrent ? "bg-brand-warning" : isPast ? "bg-brand-success" : "bg-bg-card border border-border-primary/80"
+                                  <div key={stg.key} className="flex-1 flex flex-col items-center gap-1.5">
+                                    <div className={`h-1.5 w-full rounded-full ${
+                                      !daQua
+                                        ? "bg-bg-surface"
+                                        : daXong
+                                        ? "bg-brand-success"
+                                        : "bg-[color:var(--nut-chinh)]"
                                     }`} />
-                                    <span className={`text-2xs tabular-nums transition-colors ${
-                                      isCurrent ? "text-brand-warning font-bold" : isPast ? "text-brand-success font-medium" : "text-text-muted opacity-50"
+                                    <span className={`text-xs text-center ${
+                                      isCurrent ? "text-text-primary font-bold" : daQua ? "text-text-secondary" : "text-text-muted"
                                     }`}>
                                       {stg.label}
                                     </span>
