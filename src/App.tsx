@@ -220,7 +220,7 @@ export default function App() {
               className="px-2.5 h-9 bg-nav-re-chuot border border-nav-vach hover:bg-nav-dang-mo rounded-md text-xs tabular-nums text-nav-chu-mo hover:text-nav-chu flex items-center gap-1.5 transition cursor-pointer"
               title="Mở tìm nhanh (Ctrl + K)"
             >
-              <Command className="w-3.5 h-3.5" />
+              <Command className="w-4 h-4" />
               <span className="hidden lg:inline whitespace-nowrap">Tìm nhanh</span>
             </button>
 

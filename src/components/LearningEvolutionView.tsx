@@ -325,12 +325,12 @@ export default function LearningEvolutionView() {
                   <div className="flex items-center gap-2">
                     {currentSelectedProfile.isStableMastered && (
                       <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 rounded text-xs font-semibold flex items-center gap-1">
-                        <ShieldCheck className="w-3.5 h-3.5" /> Stable Mastered
+                        <ShieldCheck className="w-4 h-4" /> Stable Mastered
                       </span>
                     )}
                     {currentSelectedProfile.isRegressionDetected && (
                       <span className="px-2.5 py-1 bg-red-500/10 text-red-600 rounded text-xs font-semibold flex items-center gap-1">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Regression Detected
+                        <AlertTriangle className="w-4 h-4" /> Regression Detected
                       </span>
                     )}
                   </div>

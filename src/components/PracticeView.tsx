@@ -413,7 +413,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         <div className="flex items-center gap-2.5 self-end sm:self-auto">
           {!exam.isSubmitted && (
             <div className="bg-bg-surface border border-border-primary/80 px-3 py-1.5 rounded-lg flex items-center gap-2">
-              <Clock className="w-3.5 h-3.5 text-text-muted" />
+              <Clock className="w-4 h-4 text-text-muted" />
               <span className="tabular-nums font-medium text-text-primary text-xs">
                 {formatTimer()}
               </span>
@@ -422,7 +422,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 className="text-text-muted hover:text-text-primary transition-colors ml-1 cursor-pointer"
                 title={timerActive ? "Tạm dừng" : "Tiếp tục"}
               >
-                {timerActive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                {timerActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               </button>
             </div>
           )}
@@ -432,7 +432,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               onClick={() => setShowSubmitModal(true)}
               className="bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-medium text-xs px-4 py-1.5 rounded-lg transition duration-150 flex items-center gap-1.5 cursor-pointer"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
               <span>Nộp bài</span>
             </button>
           )}
@@ -474,7 +474,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 }}
                 className="px-5 py-2.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
               >
-                <Play className="w-3.5 h-3.5 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
                 <span>Làm thêm 10 câu mới</span>
               </button>
 
@@ -572,7 +572,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         className="text-2xs font-medium text-text-secondary flex items-center gap-1 whitespace-nowrap"
                         title="Giáo viên AI Coaching"
                       >
-                        <Sparkles className="w-3 h-3 text-brand-success shrink-0" />
+                        <Sparkles className="w-3.5 h-3.5 text-brand-success shrink-0" />
                         <span className="hidden sm:inline">Giáo viên AI Coaching</span>
                         <span className="sr-only">Giáo viên AI Coaching</span>
                       </span>
@@ -588,7 +588,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     }`}
                     title="Đánh dấu câu hỏi trọng tâm"
                   >
-                    <Bookmark className={`w-3.5 h-3.5 ${activeBookmarked ? "fill-current" : ""}`} />
+                    <Bookmark className={`w-4 h-4 ${activeBookmarked ? "fill-current" : ""}`} />
                   </button>
                   <button 
                     onClick={() => toggleFlag(activeQuestion.id)}
@@ -599,7 +599,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     }`}
                     title="Đánh dấu câu nghi ngờ để rà soát lại"
                   >
-                    <Flag className={`w-3.5 h-3.5 ${activeFlagged ? "fill-current" : ""}`} />
+                    <Flag className={`w-4 h-4 ${activeFlagged ? "fill-current" : ""}`} />
                   </button>
                 </div>
               </div>
@@ -628,7 +628,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         <>
                           <span className="text-text-muted">•</span>
                           <span className="text-brand-info flex items-center gap-1">
-                            <Brain className="w-3.5 h-3.5 shrink-0" />
+                            <Brain className="w-4 h-4 shrink-0" />
                             Khái niệm: {conceptNode.concept}
                           </span>
                           {reqNodes.length > 0 && (
@@ -872,7 +872,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   {aiExplanations[activeQuestion.id] ? (
                     <div className="space-y-1.5">
                       <span className="text-brand-info font-semibold text-2xs block flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-brand-info" />
+                        <Sparkles className="w-4 h-4 text-brand-info" />
                         Gia sư AI phân tích sâu:
                       </span>
                       <div className="bg-bg-surface border border-brand-info/30 p-3 rounded-lg text-text-primary leading-relaxed text-xs">
@@ -886,7 +886,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         disabled={aiLoading[activeQuestion.id]}
                         className="bg-brand-info-bg text-brand-info border border-brand-info/30 text-2xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-info-bg transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-4 h-4" />
                         <span>{aiLoading[activeQuestion.id] ? "Đang phân tích..." : "Nhờ gia sư AI phân tích sâu"}</span>
                       </button>
                     </div>
@@ -963,7 +963,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     onClick={() => handleRequestAIExplanation(activeQuestion.id, explanationLevel)}
                     className="shrink-0 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white disabled:opacity-50 text-2xs font-medium px-4 py-2 rounded-lg transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-4 h-4" />
                     <span>{aiExplanations[activeQuestion.id] ? "Làm mới bài giảng AI" : "Yêu cầu Trực tuyến"}</span>
                   </button>
                 </div>
@@ -1035,7 +1035,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel && (
                           <div className="md:col-span-2 bg-brand-info-bg/5 border border-brand-info-border/20 p-3 rounded-lg space-y-1 mt-1">
                             <div className="flex items-center gap-1 text-2xs font-bold text-brand-info tabular-nums">
-                              <Brain className="w-3.5 h-3.5" />
+                              <Brain className="w-4 h-4" />
                               <span>Kết nối tư duy liên môn (Cross-Subject Intelligence)</span>
                             </div>
                             <p className="text-2xs text-text-primary font-medium">
@@ -1052,7 +1052,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     {/* The main AI Lecture body */}
                     <div className="bg-bg-card p-5 rounded-lg border border-border-primary/60 text-xs text-text-secondary leading-relaxed font-sans prose dark:prose-invert max-w-none">
                       <div className="flex items-center gap-1.5 mb-3 text-2xs tabular-nums text-brand-info font-bold">
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-4 h-4" />
                         <span>Bài giảng AI (Góc nhìn: {
                           explanationLevel === "simple" ? "Dễ hiểu" :
                           explanationLevel === "academic" ? "Chuẩn đại học" :

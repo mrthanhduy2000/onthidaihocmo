@@ -373,6 +373,48 @@
     1280px của Tailwind, nên ở màn rộng dòng chữ trải dài hơn Khan 80px. Kéo về 1200px.
   */
   --container-7xl: 75rem;
+
+  /*
+    CHỈ HAI ĐỘ ĐẬM CHỮ, ĐÚNG NHƯ KHAN ACADEMY.
+
+    Đo trên toàn bộ bề mặt học của họ: chỉ tồn tại **400 và 700**. Không có 500, không có 600.
+    Thứ bậc do CỠ CHỮ gánh, còn độ đậm chỉ để phân biệt "chữ để đọc" với "chữ để bấm hoặc để
+    nhận diện".
+
+    Dự án này đang dùng bốn độ đậm, tổng 671 chỗ:
+        font-medium    225        font-bold      212
+        font-semibold  234
+
+    Bốn bậc nghĩa là bốn mức nhấn mạnh, mà mắt chỉ phân biệt tin cậy được hai tới ba. Hệ quả:
+    một nhãn `font-medium` và một nhãn `font-semibold` cạnh nhau trông như cùng một mức, nên
+    thứ bậc mà người viết mã định dựng lên không tới được người đọc. Khi mọi thứ hơi đậm thì
+    không gì đậm.
+
+    Gộp tại tầng token thay vì sửa 671 chỗ: `medium` về 400, `semibold` về 700. Sau bước này
+    toàn ứng dụng chỉ còn đúng hai độ đậm.
+  */
+  --font-weight-light: 400;
+  --font-weight-medium: 400;
+  --font-weight-semibold: 700;
+
+  /*
+    THANG TIÊU ĐỀ VÀ TỶ LỆ DÒNG THEO KHAN.
+
+    Hai điều đo được, điều thứ hai ngược với thói quen thường gặp:
+
+    1. Tiêu đề trang của họ là 36px, tiêu đề mục lớn 28px, tiêu đề mục 20px. Tiêu đề trang của
+       dự án này đang là 24px, tức nhỏ hơn cả tiêu đề mục lớn của họ.
+    2. **Tiêu đề càng lớn thì tỷ lệ dòng càng CHẶT.** Khan dùng 40/36 = 1,11 cho tiêu đề trang
+       nhưng 19,6/14 = 1,40 cho chữ phụ. Lý do: dòng chữ lớn tự nó đã cao, thêm khoảng dòng
+       rộng nữa thì các dòng rời rạc ra và tiêu đề mất tính một-khối. Thói quen đặt một tỷ lệ
+       dòng chung cho mọi cỡ làm hỏng đúng chỗ này.
+  */
+  --text-xl: 1.25rem;          /* 20px, tiêu đề mục */
+  --text-xl--line-height: 1.2;
+  --text-2xl: 1.75rem;         /* 24px -> 28px, tiêu đề mục lớn */
+  --text-2xl--line-height: 1.15;
+  --text-3xl: 2.25rem;         /* 30px -> 36px, tiêu đề trang */
+  --text-3xl--line-height: 1.11;
 }
 
 /* Base Aesthetics for premium Workspace style */

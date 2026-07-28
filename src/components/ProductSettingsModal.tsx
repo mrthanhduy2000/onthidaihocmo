@@ -124,7 +124,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               375px chúng bị đẩy tràn ra ngoài. Đây mới là chỗ đúng của chúng. */}
           <div className="space-y-3">
             <h4 className="text-xs font-semibold text-text-primary flex items-center gap-2">
-              <Sun className="w-3.5 h-3.5 text-brand-info" />
+              <Sun className="w-4 h-4 text-brand-info" />
               Giao diện
             </h4>
             <div className="flex items-center gap-2 bg-bg-surface p-3 border border-border-primary/80 rounded-xl">
@@ -143,7 +143,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                       : "text-text-muted hover:text-text-primary border-transparent"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                   <span>{nhan}</span>
                 </button>
               ))}
@@ -153,7 +153,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
           {/* Section 1: Study Goal & Exam Config */}
           <div className="space-y-3">
             <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Target className="w-3.5 h-3.5 text-brand-info" />
+              <Target className="w-4 h-4 text-brand-info" />
               Thiết lập Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
             </h4>
 
@@ -199,7 +199,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
           {/* Section 2: Product Preferences */}
           <div className="space-y-3">
             <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-brand-info" />
+              <Sparkles className="w-4 h-4 text-brand-info" />
               Tùy chọn trải nghiệm
             </h4>
 
@@ -228,7 +228,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
           {/* Section 3: Backup & Restore */}
           <div className="space-y-3">
             <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Download className="w-3.5 h-3.5 text-brand-info" />
+              <Download className="w-4 h-4 text-brand-info" />
               Sao lưu và khôi phục dữ liệu
             </h4>
 
@@ -242,12 +242,12 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                   onClick={handleExportJSON}
                   className="px-4 py-2 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition cursor-pointer flex items-center gap-1.5"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-4 h-4" />
                   <span>Xuất tệp sao lưu</span>
                 </button>
 
                 <label className="px-4 py-2 bg-bg-card border border-border-primary hover:border-brand-info/50 text-text-primary font-semibold text-xs rounded-xl transition cursor-pointer flex items-center gap-1.5">
-                  <Upload className="w-3.5 h-3.5 text-brand-info" />
+                  <Upload className="w-4 h-4 text-brand-info" />
                   <span>Khôi phục từ JSON</span>
                   <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
                 </label>
@@ -255,7 +255,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
               {importStatus && (
                 <div className="p-2.5 bg-brand-success-bg border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-4 h-4" />
                   <span>{importStatus}</span>
                 </div>
               )}
@@ -265,7 +265,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
           {/* Section 4: Làm mới tiến trình học */}
           <div className="space-y-3">
             <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <RotateCcw className="w-3.5 h-3.5 text-brand-warning" />
+              <RotateCcw className="w-4 h-4 text-brand-warning" />
               Làm mới tiến trình học
             </h4>
 
@@ -278,13 +278,13 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
               {resetDone ? (
                 <div className="p-2.5 bg-brand-success-bg border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-4 h-4" />
                   <span>Đã làm mới tiến trình. Số liệu đã về 0.</span>
                 </div>
               ) : confirmReset ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-brand-warning font-medium flex items-center gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5" /> Chắc chắn xóa? Không thể hoàn tác.
+                    <AlertTriangle className="w-4 h-4" /> Chắc chắn xóa? Không thể hoàn tác.
                   </span>
                   <button
                     onClick={handleResetProgress}
@@ -304,7 +304,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
                   onClick={() => setConfirmReset(true)}
                   className="px-4 py-2 bg-bg-card border border-brand-warning/40 text-brand-warning font-semibold text-xs rounded-xl hover:bg-brand-warning-bg transition cursor-pointer flex items-center gap-1.5"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-4 h-4" />
                   <span>Làm mới tiến trình môn này</span>
                 </button>
               )}

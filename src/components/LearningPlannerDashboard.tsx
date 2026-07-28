@@ -164,7 +164,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   : "bg-bg-surface hover:bg-bg-card text-text-muted hover:text-text-primary border border-border-primary/60"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span className={`px-1.5 py-0.2 text-2xs rounded-full tabular-nums font-bold ${
@@ -259,7 +259,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
               <ul className="space-y-1.5 pt-1">
                 {prediction.riskReport.reasons.map((reason, idx) => (
                   <li key={idx} className="text-xs text-text-muted flex items-start gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-brand-warning shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-4 h-4 text-brand-warning shrink-0 mt-0.5" />
                     <span>{reason}</span>
                   </li>
                 ))}
@@ -288,7 +288,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                       className="text-brand-info font-medium hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <span>Thực hiện</span>
-                      <ArrowRight className="w-3 h-3" />
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -327,7 +327,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           {/* Thẻ lý giải quyết định của AI */}
           <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl text-xs space-y-2 tabular-nums">
             <div className="flex items-center gap-2 text-text-muted">
-              <Info className="w-3.5 h-3.5 text-brand-info" />
+              <Info className="w-4 h-4 text-brand-info" />
               <span className="font-semibold text-text-primary">Vì sao AI đề xuất như vậy</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-2xs text-text-muted">
@@ -703,7 +703,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                 onClick={() => setShowClearHistoryConfirm(true)}
                 className="px-3 py-1.5 bg-brand-error-bg text-brand-error hover:bg-brand-error-bg text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-4 h-4" />
                 <span>Xóa toàn bộ lịch sử</span>
               </button>
             )}
@@ -737,7 +737,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                       onClick={() => handleDuplicateSession(sess.id)}
                       className="px-3 py-1.5 bg-bg-card border border-border-primary text-text-primary text-xs rounded-lg hover:bg-bg-surface transition cursor-pointer flex items-center gap-1"
                     >
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3.5 h-3.5" />
                       <span>Thi lại</span>
                     </button>
                     <button

@@ -69,7 +69,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
             className="px-4 py-2 bg-nut-chinh text-white font-medium text-xs rounded-lg hover:bg-nut-chinh-re-chuot transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer"
           >
             <span>Thực hiện ngay ({story.remainingRecommendedTimeMinutes}p)</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         )}
       </div>

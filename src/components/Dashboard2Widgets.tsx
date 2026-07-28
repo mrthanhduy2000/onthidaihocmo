@@ -139,7 +139,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
                 className="p-1 hover:bg-bg-surface rounded text-text-muted hover:text-text-primary transition"
                 title="Làm mới lộ trình"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <RefreshCw className="w-4 h-4" />
               </button>
             </div>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
@@ -209,7 +209,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
                             className="p-1 rounded bg-bg-surface hover:bg-border-primary border border-border-primary/60 transition group-hover:scale-105"
                             title="Luyện tập khái niệm"
                           >
-                            <Play className="w-3 h-3 text-text-secondary fill-current" />
+                            <Play className="w-3.5 h-3.5 text-text-secondary fill-current" />
                           </button>
                         )}
                       </div>
@@ -349,28 +349,28 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
               <span className="text-2xs text-text-muted tabular-nums block">Số cuộc gọi API</span>
               <span className="text-md font-bold text-text-primary font-display flex items-center justify-center gap-1 mt-0.5">
-                <Database className="w-3.5 h-3.5 text-text-muted" /> {telemetry.apiCallsCount}
+                <Database className="w-4 h-4 text-text-muted" /> {telemetry.apiCallsCount}
               </span>
             </div>
 
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
               <span className="text-2xs text-text-muted tabular-nums block">Chi phí ước tính</span>
               <span className="text-md font-bold text-brand-success font-display flex items-center justify-center gap-0.5 mt-0.5">
-                <Coins className="w-3.5 h-3.5 text-brand-success" /> ${telemetry.estimatedCostUsd.toFixed(4)}
+                <Coins className="w-4 h-4 text-brand-success" /> ${telemetry.estimatedCostUsd.toFixed(4)}
               </span>
             </div>
 
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
               <span className="text-2xs text-text-muted tabular-nums block">Tỷ lệ dùng chế độ ngoại tuyến</span>
               <span className="text-md font-bold text-text-primary font-display flex items-center justify-center gap-1 mt-0.5">
-                <RefreshCw className="w-3.5 h-3.5 text-text-muted" /> {telemetry.fallbackOfflineCount > 0 ? `${Math.round((telemetry.fallbackOfflineCount / Math.max(1, telemetry.apiCallsCount + telemetry.fallbackOfflineCount)) * 100)}%` : "0%"}
+                <RefreshCw className="w-4 h-4 text-text-muted" /> {telemetry.fallbackOfflineCount > 0 ? `${Math.round((telemetry.fallbackOfflineCount / Math.max(1, telemetry.apiCallsCount + telemetry.fallbackOfflineCount)) * 100)}%` : "0%"}
               </span>
             </div>
           </div>
 
           <div className="flex justify-between items-center text-2xs text-text-muted border-t border-border-primary/50 pt-2 tabular-nums">
             <span>Tỷ lệ trúng bộ nhớ đệm: {telemetry.apiCallsCount > 0 ? `${Math.round((telemetry.cacheHitCount / telemetry.apiCallsCount) * 100)}%` : "100% (cục bộ)"}</span>
-            <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-text-muted" /> Gemini Pro (ngữ cảnh thông minh)</span>
+            <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-text-muted" /> Gemini Pro (ngữ cảnh thông minh)</span>
           </div>
         </div>
 

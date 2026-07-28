@@ -195,19 +195,19 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
 
                 {ch.status === "COMPLETED" && (
                   <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-success">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-4 h-4" />
                     <span>Hoàn thành</span>
                   </span>
                 )}
                 {ch.status === "WEAK" && (
                   <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-warning">
-                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <AlertTriangle className="w-4 h-4" />
                     <span>Cần củng cố</span>
                   </span>
                 )}
                 {ch.status === "LOCKED" && (
                   <span className="inline-flex items-center gap-1 text-2xs tabular-nums text-text-muted">
-                    <Lock className="w-3.5 h-3.5" />
+                    <Lock className="w-4 h-4" />
                     <span>Chưa mở</span>
                   </span>
                 )}

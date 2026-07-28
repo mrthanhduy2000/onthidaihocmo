@@ -78,7 +78,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-brand-info">
-            <Brain className="w-3.5 h-3.5" /> Adaptive Exam
+            <Brain className="w-4 h-4" /> Adaptive Exam
           </span>
           <span className="text-2xs text-text-muted">Định hướng lỗ hổng kiến thức & trí nhớ</span>
         </button>
@@ -90,7 +90,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-text-primary">
-            <ShieldCheck className="w-3.5 h-3.5" /> Mock Exam
+            <ShieldCheck className="w-4 h-4" /> Mock Exam
           </span>
           <span className="text-2xs text-text-muted">Mô phỏng chuẩn cấu trúc kỳ thi thật</span>
         </button>
@@ -102,7 +102,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-brand-warning">
-            <RefreshCw className="w-3.5 h-3.5" /> Revision Exam
+            <RefreshCw className="w-4 h-4" /> Revision Exam
           </span>
           <span className="text-2xs text-text-muted">Ưu tiên câu từng sai & điểm chưa thông thạo</span>
         </button>
@@ -114,7 +114,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-brand-success">
-            <Layers className="w-3.5 h-3.5" /> Chapter Focus
+            <Layers className="w-4 h-4" /> Chapter Focus
           </span>
           <span className="text-2xs text-text-muted">Chuyên sâu 100% vào 1 chương chọn lọc</span>
         </button>
@@ -168,7 +168,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
               >
                 <div className="text-2xs tabular-nums text-text-muted">{key}</div>
                 <div className="text-xs font-bold mt-0.5 flex items-center justify-center gap-1">
-                  {isPass ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                  {isPass ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
                   <span>{check.status}</span>
                 </div>
               </div>

@@ -312,7 +312,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                 className="p-1.5 bg-bg-surface border border-border-primary hover:bg-bg-card rounded-lg text-text-muted hover:text-text-primary transition cursor-pointer"
                 title={isArchived ? "Mở lại môn học" : "Lưu trữ môn học"}
               >
-                <Archive className="w-3.5 h-3.5" />
+                <Archive className="w-4 h-4" />
               </button>
             </div>
             <p className="text-xs text-text-muted max-w-xl pt-1">
@@ -326,7 +326,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               onClick={() => setShowSearchModal(true)}
               className="px-3.5 py-2 bg-bg-surface border border-border-primary/80 hover:border-brand-info/50 text-text-primary text-xs font-medium rounded-xl transition cursor-pointer flex items-center gap-2"
             >
-              <Search className="w-3.5 h-3.5 text-brand-info" />
+              <Search className="w-4 h-4 text-brand-info" />
               <span>Tra cứu</span>
             </button>
 
@@ -334,7 +334,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               onClick={() => setShowImportModal(true)}
               className="px-3.5 py-2 bg-bg-surface border border-border-primary/80 hover:border-brand-info/50 text-text-primary text-xs font-medium rounded-xl transition cursor-pointer flex items-center gap-2"
             >
-              <Upload className="w-3.5 h-3.5 text-brand-info" />
+              <Upload className="w-4 h-4 text-brand-info" />
               <span>Thêm tài liệu</span>
             </button>
 
@@ -426,7 +426,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   : "bg-bg-surface hover:bg-bg-card text-text-muted hover:text-text-primary border border-border-primary/60"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
               {tab.count !== undefined && (
                 <span className="px-1.5 py-0.2 text-2xs rounded-full tabular-nums bg-bg-card text-text-muted">
@@ -685,7 +685,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
                   {item.missingConcepts.length > 0 ? (
                     <div className="text-2xs tabular-nums text-brand-warning flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
                       <span>Thiếu khái niệm: {item.missingConcepts.join(", ")}</span>
                     </div>
                   ) : (
@@ -1068,7 +1068,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   {/* Báo lỗi */}
                   {importError && (
                     <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-2xs text-brand-error flex items-start gap-2">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                       <span>{importError}</span>
                     </div>
                   )}
@@ -1094,7 +1094,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                         "Đang tạo..."
                       ) : materialText.trim() ? (
                         <>
-                          <Sparkles className="w-3.5 h-3.5" />
+                          <Sparkles className="w-4 h-4" />
                           Tạo {genCount} câu hỏi
                         </>
                       ) : (

@@ -82,7 +82,7 @@ export default function QuickActionFAB({ onNavigate, onOpenUpload, onOpenSearch 
               >
                 <span>{act.label}</span>
                 <div className={`p-1.5 rounded-lg ${act.color}`}>
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                 </div>
               </button>
             );

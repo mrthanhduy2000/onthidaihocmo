@@ -122,7 +122,7 @@ export function LoginScreen() {
         </div>
         {status === "error" && (
           <div className="text-2xs text-brand-error flex items-start gap-1.5">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             {errorMsg}
           </div>
         )}

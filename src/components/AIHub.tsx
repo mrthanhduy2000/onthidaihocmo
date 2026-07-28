@@ -192,7 +192,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                         ? "bg-brand-info-bg border-brand-info text-brand-info" 
                         : "bg-bg-surface border-border-primary text-text-muted"
                     }`}>
-                      {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                      {isUnlocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                     </div>
 
                     {/*
@@ -237,7 +237,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                               }}
                               className="w-full mt-2 py-1.5 px-2 bg-bg-card hover:bg-bg-surface border border-border-primary rounded-lg text-2xs font-medium text-text-primary transition flex items-center justify-center gap-1"
                             >
-                              <Play className="w-3 h-3 fill-current text-brand-info" />
+                              <Play className="w-3.5 h-3.5 fill-current text-brand-info" />
                               <span>Ôn khái niệm này</span>
                             </button>
                           </div>
@@ -305,7 +305,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
             ))}
             {loadingChat && (
               <div className="flex items-center gap-2 text-xs text-text-muted italic">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-brand-info" />
+                <RefreshCw className="w-4 h-4 animate-spin text-brand-info" />
                 <span>Gia sư AI đang suy luận câu trả lời...</span>
               </div>
             )}
@@ -349,7 +349,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                 disabled={loadingChat || !chatInput.trim()}
                 className="px-4 py-2 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer flex items-center gap-1"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </div>
           </div>

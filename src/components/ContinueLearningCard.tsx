@@ -36,7 +36,7 @@ export default function ContinueLearningCard({ exam, onContinue }: ContinueLearn
           <span>Phiên học đang diễn ra • Học tiếp</span>
         </div>
         <span className="text-xs tabular-nums text-text-muted flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5" />
+          <Clock className="w-4 h-4" />
           <span>Còn ~{estMinutes} phút</span>
         </span>
       </div>
@@ -68,9 +68,9 @@ export default function ContinueLearningCard({ exam, onContinue }: ContinueLearn
           onClick={() => onContinue(exam.id)}
           className="px-5 py-2.5 bg-brand-info text-white font-medium text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-2 cursor-pointer"
         >
-          <Play className="w-3.5 h-3.5 fill-current" />
+          <Play className="w-4 h-4 fill-current" />
           <span>Tiếp tục làm bài ({answeredCount}/{totalCount})</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>

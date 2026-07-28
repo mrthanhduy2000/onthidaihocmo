@@ -306,7 +306,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             disabled={totalAvailable === 0}
             className="bg-brand-info text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            <Play className="w-3.5 h-3.5" />
+            <Play className="w-4 h-4" />
             <span>Bắt đầu</span>
           </button>
         </div>
@@ -315,7 +315,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
       {/* Secondary Custom Options Section (Collapsible/Grouped) */}
       <div className="space-y-4 pt-4 border-t border-border-primary/60">
         <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-          <Sliders className="w-3.5 h-3.5 text-text-muted" />
+          <Sliders className="w-4 h-4 text-text-muted" />
           Ôn theo chương hoặc mức độ
         </h2>
 
@@ -408,7 +408,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                           title={`Dùng AI tạo câu hỏi cho Chương ${ch.id}`}
                           className="flex items-center gap-1 px-2 py-1 rounded-lg text-2xs font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info-bg transition cursor-pointer"
                         >
-                          <Sparkles className="w-3 h-3" />
+                          <Sparkles className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">{isEmpty ? "Tạo bằng AI" : "Tạo thêm"}</span>
                         </button>
 
@@ -473,7 +473,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 }`}
               >
                 <span>Ôn câu đã đánh dấu</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>

@@ -64,7 +64,7 @@ export default function EmptyState({
             className="px-5 py-2.5 bg-nut-chinh text-white font-medium text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition inline-flex items-center gap-2 cursor-pointer"
           >
             <span>{actionLabel}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       )}

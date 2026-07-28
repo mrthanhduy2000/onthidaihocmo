@@ -59,6 +59,94 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Reverse engineer sáu tầng, viết NGONNGUTHIETKE.md, rồi mới sửa mã
+
+Chỉ thị của Đàm: **không được bắt đầu sửa code**, phải dành phần lớn thời gian reverse engineer
+Khan Academy theo sáu tầng (Triết lý sản phẩm, Thương hiệu, Thiết kế, Thành phần, Tương tác,
+Hình minh hoạ), dựng thành một Design Language, chỉ sau đó mới được sửa.
+
+**Sản phẩm của vòng này**: [NGONNGUTHIETKE.md](NGONNGUTHIETKE.md), tài liệu ngôn ngữ thiết kế
+đầy đủ sáu tầng, mọi con số đều đo bằng trình duyệt trên trang thật.
+
+#### Phát hiện sâu nhất, và nó không phải chuyện CSS
+
+Khan trình bày nội dung như **một tài liệu có cấu trúc**. Đo trên trang khoá học: một hàng bài
+học là **chữ 14px màu mờ `#717378`, kèm biểu tượng 24px, cao đúng 24px, không viền, không nền,
+không bo góc, đệm bằng 0**. Tiến độ được viết thành **câu**: "Tinh thông chương: 0%", cỡ 14px
+đậm 400 màu chữ thường. Không phải thẻ chỉ số, không phải huy hiệu màu, không phải số to.
+
+Bảng điều khiển làm ngược lại: mỗi con số một cái thẻ, mỗi thẻ một cái viền. Khi mọi mẩu dữ
+liệu đều được đóng khung thì không mẩu nào quan trọng hơn mẩu nào, và màn hình biến thành bảng
+theo dõi thay vì chỗ để đọc.
+
+**Nguyên tắc rút ra: nội dung là chủ thể, số liệu là chú thích của nội dung.**
+
+#### Hai quy tắc chữ, cả hai ngược trực giác
+
+1. **Chỉ hai độ đậm: 400 và 700.** Không 500, không 600. Thứ bậc do CỠ gánh.
+2. **Tiêu đề càng lớn thì tỷ lệ dòng càng CHẶT.** Khan dùng 1,11 cho tiêu đề 36px nhưng 1,40
+   cho chữ phụ 14px. Thói quen đặt một tỷ lệ dòng chung cho mọi cỡ làm hỏng đúng chỗ này.
+
+Và một phát hiện ngược nữa ở khung bên: nhãn phân loại là **12px đậm 700 viết hoa**, còn tiêu
+đề dưới nó chỉ **16px thường 400**. Nhãn nổi lên nhờ độ đậm, tiêu đề nổi lên nhờ cỡ.
+
+#### Ngôn ngữ biểu tượng: khác biệt lớn nhất, và mới xử lý được một phần
+
+| | Khan Academy | Dự án này |
+|---|---|---|
+| Kiểu | `fill` đặc, `stroke: none`, **một** đường dẫn | `fill: none`, `stroke` 2px, nhiều đường dẫn |
+| Khung | 24×24 và 16×16 | phần lớn 14×14 |
+| Đầu nét | không có nét | bo tròn |
+
+Biểu tượng tô đặc ở 24px đọc ra **ký hiệu trong sách giáo khoa**; biểu tượng viền nét mảnh ở
+14px đọc ra **chrome của bảng điều khiển**. Đây là thứ mắt nhận ra trước cả màu sắc.
+
+Bộ đang dùng là `lucide-react`, vốn chỉ có dạng viền nét, không đổi bộ được nếu không thêm phụ
+thuộc (Đàm cấm thêm). Nên chỉ **nâng cỡ**: 109 chỗ từ 14px lên 16px, 32 chỗ từ 12px lên 14px,
+chỉ đổi trên các thành phần biểu tượng thật (giữ nguyên núm gạt của công tắc vốn cũng dùng
+`w-3 h-3` nhưng là một thẻ `div`).
+
+#### Ngôn ngữ hình minh hoạ
+
+Đo tệp SVG minh hoạ của Khan: **6 đường dẫn**, **không nét viền chỉ có mảng tô**, **77% lệnh là
+lệnh cong**, 6 màu. Tức mảng phẳng bo cong mạnh, rất ít chi tiết, cộng các dấu nhấn hình học
+rải rác. Dự án này chưa có hình minh hoạ nào, ghi lại làm đặc tả cho lần sau.
+
+#### Đã sửa gì
+
+| Thay đổi | Trước | Sau | Đối chiếu Khan |
+|---|---|---|---|
+| Số độ đậm chữ | **4** (300/400/500/600/700, tổng 686 chỗ) | **2** (400, 700) | 2 |
+| Tiêu đề trang | 24 / 32 / 600, tỷ lệ 1,33 | **28 / 32,2 / 700**, tỷ lệ **1,15** | 28 / 32 / 700, tỷ lệ 1,14 |
+| Tỷ lệ dòng tiêu đề lớn | dùng chung một mức | chặt dần theo cỡ | chặt dần theo cỡ |
+| Cỡ biểu tượng chính | 14px (109 chỗ) | **16px** (251 chỗ) | 24px |
+
+Gộp độ đậm làm tại tầng token (`--font-weight-light/medium/semibold`), không phải sửa 686 chỗ.
+
+#### Kiểm chứng
+
+Đo lại trên bản chạy thật, cả sáu màn: **chỉ còn đúng hai độ đậm 400 và 700**, không tràn ngang,
+không chữ dưới 12px, không viết hoa, không đơn cách, không chữ bị bóp, không chỗ rớt tương phản.
+`npm run check` đạt toàn bộ 6 chặng.
+
+#### Tự đính chính một việc đã làm ở vòng trước
+
+Vòng trước tôi gỡ toàn bộ 154 chỗ viết hoa với lý do chữ hoa không có hình bao từ nên đọc chậm.
+Lý do ấy đúng, nhưng tôi **đã đi xa hơn bản đặc tả**: Khan có dùng chữ hoa, cho đúng một vai trò
+là nhãn phân loại, ở 12px đậm 700 giãn chữ bình thường. Trường hợp tôi gỡ là 10px với giãn chữ
+**âm**, tệ hơn hẳn. Đã ghi công thức đúng vào NGONNGUTHIETKE.md cho lần sau.
+
+#### Còn khác Khan những gì
+
+- **Biểu tượng vẫn là viền nét**, Khan là mảng tô đặc. Cần đổi bộ biểu tượng mới giải quyết
+  triệt để, mà đổi bộ là thêm phụ thuộc.
+- **Thẻ chỉ số vẫn nhiều.** Nguyên tắc "số liệu là chú thích của nội dung" mới ghi thành tài
+  liệu, chưa áp vào các màn. Đây là việc lớn nhất còn lại và nó chạm vào bố cục từng màn.
+- **Tiêu đề trang 28px** so với 36px của Khan.
+- **Không có khung điều hướng bên trái**, cố ý, vì đó là đổi kiến trúc thông tin.
+
+---
+
 ### 28/07/2026 — Khan Academy là BẢN ĐẶC TẢ: thanh navy, nút xanh, thẻ phẳng
 
 Chỉ thị của Đàm đổi mức: các đợt trước là "học triết lý thiết kế", đợt này coi Khan Academy là

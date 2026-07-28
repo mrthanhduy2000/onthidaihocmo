@@ -696,7 +696,7 @@ export default function StatsView() {
                               onClick={() => handleToggleBookmark(q.id)}
                               className="bg-brand-warning-bg hover:opacity-95 text-brand-warning text-2xs font-semibold px-3 py-1.5 rounded-lg border border-brand-warning-border flex items-center gap-1 transition cursor-pointer"
                             >
-                              <Star className="w-3.5 h-3.5 fill-current" />
+                              <Star className="w-4 h-4 fill-current" />
                               <span>Đã lưu ôn tập</span>
                             </button>
                           ) : (
@@ -704,7 +704,7 @@ export default function StatsView() {
                               onClick={() => handleToggleBookmark(q.id)}
                               className="bg-bg-surface hover:bg-border-primary text-text-secondary text-2xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
                             >
-                              <Star className="w-3.5 h-3.5" />
+                              <Star className="w-4 h-4" />
                               <span>Lưu để ôn sau</span>
                             </button>
                           )}
@@ -735,7 +735,7 @@ export default function StatsView() {
                                 iconBadge = "bg-brand-error text-white";
                                 labelBadge = (
                                   <span className="ml-auto text-2xs font-medium bg-brand-error-bg text-brand-error px-2.5 py-0.5 rounded-full border border-brand-error-border flex items-center gap-1 shrink-0 tabular-nums">
-                                    <X className="w-3 h-3" /> BẠN ĐÃ CHỌN
+                                    <X className="w-3.5 h-3.5" /> BẠN ĐÃ CHỌN
                                   </span>
                                 );
                               } else if (isCorrectAnswer) {
@@ -743,7 +743,7 @@ export default function StatsView() {
                                 iconBadge = "bg-brand-success text-white";
                                 labelBadge = (
                                   <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 tabular-nums">
-                                    <Check className="w-3 h-3" /> ĐÁP ÁN ĐÚNG
+                                    <Check className="w-3.5 h-3.5" /> ĐÁP ÁN ĐÚNG
                                   </span>
                                 );
                               }
@@ -753,7 +753,7 @@ export default function StatsView() {
                                 iconBadge = "bg-brand-success text-white";
                                 labelBadge = (
                                   <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 tabular-nums">
-                                    <Check className="w-3 h-3" /> CHỌN ĐÚNG
+                                    <Check className="w-3.5 h-3.5" /> CHỌN ĐÚNG
                                   </span>
                                 );
                               }
@@ -765,7 +765,7 @@ export default function StatsView() {
                                   className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${cardStyle}`}
                                 >
                                   <span className={`w-5 h-5 rounded-md flex items-center justify-center font-bold tabular-nums text-xs shrink-0 ${iconBadge}`}>
-                                    {isUserSelected && userAnswer !== q.correctAnswer ? <X className="w-3 h-3" /> : (isCorrectAnswer ? <Check className="w-3 h-3" /> : key.toUpperCase())}
+                                    {isUserSelected && userAnswer !== q.correctAnswer ? <X className="w-3.5 h-3.5" /> : (isCorrectAnswer ? <Check className="w-3.5 h-3.5" /> : key.toUpperCase())}
                                   </span>
                                   <div className="flex-1 pr-2 leading-relaxed">{q.options[key]}</div>
                                   {labelBadge}
@@ -779,7 +779,7 @@ export default function StatsView() {
                       {userAnswer !== q.correctAnswer && (
                         <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
                           <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                            <AlertTriangle className="w-3.5 h-3.5 text-brand-error" /> Phân tích lỗi sai
+                            <AlertTriangle className="w-4 h-4 text-brand-error" /> Phân tích lỗi sai
                           </h5>
                           
                           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
@@ -787,7 +787,7 @@ export default function StatsView() {
                             <div className="md:col-span-4 flex items-center justify-center gap-6 bg-bg-surface p-4 rounded-xl border border-border-primary">
                               <div className="flex flex-col items-center gap-1">
                                 <span className="text-2xs text-text-muted tabular-nums font-medium">Bạn chọn</span>
-                                <ArrowDown className="w-3 h-3 text-text-muted" />
+                                <ArrowDown className="w-3.5 h-3.5 text-text-muted" />
                                 <span className="w-8 h-8 rounded-full bg-brand-error-bg text-brand-error flex items-center justify-center font-bold tabular-nums border border-brand-error-border">
                                   {userAnswer?.toUpperCase()}
                                 </span>
@@ -797,7 +797,7 @@ export default function StatsView() {
                               
                               <div className="flex flex-col items-center gap-1">
                                 <span className="text-2xs text-text-muted tabular-nums font-medium">Đúng là</span>
-                                <ArrowDown className="w-3 h-3 text-text-muted" />
+                                <ArrowDown className="w-3.5 h-3.5 text-text-muted" />
                                 <span className="w-8 h-8 rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center font-bold tabular-nums border border-brand-success-border">
                                   {q.correctAnswer.toUpperCase()}
                                 </span>
@@ -833,7 +833,7 @@ export default function StatsView() {
                       {/* BLOCK 3: Knowledge Card (Kiến thức cần nhớ) */}
                       <div className="bg-brand-warning-bg/20 border border-brand-warning-border p-5 rounded-2xl space-y-3">
                         <h5 className="text-2xs font-bold text-brand-warning tabular-nums flex items-center gap-1.5">
-                          <Lightbulb className="w-3.5 h-3.5" /> Kiến thức cần nhớ (Trọng tâm lý thuyết)
+                          <Lightbulb className="w-4 h-4" /> Kiến thức cần nhớ (Trọng tâm lý thuyết)
                         </h5>
                         
                         <ul className="space-y-2 text-xs text-text-secondary pl-4 list-disc marker:text-brand-warning">
@@ -846,7 +846,7 @@ export default function StatsView() {
                       {/* BLOCK 4: Kiến thức gốc (Lời giải chi tiết & Slide gốc) */}
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                         <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-brand-info" /> Tài liệu gốc & Lời giải chi tiết
+                          <BookOpen className="w-4 h-4 text-brand-info" /> Tài liệu gốc & Lời giải chi tiết
                         </h5>
 
                         <div className="space-y-2 text-xs text-text-secondary leading-relaxed">
@@ -870,11 +870,11 @@ export default function StatsView() {
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-brand-info" /> Ghi chú cá nhân (Tự động lưu)
+                            <Sparkles className="w-4 h-4 text-brand-info" /> Ghi chú cá nhân (Tự động lưu)
                           </h5>
                           {noteFeedback[q.id] && (
                             <span className="text-2xs font-medium text-brand-success flex items-center gap-1 font-sans animate-pulse">
-                              <Check className="w-3 h-3" /> {noteFeedback[q.id]}
+                              <Check className="w-3.5 h-3.5" /> {noteFeedback[q.id]}
                             </span>
                           )}
                         </div>
@@ -893,7 +893,7 @@ export default function StatsView() {
                         return (
                           <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
                             <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                              <History className="w-3.5 h-3.5 text-brand-info" /> Lịch sử luyện tập & Timeline sai
+                              <History className="w-4 h-4 text-brand-info" /> Lịch sử luyện tập & Timeline sai
                             </h5>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-xs">
@@ -927,7 +927,7 @@ export default function StatsView() {
                         return (
                           <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                             <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                              <Layers className="w-3.5 h-3.5 text-brand-info" /> Các câu sai liên quan trong hệ thống
+                              <Layers className="w-4 h-4 text-brand-info" /> Các câu sai liên quan trong hệ thống
                             </h5>
 
                             <div className="flex flex-col gap-2.5">
@@ -946,7 +946,7 @@ export default function StatsView() {
                                     </span>
                                     <span className="text-text-primary truncate font-sans">{otherQ.question}</span>
                                   </div>
-                                  <ChevronRight className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                                  <ChevronRight className="w-4 h-4 text-text-muted shrink-0" />
                                 </button>
                               ))}
                             </div>
@@ -972,7 +972,7 @@ export default function StatsView() {
                                   : "text-text-muted hover:text-text-primary border border-transparent"
                               }`}
                             >
-                              <Check className="w-3 h-3" />
+                              <Check className="w-3.5 h-3.5" />
                               <span>Đã hiểu</span>
                             </button>
 
@@ -984,7 +984,7 @@ export default function StatsView() {
                                   : "text-text-muted hover:text-text-primary border border-transparent"
                               }`}
                             >
-                              <AlertTriangle className="w-3 h-3" />
+                              <AlertTriangle className="w-3.5 h-3.5" />
                               <span>Cần ôn lại</span>
                             </button>
 
@@ -996,7 +996,7 @@ export default function StatsView() {
                                   : "text-text-muted hover:text-text-primary border border-transparent"
                               }`}
                             >
-                              <HelpCircle className="w-3 h-3" />
+                              <HelpCircle className="w-3.5 h-3.5" />
                               <span>Chưa học</span>
                             </button>
                           </div>
@@ -1061,7 +1061,7 @@ export default function StatsView() {
       {toastMsg && (
         <div className="fixed bottom-6 right-6 z-50 bg-bg-invert/95 backdrop-blur-md text-text-invert px-4 py-3 rounded-xl shadow-xl border border-border-primary text-xs font-medium flex items-center gap-2.5 animate-fade-in-up duration-200">
           <div className="w-4 h-4 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center shrink-0">
-            <Check className="w-3 h-3" />
+            <Check className="w-3.5 h-3.5" />
           </div>
           <span>{toastMsg}</span>
         </div>

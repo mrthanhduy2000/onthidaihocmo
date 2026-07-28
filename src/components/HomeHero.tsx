@@ -94,18 +94,18 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-info-bg text-brand-info border border-brand-info/20 text-xs font-semibold rounded-full">
-              <RhythmIcon className="w-3.5 h-3.5" />
+              <RhythmIcon className="w-4 h-4" />
               <span>{timeOfRhythm.label} • {timeOfRhythm.strategy}</span>
             </span>
 
             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg-surface text-text-muted border border-border-primary text-2xs tabular-nums rounded-full">
-              <Clock className="w-3 h-3 text-brand-info" />
+              <Clock className="w-3.5 h-3.5 text-brand-info" />
               <span>{action.estimatedTimeMinutes} phút</span>
             </span>
           </div>
 
           <div className="flex items-center gap-1 text-xs text-text-muted tabular-nums">
-            <TrendingUp className="w-3.5 h-3.5 text-brand-success" />
+            <TrendingUp className="w-4 h-4 text-brand-success" />
             <span>{action.expectedBenefit}</span>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
             </div>
             <div className="flex items-center justify-between text-2xs font-sans">
               <span className="text-text-muted tabular-nums flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-success" />
+                <ShieldCheck className="w-4 h-4 text-brand-success" />
                 <span>Độ tự tin: <strong className="text-text-primary font-medium">{confidenceText}</strong></span>
               </span>
             </div>

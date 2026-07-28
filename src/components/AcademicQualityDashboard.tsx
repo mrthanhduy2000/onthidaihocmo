@@ -67,7 +67,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setAuditData(evidenceCoverageAuditService.auditSubject())}
           className="px-4 py-2 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary text-text-primary text-xs font-medium rounded-xl transition flex items-center gap-2 self-start md:self-auto cursor-pointer"
         >
-          <RefreshCw className="w-3.5 h-3.5 text-brand-info" />
+          <RefreshCw className="w-4 h-4 text-brand-info" />
           <span>Tải lại kiểm định</span>
         </button>
       </div>
@@ -82,7 +82,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <BarChart2 className="w-3.5 h-3.5" />
+          <BarChart2 className="w-4 h-4" />
           <span>Sức khỏe Ngân hàng đề</span>
         </button>
 
@@ -94,7 +94,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5" />
+          <BookOpen className="w-4 h-4" />
           <span>Ma trận bao phủ</span>
         </button>
 
@@ -106,7 +106,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
+          <ShieldCheck className="w-4 h-4" />
           <span>Kiểm định từng câu hỏi ({questionPool.length})</span>
         </button>
 
@@ -118,7 +118,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <FileText className="w-3.5 h-3.5" />
+          <FileText className="w-4 h-4" />
           <span>Báo cáo đề thi</span>
         </button>
 
@@ -130,7 +130,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <UserCheck className="w-3.5 h-3.5" />
+          <UserCheck className="w-4 h-4" />
           <span>Hàng chờ phê duyệt</span>
         </button>
       </div>

@@ -200,7 +200,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
 
               {error && (
                 <div className="p-3 bg-brand-error-bg border border-brand-error-border/40 rounded-xl text-2xs text-brand-error flex items-start gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
               )}
@@ -222,7 +222,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
                   "Đang tạo..."
                 ) : (
                   <>
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Sparkles className="w-4 h-4" />
                     Tạo {genCount} câu
                   </>
                 )}

@@ -191,7 +191,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="px-3 py-1.5 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary text-text-muted hover:text-text-primary text-xs font-medium rounded-lg transition inline-flex items-center gap-1.5 cursor-pointer"
         >
-          {showAdvanced ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           <span>{showAdvanced ? "Ẩn phần mở rộng" : "Xem phần mở rộng"}</span>
         </button>
       </div>
@@ -220,7 +220,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
                     <div className="text-2xs tabular-nums text-brand-info font-bold">Chương {ch.id}</div>
                     <div className="text-xs font-medium text-text-primary truncate max-w-[200px]">{ch.title}</div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
+                  <ChevronRight className="w-4 h-4 text-text-muted" />
                 </button>
               ))}
             </div>

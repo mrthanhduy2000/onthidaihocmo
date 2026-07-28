@@ -147,7 +147,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="w-3.5 h-3.5 text-text-muted" />
+              <Filter className="w-4 h-4 text-text-muted" />
               <select
                 value={selectedChapter}
                 onChange={(e) => setSelectedChapter(e.target.value === "all" ? "all" : Number(e.target.value))}
@@ -274,12 +274,12 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                         }}
                         className="px-3 py-1.5 bg-bg-surface hover:bg-bg-surface-hover text-text-primary border border-border-primary rounded-lg text-xs font-medium transition flex items-center gap-1.5"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-4 h-4" />
                         <span>Ôn lại</span>
                       </button>
 
                       <div className="w-6 h-6 rounded-full bg-bg-surface border border-border-primary flex items-center justify-center text-text-muted">
-                        <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                        <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                       </div>
                     </div>
                   </div>
@@ -367,7 +367,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                         </div>
 
                         <div className="text-2xs tabular-nums text-brand-info flex items-center gap-1">
-                          <Sparkles className="w-3.5 h-3.5" />
+                          <Sparkles className="w-4 h-4" />
                           <span>Dự báo sau khi ôn: độ ghi nhớ tăng từ 45% lên 88%</span>
                         </div>
                       </div>
