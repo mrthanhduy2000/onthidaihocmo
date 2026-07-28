@@ -2695,14 +2695,86 @@ check("Bốn màu ngữ nghĩa đọc được trên nền cùng tông của ch�
     ? `đạt chuẩn WCAG AA: ${capDat.join(", ")}`
     : `chưa đạt 4,5:1: ${capHong.join(", ")}`);
 
-// AF4. Nội dung phương án KHÔNG được tô theo màu ngữ nghĩa.
-// Tín hiệu đúng sai đã có ở nền, viền, ô chữ cái và biểu tượng; tô luôn cả đoạn chữ chỉ làm
-// tụt độ tương phản của chính thứ người học phải đọc kỹ nhất sau mỗi câu.
-check("Nội dung phương án giữ màu chữ thường, không tô theo màu ngữ nghĩa",
-  !/bg-brand-success-bg border-brand-success-border text-brand-success/.test(nguonPractice)
-    && !/bg-brand-error-bg border-brand-error-border text-brand-error\b/.test(nguonPractice)
-    && /bg-brand-success-bg border-brand-success-border text-text-primary/.test(nguonPractice),
-  "chữ nội dung dùng text-text-primary, tương phản 18:1 thay cho 3,15:1");
+// AF4. Không được vừa TÔ NỀN vừa TÔ CHỮ bằng cùng một màu ngữ nghĩa trên hàng đáp án.
+//
+// Lịch sử của phép kiểm này đáng đọc, vì bản đầu của nó cấm nhầm thứ.
+//
+// Ngày 28/07/2026 đo được phương án ĐÚNG có tương phản 3,15:1 và phương án SAI 4,41:1, đều
+// dưới ngưỡng 4,5:1 của WCAG AA. Kết luận lúc đó là "cấm tô màu ngữ nghĩa lên chữ nội dung",
+// và phép kiểm được viết đúng theo câu chữ ấy.
+//
+// Nhưng nguyên nhân thật không phải là màu chữ. Nó là **cặp nền tô cộng chữ tô**: chữ xanh lá
+// đặt trên nền xanh nhạt thì hai màu cùng tông nên tương phản sập. Đo lại ngày 29/07/2026 với
+// nền để TRONG SUỐT:
+//
+//   #157d3c trên nền trắng = 5,21:1     #b91c1c trên nền trắng = 6,47:1
+//
+// Cả hai vượt ngưỡng. Nghĩa là cách làm của Khan Academy, bỏ nền và tô chữ, không hề vi phạm
+// chuẩn; chính cái nền mới là thứ gây ra con số 3,15.
+//
+// Nên phép kiểm này chuyển sang canh đúng cái đã hỏng thật và hiện KHÔNG có phép kiểm nào giữ:
+// **độ đục trên hàng đáp án sau khi lộ kết quả**.
+//
+// Bản cũ dùng `opacity-40` chồng lên `text-text-muted` cho ba phương án không được chọn. Màu
+// thật hiện ra trên nền trắng là 0,4 x (107,107,117) cộng 0,6 x (255,255,255), tức xấp xỉ
+// #C4C4C8, chỉ **1,85:1**. Mà đọc lại ba phương án còn lại để hiểu vì sao chúng sai chính là
+// phần học nhiều nhất của cả câu hỏi.
+//
+// Vì sao phải canh riêng độ đục thay vì canh tương phản như AF3: `opacity` không nằm trong bộ
+// token màu nên mọi phép đo tĩnh trên token đều **không thấy nó**. Cứ đặt màu chữ đạt chuẩn rồi
+// phủ một lớp độ đục lên là tương phản sập mà không phép kiểm nào kêu.
+//
+// Riêng cặp nền tô cộng chữ tô cùng tông thì AF3 đã canh bằng số đo thật (success 4,98:1) nên
+// không viết thêm ở đây. Đo lại ngày 29/07/2026 với nền để TRONG SUỐT: #157d3c trên trắng đạt
+// 5,21:1 và #b91c1c đạt 6,47:1, nên cách của Khan Academy (bỏ nền, tô chữ) hợp chuẩn.
+const chuoiKieuHang = nguonPractice.match(/(?:voHang|mauChu|oChuCai) = "[^"]*"/g) || [];
+const hangCoDoDuc = chuoiKieuHang.filter(s => /\bopacity-\d/.test(s));
+check("Hàng đáp án không hạ độ đục sau khi lộ kết quả",
+  chuoiKieuHang.length >= 8 && hangCoDoDuc.length === 0,
+  hangCoDoDuc.length > 0
+    ? `${hangCoDoDuc.length} trạng thái còn hạ độ đục: ${hangCoDoDuc.join(" | ")}`
+    : chuoiKieuHang.length < 8
+    ? `chỉ tìm thấy ${chuoiKieuHang.length} chuỗi kiểu hàng đáp án, phép kiểm nhiều khả năng đã hết bám vào mã`
+    : `${chuoiKieuHang.length} trạng thái của hàng đáp án, không trạng thái nào dùng opacity`);
+
+// AF5. Vòng khoanh trên hàng đáp án chỉ được có MỘT, và luôn quanh đáp án đúng.
+//
+// Đo trên trang bài tập của Khan: dù trả lời đúng hay sai, trên màn hình chỉ tồn tại đúng một
+// vòng khoanh và nó luôn ở đáp án đúng. Vòng là thứ CHỈ CHỖ CẦN NHÌN, không phải thứ chấm điểm.
+// Bản đầu của lượt 29/07/2026 khoanh cả phương án chọn sai, và nhìn trên bản chạy thật thì hai
+// vòng cùng độ dày nằm sát nhau tranh nhau sự chú ý.
+check("Chỉ đáp án đúng được khoanh vòng",
+  /voHang = "border-brand-success"/.test(nguonPractice)
+    && !/voHang = "border-brand-error"/.test(nguonPractice),
+  "vòng khoanh dành riêng cho đáp án đúng, phương án chọn sai chỉ đổi ô chữ cái và màu chữ");
+
+// AF6. Mọi lớp `animate-*` viết trong components phải có token `--animate-*` tương ứng.
+//
+// Cùng họ lỗi với AF1 và cũng lặng lẽ y như vậy. Tailwind v4 chỉ sinh lớp `animate-x` từ token
+// `--animate-x` trong `@theme`; thiếu token thì lớp không tồn tại và trình duyệt bỏ qua không
+// một tiếng động. Ngày 29/07/2026 tìm ra `animate-fade-in-up` nằm ở 7 chỗ trong hai file mà
+// chưa từng có token, tức mọi bảng phản hồi sau khi trả lời đều nhảy phịch vào suốt từ đầu,
+// dù mã nguồn đọc lên như thể đã có hiệu ứng.
+const tokenHoatAnh = new Set(
+  Array.from(cssTheme.matchAll(/--animate-([a-z-]+)\s*:/g)).map(m => m[1])
+);
+const hoatAnhDangDung = new Map<string, string[]>();
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  for (const m of noiDung.matchAll(/\banimate-([a-z][a-z0-9-]*)(?=[\s"'`}])/g)) {
+    const ten = m[1];
+    if (["none", "spin", "ping", "pulse", "bounce"].includes(ten)) continue; // có sẵn trong Tailwind
+    if (!hoatAnhDangDung.has(ten)) hoatAnhDangDung.set(ten, []);
+    if (!hoatAnhDangDung.get(ten)!.includes(f)) hoatAnhDangDung.get(ten)!.push(f);
+  }
+}
+const hoatAnhMoCoi = [...hoatAnhDangDung.keys()].filter(t => !tokenHoatAnh.has(t)).sort();
+check("Không lớp hoạt ảnh nào bị dùng mà thiếu token",
+  hoatAnhMoCoi.length === 0,
+  hoatAnhMoCoi.length === 0
+    ? `${hoatAnhDangDung.size} hoạt ảnh đang dùng, tất cả đều có token trong index.css`
+    : `${hoatAnhMoCoi.length} lớp KHÔNG chạy được: ${hoatAnhMoCoi.map(t => `${t} (${hoatAnhDangDung.get(t)!.slice(0, 3).join(", ")})`).join(" | ")}`);
 
 // ===========================================================================
 // Kết quả

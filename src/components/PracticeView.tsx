@@ -636,10 +636,23 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 tiếng học, một dòng chỉ dẫn rõ ràng cắt được đúng khoảng do dự đó.
               */}
               <p className="text-lg font-bold text-text-primary font-sans pt-1">
-                Chọn 1 đáp án:
+                Hãy chọn 1 đáp án:
               </p>
 
-              <div className="grid grid-cols-1 pt-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+              {/*
+                `key` gắn theo mã câu hỏi để React DỰNG LẠI bốn hàng khi sang câu khác thay vì
+                dùng lại đúng bốn nút cũ.
+
+                Bắt được lỗi này khi chụp màn hình ngay lúc chuyển câu: vòng xanh và ô chữ cái
+                đỏ của câu VỪA XONG vẫn còn nằm trên các phương án của câu MỚI rồi mới nhạt dần.
+                Nguyên nhân là quy tắc chuyển màu nền và màu viền 140ms đặt chung cho mọi thẻ:
+                React giữ nguyên nút cũ và chỉ đổi lớp, nên trình duyệt chạy hiệu ứng chuyển màu
+                giữa hai trạng thái của hai câu khác nhau.
+
+                Với một ứng dụng học tập thì đây không phải lỗi thẩm mỹ: trong khoảnh khắc đó
+                người học thấy phản hồi đúng sai gắn lên những phương án chưa hề đọc.
+              */}
+              <div key={activeQuestion.id} className="grid grid-cols-1 pt-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
                 {(() => {
                   // Trong chế độ gia sư, khi đã trả lời thì lộ đáp án đúng/sai ngay trên các phương án
                   // (không cần đợi nộp bài). Câu đã chốt khóa cũng luôn lộ + khóa. Chế độ thường chỉ lộ sau khi nộp.
@@ -647,34 +660,72 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   const committed = lockedIds.has(activeQuestion.id) || (isTutorMode && answeredThis);
                   const reveal = exam.isSubmitted || committed;
                   const locked = exam.isSubmitted || committed;
+                  // Điều kiện y hệt hai bảng phản hồi cũ, chỉ đổi chỗ hiển thị chứ không đổi
+                  // lúc nào được hiện.
+                  const hienGiaiNghia = isTutorMode && !exam.isSubmitted && answeredThis;
                   return (["a", "b", "c", "d"] as const).map((key) => {
                   const optionText = activeQuestion.options[key];
                   const isSelected = exam.answers[activeQuestion.id] === key;
                   const isCorrect = activeQuestion.correctAnswer === key;
                   const isWrongSelection = isSelected && !isCorrect;
 
-                  // Trạng thái nghỉ: trong suốt hoàn toàn, không viền. Chỉ khi rê chuột mới
-                  // hiện một mảng nền rất nhạt để báo rằng hàng này bấm được.
-                  let optionStyle = "border-transparent bg-transparent text-text-secondary hover:bg-bg-surface/60";
+                  /*
+                    TRẠNG THÁI ĐÃ TRẢ LỜI, DỰNG LẠI THEO ĐÚNG THỨ ĐO ĐƯỢC TRÊN KHAN ACADEMY.
+
+                    Đo ngày 29/07/2026 trên một bài tập thật của họ, cố ý chọn sai trước rồi
+                    chọn lại cho đúng để xem được cả hai trạng thái:
+
+                    | Thành phần | Số đo trên Khan |
+                    |---|---|
+                    | Nền hàng đáp án đúng | **trong suốt**, không hề tô nền |
+                    | Viền hàng đáp án đúng | vòng 2px màu `#0B7C18`, bo 8px |
+                    | Ô chữ cái đáp án đúng | viên thuốc 50x32 tô đặc, bên trong là **dấu tích ĐI KÈM chữ cái** |
+                    | Chữ nội dung đáp án đúng | tô luôn màu `#0B7C18` |
+                    | Ô chữ cái lúc nghỉ | **hình TRÒN** 32x32, viền 2px `#5F6167`, rỗng ruột |
+                    | Hàng đã chọn, chưa lộ | nền vẫn trong suốt, chữ và ô chữ cái chuyển xanh dương |
+
+                    Hai điều chỉnh dưới đây đáng làm vì chúng sửa đúng hai chỗ đang làm ngược:
+
+                    1. **Ô chữ cái phải TRÒN, không vuông.** Trên Khan hình dạng ô mang nghĩa:
+                       tròn cho câu chọn một đáp án, vuông cho câu chọn nhiều đáp án, đúng quy
+                       ước nút chọn của mọi hệ điều hành. Sản phẩm này luôn là chọn một, mà lại
+                       vẽ ô vuông, tức đang phát tín hiệu "được chọn nhiều".
+
+                    2. **Bỏ nền đi thì cởi trói được cho màu chữ.** Bất biến 4.9d cấm tô màu ngữ
+                       nghĩa lên chữ nội dung, và lý do ghi lại là đo được 3,15:1 khi tô chữ
+                       xanh lá lên NỀN xanh nhạt. Lý do ấy đúng với cái nền đó. Bỏ nền thì ràng
+                       buộc cũng mất: `#157d3c` trên nền trắng đạt **5,21:1**, `#b91c1c` đạt
+                       **6,47:1**, cả hai vượt ngưỡng 4,5:1 của WCAG AA. Nên nay theo được cách
+                       của Khan mà không phải đánh đổi độ đọc được.
+                  */
+                  let voHang = "border-transparent";
+                  let mauChu = "text-text-primary";
+                  let oChuCai = "w-8 border-2 border-text-secondary text-text-secondary group-hover:border-text-primary group-hover:text-text-primary";
 
                   if (isSelected && !reveal) {
-                    optionStyle = "bg-bg-surface/80 border-text-primary text-text-primary font-medium";
+                    mauChu = "text-[color:var(--nut-chinh)] font-medium";
+                    oChuCai = "w-8 bg-[color:var(--nut-chinh)] text-white border-2 border-transparent";
                   } else if (reveal) {
-                    // NỘI DUNG phương án giữ màu chữ thường, tín hiệu đúng sai nằm ở NỀN, VIỀN,
-                    // Ô CHỮ CÁI và BIỂU TƯỢNG.
-                    //
-                    // Vì sao đổi (28/07/2026): bản cũ tô luôn chữ nội dung theo màu ngữ nghĩa,
-                    // và đo được độ tương phản chỉ 3,15:1 cho phương án ĐÚNG (xanh trên nền xanh
-                    // nhạt) với 4,41:1 cho phương án SAI, đều dưới mức 4,5:1 của chuẩn WCAG AA.
-                    // Đó lại đúng là đoạn chữ người học phải đọc kỹ nhất sau mỗi câu, và đọc
-                    // suốt vài tiếng liền. Sau khi sửa: 18,04:1 và 17,26:1.
-                    //
-                    // Bốn tín hiệu còn lại vẫn thừa sức nói lên đúng hay sai mà không phải hạ
-                    // độ đọc được của chính nội dung.
                     if (isCorrect) {
-                      optionStyle = "bg-brand-success-bg border-brand-success-border text-text-primary font-medium";
+                      voHang = "border-brand-success";
+                      mauChu = "text-brand-success font-medium";
+                      oChuCai = "w-12 gap-1 bg-brand-success text-white border-2 border-transparent animate-danh-dau";
                     } else if (isWrongSelection) {
-                      optionStyle = "bg-brand-error-bg border-brand-error-border text-text-primary";
+                      /*
+                        KHÔNG khoanh vòng quanh phương án chọn sai.
+
+                        Bản đầu của lượt này khoanh cả hai: vòng xanh quanh đáp án đúng và vòng
+                        đỏ quanh phương án đã chọn. Nhìn trên bản chạy thật thì hai vòng nằm sát
+                        nhau, cùng độ dày, cùng bo góc, nên chúng có **cùng sức nặng thị giác**
+                        và mắt không biết nên nhìn cái nào trước.
+
+                        Trên Khan chỉ có đúng MỘT vòng, và nó luôn quanh đáp án đúng. Vòng là
+                        thứ chỉ chỗ cần nhìn, không phải thứ chấm điểm. Nên ở đây phương án chọn
+                        sai chỉ giữ ô chữ cái và màu chữ, đủ để người học nhận ra mình đã chọn
+                        gì mà không tranh chỗ với đáp án.
+                      */
+                      mauChu = "text-brand-error";
+                      oChuCai = "w-8 bg-brand-error text-white border-2 border-transparent";
                     } else {
                       /*
                         PHƯƠNG ÁN KHÔNG ĐƯỢC CHỌN, SAU KHI LỘ ĐÁP ÁN.
@@ -693,39 +744,48 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         thẳng `text-text-muted` (5,27:1), bỏ `opacity`. Vẫn lùi rõ so với đáp án
                         đúng nhưng đọc được.
                       */
-                      optionStyle = "border-transparent bg-transparent text-text-muted";
+                      mauChu = "text-text-muted";
+                      oChuCai = "w-8 border-2 border-border-primary text-text-muted";
                     }
                   }
 
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => handleSelectAnswer(key)}
-                      disabled={locked}
-                      className={`w-full text-left p-4 min-h-[56px] rounded-lg border flex items-center justify-between gap-4 group relative ${locked ? "cursor-default" : "cursor-pointer"} ${optionStyle}`}
-                    >
-                      <div className="flex items-center gap-3.5">
-                        {/*
-                          Ô CHỮ CÁI. Đo trên Khan Academy: hình vuông bo 4px, lúc nghỉ là viền
-                          2px rỗng ruột, lúc được chọn thì tô đặc và chữ đổi sang trắng. Chính ô
-                          này gánh phần lớn tín hiệu trạng thái, nên hàng đằng sau nó mới được
-                          phép để trống trơn.
+                  /*
+                    GIẢI NGHĨA GẮN THẲNG DƯỚI PHƯƠNG ÁN, KHÔNG CÒN LÀ MỘT BẢNG RIÊNG.
 
-                          Bỏ `tabular-nums`: đây là MỘT ký tự, mà lợi ích duy nhất của font đơn cách
-                          là xếp thẳng cột nhiều ký tự. Một ký tự thì không có gì để xếp cột,
-                          chỉ còn lại nhược điểm là nét chữ khô và rộng hơn.
+                    Khan đặt phần lý giải ngay bên dưới CHÍNH phương án mà nó nói tới, thụt vào
+                    đúng mép chữ, cỡ 16px màu mờ, không hộp, không viền, không nền. Mắt vừa thấy
+                    phương án nào đúng là đọc tiếp được ngay vì sao, không phải nhảy xuống một
+                    khối khác rồi dò ngược lên xem khối đó đang nói về phương án nào.
+
+                    Điều kiện hiện giữ y hệt hai bảng cũ nên không có trạng thái nào mới sinh ra
+                    và cũng không có trạng thái nào mất đi.
+
+                    Trên Khan MỌI phương án đều có một câu lý giải riêng. Dự án này không có dữ
+                    liệu đó: ngân hàng câu hỏi chỉ có một trường `explanation` cho cả câu, còn
+                    trường `misconception` của từng câu rỗng 292/292 (xem Nợ 2 trong WORKSTATE).
+                    Nên chỉ gắn lý giải vào đúng phương án mà nó nói tới, và các phương án còn
+                    lại để trống thay vì độn một câu chữ không dạy được gì.
+                  */
+                  const giaiNghia = hienGiaiNghia && isCorrect ? activeQuestion.explanation : null;
+
+                  return (
+                    <div key={key} className={`rounded-lg border-2 ${voHang}`}>
+                      <button
+                        onClick={() => handleSelectAnswer(key)}
+                        disabled={locked}
+                        className={`w-full text-left px-4 py-3.5 min-h-[52px] flex items-start gap-3.5 group ${locked ? "cursor-default" : "cursor-pointer hover:bg-bg-surface/60"} ${mauChu}`}
+                      >
+                        {/*
+                          Ô CHỮ CÁI. Chính ô này gánh phần lớn tín hiệu trạng thái, nên hàng
+                          đằng sau nó mới được phép để trống trơn. Khi đúng thì nó nở ra thành
+                          viên thuốc chứa dấu tích ĐI KÈM chữ cái, đúng cách Khan làm: dấu tích
+                          nói "đúng", chữ cái vẫn nói "phương án nào", không mất thông tin nào.
+
+                          Không dùng `tabular-nums`: đây là MỘT ký tự, mà lợi ích duy nhất của
+                          font đơn cách là xếp thẳng cột nhiều ký tự.
                         */}
-                        <span className={`w-6 h-6 rounded shrink-0 flex items-center justify-center font-semibold text-xs ${
-                          isSelected && !reveal
-                            ? "bg-nut-chinh text-white border-2 border-text-primary"
-                            : reveal && isCorrect
-                            ? "bg-brand-success text-white border-2 border-brand-success"
-                            : reveal && isWrongSelection
-                            ? "bg-brand-error text-white border-2 border-brand-error"
-                            : reveal
-                            ? "text-text-muted border-2 border-border-primary"
-                            : "text-text-muted border-2 border-border-primary group-hover:border-text-muted"
-                        }`}>
+                        <span className={`h-8 rounded-full shrink-0 flex items-center justify-center font-bold text-xs transition ${oChuCai}`}>
+                          {reveal && isCorrect && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
                           {key.toUpperCase()}
                         </span>
                         {/*
@@ -734,113 +794,122 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           bốn điểm. Thứ bậc đọc bị đảo ngược: đọc câu hỏi ở cỡ lớn rồi phải hạ
                           mắt xuống cỡ nhỏ hơn để làm phần việc khó hơn. Nay 16px.
                         */}
-                        <span className="text-base leading-relaxed font-sans">{optionText}</span>
-                      </div>
+                        <span className="text-base leading-relaxed font-sans pt-0.5">{optionText}</span>
+                      </button>
 
-                      {reveal && isCorrect && (
-                        <Check className="w-4 h-4 text-brand-success shrink-0" />
+                      {/*
+                        Thụt vào 78px để chữ giải nghĩa thẳng cột với chính chữ của phương án nó
+                        nói tới: 16px đệm hàng cộng 2px viền cộng 48px ô chữ cái cộng 14px khoảng
+                        hở. Đo trên Khan ở khổ hẹp: họ giữ mép trái của lời lý giải trùng đúng
+                        mép trái của nhãn phương án, chấp nhận dòng ngắn lại chứ không bỏ thụt
+                        đầu dòng. Thẳng cột chính là thứ nói lên "đoạn này thuộc về phương án
+                        kia".
+
+                        Chú thích phải nằm NGOÀI ngoặc của biểu thức `&&`. Đây là lần thứ tư cái
+                        bẫy này làm hỏng bản dựng: đặt một khối chú thích JSX làm phần tử đầu
+                        tiên bên trong ngoặc thì thành hai biểu thức đứng cạnh nhau và trình
+                        biên dịch báo thiếu dấu phẩy.
+                      */}
+                      {giaiNghia && (
+                        <p className="animate-hien-len pl-[78px] pr-4 pb-4 text-sm leading-relaxed text-text-secondary font-sans max-w-[40rem]">
+                          {giaiNghia}
+                        </p>
                       )}
-                      {reveal && isWrongSelection && (
-                        <AlertCircle className="w-4 h-4 text-brand-error shrink-0" />
-                      )}
-                    </button>
+                    </div>
                   );
                 });
                 })()}
               </div>
 
-              {/* Correct Answer Success Panel (Tutor Mode) */}
-              {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] === activeQuestion.correctAnswer && (
-                <div className="border border-brand-success-border/40 bg-brand-success-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
-                  <div className="flex items-center gap-2 border-b border-brand-success-border/30 pb-2.5">
-                    <CheckCircle2 className="w-5 h-5 text-brand-success animate-pulse" />
-                    <div>
-                      <h4 className="text-sm font-semibold text-brand-success">Chính xác! Bạn đã chọn đúng đáp án</h4>
-                      <p className="text-xs text-text-muted font-sans">Dùng mũi tên trái phải để chuyển câu.</p>
-                    </div>
-                  </div>
+              {/*
+                MỘT THẺ BÁO GỌN, THAY CHO HAI BẢNG LỒNG HỘP.
 
-                  {/*
-                    BẢNG PHẢN HỒI LÀ NƠI DẠY THẬT SỰ, nên đoạn giải nghĩa phải là nhân vật
-                    chính của khối này.
+                Trước lượt này, mỗi trạng thái là một bảng lớn có viền, có nền tô màu ngữ nghĩa,
+                bo 12px, bên trong lại có nhãn dẫn và MỘT HỘP NỮA bọc đoạn giải nghĩa, tức hộp
+                trong hộp trong hộp. Riêng bảng trả lời sai còn chép lại nguyên văn đáp án đúng
+                một lần nữa, dù ngay phía trên phương án ấy đã được khoanh xanh kèm dấu tích.
 
-                    Đo trên bản chạy thật trước khi sửa (28/07/2026): thân giải nghĩa 13px và
-                    trải **87 ký tự mỗi dòng**, tức vừa là chữ nhỏ nhất trong các đoạn có
-                    nghĩa, vừa là dòng dài nhất màn hình. Còn nhãn dẫn nó thì để `text-2xs`
-                    viết hoa giãn chữ, cỡ chữ nhỏ nhất toàn sản phẩm.
+                Đo trên Khan cùng ngày: phản hồi của họ là **một thẻ 192x102**, nền trắng, viền
+                1px, bo 4px, đổ bóng `0 4px 8px rgba(33,36,44,0.16)`, tiêu đề 20px đậm 700 để
+                màu CHỮ THƯỜNG chứ không phải màu ngữ nghĩa, dòng dưới 16px thường. Thẻ nổi ở
+                góc dưới bên phải, ngay cạnh nút hành động chính, và có nút đóng.
 
-                    Ba điều sửa, đều thuần thị giác:
-                    1. Thân giải nghĩa lên 15px và chặn bề rộng, cho về vùng 45 tới 75 ký tự.
-                    2. Nhãn bỏ viết hoa, về 13px chữ thường. Chữ hoa toàn phần mất đường viền
-                       trên dưới của từ nên mắt phải đọc từng chữ cái thay vì nhận dạng cả
-                       hình khối từ, chậm hơn hẳn ở cỡ nhỏ.
-                    3. Tiêu đề phản hồi lên 15px để lớn hơn nhãn phụ bên dưới nó.
-                  */}
-                  <div className="space-y-2 font-sans text-text-secondary">
-                    <span className="text-brand-success font-medium text-xs block">Giải nghĩa từ giáo trình</span>
-                    <p className="bg-bg-card border border-border-primary/50 p-4 rounded-lg text-text-primary text-sm leading-relaxed max-w-[38rem]">
-                      {activeQuestion.explanation}
-                    </p>
-                  </div>
-                </div>
-              )}
+                Điều đáng học nhất không nằm ở kích thước mà ở tông giọng: **trạng thái sai của
+                Khan không có màu đỏ ở bất cứ đâu**, chữ nghĩa là "Hãy thử lại lần nữa" chứ
+                không phải một lời phán xét. Sai là một bước của việc học, không phải một sự cố.
 
-              {/* Phản hồi khi trả lời SAI (tutor mode): bám sát ĐÚNG câu hỏi hiện tại,
-                  hiện thẳng đáp án đúng + lời giải giáo trình, và cho phép yêu cầu AI phân tích sâu. */}
-              {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] !== undefined
-                && exam.answers[activeQuestion.id] !== activeQuestion.correctAnswer && (
-                <div className="border border-brand-error-border/40 bg-brand-error-bg/15 p-5 rounded-xl space-y-4 animate-fade-in-up mt-4">
-                  <div className="flex items-center gap-2 border-b border-brand-error-border/30 pb-2.5">
-                    <AlertCircle className="w-5 h-5 text-brand-error" />
-                    <div>
-                      <h4 className="text-sm font-semibold text-brand-error">Chưa đúng. Cùng xem lại nhé</h4>
-                      <p className="text-xs text-text-muted font-sans">
-                        Bạn chọn {String(exam.answers[activeQuestion.id]).toUpperCase()}. Đáp án đúng là{" "}
-                        <strong className="text-brand-success">{activeQuestion.correctAnswer.toUpperCase()}</strong>. Dùng mũi tên trái phải để chuyển câu.
-                      </p>
-                    </div>
-                  </div>
+                Giữ đúng tinh thần đó nhưng không bê nguyên câu "thử lại": luồng ở đây khóa đáp
+                án ngay khi chọn nên không có lần thử thứ hai, vậy nên câu chữ chỉ dẫn mắt
+                xuống chỗ đang có lời giải.
+              */}
+              {isTutorMode && !exam.isSubmitted && exam.answers[activeQuestion.id] !== undefined && (() => {
+                const dung = exam.answers[activeQuestion.id] === activeQuestion.correctAnswer;
+                return (
+                  /*
+                    Một hàng duy nhất, không phải hai khối xếp chồng.
 
-                  {/* Cùng lý do như bảng trả lời đúng, xem chú thích dài ở khối trên. */}
-                  <div className="space-y-2 font-sans">
-                    <span className="text-brand-success font-medium text-xs block">Đáp án đúng</span>
-                    <p className="bg-brand-success-bg/40 border border-brand-success-border/40 p-4 rounded-lg text-text-primary text-sm leading-relaxed max-w-[38rem]">
-                      <strong>{activeQuestion.correctAnswer.toUpperCase()}.</strong> {activeQuestion.options[activeQuestion.correctAnswer]}
-                    </p>
-                    <span className="text-text-muted font-medium text-xs block pt-1">Giải nghĩa từ giáo trình</span>
-                    <p className="bg-bg-card border border-border-primary/50 p-4 rounded-lg text-text-secondary text-sm leading-relaxed max-w-[38rem]">
-                      {activeQuestion.explanation}
-                    </p>
-                  </div>
+                    Bản đầu của lượt này để thẻ báo trên một hàng riêng canh phải, và nhìn trên
+                    bản chạy thật thì nó tạo ra **một dải trống chạy hết nửa trái màn hình**,
+                    cao bằng cả thẻ. Khoảng trắng của Khan luôn là lề chứ không phải một ô rỗng
+                    nằm giữa hai thứ có nội dung.
 
-                  {/* Gia sư AI phân tích sâu theo đúng câu hỏi (gọi khi người học yêu cầu) */}
-                  {aiExplanations[activeQuestion.id] ? (
-                    <div className="space-y-1.5">
-                      <span className="text-brand-info font-semibold text-2xs block flex items-center gap-1">
-                        <Sparkles className="w-4 h-4 text-brand-info" />
-                        Gia sư AI phân tích sâu:
-                      </span>
-                      <div className="bg-bg-surface border border-brand-info/30 p-3 rounded-lg text-text-primary leading-relaxed text-xs">
-                        <SimpleMarkdown text={aiExplanations[activeQuestion.id]} />
+                    Nay hai thứ cùng xuất hiện sau khi trả lời chia nhau một hàng: bên trái là
+                    "còn làm được gì nữa", bên phải là "vừa rồi thế nào".
+                  */
+                  <div className="flex flex-wrap items-start gap-4 pt-1">
+
+                    {/*
+                      Gia sư AI phân tích sâu. Giữ nguyên tính năng và giữ nguyên điều kiện chỉ
+                      mời khi trả lời sai. Đổi cách trình bày: thụt vào đúng 62px cho thẳng cột
+                      với đoạn giải nghĩa ngay trên nó, và lời mời chuyển thành một liên kết chữ
+                      thay vì một cái nút có nền và viền riêng. Khan để mọi hành động phụ trong
+                      trang bài tập ở dạng chữ xanh không khung, chỉ hành động chính mới có nền.
+                    */}
+                    {!dung && (
+                      <div className="pl-4 sm:pl-[62px] pr-4 space-y-2 flex-1 min-w-[16rem] max-w-[40rem]">
+                        {aiExplanations[activeQuestion.id] ? (
+                          <div className="animate-hien-len space-y-1.5">
+                            <span className="text-text-muted text-sm flex items-center gap-1.5">
+                              <Sparkles className="w-4 h-4 text-brand-info" />
+                              Gia sư AI phân tích sâu
+                            </span>
+                            <div className="text-text-secondary leading-relaxed text-sm">
+                              <SimpleMarkdown text={aiExplanations[activeQuestion.id]} />
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleRequestAIExplanation(activeQuestion.id)}
+                            disabled={aiLoading[activeQuestion.id]}
+                            className="text-[color:var(--nut-chinh)] text-sm font-bold flex items-center gap-1.5 cursor-pointer hover:underline disabled:opacity-50 disabled:cursor-default"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            <span>{aiLoading[activeQuestion.id] ? "Đang phân tích" : "Nhờ gia sư AI phân tích sâu"}</span>
+                          </button>
+                        )}
+                        {aiError[activeQuestion.id] && (
+                          <p className="text-sm text-brand-error">{aiError[activeQuestion.id]}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Thẻ báo, đẩy về phải cho sát nơi mắt sắp chạm tới thanh hành động */}
+                    <div className="animate-hien-len ml-auto max-w-xs bg-bg-card border border-border-primary rounded shadow-lg p-5 flex items-start gap-3">
+                      {dung && <CheckCircle2 className="w-7 h-7 text-brand-success shrink-0" />}
+                      <div className="space-y-1">
+                        <p className="text-xl font-bold text-text-primary leading-snug">
+                          {dung ? "Chính xác!" : "Chưa chính xác."}
+                        </p>
+                        <p className="text-base text-text-secondary font-sans leading-snug">
+                          {dung
+                            ? "Giữ nhịp này nhé."
+                            : "Đọc phần giải nghĩa ở đáp án đúng trước khi sang câu sau."}
+                        </p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex justify-start pt-1">
-                      <button
-                        onClick={() => handleRequestAIExplanation(activeQuestion.id)}
-                        disabled={aiLoading[activeQuestion.id]}
-                        className="bg-brand-info-bg text-brand-info border border-brand-info/30 text-2xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-info-bg transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      >
-                        <Sparkles className="w-4 h-4" />
-                        <span>{aiLoading[activeQuestion.id] ? "Đang phân tích..." : "Nhờ gia sư AI phân tích sâu"}</span>
-                      </button>
-                    </div>
-                  )}
-                  {aiError[activeQuestion.id] && (
-                    <p className="text-2xs text-brand-error">{aiError[activeQuestion.id]}</p>
-                  )}
-                </div>
-              )}
+                  </div>
+                );
+              })()}
 
               {/*
                 THANH HÀNH ĐỘNG ĐÁY, thay cho cụm chrome cũ nằm TRÊN câu hỏi.

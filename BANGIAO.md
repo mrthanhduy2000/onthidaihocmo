@@ -59,6 +59,116 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026, dựng lại trạng thái ĐÃ TRẢ LỜI của màn Luyện câu theo bản đo trên Khan
+
+**Cách làm**: mở một bài tập thật của Khan Academy bằng trình duyệt, cố ý chọn SAI trước rồi
+chọn lại cho ĐÚNG, đo cả hai trạng thái, xong mới đụng vào mã. Không đọc tài liệu về họ.
+
+**Sáu số đo dẫn tới mọi thay đổi bên dưới**
+
+| Thành phần | Khan Academy | Bản trước của dự án |
+|---|---|---|
+| Nền hàng đáp án đúng | **trong suốt** | tô `bg-brand-success-bg` |
+| Viền hàng đáp án đúng | vòng 2px `#0B7C18`, bo 8px | viền 1px nhạt |
+| Ô chữ cái lúc nghỉ | **hình TRÒN** 32x32, viền 2px rỗng ruột | hình vuông 24x24 bo 4px |
+| Ô chữ cái đáp án đúng | viên thuốc 50x32, **dấu tích ĐI KÈM chữ cái** | ô vuông + dấu tích rời ở mép phải |
+| Lời lý giải | nằm **ngay dưới chính phương án** nó nói tới, thẳng cột với nhãn, không hộp | một bảng riêng phía dưới, hộp trong hộp |
+| Thẻ phản hồi | 192x102, nền trắng, tiêu đề 20px/700 **màu chữ thường** | bảng lớn tô nền ngữ nghĩa, bo 12px |
+
+**Bốn thay đổi, xếp theo đúng thứ tự ưu tiên Đàm đặt**
+
+1. **Lời giải nghĩa chuyển vào trong hàng đáp án đúng** (Kiến trúc thông tin). Trước đó nó nằm
+   trong một bảng riêng, mà bảng trả lời sai còn **chép lại nguyên văn đáp án đúng một lần
+   nữa** dù ngay phía trên phương án ấy đã được đánh dấu. Nay mắt thấy phương án nào đúng là
+   đọc tiếp được ngay vì sao, không phải nhảy xuống khối khác rồi dò ngược lên.
+2. **Ô chữ cái đổi từ vuông sang tròn** (Cấu tạo thành phần). Trên Khan hình dạng ô mang nghĩa:
+   tròn cho câu chọn một đáp án, vuông cho câu chọn nhiều, đúng quy ước nút chọn của mọi hệ
+   điều hành. Sản phẩm này luôn là chọn một mà lại vẽ ô vuông, tức đang phát tín hiệu sai.
+3. **Bỏ nền tô, chuyển tín hiệu sang vòng khoanh và màu chữ** (Ngôn ngữ thiết kế). Xem mục đính
+   chính bất biến bên dưới, đây là phần đáng đọc nhất của lượt này.
+4. **Hai bảng phản hồi gộp thành một thẻ báo gọn** (Tâm lý học tập). Điều đáng học nhất ở Khan
+   không phải kích thước mà là tông giọng: **trạng thái sai của họ không có màu đỏ ở bất cứ
+   đâu**, tiêu đề để màu chữ thường, câu chữ là lời mời làm tiếp chứ không phải lời phán. Bản
+   này giữ tinh thần đó nhưng không bê nguyên câu "thử lại", vì luồng ở đây khóa đáp án ngay
+   khi chọn nên không có lần thử thứ hai.
+
+**Đính chính một bất biến do chính tôi đặt sai hôm trước**
+
+Ngày 28/07 tôi ghi vào AGENTS.md 4.9d: "nội dung phương án không tô theo màu ngữ nghĩa", lý do
+là đo được **3,15:1**. Con số đúng, nhưng câu chữ cấm nhầm thứ. Nguyên nhân không phải màu chữ
+mà là **cặp nền tô cộng chữ tô cùng tông**: chữ xanh lá trên nền xanh nhạt thì hai màu cùng
+tông nên tương phản sập. Đo lại với nền để trong suốt:
+
+| Màu | Trên nền tô cùng tông | Trên nền trong suốt |
+|---|---|---|
+| `#157d3c` xanh lá | 3,15:1, **rớt AA** | **5,21:1**, đạt |
+| `#b91c1c` đỏ | 4,41:1, rớt AA | **6,47:1**, đạt |
+
+Nghĩa là cách của Khan (bỏ nền, tô chữ) không hề vi phạm chuẩn; chính cái nền mới là thủ phạm.
+Bất biến nay sửa thành: **hàng đáp án để nền trong suốt, và khi nền đã trong suốt thì được tô
+chữ theo màu ngữ nghĩa.** Đã ghi lại đầy đủ trong AGENTS.md kèm cả hai cột số đo.
+
+**Bài học phương pháp**: một bất biến ghi lại *kết luận* mà không ghi *cơ chế* thì lần sau sẽ
+chặn nhầm. Câu "cấm tô chữ" chặn cả trường hợp an toàn, đồng thời vẫn bỏ lọt trường hợp nguy
+hiểm nếu ai đó đặt nền tô cộng chữ tô dưới một cặp tên lớp khác.
+
+**Ba lỗi tự bắt được trên bản chạy thật, đều không phép kiểm nào thấy**
+
+1. **`animate-fade-in-up` là một lớp CHẾT**, dùng ở 7 chỗ trong 2 file. Tailwind v4 chỉ sinh
+   lớp `animate-*` từ token `--animate-*` trong `@theme`, mà token đó chưa từng được khai báo;
+   file css có `.fade-in-up` không tiền tố nên không chỗ nào trúng. Nghĩa là **mọi bảng phản
+   hồi sau khi trả lời đều nhảy phịch vào suốt từ đầu tới nay**, dù mã nguồn đọc lên như thể đã
+   có hiệu ứng. Phép kiểm mới AF6 tìm thêm được `animate-fade-in` ở 3 file nữa, cùng họ.
+2. **Khoanh vòng cả phương án chọn sai là sai bậc thị giác.** Bản đầu của lượt này khoanh cả
+   hai; nhìn trên bản chạy thật thì hai vòng cùng độ dày nằm sát nhau nên mắt không biết nhìn
+   cái nào trước. Trên Khan chỉ có đúng MỘT vòng và nó luôn ở đáp án đúng: vòng là thứ chỉ chỗ
+   cần nhìn, không phải thứ chấm điểm.
+3. **Màu của câu trước tan dần lên phương án của câu mới.** Chụp đúng khoảnh khắc chuyển câu
+   thì thấy vòng xanh và ô chữ đỏ của câu vừa xong còn nằm trên câu mới. Nguyên nhân là quy tắc
+   chuyển màu nền và viền 140ms đặt chung cho mọi thẻ: React giữ nguyên nút cũ và chỉ đổi lớp
+   nên trình duyệt chạy hiệu ứng giữa hai trạng thái của hai câu khác nhau. Với ứng dụng học
+   tập đây không phải lỗi thẩm mỹ: trong khoảnh khắc đó người học thấy phản hồi đúng sai gắn
+   lên những phương án chưa hề đọc. Sửa bằng `key={activeQuestion.id}` để React dựng lại hàng.
+
+**Bộ kiểm: 195 lên 197, một phép kiểm được viết lại**
+
+Phép kiểm AF4 cũ bắt đúng lượt sửa này và báo đỏ. Đó là nó làm đúng việc, nên **không xóa mà
+viết lại cho bám cơ chế thật**. Bản mới canh thứ chưa ai canh và cũng chính là ca hỏng nặng
+nhất từng đo được: **độ đục trên hàng đáp án**. `opacity-40` chồng lên `text-text-muted` cho ra
+xấp xỉ #C4C4C8, chỉ **1,85:1**. Phải canh riêng vì `opacity` không nằm trong bộ token màu nên
+mọi phép đo tĩnh trên token đều không thấy nó.
+
+Ba phép kiểm mới, **cả ba đã thử phá và đều báo đỏ đúng lúc**:
+
+| Phép kiểm | Thử phá bằng | Kết quả |
+|---|---|---|
+| Hàng đáp án không hạ độ đục | thêm `opacity-40` vào một trạng thái | HONG, chỉ đúng chuỗi vi phạm |
+| Chỉ đáp án đúng được khoanh vòng | thêm lại `voHang = "border-brand-error"` | HONG |
+| Không lớp hoạt ảnh nào thiếu token | không cần thử, nó bắt `fade-in` ngay lần chạy đầu | HONG |
+
+**Một bản nháp phép kiểm đã bị tôi bỏ đi, ghi lại để khỏi ai viết lại**: bản đầu tôi định cấm
+mọi cặp `bg-brand-*-bg` đi cùng `text-brand-*`. Chạy thử thì nó báo 4 vi phạm, nhưng soi ra đều
+là chip và huy hiệu ở chỗ khác, và AF3 đã đo chúng đạt 4,98:1 rồi. Một phép kiểm chặn nhầm thứ
+an toàn thì sớm muộn cũng bị ai đó nới, nên bỏ.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, **197/197**. Trên bản chạy thật đo ở 1280px và
+375px: 0 chỗ rớt tương phản trên màn này, 0 tràn ngang, 0 chữ bị bóp; mép trái lời giải nghĩa
+trùng đúng mép trái nhãn phương án ở cả hai khổ (96px); ở 375px được 42 ký tự mỗi dòng và thẻ
+báo rộng 214px nằm gọn trong khung. Đã xem tận mắt cả trạng thái đúng lẫn sai.
+
+**Còn khác Khan trên màn này**
+
+- Chưa có khối "Nội dung liên quan" dưới bài. Khan đặt nó ngay dưới bốn phương án, nhãn 14px/700
+  màu `#717378`, bên dưới là thẻ video kèm thời lượng. Dự án có sẵn liên kết khái niệm nên làm
+  được, để lượt sau.
+- Khan cho MỌI phương án một câu lý giải riêng. Dự án chỉ có một trường `explanation` cho cả
+  câu, còn `misconception` của từng câu rỗng 292/292 (Nợ 2). Nên chỉ gắn lý giải vào đúng
+  phương án đúng, các phương án còn lại **để trống thay vì độn một câu chữ không dạy được gì**.
+- Đồng hồ đếm ngược vẫn ở góc trên phải. Trang bài tập của Khan không có đồng hồ nên chưa có
+  đối chiếu trực tiếp.
+
+---
+
 ### 28/07/2026 — Dựng lại màn Luyện câu như đội thiết kế Khan sẽ dựng từ chính logic này
 
 Chỉ thị của Đàm đổi góc nhìn: coi đây là codebase vừa được đội Product Design của Khan Academy

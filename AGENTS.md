@@ -394,17 +394,33 @@ Ngày 28/07/2026 phát hiện `brand-danger` được dùng **84 lần trong 11 
 làm bài hiện y hệt phương án chưa ai đụng tới**, mất trắng tín hiệu quan trọng nhất của một ứng
 dụng học tập. Nay chỉ còn MỘT tên là `brand-error`.
 
-Hai ràng buộc, nhóm kiểm **AF** canh cả hai:
+Bốn ràng buộc, nhóm kiểm **AF** canh cả bốn:
 
 1. **Mọi lớp màu đang dùng phải có token.** Bộ quét đối chiếu toàn bộ `src/components` với
    `index.css`. Ngay lần chạy đầu nó tìm thêm được `brand-warning-text`, một ca nữa cùng họ.
 2. **Bốn màu ngữ nghĩa phải đạt tương phản 4,5:1 trên chính nền cùng tông của chúng**, vì đó là
    cách chúng được dùng thật. Ngưỡng này là chuẩn ngoài (WCAG AA), **không được hạ cho vừa bảng
    màu**; muốn đổi màu thì đổi sao cho vẫn đạt.
+3. **Hàng đáp án không được hạ độ đục sau khi lộ kết quả.** Bản cũ phủ `opacity-40` lên ba
+   phương án không được chọn, cho ra xấp xỉ #C4C4C8 tức **1,85:1**, gần như không đọc nổi, đúng
+   lúc người học cần đọc lại chúng nhất. Phải canh riêng vì `opacity` không nằm trong bộ token
+   màu nên mọi phép đo tĩnh trên token đều không thấy nó: cứ đặt màu chữ đạt chuẩn rồi phủ một
+   lớp độ đục lên là tương phản sập mà không phép kiểm nào kêu.
+4. **Mọi lớp `animate-*` phải có token `--animate-*`.** Cùng họ lỗi với ràng buộc 1 và cũng lặng
+   lẽ y như vậy. Ngày 29/07/2026 tìm ra `animate-fade-in-up` ở 7 chỗ và `animate-fade-in` ở 3
+   chỗ, cả hai chưa từng có token, nên mọi bảng phản hồi sau khi trả lời đều nhảy phịch vào
+   suốt từ đầu dù mã nguồn đọc lên như thể đã có hiệu ứng.
 
-Một quy ước đi kèm: **nội dung phương án không tô theo màu ngữ nghĩa.** Tín hiệu đúng sai đã có
-ở nền, viền, ô chữ cái và biểu tượng. Tô luôn đoạn chữ chỉ kéo tương phản xuống 3,15:1 cho đúng
-thứ người học phải đọc kỹ nhất.
+**Quy ước cũ đã được sửa lại ngày 29/07/2026, đọc kỹ trước khi dùng.** Bản trước ghi "nội dung
+phương án không tô theo màu ngữ nghĩa", lý do là đo được 3,15:1. Lý do ấy đúng nhưng câu chữ thì
+cấm nhầm thứ: nguyên nhân không phải màu chữ mà là **cặp nền tô cộng chữ tô cùng tông**. Đo lại
+với nền để trong suốt thì `#157d3c` trên trắng đạt **5,21:1** và `#b91c1c` đạt **6,47:1**, cả
+hai vượt ngưỡng.
+
+Quy ước đúng nay là: **hàng đáp án để nền trong suốt, và khi nền đã trong suốt thì được tô chữ
+theo màu ngữ nghĩa.** Đây cũng chính là cách Khan Academy làm, đo trực tiếp trên trang bài tập
+của họ. Kèm theo: **chỉ đáp án đúng được khoanh vòng**, phương án chọn sai chỉ đổi ô chữ cái và
+màu chữ, vì vòng khoanh là thứ chỉ chỗ cần nhìn chứ không phải thứ chấm điểm.
 
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 

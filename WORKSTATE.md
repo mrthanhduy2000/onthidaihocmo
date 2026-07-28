@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 28/07/2026, sau đợt tái thiết kế giao diện theo Khan Academy.
+**Cập nhật lần cuối**: 29/07/2026, sau lượt dựng lại trạng thái đã trả lời của màn Luyện câu.
 
 ---
 
@@ -25,7 +25,37 @@ quyết định.
 
 ---
 
-## Đợt mới nhất: tái thiết kế giao diện theo Khan Academy
+## Lượt mới nhất: trạng thái ĐÃ TRẢ LỜI của màn Luyện câu
+
+Dựng lại theo bản đo trực tiếp trên một bài tập thật của Khan Academy, cố ý chọn sai trước rồi
+chọn lại cho đúng để xem cả hai trạng thái. Chi tiết đầy đủ trong [BANGIAO.md](BANGIAO.md),
+mục 29/07/2026.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Lời giải nghĩa | một bảng riêng, **hộp trong hộp trong hộp** | nằm ngay dưới phương án đúng, thẳng cột với nhãn |
+| Bảng trả lời sai | **chép lại nguyên văn đáp án đúng lần thứ hai** | không lặp, đáp án đúng đã được khoanh ở trên |
+| Ô chữ cái | vuông 24x24 bo 4px, tức tín hiệu "chọn nhiều đáp án" | **tròn 32x32**, đúng quy ước chọn một |
+| Dấu tích của đáp án đúng | rời ra ở mép phải hàng | nằm trong ô chữ cái, **đi kèm chữ cái** |
+| Nền hàng đáp án | tô màu ngữ nghĩa | **trong suốt**, tín hiệu chuyển sang vòng khoanh và màu chữ |
+| Tương phản chữ đáp án đúng | 3,15:1 khi tô trên nền cùng tông | **5,21:1** trên nền trong suốt |
+| Tương phản chữ đáp án sai | 4,41:1 | **6,47:1** |
+| Số vòng khoanh trên màn | 2 (cả phương án chọn sai) | **1**, luôn ở đáp án đúng |
+| Lớp hoạt ảnh chết | `animate-fade-in-up` 7 chỗ, `animate-fade-in` 3 chỗ, **không lớp nào chạy** | 0, đã có token |
+| Màu câu trước tan lên câu mới | có, khi chuyển câu | không, `key` theo mã câu buộc dựng lại hàng |
+| Số phép kiểm | 195 | **197** |
+
+**Một bất biến đã được sửa lại, đọc trước khi đụng vào màu hàng đáp án**: AGENTS.md 4.9d trước
+đây ghi "nội dung phương án không tô theo màu ngữ nghĩa". Câu đó cấm nhầm thứ. Thủ phạm của con
+số 3,15:1 là **cặp nền tô cộng chữ tô cùng tông**, không phải màu chữ. Bỏ nền đi là cả hai màu
+đều vượt chuẩn AA. Quy ước đúng: nền trong suốt thì được tô chữ.
+
+**Còn nợ của lượt này**: chưa có khối "Nội dung liên quan" dưới bài như Khan (đã đo: nhãn
+14px/700 màu `#717378`, bên dưới là thẻ nội dung kèm thời lượng).
+
+---
+
+## Đợt trước: tái thiết kế giao diện theo Khan Academy
 
 Yêu cầu của Đàm: chỉ được đụng UX/UI, Design System, Component System, Presentation Layer.
 Không thêm tính năng, không đổi luồng sản phẩm, không đổi kiến trúc thông tin, không đụng
@@ -418,7 +448,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **195**, chia 32 nhóm A đến AF, đạt toàn bộ |
+| Phép tự kiểm chứng | **197**, chia 32 nhóm A đến AF, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

@@ -354,6 +354,27 @@
   --color-nut-chinh-re-chuot: var(--nut-chinh-re-chuot);
   --color-nut-chinh-bam: var(--nut-chinh-bam);
 
+  /*
+    CHUYỂN ĐỘNG: BA HOẠT ẢNH CÓ THẬT, THAY CHO MỘT LỚP CHẾT.
+
+    Phát hiện khi rà lượt này: `animate-fade-in-up` được viết ở **7 chỗ** trong hai file
+    component, nhưng Tailwind v4 chỉ sinh lớp `animate-*` từ token `--animate-*` trong `@theme`,
+    mà token đó chưa từng được khai báo. File css có sẵn một quy tắc `.fade-in-up` (không có
+    tiền tố `animate-`) nên không chỗ nào trúng. Nghĩa là **mọi bảng phản hồi sau khi trả lời
+    đều hiện ra bằng cách nhảy phịch vào**, suốt từ đầu tới nay, dù mã nguồn đọc lên như thể đã
+    có hiệu ứng.
+
+    Loại lỗi này không báo gì cả: lớp không tồn tại thì trình duyệt bỏ qua, không cảnh báo, và
+    người đọc mã tin là có hiệu ứng.
+
+    Ba hoạt ảnh dưới đây bám đúng nhịp đã đặt ở trên, và tự tắt theo quy tắc
+    `prefers-reduced-motion` đã có sẵn cuối file.
+  */
+  --animate-fade-in-up: hienLen var(--thoi-chuyen-noi) var(--nhip-chuyen) both;
+  --animate-hien-len: hienLen var(--thoi-chuyen-noi) var(--nhip-chuyen) both;
+  --animate-fade-in: hienDan var(--thoi-chuyen-noi) var(--nhip-chuyen) both;
+  --animate-danh-dau: danhDau 220ms var(--nhip-chuyen) both;
+
   /* Màu thanh điều hướng, để dùng được bằng lớp tiện ích của Tailwind */
   --color-nav-nen: var(--nav-nen);
   --color-nav-chu: var(--nav-chu);
@@ -574,19 +595,50 @@ input[type="text"], select {
   @apply bg-bg-card border border-border-primary rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:border-text-muted focus:ring-2 focus:ring-brand-info/5 transition-all text-text-primary placeholder:text-text-dimmed;
 }
 
-/* Custom interactive animation for elegant fade-in */
+/*
+  Hai hoạt ảnh gốc của các token `--animate-*` khai báo trong `@theme`.
+
+  `hienLen` dịch lên 6px chứ không phải 8px như bản cũ, và chạy trong 180ms thay vì 300ms: đây
+  là hiệu ứng của một khối chữ mới xuất hiện ngay dưới tầm mắt, nên nó phải xong trước khi mắt
+  kịp chuyển xuống. Dài hơn thì người học đọc phải một dòng chữ đang còn trôi.
+
+  `danhDau` chỉ dành cho ô chữ cái của đáp án đúng: nảy nhẹ một nhịp để mắt bắt được chỗ vừa
+  đổi trạng thái, rồi đứng yên. Không lặp, không nhấp nháy.
+*/
 .fade-in-up {
-  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: var(--animate-fade-in-up);
 }
 
-@keyframes fadeInUp {
+@keyframes hienLen {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* `animate-fade-in` cũng là một lớp chết, dùng ở 3 file khác mà chưa từng có token. */
+@keyframes hienDan {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes danhDau {
+  0% {
+    transform: scale(0.72);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 
