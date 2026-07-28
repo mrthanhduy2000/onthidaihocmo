@@ -546,35 +546,20 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   Nay hạ nó xuống đúng vai trò ngữ cảnh: chữ thường, không tô đậm, màu nhạt.
                   Câu hỏi trở thành thứ dẫn dắt, đúng như nó phải thế.
                 */}
-                <div className="text-2xs text-text-muted flex flex-wrap items-center gap-1.5">
-                  <span>Chủ đề: {topics.find(t => t.id === activeQuestion.topicId)?.title}</span>
-                  {(() => {
-                    const activeSubjectId = dbService.getActiveSubjectId();
-                    const conceptNode = kbService.getConceptForQuestion(activeSubjectId, activeQuestion);
-                    if (conceptNode) {
-                      const reqs = conceptNode.dependencies?.requires || [];
-                      const reqNodes = kbService.getKnowledgeGraph(activeSubjectId).filter(g => reqs.includes(g.id));
-                      return (
-                        <>
-                          <span className="text-text-muted">•</span>
-                          <span className="text-brand-info flex items-center gap-1">
-                            <Brain className="w-4 h-4 shrink-0" />
-                            Khái niệm: {conceptNode.concept}
-                          </span>
-                          {reqNodes.length > 0 && (
-                            <>
-                              <span className="text-text-muted">➔</span>
-                              <span className="text-text-muted flex items-center gap-1" title="Cần học trước">
-                                Yêu cầu trước: {reqNodes.map(rn => rn.concept).join(", ")}
-                              </span>
-                            </>
-                          )}
-                        </>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
+                {/*
+                  PHÍA TRÊN CÂU HỎI KHÔNG CÒN GÌ CẢ.
+
+                  Cụm ba mẩu siêu dữ liệu (chủ đề, khái niệm, yêu cầu trước) đã chuyển xuống
+                  khối "Nội dung liên quan" dưới bốn phương án, đúng chỗ Khan Academy đặt phần
+                  ấy. Trên trang bài tập của họ, phía trên câu hỏi không có gì ngoài tiêu đề bài
+                  và một đường kẻ.
+
+                  Đây không chỉ là đổi chỗ cho giống. Biết trước "câu này kiểm tra khái niệm X"
+                  là một gợi ý KHÔNG AI XIN, và nó tới đúng lúc người học đang phải tự nhớ ra
+                  điều đó. Sau khi đã chốt đáp án thì cũng chính thông tin ấy trở thành thứ đáng
+                  giá nhất: nó nói cần đi ôn lại phần nào. Không mẩu tin nào mất đi, chỉ đổi
+                  thời điểm xuất hiện sang lúc nó dùng được.
+                */}
                 {/*
                   Câu hỏi là thứ mắt phải chạm đầu tiên và đọc kỹ nhất, nên nó phải LỚN NHẤT
                   trên màn hình này.
@@ -822,6 +807,55 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               </div>
 
               {/*
+                KHỐI "NỘI DUNG LIÊN QUAN", ĐẶT DƯỚI BỐN PHƯƠNG ÁN.
+
+                Đo trên trang bài tập của Khan Academy: ngay dưới danh sách đáp án là một khối
+                mang đúng nhãn này, chữ **14px đậm 700 màu `#717378`**, không viết hoa, không
+                viền, không nền; bên dưới là các mục nội dung dạy chính kỹ năng đang luyện.
+
+                Ba mẩu ở đây là ba mẩu vốn nằm PHÍA TRÊN câu hỏi: chủ đề, khái niệm đang kiểm
+                tra, và các khái niệm cần học trước. Không mẩu nào bị bỏ, không mẩu nào thêm
+                vào; chúng chỉ chuyển xuống đúng chỗ Khan dành cho loại thông tin này, và cũng
+                là chỗ chúng dùng được: sau khi chốt đáp án, đây chính là câu trả lời cho "vậy
+                giờ đi ôn lại phần nào".
+              */}
+              {(() => {
+                const activeSubjectId = dbService.getActiveSubjectId();
+                const conceptNode = kbService.getConceptForQuestion(activeSubjectId, activeQuestion);
+                const chuDe = topics.find(t => t.id === activeQuestion.topicId)?.title;
+                const reqs = conceptNode?.dependencies?.requires || [];
+                const reqNodes = reqs.length
+                  ? kbService.getKnowledgeGraph(activeSubjectId).filter(g => reqs.includes(g.id))
+                  : [];
+                if (!chuDe && !conceptNode) return null;
+                return (
+                  <div className="pt-2 space-y-2.5">
+                    <p className="text-sm font-bold text-text-muted font-sans">Nội dung liên quan</p>
+                    <div className="space-y-2">
+                      {chuDe && (
+                        <p className="flex items-start gap-2.5 text-sm text-text-secondary font-sans">
+                          <BookOpen className="w-5 h-5 shrink-0 text-text-muted" />
+                          <span>Chủ đề: {chuDe}</span>
+                        </p>
+                      )}
+                      {conceptNode && (
+                        <p className="flex items-start gap-2.5 text-sm text-text-secondary font-sans">
+                          <Brain className="w-5 h-5 shrink-0 text-brand-info" />
+                          <span>Khái niệm đang kiểm tra: {conceptNode.concept}</span>
+                        </p>
+                      )}
+                      {reqNodes.length > 0 && (
+                        <p className="flex items-start gap-2.5 text-sm text-text-muted font-sans">
+                          <HelpCircle className="w-5 h-5 shrink-0" />
+                          <span>Cần nắm trước: {reqNodes.map(rn => rn.concept).join(", ")}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/*
                 MỘT THẺ BÁO GỌN, THAY CHO HAI BẢNG LỒNG HỘP.
 
                 Trước lượt này, mỗi trạng thái là một bảng lớn có viền, có nền tô màu ngữ nghĩa,
@@ -866,7 +900,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       trang bài tập ở dạng chữ xanh không khung, chỉ hành động chính mới có nền.
                     */}
                     {!dung && (
-                      <div className="pl-4 sm:pl-[62px] pr-4 space-y-2 flex-1 min-w-[16rem] max-w-[40rem]">
+                      <div className="pr-4 space-y-2 flex-1 min-w-[16rem] max-w-[40rem]">
                         {aiExplanations[activeQuestion.id] ? (
                           <div className="animate-hien-len space-y-1.5">
                             <span className="text-text-muted text-sm flex items-center gap-1.5">

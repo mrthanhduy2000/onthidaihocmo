@@ -50,8 +50,16 @@ mục 29/07/2026.
 số 3,15:1 là **cặp nền tô cộng chữ tô cùng tông**, không phải màu chữ. Bỏ nền đi là cả hai màu
 đều vượt chuẩn AA. Quy ước đúng: nền trong suốt thì được tô chữ.
 
-**Còn nợ của lượt này**: chưa có khối "Nội dung liên quan" dưới bài như Khan (đã đo: nhãn
-14px/700 màu `#717378`, bên dưới là thẻ nội dung kèm thời lượng).
+Lượt 2 cùng ngày: **phía trên câu hỏi nay không còn gì cả**. Cụm ba mẩu siêu dữ liệu (chủ đề,
+khái niệm đang kiểm tra, yêu cầu trước) chuyển xuống khối **"Nội dung liên quan"** dưới bốn
+phương án, đúng chỗ Khan đặt phần ấy. Không mẩu nào mất đi, chỉ đổi thời điểm xuất hiện sang
+lúc dùng được: biết trước "câu này kiểm tra khái niệm X" là gợi ý không ai xin, còn biết sau
+khi chốt đáp án thì đó là câu trả lời cho "giờ đi ôn lại phần nào".
+
+**Còn nợ của lượt này**: ở khổ 375px, cụm tiêu đề phiên cộng đồng hồ đếm ngược chiếm **179px
+trước khi tới câu hỏi**, khoảng 22% chiều cao màn hình. Lại là chrome nằm trên câu hỏi, đúng
+loại vừa dọn, và đau nhất ở khổ nhỏ nhất. Chưa sửa vì chưa đo phần đầu trang bài tập của Khan
+ở khổ hẹp.
 
 ---
 

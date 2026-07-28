@@ -59,6 +59,33 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 2), dời siêu dữ liệu xuống khối "Nội dung liên quan"
+
+**Đổi gì**: gỡ toàn bộ cụm ba mẩu siêu dữ liệu (chủ đề, khái niệm đang kiểm tra, yêu cầu trước)
+khỏi vị trí PHÍA TRÊN câu hỏi, dựng lại thành khối "Nội dung liên quan" đặt dưới bốn phương án.
+Nay **phía trên câu hỏi không còn gì cả**, đúng như trang bài tập của Khan.
+
+**Số đo dẫn tới quyết định**: trên trang bài tập của Khan, ngay dưới danh sách đáp án là một
+khối mang đúng nhãn "Nội dung liên quan", chữ **14px đậm 700 màu `#717378`**, không viết hoa,
+không viền, không nền, bên dưới là các mục nội dung dạy chính kỹ năng đang luyện.
+
+**Vì sao không chỉ là đổi chỗ cho giống**: biết trước "câu này kiểm tra khái niệm X" là một gợi
+ý không ai xin, và nó tới đúng lúc người học đang phải tự nhớ ra điều đó. Sau khi đã chốt đáp
+án thì cũng chính thông tin ấy trở thành thứ đáng giá nhất, vì nó trả lời câu "vậy giờ đi ôn
+lại phần nào". Không mẩu tin nào mất đi, chỉ đổi thời điểm xuất hiện sang lúc nó dùng được.
+
+Lời mời gia sư AI cũng bỏ thụt đầu dòng 62px, cho thẳng cột với nhãn khối mới ngay trên nó.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, 197/197. Đo trên bản chạy thật ở 1280px và
+375px: 0 tràn ngang, 0 phần tử vượt khung, 0 chỗ rớt tương phản.
+
+**Còn nợ, đã thấy nhưng chưa đo nên chưa sửa**: ở khổ 375px, cụm tiêu đề phiên cộng đồng hồ
+đếm ngược chiếm **179px trước khi tới câu hỏi**, tức khoảng 22% chiều cao màn hình. Đây lại là
+chrome nằm trên câu hỏi, đúng loại vừa dọn ở trên, và nó đau nhất ở khổ nhỏ nhất. Chưa sửa vì
+chưa đo phần đầu trang bài tập của Khan ở khổ hẹp.
+
+---
+
 ### 29/07/2026, dựng lại trạng thái ĐÃ TRẢ LỜI của màn Luyện câu theo bản đo trên Khan
 
 **Cách làm**: mở một bài tập thật của Khan Academy bằng trình duyệt, cố ý chọn SAI trước rồi
