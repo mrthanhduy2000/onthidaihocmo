@@ -272,11 +272,19 @@ export default function StatsView() {
       {/* View Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-primary pb-6">
         <div>
-          <h1 className="text-3xl font-light font-display tracking-tight text-text-primary">
-            Báo cáo <span className="font-medium text-brand-info">Năng lực Học tập</span>
+          {/*
+            Tiêu đề một màu, viết thường.
+
+            Bản cũ tô nửa sau tiêu đề bằng màu xanh dương và viết hoa giữa câu ("Năng lực Học
+            tập"). Trên Khan, tiêu đề luôn một màu và viết như câu tiếng Việt bình thường; màu
+            dành cho thứ bấm được. Một nửa tiêu đề mang màu của liên kết là mời người ta bấm
+            vào chỗ không bấm được.
+          */}
+          <h1 className="text-3xl font-bold font-sans text-text-primary">
+            Báo cáo năng lực học tập
           </h1>
-          <p className="text-text-secondary mt-1.5 text-sm font-sans">
-            Đánh giá sức mạnh học tập, tỷ lệ chính xác từng chuyên đề và lịch sử lỗi sai
+          <p className="text-text-secondary mt-1.5 text-base font-sans max-w-[40rem]">
+            Tỷ lệ làm đúng theo chuyên đề, nhịp học theo ngày và lịch sử lỗi sai.
           </p>
         </div>
 
@@ -387,92 +395,80 @@ export default function StatsView() {
         </div>
       </div>
 
-      {/* Main Stats Bento-Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Metric 1: General Accuracy Card */}
-        <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
-          <h3 className="text-2xs tabular-nums font-semibold text-text-muted">Hiệu suất chính xác</h3>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-light font-display text-text-primary">
-              {stats.totalSolved > 0 ? Math.round((stats.totalCorrect / stats.totalSolved) * 100) : 0}%
-            </span>
-            <span className="text-xs text-text-muted">làm đúng trung bình</span>
-          </div>
+      {/*
+        BA CON SỐ CỠ 48PX ĐỔI THÀNH BA CÂU.
 
-          <p className="text-xs text-text-secondary leading-relaxed font-sans">
-            Tỷ lệ trả lời chính xác được tính dựa trên tỷ lệ câu trả lời đúng đầu tiên so với tổng số lượng câu hỏi bạn đã giải trong hệ thống cơ sở dữ liệu.
+        Cùng một nguyên tắc đã áp cho màn Bàn học và bảng tổng kết sau khi nộp: **nội dung là
+        chủ thể, số liệu là chú thích của nội dung.** Bản cũ để mỗi con số ở cỡ 48px chữ mảnh
+        trong một thẻ bo 16px có viền riêng, còn phần chữ giải thích thì 12px nằm dưới. Thứ bậc
+        bị đảo: con số to nhất màn hình lại là thứ nói ít nhất, vì "29%" một mình không cho biết
+        29% của cái gì.
+
+        BA THỨ BỎ HẲN, không phải vì xấu mà vì chúng không nói gì về người học:
+
+        1. "Học tập là một hành trình liên tục... Hãy tiếp tục giải thêm nhiều câu ngẫu nhiên để
+           mở rộng vùng kiến thức!" Câu động viên viết sẵn, hiện y hệt nhau cho mọi người học
+           và mọi thời điểm.
+        2. "Nền tảng ghi nhận thời gian làm bài thực tế để phân tích mức độ cân nhắc và suy nghĩ
+           của bạn..." Đây là lời giới thiệu tính năng, không phải thông tin về người học. Một
+           màn báo cáo nói về NGƯỜI HỌC, không nói về chính nó.
+        3. "Tỷ lệ trả lời chính xác được tính dựa trên... trong hệ thống cơ sở dữ liệu." Cách
+           tính viết dài dòng, nay gộp thẳng vào câu và bỏ mấy chữ "hệ thống cơ sở dữ liệu".
+
+        MỘT MÂU THUẪN SỐ LIỆU ĐÃ SỬA. Cùng màn hình này, phần trên viết "Đã chạm 20/292 câu
+        trong ngân hàng, tức 7% độ phủ" còn thẻ giữa viết "7 / 292 câu đã quét qua" với "Độ bao
+        phủ câu hỏi: 2%". Hai con số độ phủ khác nhau đứng cách nhau một màn hình. Không phải
+        lỗi phép tính: một bên đếm câu ĐÃ GẶP, một bên đếm câu ĐÃ TRẢ LỜI, nhưng cả hai đều được
+        gọi là "độ phủ". Đây là chuyện nhãn, tức thuộc tầng trình bày, nên sửa được ở đây: nhãn
+        nay nói rõ nó đếm câu đã trả lời. Khoản nợ này đã nằm trong WORKSTATE từ 28/07/2026.
+
+        Vạch ngăn dọc dùng lại đúng cách đã làm ở màn Bàn học, để hai màn nói cùng một ngôn ngữ.
+      */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0">
+
+        {/* Tỷ lệ làm đúng */}
+        <div className="space-y-3 md:pr-6">
+          <h3 className="text-sm font-bold text-text-muted font-sans">Tỷ lệ làm đúng</h3>
+          <p className="text-xl font-bold text-text-primary font-sans leading-snug">
+            Bạn làm đúng {stats.totalSolved > 0 ? Math.round((stats.totalCorrect / stats.totalSolved) * 100) : 0}% số câu đã trả lời.
           </p>
-          
-          <div className="pt-2">
-            <div className="text-2xs text-text-muted mb-1 flex justify-between tabular-nums">
-              <span>Đã trả lời đúng ít nhất một lần:</span>
-              <span className="font-semibold text-text-secondary">{stats.totalCorrect} câu</span>
-            </div>
-            <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
-              <div 
-                className="bg-brand-success h-full rounded-full transition-all duration-500" 
-                style={{ width: `${stats.totalSolved > 0 ? (stats.totalCorrect / stats.totalSolved) * 100 : 0}%` }}
-              />
-            </div>
+          <p className="text-sm text-text-secondary font-sans">
+            {stats.totalCorrect} trên {stats.totalSolved} câu từng trả lời đúng ít nhất một lần.
+          </p>
+          <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-brand-success h-full rounded-full transition-all duration-500"
+              style={{ width: `${stats.totalSolved > 0 ? (stats.totalCorrect / stats.totalSolved) * 100 : 0}%` }}
+            />
           </div>
         </div>
 
-        {/* Metric 2: Study Volume */}
-        <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
-          <h3 className="text-2xs tabular-nums font-semibold text-text-muted">Năng lực rèn luyện</h3>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-light font-display text-text-primary">
-              {stats.totalSolved}
-            </span>
-            <span className="text-xs text-text-muted">/ {questions.length} câu đã quét qua</span>
-          </div>
-
-          <p className="text-xs text-text-secondary leading-relaxed font-sans">
-            Học tập là một hành trình liên tục. Bạn đã giải được {stats.totalSolved} câu hỏi độc lập. Hãy tiếp tục giải thêm nhiều câu ngẫu nhiên để mở rộng vùng kiến thức!
+        {/* Phần ngân hàng đã trả lời */}
+        <div className="space-y-3 md:px-6 md:border-l md:border-border-primary">
+          <h3 className="text-sm font-bold text-text-muted font-sans">Phần ngân hàng đã trả lời</h3>
+          <p className="text-xl font-bold text-text-primary font-sans leading-snug">
+            Bạn đã trả lời {stats.totalSolved} trên {questions.length} câu.
           </p>
-
-          <div className="pt-2">
-            <div className="text-2xs text-text-muted mb-1 flex justify-between tabular-nums">
-              <span>Độ bao phủ câu hỏi:</span>
-              <span className="font-semibold text-text-secondary">{Math.round((stats.totalSolved / questions.length) * 100)}%</span>
-            </div>
-            <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
-              <div 
-                className="bg-brand-info h-full rounded-full transition-all duration-500" 
-                style={{ width: `${(stats.totalSolved / questions.length) * 100}%` }}
-              />
-            </div>
+          <p className="text-sm text-text-secondary font-sans">
+            Tức {Math.round((stats.totalSolved / questions.length) * 100)}% ngân hàng câu hỏi của môn này.
+          </p>
+          <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-brand-info h-full rounded-full transition-all duration-500"
+              style={{ width: `${(stats.totalSolved / questions.length) * 100}%` }}
+            />
           </div>
         </div>
 
-        {/* Metric 3: Time Spent and Streaks */}
-        <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-4">
-          <h3 className="text-2xs tabular-nums font-semibold text-text-muted">Cường độ học tập</h3>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-light font-display text-text-primary">
-              {Math.round(stats.totalTimeSpent / 60)}
-            </span>
-            <span className="text-xs text-text-muted">phút tập trung tổng cộng</span>
-          </div>
-
-          <p className="text-xs text-text-secondary leading-relaxed font-sans">
-            Nền tảng ghi nhận thời gian làm bài thực tế để phân tích mức độ cân nhắc và suy nghĩ của bạn khi đối phó với các câu hỏi khó của đề thi.
+        {/* Thời gian và nhịp học */}
+        <div className="space-y-3 md:pl-6 md:border-l md:border-border-primary">
+          <h3 className="text-sm font-bold text-text-muted font-sans">Thời gian đã học</h3>
+          <p className="text-xl font-bold text-text-primary font-sans leading-snug">
+            Bạn đã học tổng cộng {Math.round(stats.totalTimeSpent / 60)} phút.
           </p>
-
-          <div className="grid grid-cols-2 gap-4 border-t border-border-primary pt-4 text-xs font-sans">
-            <div>
-              <span className="text-text-muted block text-2xs">Chuỗi ngày:</span>
-              <span className="font-bold text-brand-warning tabular-nums">{stats.studyStreak} ngày liên tục</span>
-            </div>
-            <div>
-              <span className="text-text-muted block text-2xs">Số lượt thi nộp:</span>
-              <span className="font-bold text-text-primary tabular-nums">{history.length} lượt</span>
-            </div>
-          </div>
+          <p className="text-sm text-text-secondary font-sans">
+            Chuỗi {stats.studyStreak} ngày liên tục, đã nộp {history.length} lượt.
+          </p>
         </div>
 
       </div>

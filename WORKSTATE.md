@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau lượt dựng lại trạng thái đã trả lời của màn Luyện câu.
+**Cập nhật lần cuối**: 29/07/2026, sau bảy lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo).
 
 ---
 
@@ -25,7 +25,27 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Câu sai, thang tiến độ đang tô ĐỎ đúng chặng vừa gỡ được
+## Lượt mới nhất: màn Báo cáo, ba con số 48px thành ba câu
+
+Màn thứ tư của đợt.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Ba khối dẫn dắt | ba con số **48px chữ mảnh**, mỗi số một thẻ có viền | ba câu 20px, con số nằm trong câu |
+| Độ phủ ngân hàng | **hai con số khác nhau cùng gọi là "độ phủ"** (20/292 tức 7%, và 7/292 tức 2%) | nhãn phân biệt rõ "đã chạm" với "đã trả lời" |
+| Câu động viên viết sẵn | có, hiện y hệt cho mọi người học | bỏ |
+| Đoạn giới thiệu tính năng | có ("Nền tảng ghi nhận thời gian...") | bỏ, màn báo cáo nói về NGƯỜI HỌC chứ không nói về chính nó |
+| Tiêu đề | nửa sau tô xanh dương, viết hoa giữa câu | một màu, viết như câu tiếng Việt |
+
+Mâu thuẫn độ phủ là khoản nợ đã ghi trong file này từ 28/07/2026, nay xong. Không đụng phép
+tính nào: một bên đếm câu đã gặp, một bên đếm câu đã trả lời, chỉ có nhãn là sai.
+
+**Còn nợ**: dòng "Đã chạm 20/292 câu, tức 7% độ phủ" ở khối trên vẫn dùng chữ "độ phủ" cho
+nghĩa "đã gặp". Không còn mâu thuẫn nhưng viết rõ hơn được.
+
+---
+
+## Lượt trước: màn Câu sai, thang tiến độ đang tô ĐỎ đúng chặng vừa gỡ được
 
 Màn thứ ba của đợt. Bốn lỗi, hai trong số đó không phải chuyện thẩm mỹ:
 
@@ -178,7 +198,7 @@ lẫn giữa câu tiếng Việt. Chi tiết trong BANGIAO.md.
 
 ---
 
-## Lượt mới nhất: rà màu ngữ nghĩa, đáp án sai vốn không hề có màu đỏ
+## Lượt cũ hơn: rà màu ngữ nghĩa, đáp án sai vốn không hề có màu đỏ
 
 `brand-danger` được dùng **84 lần trong 11 file** mà **chưa từng được định nghĩa**; bộ token chỉ
 có `brand-error`. Đo được `text-brand-danger` ra `rgb(17,17,17)` tức đen như chữ thường, và
@@ -333,7 +353,7 @@ Dấu hiệu thứ ba đắt nhất và khó thấy nhất: mã vẫn chạy, ki
 
 ---
 
-## Lượt mới nhất: đường cong quên và gợi ý học tập
+## Lượt cũ hơn: đường cong quên và gợi ý học tập
 
 Yêu cầu: quét nốt `questionGenerationEngine`, cải tiến dự đoán đường cong quên, ra gợi ý tốt hơn.
 Bốn hạng mục, bốn commit, nhóm kiểm mới **U, V, W, X**.

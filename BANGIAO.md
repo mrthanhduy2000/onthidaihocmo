@@ -59,6 +59,49 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 7), màn Báo cáo: ba con số 48px thành ba câu, và sửa một mâu thuẫn số liệu
+
+Màn thứ tư. Ba khối dẫn dắt của màn này là ba con số cỡ **48px chữ mảnh**, mỗi con số một thẻ
+bo 16px có viền riêng, còn phần chữ giải thích thì 12px nằm dưới. Thứ bậc bị đảo: con số to
+nhất màn hình lại là thứ nói ít nhất, vì "29%" một mình không cho biết 29% của cái gì.
+
+Nay mỗi khối là một câu 20px: "Bạn làm đúng 29% số câu đã trả lời.", "Bạn đã trả lời 7 trên 292
+câu.", "Bạn đã học tổng cộng 15 phút." Con số nằm trong câu chứ không đứng một mình.
+
+**Một mâu thuẫn số liệu đã sửa, đây là phần đáng giá nhất của lượt.** Cùng một màn hình, phần
+trên viết "Đã chạm **20/292** câu trong ngân hàng, tức **7%** độ phủ", còn thẻ giữa viết
+"**7** / 292 câu đã quét qua" với "Độ bao phủ câu hỏi: **2%**". Hai con số độ phủ khác nhau
+đứng cách nhau một màn hình.
+
+Không phải lỗi phép tính: một bên đếm câu **đã gặp**, một bên đếm câu **đã trả lời**, nhưng cả
+hai đều được gọi là "độ phủ". Đây là chuyện NHÃN nên sửa được ngay ở tầng trình bày mà không
+đụng vào phép tính nào: nhãn nay là "Phần ngân hàng đã trả lời" và câu phụ nói rõ nó đếm gì.
+Khoản nợ này đã nằm trong WORKSTATE từ 28/07/2026.
+
+**Ba đoạn chữ bỏ hẳn**, không phải vì xấu mà vì chúng không nói gì về người học:
+
+1. "Học tập là một hành trình liên tục... Hãy tiếp tục giải thêm nhiều câu ngẫu nhiên để mở
+   rộng vùng kiến thức!" Câu động viên viết sẵn, hiện y hệt nhau cho mọi người học.
+2. "Nền tảng ghi nhận thời gian làm bài thực tế để phân tích mức độ cân nhắc và suy nghĩ của
+   bạn..." Đây là lời giới thiệu tính năng. **Một màn báo cáo nói về NGƯỜI HỌC, không nói về
+   chính nó.**
+3. Đoạn giải thích cách tính tỷ lệ đúng dài ba dòng, nay gộp vào câu.
+
+**Tiêu đề**: bản cũ tô nửa sau bằng màu xanh dương và viết hoa giữa câu ("Báo cáo **Năng lực
+Học tập**"). Trên Khan tiêu đề luôn một màu và viết như câu tiếng Việt bình thường; màu dành
+cho thứ bấm được, nên một nửa tiêu đề mang màu liên kết là mời người ta bấm vào chỗ không bấm
+được. Nay "Báo cáo năng lực học tập", một màu.
+
+Vạch ngăn dọc dùng lại đúng cách đã làm ở màn Bàn học, để hai màn nói cùng một ngôn ngữ.
+
+**Kiểm chứng**: `npm run check` 201/201. Trên bản chạy thật ở 1280px và 375px: 0 tràn ngang,
+0 phần tử vượt khung, **0 chỗ rớt tương phản trên cả màn**.
+
+**Còn nợ trên màn này**: dòng "Đã chạm 20/292 câu, tức 7% độ phủ" ở khối trên vẫn dùng chữ "độ
+phủ" cho nghĩa "đã gặp". Không còn mâu thuẫn vì nhãn kia đã đổi, nhưng viết rõ hơn được.
+
+---
+
 ### 29/07/2026 (lượt 6), màn Câu sai: thang tiến độ đang tô ĐỎ đúng chặng vừa gỡ được
 
 Màn thứ ba. Mở ra bằng mắt là thấy ngay bốn lỗi, hai trong số đó không phải chuyện thẩm mỹ.
