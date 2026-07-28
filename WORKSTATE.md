@@ -25,7 +25,27 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: trạng thái ĐÃ TRẢ LỜI của màn Luyện câu
+## Lượt mới nhất: màn Bàn học, bốn ô số liệu thành một dòng chữ
+
+Màn thứ hai của đợt, sau bốn lượt trên màn Luyện câu. **Lần đầu áp nguyên tắc đã ghi trong
+NGONNGUTHIETKE.md mà chưa từng dùng ở đâu**: nội dung là chủ thể, số liệu là chú thích của nội
+dung.
+
+| | Khan | Trước | Sau |
+|---|---|---|---|
+| Cách trình bày tiến độ | một CÂU 14px đậm 400 | **bốn thẻ**, mỗi thẻ một nền, một viền, một bo góc | một dòng chữ, số tô đậm |
+| Chiều cao khối ở 375px | | khoảng 240px | **124px** |
+| Ngăn cách các mẩu | | viền hộp | vạch trái mảnh, chỉ bật từ mốc `sm` |
+
+Giữ đủ bốn mẩu tin và liên kết "Sửa ngay". Bỏ màu cam trên số ngày còn lại: trên Khan màu không
+mang trạng thái trong chữ nội dung, và một vệt cam thường trực thì sau một ngày là mắt thôi thấy.
+
+**Còn nợ**: `toFixed(1)` cho dấu chấm thập phân kiểu tiếng Anh ("3.0" thay vì "3,0"), rải rác
+nhiều chỗ nên phải làm một lượt riêng.
+
+---
+
+## Lượt trước: trạng thái ĐÃ TRẢ LỜI của màn Luyện câu
 
 Dựng lại theo bản đo trực tiếp trên một bài tập thật của Khan Academy, cố ý chọn sai trước rồi
 chọn lại cho đúng để xem cả hai trạng thái. Chi tiết đầy đủ trong [BANGIAO.md](BANGIAO.md),

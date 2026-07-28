@@ -349,16 +349,40 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
           </div>
         </div>
 
-        {/* Progress & Countdown Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 border-t border-border-primary/60">
-          <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-2xs text-text-muted block">Còn tới kỳ thi</span>
-            <div className="flex items-center gap-2 pt-0.5">
-              <Clock className="w-4 h-4 text-brand-warning shrink-0" />
-              <span className="text-sm font-semibold text-brand-warning">Còn {remainingDays} ngày</span>
-              <span className="text-2xs text-text-muted">{ngayThiTiengViet}</span>
-            </div>
-          </div>
+        {/*
+          BỐN Ô SỐ LIỆU ĐÓNG KHUNG ĐỔI THÀNH MỘT DÒNG CHỮ.
+
+          Đây là lần đầu áp nguyên tắc đã ghi trong NGONNGUTHIETKE.md từ lượt reverse engineer
+          mà chưa từng dùng ở đâu: **nội dung là chủ thể, số liệu là chú thích của nội dung.**
+
+          Đo trên Khan Academy: tiến độ của họ được viết thành CÂU, ví dụ "Tinh thông chương:
+          0%", cỡ 14px, đậm 400, màu chữ thường. Không thẻ, không viền, không bo góc, không số
+          cỡ lớn, không huy hiệu màu.
+
+          Bản cũ ở đây làm ngược hẳn: bốn con số, mỗi con số một cái thẻ, mỗi thẻ một cái nền,
+          một cái viền và một cái bo góc riêng. Khi mọi mẩu dữ liệu đều được đóng khung thì
+          không mẩu nào quan trọng hơn mẩu nào, và màn hình biến thành bảng theo dõi thay vì
+          chỗ để đọc. Đúng cái làm nó trông như một dashboard React chứ không như một chỗ học.
+
+          Giữ nguyên đủ bốn mẩu tin và cả liên kết "Sửa ngay", chỉ đổi cách trình bày.
+
+          Một điều bỏ đi có chủ ý: **màu cam trên số ngày còn lại**. Trên Khan, màu không bao
+          giờ mang trạng thái trong chữ nội dung; nó dành cho thứ bấm được và cho đúng sai. Một
+          vệt cam nằm thường trực trên màn hình thì sau đúng một ngày là mắt thôi thấy nó, nên
+          nó không còn báo được điều gì mà chỉ còn làm nhiễu. Số ngày nay tô đậm thay vì tô màu.
+        */}
+        {/*
+          Vạch ngăn dựng bằng viền trái và CHỈ bật từ mốc `sm` trở lên.
+
+          Bản đầu của lượt này dùng dấu chấm giữa các mẩu. Nhìn trên khung 375px thì bốn mẩu
+          xuống bốn dòng và mỗi dấu chấm bị kẹt lại ở CUỐI dòng, trông như một dấu đầu dòng đặt
+          nhầm chỗ. Vạch trái thì tự biến mất khi các mẩu không còn nằm cùng hàng.
+        */}
+        <div className="pt-3 border-t border-border-primary/60 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-1 text-sm text-text-secondary font-sans">
+          <span className="flex items-center gap-1.5">
+            <Clock className="w-4 h-4 shrink-0 text-text-muted" />
+            <span>Còn <strong className="text-text-primary">{remainingDays} ngày</strong> tới kỳ thi {ngayThiTiengViet}</span>
+          </span>
 
           {/*
             Bỏ chuỗi "+6% tuần này". Nó là chữ VIẾT CỨNG, hiện y hệt nhau cho mọi người học và
@@ -366,41 +390,35 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             hề đo. Đúng khuôn lỗi ở bất biến 4.9. Không thay bằng số khác vì lượt làm bài hiện
             không ghi mốc theo tuần, nên chưa có gì để đo cho tử tế.
           */}
-          <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-2xs text-text-muted block">Nắm chắc kiến thức</span>
-            <div className="flex items-center justify-between pt-0.5">
-              <span className="text-sm font-display font-semibold text-text-primary">{prediction.metricsBreakdown.masteryScore}%</span>
-            </div>
-          </div>
+          <span className="sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
+            Nắm chắc kiến thức <strong className="text-text-primary">{prediction.metricsBreakdown.masteryScore}%</strong>
+          </span>
 
           {/*
             Điểm dự kiến chỉ có nghĩa khi đã có bài làm. Chưa làm câu nào thì bộ dự báo trả về
             đúng mốc khởi động nguội 5,0, và hiện nó ra kèm biên độ trông y như một phép đo thật.
           */}
-          <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-2xs text-text-muted block">Điểm dự kiến</span>
-            <div className="flex items-center justify-between pt-0.5">
-              {daCoBaiLam ? (
-                <span className="text-sm font-display font-bold text-brand-info">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</span>
-              ) : (
-                <span className="text-sm text-text-muted">Chưa đủ dữ liệu</span>
-              )}
-              <span className="text-2xs text-text-muted">Mục tiêu: {goal.targetScore.toFixed(1)}</span>
-            </div>
-          </div>
+          <span className="sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
+            Điểm dự kiến{" "}
+            {daCoBaiLam ? (
+              <strong className="text-text-primary">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</strong>
+            ) : (
+              <span className="text-text-muted">Chưa đủ dữ liệu</span>
+            )}
+            , mục tiêu {goal.targetScore.toFixed(1)}
+          </span>
 
-          <div className="bg-bg-surface p-3 rounded-xl border border-border-primary/60">
-            <span className="text-2xs text-text-muted block">Câu cần sửa</span>
-            <div className="flex items-center justify-between pt-0.5">
-              <span className="text-sm font-semibold text-brand-warning">{prediction.metricsBreakdown.studyDebtCount} câu</span>
-              <button 
+          <span className="flex items-center gap-2 sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
+            <span><strong className="text-text-primary">{prediction.metricsBreakdown.studyDebtCount} câu</strong> cần sửa</span>
+            {prediction.metricsBreakdown.studyDebtCount > 0 && (
+              <button
                 onClick={() => onNavigateView("review")}
-                className="text-2xs font-medium text-brand-info hover:underline cursor-pointer"
+                className="text-[color:var(--nut-chinh)] font-bold hover:underline cursor-pointer whitespace-nowrap"
               >
                 Sửa ngay &rarr;
               </button>
-            </div>
-          </div>
+            )}
+          </span>
         </div>
 
       </div>

@@ -59,6 +59,41 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 5), màn Bàn học: bốn ô số liệu đóng khung đổi thành một dòng chữ
+
+Chuyển sang màn thứ hai sau bốn lượt trên màn Luyện câu.
+
+**Đây là lần đầu áp nguyên tắc đã ghi trong NGONNGUTHIETKE.md mà chưa từng dùng ở đâu**: nội
+dung là chủ thể, số liệu là chú thích của nội dung.
+
+| | Khan Academy | Trước | Sau |
+|---|---|---|---|
+| Cách trình bày tiến độ | một CÂU 14px đậm 400, màu chữ thường | **bốn thẻ**, mỗi thẻ một nền, một viền, một bo góc | một dòng chữ, số tô đậm |
+| Chiều cao khối ở 375px | | khoảng 240px (bốn thẻ xếp dọc) | **124px** |
+| Ngăn cách các mẩu | | viền hộp | vạch trái mảnh, chỉ bật từ mốc `sm` |
+
+Giữ nguyên đủ bốn mẩu tin (ngày còn lại, độ nắm chắc, điểm dự kiến kèm biên độ và mục tiêu, số
+câu cần sửa) và cả liên kết "Sửa ngay". Chỉ đổi cách trình bày.
+
+**Một điều bỏ đi có chủ ý**: màu cam trên số ngày còn lại. Trên Khan, màu không bao giờ mang
+trạng thái trong chữ nội dung; nó dành cho thứ bấm được và cho đúng sai. Một vệt cam nằm thường
+trực thì sau đúng một ngày là mắt thôi thấy nó, nên nó không còn báo được gì mà chỉ còn làm
+nhiễu. Số ngày nay tô đậm thay vì tô màu.
+
+**Một lỗi tự bắt được giữa chừng**: bản đầu dùng dấu chấm "•" ngăn giữa các mẩu. Nhìn trên khung
+375px thì bốn mẩu xuống bốn dòng và **mỗi dấu chấm bị kẹt ở CUỐI dòng**, trông như một dấu đầu
+dòng đặt nhầm chỗ. Đổi sang vạch trái bật từ mốc `sm`: khi các mẩu không còn nằm cùng hàng thì
+vạch tự biến mất.
+
+**Kiểm chứng**: `npm run check` 198/198. Đo trên bản chạy thật ở 1280px và 375px: 0 tràn ngang,
+0 chỗ rớt tương phản. Ở 1280px bốn mẩu nằm một hàng có vạch ngăn mảnh; ở 375px xuống bốn dòng
+sạch, không dấu chấm thừa.
+
+**Còn nợ nhìn thấy trên màn này**: `toFixed(1)` cho ra dấu chấm thập phân kiểu tiếng Anh ("3.0"
+thay vì "3,0"). Rải rác nhiều chỗ trong dự án nên phải làm thành một lượt riêng, không sửa lẻ.
+
+---
+
 ### 29/07/2026 (lượt 4), tổng kết sau khi nộp: một câu thay bốn ô, và BA TRONG BỐN Ô LÀ SỐ BỊA
 
 Lượt này bắt đầu như một việc trình bày rồi lộ ra thứ nặng hơn nhiều.
