@@ -59,6 +59,64 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Dựng lại màn Luyện câu như đội thiết kế Khan sẽ dựng từ chính logic này
+
+Chỉ thị của Đàm đổi góc nhìn: coi đây là codebase vừa được đội Product Design của Khan Academy
+tiếp quản. Không hỏi "làm sao cho giống Khan hơn" mà hỏi "**nếu Khan dựng component này từ đầu
+dựa trên business logic hiện có, họ sẽ dựng ra gì**". Thứ tự ưu tiên bắt buộc: Trải nghiệm học
+trước, Design Tokens sau cùng.
+
+Logic sẵn có của màn này: một phiên N câu, mỗi câu có ngữ cảnh chủ đề và khái niệm, bốn phương
+án, phản hồi tức thì hoặc hoãn tuỳ chế độ gia sư, đánh dấu, báo lỗi, đồng hồ, nộp bài.
+
+#### Ba thứ đội thiết kế Khan sẽ làm khác, theo đúng thứ tự ưu tiên
+
+**1. Dòng nhắc hành động (Trải nghiệm học).** Khan luôn đặt ngay dưới câu hỏi một dòng nói rõ
+phải làm gì: "Chọn 2 đáp án:", cỡ 18px đậm 700, cùng bậc với chính câu hỏi. Màn này trước đó
+không có. Câu hỏi cho biết phải NGHĨ gì; dòng này cho biết phải LÀM gì. Thiếu nó thì người học
+phải tự suy ra luật chơi từ hình dạng các ô bấm, và với người đang mệt sau vài tiếng học thì đó
+là một khoảng do dự thừa ở mỗi câu.
+
+**2. Tiến độ dạng chấm thay cho lưới số (Tâm lý học tập).** Khan để tiến độ là một hàng chấm
+nhỏ trong thanh đáy. Màn này có một thẻ "Bảng câu hỏi" với lưới 10 con số kèm bảng chú giải sáu
+dòng. Một lưới số **mời người học đếm xem còn bao nhiêu câu nữa**; một hàng chấm chỉ trả lời
+"đang ở đâu" khi được hỏi tới. Trong lúc cân nhắc đáp án, câu hỏi đáng được toàn bộ chú ý.
+
+**Không mất chức năng**: mỗi chấm vẫn là nút bấm để nhảy tới câu bất kỳ, vẫn phân biệt đủ các
+trạng thái (chưa trả lời, đã trả lời, đúng, sai, đã đánh dấu), và nhãn đọc màn hình của từng
+chấm mang theo đúng thông tin mà bảng chú giải cũ phải viết ra thành sáu dòng riêng.
+
+**3. Nút "Nộp bài" từ góc trên phải xuống đáy phải (Luồng thao tác).** Khan đặt hành động chính
+ở đáy bên phải, cạnh điều hướng câu. Hành động chính phải nằm ở nơi mắt KẾT THÚC, tức sau khi
+đã đọc câu hỏi và bốn phương án. Đặt nó ở đỉnh màn là bắt người học đi ngược lên; đặt nó sát nút
+thoát phiên là để hai hành động không hoàn tác được nằm cạnh nhau.
+
+#### Hai lỗi tự gây, đã sửa
+
+**Chấm đang mở biến thành ô vuông 40px.** Quy tắc CSS ép đặc tả nút chính (`min-height: 40px`,
+bo 4px) bắt theo lớp `bg-nut-chinh`, mà tôi lại dùng đúng lớp đó cho chấm 12px. Đã đổi sang gọi
+thẳng biến màu để không trúng quy tắc ấy. Ghi lại vì đây là cái bẫy chung của mọi quy tắc ép
+kiểu theo tên lớp màu.
+
+**Bộ tự kiểm chứng bắt được chỗ thứ hai.** Nhóm **AE6** đếm số chỗ khoá gãy dòng và báo hỏng khi
+con số tụt xuống sau lúc tôi dựng lại thanh đáy. Phép kiểm ấy sinh ra từ một lỗi thật đo được
+trên khung 375px, nên nó bảo vệ đúng thứ cần bảo vệ. Đã bổ sung khoá gãy dòng cho các nhãn mới
+trong thanh.
+
+#### Kiểm chứng
+
+`npm run check` đạt toàn bộ 6 chặng, 195/195 phép kiểm. Đo trên bản chạy thật ở 1280px và 375px:
+đủ 10 chấm tiến độ và đều bấm được, nút Nộp bài nằm dưới câu hỏi, có dòng nhắc "Chọn 1 đáp án",
+thẻ "Bảng câu hỏi" cũ đã hết, không chữ nào bị bóp, không tràn ngang.
+
+#### Còn khác Khan trên màn này
+
+- Đồng hồ đếm ngược vẫn ở góc trên phải; Khan không có đồng hồ trong trang bài tập nên chưa có
+  đối chiếu trực tiếp.
+- Chưa có khối "Nội dung liên quan" dưới bài như Khan.
+
+---
+
 ### 28/07/2026 — Màn Luyện câu: dời chrome xuống đáy, bỏ cột phải, về một cột
 
 Chỉ thị của Đàm: tự quyết và triển khai mọi thay đổi thuộc Presentation Layer, Layout,

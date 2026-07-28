@@ -427,15 +427,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
             </div>
           )}
 
-          {!exam.isSubmitted && (
-            <button 
-              onClick={() => setShowSubmitModal(true)}
-              className="bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-medium text-xs px-4 py-1.5 rounded-lg transition duration-150 flex items-center gap-1.5 cursor-pointer"
-            >
-              <Send className="w-4 h-4" />
-              <span>Nộp bài</span>
-            </button>
-          )}
+          {/* Nút "Nộp bài" đã chuyển xuống thanh hành động đáy, xem chú thích tại đó. */}
 
           {exam.isSubmitted && (
             <div className="bg-brand-success-bg border border-brand-success-border px-3.5 py-1.5 rounded-lg text-brand-success font-medium text-xs">
@@ -632,6 +624,21 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 Các hàng nay nằm sát nhau và ngăn bằng đường kẻ thay vì rời nhau bằng khe, đúng
                 cách Khan làm, nên mảng phương án đọc thành MỘT khối liền thay vì bốn mảnh.
               */}
+              {/*
+                DÒNG NHẮC HÀNH ĐỘNG.
+
+                Khan Academy luôn đặt một dòng ngay dưới câu hỏi nói rõ người học phải làm gì:
+                "Chọn 2 đáp án:", cỡ 18px đậm 700, cùng bậc với chính câu hỏi.
+
+                Vì sao nó thuộc về trải nghiệm học chứ không phải trang trí: câu hỏi cho biết
+                phải NGHĨ gì, dòng này cho biết phải LÀM gì. Thiếu nó thì người học phải tự suy
+                ra luật chơi từ hình dạng các ô bấm. Với người mới hoặc người đang mệt sau vài
+                tiếng học, một dòng chỉ dẫn rõ ràng cắt được đúng khoảng do dự đó.
+              */}
+              <p className="text-lg font-bold text-text-primary font-sans pt-1">
+                Chọn 1 đáp án:
+              </p>
+
               <div className="grid grid-cols-1 pt-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
                 {(() => {
                   // Trong chế độ gia sư, khi đã trả lời thì lộ đáp án đúng/sai ngay trên các phương án
@@ -904,12 +911,66 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                 {/* Giữa: vị trí trong phiên và mức khó, viết thành CÂU thay vì hai cái chip.
                     Khan viết tiến độ thành câu ("Hoàn thành 7 câu hỏi") chứ không đóng khung. */}
-                <div className="flex items-center gap-2 text-xs text-text-muted order-1 sm:order-2 w-full sm:w-auto justify-center">
-                  <span className="tabular-nums whitespace-nowrap">
+                {/*
+                  TIẾN ĐỘ DẠNG CHẤM, THAY CHO LƯỚI SỐ Ở CỘT PHẢI.
+
+                  Khan Academy thể hiện tiến độ trong một phiên bằng một hàng chấm nhỏ nằm ngay
+                  thanh đáy, kèm một câu chữ ("Hoàn thành 7 câu hỏi"). Không có lưới số, không
+                  có thẻ riêng, không có bảng chú giải.
+
+                  Vì sao đây là quyết định về tâm lý học tập chứ không phải về chỗ đặt: một lưới
+                  10 con số mời người học đếm xem còn bao nhiêu câu nữa. Một hàng chấm chỉ trả
+                  lời "đang ở đâu" khi được hỏi tới. Trong lúc đang cân nhắc đáp án, câu hỏi
+                  đáng được toàn bộ sự chú ý, còn tiến độ nên nằm ở nền.
+
+                  **Giữ nguyên chức năng nhảy câu**: mỗi chấm vẫn là một nút bấm được, có nhãn
+                  đọc màn hình mô tả đủ số câu và trạng thái, nên thông tin mà bảng chú giải cũ
+                  mang theo không mất đi mà chuyển vào chính từng chấm.
+                */}
+                <div className="flex items-center gap-3 order-1 sm:order-2 w-full sm:w-auto justify-center">
+                  <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
                     Câu {currentIdx + 1} trên {examQuestions.length}
                   </span>
-                  <span aria-hidden="true">•</span>
-                  <span className="whitespace-nowrap">Mức {activeQuestion.difficulty}</span>
+                  <div className="flex items-center gap-1.5" role="group" aria-label="Chuyển nhanh tới câu bất kỳ">
+                    {examQuestions.map((q, idx) => {
+                      const daTraLoi = exam.answers[q.id] !== undefined;
+                      const dangMo = currentIdx === idx;
+                      const daDanhDau = exam.bookmarks?.includes(q.id) || dbStats.bookmarks.includes(q.id)
+                        || exam.flags?.includes(q.id) || dbStats.flags.includes(q.id);
+                      let kieu = "bg-border-primary hover:bg-text-muted";
+                      let trangThai = "chưa trả lời";
+                      if (exam.isSubmitted) {
+                        const dung = exam.answers[q.id] === q.correctAnswer;
+                        kieu = dung ? "bg-brand-success" : daTraLoi ? "bg-brand-error" : "bg-border-primary";
+                        trangThai = dung ? "trả lời đúng" : daTraLoi ? "trả lời sai" : "bỏ trống";
+                      } else if (daTraLoi) {
+                        kieu = "bg-text-secondary hover:bg-text-primary";
+                        trangThai = "đã trả lời";
+                      }
+                      return (
+                        <button
+                          key={q.id}
+                          onClick={() => setCurrentIdx(idx)}
+                          aria-current={dangMo ? "true" : undefined}
+                          title={`Câu ${idx + 1}: ${trangThai}${daDanhDau ? ", đã đánh dấu" : ""}`}
+                          /*
+                            Chấm đang mở KHÔNG được dùng lớp `bg-nut-chinh`: quy tắc ép đặc tả
+                            nút chính trong index.css bắt theo chính lớp đó và sẽ áp
+                            `min-height: 40px` cùng bo góc 4px, biến cái chấm 10px thành một ô
+                            vuông 40px. Dùng thẳng biến màu để tránh trúng quy tắc ấy.
+                          */
+                          className={`rounded-full transition-all duration-150 cursor-pointer relative ${
+                            dangMo ? "w-3 h-3 bg-[color:var(--nut-chinh)]" : `w-2 h-2 ${kieu}`
+                          }`}
+                        >
+                          <span className="sr-only">Câu {idx + 1}, {trangThai}{daDanhDau ? ", đã đánh dấu" : ""}</span>
+                          {daDanhDau && !dangMo && (
+                            <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-warning" aria-hidden="true" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Phải: điều hướng câu, đúng vị trí Khan đặt hành động chính */}
@@ -920,16 +981,38 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     className="flex items-center gap-1 px-3 h-10 text-sm font-bold text-text-secondary rounded hover:bg-bg-surface transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    <span>Câu trước</span>
+                    <span className="whitespace-nowrap">Câu trước</span>
                   </button>
                   <button
                     onClick={handleNext}
                     disabled={currentIdx === examQuestions.length - 1}
                     className="flex items-center gap-1 px-4 h-10 text-sm font-bold border border-border-primary bg-bg-card hover:bg-bg-surface text-text-primary rounded transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
                   >
-                    <span>Câu sau</span>
+                    <span className="whitespace-nowrap">Câu sau</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
+
+                  {/*
+                    NÚT NỘP BÀI CHUYỂN TỪ GÓC TRÊN PHẢI XUỐNG ĐÁY PHẢI.
+
+                    Khan Academy đặt hành động chính của trang bài tập ("Kiểm tra kết quả") ở
+                    **đáy bên phải**, ngay cạnh điều hướng câu. Sản phẩm này để "Nộp bài" ở góc
+                    trên phải, cạnh nút thoát phiên.
+
+                    Vì sao đây là quyết định về luồng thao tác: hành động chính phải nằm ở nơi
+                    mắt KẾT THÚC, tức sau khi đã đọc câu hỏi và bốn phương án. Đặt nó ở đỉnh
+                    màn là bắt người học đi ngược lên, và đặt nó sát nút thoát là để hai hành
+                    động không thể hoàn tác nằm cạnh nhau.
+                  */}
+                  {!exam.isSubmitted && (
+                    <button
+                      onClick={() => setShowSubmitModal(true)}
+                      className="flex items-center gap-1.5 px-4 h-10 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white text-sm font-bold rounded transition cursor-pointer"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span className="whitespace-nowrap">Nộp bài</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1343,86 +1426,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
             </div>
           )}
 
-          {/* Sticky Question Palette Card */}
-          <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
-            <h3 className="font-medium text-text-primary text-xs flex items-center justify-between">
-              <span>Bảng câu hỏi</span>
-              <span className="text-xs text-text-muted font-normal tabular-nums">
-                {Object.keys(exam.answers).length} / {examQuestions.length}
-              </span>
-            </h3>
+          {/*
+            BỎ THẺ "BẢNG CÂU HỎI" Ở CỘT PHẢI.
 
-            {/* Grid layout for question button palette */}
-            <div className="grid grid-cols-5 gap-1.5">
-              {examQuestions.map((q, idx) => {
-                const isSelected = exam.answers[q.id] !== undefined;
-                const isActive = currentIdx === idx;
-                const isBookmarked = exam.bookmarks?.includes(q.id) || dbStats.bookmarks.includes(q.id);
-                const isFlagged = exam.flags?.includes(q.id) || dbStats.flags.includes(q.id);
-                
-                let btnStyle = "border-border-primary bg-bg-card text-text-secondary hover:bg-bg-surface cursor-pointer";
-                
-                if (isActive) {
-                  btnStyle = "bg-nut-chinh text-white font-semibold border-transparent shadow-xs cursor-pointer";
-                } else if (exam.isSubmitted) {
-                  const userAnswer = exam.answers[q.id];
-                  const isAnswerCorrect = userAnswer === q.correctAnswer;
-                  btnStyle = isAnswerCorrect 
-                    ? "bg-brand-success text-white border-transparent cursor-pointer" 
-                    : userAnswer 
-                    ? "bg-brand-error text-white border-transparent cursor-pointer" 
-                    : "bg-bg-surface border-border-primary/60 text-text-muted cursor-pointer opacity-70";
-                } else if (isSelected) {
-                  btnStyle = "bg-bg-surface border-text-muted/30 text-text-primary font-medium cursor-pointer";
-                }
-
-                return (
-                  <button 
-                    key={q.id}
-                    onClick={() => setCurrentIdx(idx)}
-                    className={`h-8 w-full rounded-md border text-xs tabular-nums flex items-center justify-center relative transition-all duration-150 ${btnStyle}`}
-                  >
-                    <span>{idx + 1}</span>
-                    
-                    {/* Tiny bookmark indicators */}
-                    {isBookmarked && !isActive && (
-                      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-brand-warning rounded-full border border-bg-card" title="Đã lưu trọng tâm" />
-                    )}
-                    {isFlagged && !isBookmarked && !isActive && (
-                      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-brand-warning rounded-full border border-bg-card" title="Đánh dấu nghi ngờ" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="border-t border-border-primary/60 pt-3.5 space-y-2 text-2xs text-text-muted tabular-nums">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-bg-card border border-border-primary rounded-sm" />
-                <span>Chưa trả lời</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-bg-surface border border-text-muted/30 rounded-sm" />
-                <span>Đã trả lời</span>
-              </div>
-              {exam.isSubmitted && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-brand-success rounded-sm" />
-                    <span>Đáp án Đúng</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-brand-error rounded-sm" />
-                    <span>Đáp án Sai</span>
-                  </div>
-                </>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-brand-warning rounded-full" />
-                <span>Đã lưu trọng tâm (★)</span>
-              </div>
-            </div>
-          </div>
+            Chức năng nhảy tới câu bất kỳ đã chuyển thành hàng chấm tiến độ nằm trong thanh
+            hành động đáy, xem chú thích tại đó. Mỗi chấm vẫn bấm được, vẫn phân biệt trạng
+            thái, và nhãn đọc màn hình của nó mang theo đúng thông tin mà bảng chú giải cũ
+            phải viết ra thành sáu dòng riêng.
+          */}
 
         </div>
       </div>
