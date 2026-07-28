@@ -62,6 +62,26 @@ import {
 } from "../services/productObservabilityService";
 import { dbService } from "../services/db";
 
+/*
+  Nhãn tiếng Việt cho sáu bậc thang nhận thức Bloom. Chỉ là lớp dịch khi hiển thị, đặt ngoài
+  component để không dựng lại sau mỗi lần vẽ. Giá trị bên trong engine vẫn nguyên tiếng Anh.
+*/
+/* Nhãn tiếng Việt cho trạng thái sức khỏe hệ thống. */
+const NHAN_TRANG_THAI: Record<string, string> = {
+  OPTIMAL: "Tốt",
+  ATTENTION: "Cần để ý",
+  CRITICAL: "Cần xử lý ngay",
+};
+
+const NHAN_BAC_BLOOM: Record<string, string> = {
+  REMEMBER: "Nhớ",
+  UNDERSTAND: "Hiểu",
+  APPLY: "Vận dụng",
+  ANALYZE: "Phân tích",
+  EVALUATE: "Đánh giá",
+  CREATE: "Sáng tạo",
+};
+
 export const LearningObservatoryView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"observatory" | "concept_health" | "pedagogy" | "author_center" | "evolution">("observatory");
   
@@ -131,7 +151,10 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-2xs tabular-nums font-semibold bg-brand-info-bg text-brand-info border border-brand-info/20">
-                PHASE NEXT — PRODUCT INTELLIGENCE
+                {/* Trước 28/07/2026 nhãn này là "PHASE NEXT — PRODUCT INTELLIGENCE", vừa là
+                    tiếng Anh trong một sản phẩm tiếng Việt, vừa dùng dấu gạch ngang dài mà quy
+                    ước viết mã của dự án cấm. */}
+                Chất lượng học liệu
               </span>
               <span className="text-xs text-text-muted tabular-nums">
                 {completeness.courseCode} ({completeness.courseName})
@@ -139,7 +162,10 @@ export const LearningObservatoryView: React.FC = () => {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary flex items-center gap-3">
               <Activity className="w-7 h-7 text-brand-info" />
-              <span>Observability & Self-Improving Platform</span>
+              {/* Trước 28/07/2026 tiêu đề này là "Observability & Self-Improving Platform",
+                  tức chuỗi tiếng Anh ở cỡ 30px đậm, là dòng chữ to nhất cả màn, trong một sản
+                  phẩm mà mọi màn khác đều thuần tiếng Việt. */}
+              <span>Giám sát và tự cải thiện chất lượng học liệu</span>
             </h1>
             <p className="text-sm text-text-muted max-w-3xl leading-relaxed">
               Hệ thống Giám sát & Tự Tiến hóa chất lượng học thuật. Tự động kiểm toán độ phủ khái niệm, chỉ số lão hóa câu hỏi, hiệu quả phương án nhiễu, độ lệch khó thực tế và mức độ sẵn sàng phát hành.
@@ -155,7 +181,9 @@ export const LearningObservatoryView: React.FC = () => {
               </div>
               <div className="text-2xs font-medium text-brand-success flex items-center justify-center sm:justify-end gap-1">
                 <CheckCircle2 className="w-3 h-3" />
-                <span>Trạng thái: {health.status}</span>
+                {/* `health.status` là giá trị liệt kê của engine ("OPTIMAL" / "ATTENTION" /
+                    "CRITICAL"), trước 28/07/2026 in thẳng ra màn hình. Dịch khi hiển thị. */}
+                <span>Trạng thái: {NHAN_TRANG_THAI[health.status] ?? health.status}</span>
               </div>
             </div>
 
@@ -180,7 +208,7 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
             <div className="text-2xs text-text-muted font-medium">Độ phủ Khái niệm</div>
             <div className="text-lg font-bold tabular-nums text-text-primary mt-0.5">{health.coverageScore}%</div>
-            <div className="text-2xs text-text-muted">{deadConcepts.length} Dead Concepts</div>
+            <div className="text-2xs text-text-muted">{deadConcepts.length} khái niệm chưa có câu hỏi</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
             <div className="text-2xs text-text-muted font-medium">Hiệu quả Phương án nhiễu</div>
@@ -417,7 +445,11 @@ export const LearningObservatoryView: React.FC = () => {
                 {bloomHealth.distribution.map((item, idx) => (
                   <div key={idx} className="space-y-1">
                     <div className="flex justify-between text-xs font-medium text-text-primary">
-                      <span>{item.bloomLevel}</span>
+                      {/* Sáu bậc thang Bloom vốn là giá trị liệt kê tiếng Anh của engine
+                          ("REMEMBER", "UNDERSTAND"...) và trước 28/07/2026 được in thẳng ra
+                          màn hình. Đây chỉ là lớp dịch khi hiển thị, không đụng engine; nhánh
+                          dự phòng trả về giá trị gốc nếu engine thêm bậc mới. */}
+                      <span>{NHAN_BAC_BLOOM[item.bloomLevel] ?? item.bloomLevel}</span>
                       <span className="tabular-nums text-text-muted">{item.currentCount} câu ({item.currentPct}% / Mục tiêu: {item.targetPct}%)</span>
                     </div>
                     <div className="w-full h-2 bg-bg-surface rounded-full overflow-hidden border border-border-primary/60">

@@ -418,7 +418,11 @@ export const productObservabilityService = {
     const status: "OPTIMAL" | "ATTENTION" | "CRITICAL" =
       systemHealthScore >= 80 ? "OPTIMAL" : systemHealthScore >= 65 ? "ATTENTION" : "CRITICAL";
 
-    const formulaDetails = `SystemHealth = 0.25 × Quality(${contentQualityScore}) + 0.20 × Coverage(${coverageScore}%) + 0.15 × Distractor(${distractorHealthScore}%) + 0.15 × Bloom(${bloomBalanceScore}%) + 0.15 × Difficulty(${difficultyDriftScore}%) + 0.10 × TechDebt(${technicalDebtScore}%) = ${systemHealthScore}/100`;
+    // Chuỗi này CHỈ để hiển thị cho người dùng đọc, không tham gia tính toán gì.
+    // Đổi nhãn sang tiếng Việt ngày 28/07/2026: trước đó nó in ra màn hình bằng tiếng Anh
+    // ("SystemHealth = 0.25 × Quality(94) + ...") trong một sản phẩm thuần tiếng Việt.
+    // Các HỆ SỐ và BIẾN giữ nguyên y hệt, không đụng tới một phép tính nào.
+    const formulaDetails = `Điểm sức khỏe = 0,25 × Chất lượng nội dung(${contentQualityScore}) + 0,20 × Độ phủ khái niệm(${coverageScore}%) + 0,15 × Hiệu quả phương án nhiễu(${distractorHealthScore}%) + 0,15 × Cân bằng Bloom(${bloomBalanceScore}%) + 0,15 × Độ lệch độ khó(${difficultyDriftScore}%) + 0,10 × Nợ kỹ thuật(${technicalDebtScore}%) = ${systemHealthScore}/100`;
 
     return {
       systemHealthScore,

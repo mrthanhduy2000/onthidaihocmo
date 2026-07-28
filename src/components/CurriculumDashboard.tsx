@@ -30,6 +30,40 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
     setPlan(curriculumIntelligenceEngine.getCurriculumPlan());
   }, []);
 
+  /*
+    NHÃN TIẾNG VIỆT CHO GIÁ TRỊ CỦA ENGINE.
+
+    `plan.currentStage` và `debt.priority` là các giá trị liệt kê của engine, viết bằng tiếng
+    Anh in hoa ("FOUNDATION", "HIGH"). Trước ngày 28/07/2026 chúng được in THẲNG ra màn hình,
+    nên người học đang ôn thi bằng tiếng Việt lại đọc thấy "Giai đoạn: FOUNDATION".
+
+    Hai bảng dưới đây chỉ là lớp DỊCH KHI HIỂN THỊ. Không đụng gì tới engine, không đổi dữ
+    liệu, không đổi kiểu: giá trị bên trong vẫn nguyên "FOUNDATION", chỉ khác chỗ vẽ ra màn
+    hình. Có nhánh dự phòng trả về chính giá trị gốc, nên nếu engine thêm giai đoạn mới thì
+    màn hình vẫn chạy chứ không vỡ.
+  */
+  const NHAN_GIAI_DOAN: Record<CurriculumStage, string> = {
+    FOUNDATION: "Xây nền",
+    UNDERSTANDING: "Hiểu bài",
+    APPLICATION: "Vận dụng",
+    CONSOLIDATION: "Củng cố",
+    EXAM_PREPARATION: "Ôn thi",
+    FINAL_REVIEW: "Rà lần cuối",
+    MASTERY: "Nắm chắc",
+  };
+
+  const NHAN_UU_TIEN: Record<string, string> = {
+    HIGH: "Cần làm sớm",
+    MEDIUM: "Vừa phải",
+    LOW: "Thong thả",
+  };
+
+  const NHAN_LOAI_DE: Record<string, string> = {
+    chapter: "theo chương",
+    mock: "thi thử",
+    incorrect: "ôn câu sai",
+  };
+
   const getStageBadgeColor = (stage: CurriculumStage) => {
     switch (stage) {
       case "FOUNDATION": return "bg-brand-info-bg text-brand-info border-brand-info/30";
@@ -66,7 +100,8 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
             <div className="flex items-center gap-2.5">
               <Compass className="w-6 h-6 text-brand-info" />
               <h1 className="text-2xl font-display font-light text-text-primary tracking-tight">
-                Curriculum Intelligence & Learning Strategy
+                {/* Trước 28/07/2026 là "Curriculum Intelligence & Learning Strategy". */}
+                Khung chương trình và chiến lược ôn tập
               </h1>
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
@@ -76,7 +111,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
 
           <div className="flex items-center gap-3 self-start md:self-auto">
             <span className={`px-3 py-1.5 rounded-full border text-xs tabular-nums font-bold ${getStageBadgeColor(plan.currentStage)}`}>
-              Giai đoạn: {plan.currentStage}
+              Giai đoạn: {NHAN_GIAI_DOAN[plan.currentStage] ?? plan.currentStage}
             </span>
           </div>
         </div>
@@ -125,7 +160,9 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
             className="px-5 py-2.5 bg-text-primary hover:opacity-95 text-bg-card font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>Thực hiện nhiệm vụ ({plan.recommendedExamType.toUpperCase()})</span>
+            {/* `.toUpperCase()` trên giá trị liệt kê của engine in ra "CHAPTER" / "MOCK" /
+                "INCORRECT" ngay trên nút bấm chính của màn. Dịch khi hiển thị. */}
+            <span>Thực hiện nhiệm vụ ({NHAN_LOAI_DE[plan.recommendedExamType] ?? plan.recommendedExamType})</span>
           </button>
         </div>
       </div>
@@ -260,7 +297,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
                     <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
                       debt.priority === "HIGH" ? "bg-brand-error-bg text-brand-error" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
-                      {debt.priority}
+                      {NHAN_UU_TIEN[debt.priority] ?? debt.priority}
                     </span>
                   </div>
                   <p className="text-2xs text-text-muted leading-relaxed">{debt.reason}</p>

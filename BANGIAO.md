@@ -59,6 +59,63 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Giá trị liệt kê của engine đang rò ra màn hình bằng tiếng Anh
+
+Vòng này rà một hạng mục chưa ai đụng: **chuỗi tiếng Anh trong một sản phẩm thuần tiếng Việt.**
+
+**Vì sao đây là việc thật chứ không phải chuyện chữ nghĩa.** Người học đang ôn thi bằng tiếng
+Việt, đọc thấy "Giai đoạn: FOUNDATION", "Trạng thái: OPTIMAL", "Thực hiện nhiệm vụ (CHAPTER)",
+hoặc tiêu đề màn ở cỡ 30px đậm ghi "Observability & Self-Improving Platform". Mỗi chuỗi như vậy
+là một lần người đọc phải dừng lại dịch, tức đúng loại tải nhận thức mà đợt tái thiết kế này
+sinh ra để cắt bỏ.
+
+**Gốc rễ**: các engine định nghĩa kiểu liệt kê bằng tiếng Anh in hoa (`CurriculumStage`,
+`priority`, `bloomLevel`, `examType`, `status`) và tầng giao diện in **thẳng** giá trị đó ra,
+có chỗ còn `.toUpperCase()` thêm.
+
+**Đã sửa, toàn bộ ở tầng trình bày:**
+
+| Chỗ | Trước | Sau |
+|---|---|---|
+| Tiêu đề màn Công cụ hệ thống | Observability & Self-Improving Platform | Giám sát và tự cải thiện chất lượng học liệu |
+| Tiêu đề màn Chương trình | Curriculum Intelligence & Learning Strategy | Khung chương trình và chiến lược ôn tập |
+| Nhãn dải trên màn Công cụ | PHASE NEXT — PRODUCT INTELLIGENCE | Chất lượng học liệu |
+| Giai đoạn học | FOUNDATION, UNDERSTANDING... | Xây nền, Hiểu bài... |
+| Bậc nhận thức Bloom | REMEMBER, UNDERSTAND... | Nhớ, Hiểu, Vận dụng... |
+| Ưu tiên nợ học | HIGH, MEDIUM, LOW | Cần làm sớm, Vừa phải, Thong thả |
+| Trạng thái hệ thống | OPTIMAL, ATTENTION, CRITICAL | Tốt, Cần để ý, Cần xử lý ngay |
+| Loại đề trên nút chính | (CHAPTER) | (theo chương) |
+| Loại phiên đang dở | (ADAPTIVE) | (thích ứng) |
+| Công thức điểm sức khỏe | SystemHealth = 0.25 × Quality(94)... | Điểm sức khỏe = 0,25 × Chất lượng nội dung(94)... |
+| Đếm khái niệm chết | 0 Dead Concepts | 0 khái niệm chưa có câu hỏi |
+
+Nhãn "PHASE NEXT — PRODUCT INTELLIGENCE" còn chứa **dấu gạch ngang dài**, phạm quy ước viết mã
+của dự án. Đã hết.
+
+**Ranh giới đã giữ**: mọi bảng nhãn đều là lớp **dịch khi hiển thị**, có nhánh dự phòng trả về
+chính giá trị gốc nếu engine thêm mục mới. **Không đổi một kiểu dữ liệu nào, không đổi một giá
+trị nào, không đổi một phép tính nào.** Ba chỗ nằm trong file service (`formulaDetails`,
+`metrics`, `policy`, `decision`) chỉ là chuỗi để in ra màn hình, không tham gia tính toán; hệ
+số và biến giữ nguyên từng ký tự.
+
+**Bộ dò của tôi sai hai lần trong vòng này, ghi lại để người sau khỏi mất công:**
+
+1. Lần đầu lọc theo phần tử có nút chữ **trực tiếp**, nên bỏ sót mọi chuỗi bị chia nhỏ qua
+   nhiều thẻ con, kể cả tiêu đề 30px to nhất màn. Phải duyệt thẳng nút văn bản bằng
+   `TreeWalker`.
+2. Lần sau chỉ bắt chuỗi **thuần** tiếng Anh, nên bỏ sót giá trị liệt kê **nằm lẫn giữa câu
+   tiếng Việt**, kiểu "Đặt mục tiêu chiến lược giai đoạn [FOUNDATION]". Phải dò thêm mẫu
+   `[A-Z]{4,}` bên trong chuỗi.
+
+Ngoài ra có một **báo nhầm cần biết**: "HVKH" và "4Ps" bị bộ dò tưởng là giá trị liệt kê, nhưng
+đó là **nội dung môn học** (viết tắt tiếng Việt và thuật ngữ marketing chuẩn), không phải nhãn
+giao diện. Giữ nguyên. Bộ dò nay có danh sách bỏ qua cho nhóm thuật ngữ này.
+
+**Kiểm chứng**: quét cả **mười màn**, kết quả **không màn nào còn chuỗi tiếng Anh**.
+`npm run check` đạt toàn bộ 6 chặng.
+
+---
+
 ### 28/07/2026 — Nền theo độ mờ là gốc rễ 15 chỗ rớt tương phản, và một lỗi trong chính bộ đo của tôi
 
 Vòng này rà bốn màn **chưa từng được kiểm**: Tổng quan, Chương trình, Công cụ hệ thống, Dự báo

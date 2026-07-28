@@ -457,11 +457,25 @@ export const curriculumIntelligenceEngine = {
       chapterStatuses,
       studyBalance,
       explainability: {
-        decision: `Đặt mục tiêu chiến lược giai đoạn [${stage}]`,
+        // Chuỗi hiển thị. Trước 28/07/2026 nó chèn thẳng giá trị liệt kê vào giữa câu tiếng
+        // Việt, ra "Đặt mục tiêu chiến lược giai đoạn [FOUNDATION]". Bảng nhãn dưới đây chỉ
+        // dùng để dựng câu chữ, không có giá trị nào của engine bị đổi.
+        decision: `Đặt mục tiêu chiến lược giai đoạn [${({
+          FOUNDATION: "Xây nền",
+          UNDERSTANDING: "Hiểu bài",
+          APPLICATION: "Vận dụng",
+          CONSOLIDATION: "Củng cố",
+          EXAM_PREPARATION: "Ôn thi",
+          FINAL_REVIEW: "Rà lần cuối",
+          MASTERY: "Nắm chắc",
+        } as Record<string, string>)[stage] ?? stage}]`,
         reason,
         evidence: `Dựa trên dữ liệu ${totalSolved} câu đã làm, ${attempts.length} phiên thi & đếm ngược ${examDaysRemaining} ngày.`,
-        metrics: `Accuracy: ${masteryScore}%, Readiness: ${readinessScore}/100`,
-        policy: "Curriculum Strategy Deterministic Policy v2026.1",
+        // Hai dòng này CHỈ để hiển thị, không tham gia tính toán. Đổi sang tiếng Việt ngày
+        // 28/07/2026 cho khớp với `decision`, `reason`, `evidence` ngay bên cạnh vốn đã là
+        // tiếng Việt. Giá trị số giữ nguyên.
+        metrics: `Tỷ lệ đúng: ${masteryScore}%, Mức sẵn sàng: ${readinessScore}/100`,
+        policy: "Quy tắc chiến lược ôn tập, bản v2026.1",
         timestamp: TimeService.now().toISOString()
       }
     };

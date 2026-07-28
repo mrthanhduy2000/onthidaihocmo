@@ -12,6 +12,15 @@ interface ContinueLearningCardProps {
   onContinue: (examId: string) => void;
 }
 
+/* Nhãn tiếng Việt cho các loại phiên luyện tập của engine. Chỉ là lớp dịch khi hiển thị. */
+const NHAN_LOAI_PHIEN: Record<string, string> = {
+  adaptive: "thích ứng",
+  "ai-smart": "thi thử",
+  chapter: "theo chương",
+  incorrect: "ôn câu sai",
+  mock: "thi thử",
+};
+
 export default function ContinueLearningCard({ exam, onContinue }: ContinueLearningCardProps) {
   const answeredCount = Object.keys(exam.answers || {}).length;
   const totalCount = exam.questions.length;
@@ -33,8 +42,13 @@ export default function ContinueLearningCard({ exam, onContinue }: ContinueLearn
       </div>
 
       <div className="space-y-2">
+        {/*
+          `.toUpperCase()` trên giá trị liệt kê của engine in ra "ADAPTIVE" / "AI-SMART" ngay
+          trong tiêu đề thẻ. Dịch khi hiển thị, có nhánh dự phòng giữ giá trị gốc nếu engine
+          thêm loại đề mới.
+        */}
         <h3 className="text-lg font-display font-light text-text-primary">
-          Tiếp tục phiên luyện tập ({exam.examType.toUpperCase()})
+          Tiếp tục phiên luyện tập ({NHAN_LOAI_PHIEN[exam.examType] ?? exam.examType})
         </h3>
         <p className="text-xs text-text-muted">
           Bạn đã trả lời <strong className="text-text-primary tabular-nums">{answeredCount}/{totalCount} câu</strong> ({progressPct}% tiến độ). Dữ liệu đã được lưu tự động.
