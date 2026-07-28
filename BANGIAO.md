@@ -59,6 +59,48 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 4), tổng kết sau khi nộp: một câu thay bốn ô, và BA TRONG BỐN Ô LÀ SỐ BỊA
+
+Lượt này bắt đầu như một việc trình bày rồi lộ ra thứ nặng hơn nhiều.
+
+**Việc thứ nhất, trình bày.** Khối tổng kết vốn là một thẻ bo 16px có viền, có đổ bóng, bên
+trong là bốn ô số liệu đóng khung riêng, mỗi ô lại có viền và bo góc của nó. Đúng khuôn bảng
+điều khiển: khi mọi mẩu dữ liệu đều được đóng khung thì không mẩu nào quan trọng hơn mẩu nào.
+Khan viết tiến độ thành CÂU ở cỡ chữ thường, không thẻ, không huy hiệu, không số to. Nguyên tắc
+đã ghi sẵn trong NGONNGUTHIETKE.md nhưng chưa từng được áp ở đâu: **nội dung là chủ thể, số
+liệu là chú thích của nội dung.**
+
+**Việc thứ hai, ba trong bốn ô là số bịa.** Đọc kỹ mã cũ:
+
+| Ô | Công thức cũ | Vấn đề |
+|---|---|---|
+| Kết quả bài thi | `correctCount / tổng` | thật |
+| Khái niệm đã thông thạo | `Math.max(1, Math.floor(correctCount / 3))` | **đúng 0 câu vẫn khoe "+1 khái niệm"** |
+| Hiểu sai đã sửa | `incorrectCount > 0 ? "1 hiểu sai" : "0 bẫy sai"` | sai 1 câu hay sai 9 câu đều ra **"1 hiểu sai"** |
+| Độ ghi nhớ dự đoán | `71% → 71 + tỷ_lệ_đúng * 18` | mốc **71 viết cứng**, không đọc từ hồ sơ người học nào |
+
+Đây đúng họ lỗi mà bất biến 4.9 sinh ra để chặn, nhưng **ba lượt quét trước đều dừng ở tầng
+service** nên không lượt nào chạm tới. Nó nói với người học một điều không có thật đúng vào
+khoảnh khắc họ tin tưởng nhất, tức lúc vừa nộp bài xong. Chụp được bằng chứng rõ nhất: một
+phiên **0/10** mà màn hình vẫn khoe "+1 khái niệm đã thông thạo".
+
+**Vì sao không sửa công thức mà bỏ hẳn**: tính đúng ba đại lượng ấy là việc của tầng engine chứ
+không phải tầng trình bày, mà lượt này bị cấm đụng engine. Việc đúng đắn ở tầng này là **thôi
+khẳng định thứ mình không biết**. Không mất chức năng nào: cả ba con số vốn chưa từng được
+engine nào tính, nên không có đường dữ liệu nào bị cắt. Nếu sau này muốn có thật thì phải xây
+ở tầng engine trước.
+
+Bản mới: một dòng nhãn "Phiên học hoàn tất", một câu 28px/700 "Bạn làm đúng N trên M câu.", một
+dòng phụ nói còn bao nhiêu câu đáng xem lại và tìm giải nghĩa ở đâu. Hai nút giữ nguyên. Không
+thẻ, không viền, không đổ bóng, chỉ một đường kẻ chân.
+
+**Phép kiểm mới AE7**, đã thử phá và báo đỏ đúng lúc: bắt cả ba biểu thức bịa nói trên.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, **198/198**. Trên bản chạy thật: làm một đề
+thật rồi nộp, ở 1280px và 375px đều 0 tràn ngang, 0 phần tử vượt khung, không chữ nào bị bóp.
+
+---
+
 ### 29/07/2026 (lượt 3), đầu phiên gộp về một hàng, trả lại 49px cho khổ điện thoại
 
 **Số đo ở khổ 375px**

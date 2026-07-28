@@ -62,9 +62,22 @@ chrome trước khi tới câu hỏi từ **179px xuống 130px** (Khan: 73px). 
 khổ nhỏ nhất nơi mỗi điểm ảnh dọc đắt nhất. Phần còn chênh so với Khan là ba chức năng thật mà
 trang của họ không có: nút quay lại, phụ đề phiên, đồng hồ.
 
-**Việc tiếp theo đã nhìn thấy**: ở trạng thái ĐÃ NỘP, ngay dưới đầu phiên là thẻ "Tổng quan kết
-quả & Tiến trình củng cố" gồm **bốn ô số liệu đóng khung**. Đúng loại mà NGONNGUTHIETKE.md ghi
-là ngược với Khan: "nội dung là chủ thể, số liệu là chú thích của nội dung".
+Lượt 4 cùng ngày: thẻ tổng kết sau khi nộp đổi thành **một câu**, và lộ ra **ba trong bốn ô là
+số bịa**.
+
+| Ô cũ | Công thức cũ | Vấn đề |
+|---|---|---|
+| Kết quả bài thi | `correctCount / tổng` | thật, giữ lại |
+| Khái niệm đã thông thạo | `Math.max(1, Math.floor(correctCount / 3))` | **đúng 0 câu vẫn khoe "+1 khái niệm"** |
+| Hiểu sai đã sửa | chuỗi `"1 hiểu sai"` viết cứng | sai 1 câu hay 9 câu đều như nhau |
+| Độ ghi nhớ dự đoán | `71% → 71 + tỷ_lệ_đúng*18` | mốc 71 viết cứng |
+
+Đúng họ lỗi mà bất biến 4.9 sinh ra để chặn, nhưng **ba lượt quét trước đều dừng ở tầng service**
+nên không lượt nào chạm tới tầng trình bày. Không sửa công thức (tính đúng ba đại lượng ấy là
+việc của engine, lượt này bị cấm đụng) mà **thôi khẳng định thứ mình không biết**. Không đường
+dữ liệu nào bị cắt vì chưa engine nào từng tính chúng. Nhóm kiểm mới **AE7** canh cả ba.
+
+Muốn có ba con số ấy thật thì phải xây ở **tầng engine** trước, xem Open Question mới ở cuối.
 
 ---
 
@@ -461,7 +474,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **197**, chia 32 nhóm A đến AF, đạt toàn bộ |
+| Phép tự kiểm chứng | **198**, chia 32 nhóm A đến AF, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
@@ -591,6 +604,13 @@ Cần chủ dự án quyết, **không được tự quyết thay**:
    mọi chỉ số về nhịp ở mức khái niệm đều là phân bổ đều chứ không phải đo. Ghi được thì mở ra
    nhịp thật từng câu, phát hiện đoán mò chính xác hơn, và `averageResponseTime` có nghĩa. Nhưng
    đây là **thêm việc thu thập dữ liệu**, chỉ có tác dụng từ lúc bật trở đi, không hồi tố được.
+9. **Có xây thật ba đại lượng của bảng tổng kết sau khi nộp không?** Ngày 29/07/2026 đã gỡ ba ô
+   "Khái niệm đã thông thạo", "Hiểu sai đã sửa", "Độ ghi nhớ dự đoán" khỏi màn làm bài vì cả ba
+   là số bịa viết thẳng trong tầng trình bày (chi tiết trong BANGIAO.md). Dữ liệu để tính thật
+   thì **có sẵn**: tầng trí nhớ khái niệm biết độ thạo trước và sau phiên, cảnh báo bẫy hiểu sai
+   đã nối từ 27/07/2026, và đường cong quên cho ra độ ghi nhớ theo thời điểm. Nhưng đây là việc
+   của **tầng engine**, phải chọn định nghĩa cho từng đại lượng trước khi tính, nên không tự làm.
+
 8. **Hai khái niệm "độ tự tin" nên gộp làm một hay giữ riêng?** `ConceptProfile.confidence` của
    `learnerModel` là một đại lượng, `ConceptMemoryProfile.averageConfidence` vừa nối vào cờ nghi
    vấn là đại lượng khác, và màn Phân tích giảng dạy đang hiện cái thứ nhất. Cùng một chữ, hai

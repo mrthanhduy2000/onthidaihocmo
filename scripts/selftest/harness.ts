@@ -2597,6 +2597,34 @@ check("Chip đầu thẻ làm bài không xuống dòng trên khung hẹp",
   (nguonPractice.match(/whitespace-nowrap/g) || []).length >= 3,
   "chip số câu, chip mức độ và nhãn công tắc gia sư đều giữ một dòng");
 
+// AE7. Bảng tổng kết sau khi nộp không được khẳng định thứ engine chưa hề tính.
+//
+// Ngày 29/07/2026, mở màn làm bài ở trạng thái ĐÃ NỘP thì thấy một thẻ bốn ô số liệu, và ba
+// trong bốn ô là số bịa viết thẳng trong tầng trình bày:
+//
+//   Khái niệm đã thông thạo:  Math.max(1, Math.floor(correctCount / 3))
+//     -> đúng 0 câu vẫn khoe "+1 khái niệm đã thông thạo"
+//   Hiểu sai đã sửa:          incorrectCount > 0 ? "1 hiểu sai" : "0 bẫy sai"
+//     -> sai 1 câu hay sai 9 câu đều ra đúng chuỗi "1 hiểu sai"
+//   Độ ghi nhớ dự đoán:       71% -> 71 + tỷ_lệ_đúng * 18
+//     -> mốc 71 viết cứng, không đọc từ hồ sơ người học nào
+//
+// Đây đúng họ lỗi mà bất biến 4.9 sinh ra để chặn, nhưng ba lượt quét trước đều dừng ở tầng
+// service nên không lượt nào chạm tới. Nó nói với người học một điều không có thật đúng vào
+// khoảnh khắc họ tin tưởng nhất, tức lúc vừa nộp bài xong.
+//
+// Cách chữa ở tầng trình bày KHÔNG phải là sửa công thức (tính đúng ba đại lượng ấy là việc
+// của engine) mà là thôi khẳng định thứ mình không biết.
+const bipBia: string[] = [];
+if (/Math\.max\(1,\s*Math\.floor\(correctCount/.test(nguonPractice)) bipBia.push("khái niệm thông thạo suy từ correctCount/3, sàn 1");
+if (/"1 hiểu sai"/.test(nguonPractice)) bipBia.push("số hiểu sai đã sửa là chuỗi viết cứng");
+if (/71\s*\+\s*Math\.round/.test(nguonPractice) || /71%\s*&rarr;/.test(nguonPractice)) bipBia.push("độ ghi nhớ neo vào mốc 71 viết cứng");
+check("Tổng kết sau khi nộp chỉ nói con số có thật",
+  bipBia.length === 0,
+  bipBia.length === 0
+    ? "chỉ còn số câu đúng và số câu cần xem lại, cả hai suy thẳng từ bài làm"
+    : `${bipBia.length} con số bịa: ${bipBia.join(" | ")}`);
+
 // ===========================================================================
 g("AF. Mọi màu ngữ nghĩa dùng trong giao diện đều phải có định nghĩa");
 // ===========================================================================

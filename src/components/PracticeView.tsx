@@ -455,21 +455,56 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         </div>
       </div>
 
-      {/* Session Completion Experience (Learning Summary) */}
+      {/*
+        TỔNG KẾT PHIÊN: MỘT CÂU, KHÔNG PHẢI BỐN Ô SỐ LIỆU.
+
+        Hai việc trong một lượt sửa, và việc thứ hai nặng hơn việc thứ nhất nhiều.
+
+        VIỆC THỨ NHẤT, TRÌNH BÀY. Khối này vốn là một thẻ bo 16px có viền, có đổ bóng, bên trong
+        là bốn ô số liệu đóng khung riêng, mỗi ô lại có viền và bo góc của nó. Đúng khuôn bảng
+        điều khiển: khi mọi mẩu dữ liệu đều được đóng khung thì không mẩu nào quan trọng hơn mẩu
+        nào. Khan Academy viết tiến độ thành CÂU ở cỡ chữ thường, màu chữ thường, không thẻ,
+        không huy hiệu, không số to. Nguyên tắc đã ghi trong NGONNGUTHIETKE.md: **nội dung là chủ
+        thể, số liệu là chú thích của nội dung.**
+
+        VIỆC THỨ HAI, BA TRONG BỐN Ô LÀ SỐ BỊA. Đọc kỹ mã cũ:
+
+        | Ô | Công thức cũ | Vấn đề |
+        |---|---|---|
+        | Kết quả bài thi | `correctCount / tổng` | thật |
+        | Khái niệm đã thông thạo | `Math.max(1, Math.floor(correctCount / 3))` | **đúng 0 câu vẫn khoe "+1 khái niệm"** |
+        | Hiểu sai đã sửa | `incorrectCount > 0 ? "1 hiểu sai" : "0 bẫy sai"` | sai 1 câu hay sai 9 câu đều ra **"1 hiểu sai"** |
+        | Độ ghi nhớ dự đoán | `71% → 71 + tỷ_lệ_đúng * 18` | mốc **71 viết cứng**, không đọc từ hồ sơ người học nào |
+
+        Đây đúng họ lỗi mà bất biến 4.9 đặt ra để chặn: trình bày một hằng số viết tay như thể
+        đó là kết quả đo được. Nó không báo lỗi biên dịch, không sai kiểu, chỉ lặng lẽ nói với
+        người học một điều không có thật, ngay tại khoảnh khắc họ tin tưởng nhất là lúc vừa
+        nộp bài.
+
+        Không "sửa công thức" ở đây, vì tính đúng ba đại lượng ấy là việc của tầng engine chứ
+        không phải của tầng trình bày. Việc đúng đắn ở tầng này là **thôi khẳng định thứ mình
+        không biết**. Không mất chức năng nào: cả ba con số vốn chưa từng được engine nào tính,
+        nên không có đường dữ liệu nào bị cắt.
+      */}
       {exam.isSubmitted && (
-        <div className="bg-bg-card border border-border-primary rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-primary/60 pb-5">
-            <div>
-              <div className="flex items-center gap-2 text-xs tabular-nums text-brand-success mb-1">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Phiên học hoàn tất • Tổng kết buổi học</span>
+        <div className="animate-fade-in space-y-5 pb-2 border-b border-border-primary">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-sm text-brand-success">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>Phiên học hoàn tất</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-display font-light text-text-primary">
-                Tổng quan kết quả & Tiến trình củng cố
+              <h2 className="text-2xl font-bold text-text-primary font-sans">
+                Bạn làm đúng {correctCount} trên {examQuestions.length} câu.
               </h2>
+              <p className="text-base text-text-secondary font-sans max-w-[40rem]">
+                {incorrectCount === 0
+                  ? "Trọn vẹn cả phiên. Cuộn xuống để đọc lại phần giải nghĩa của từng câu."
+                  : `Còn ${incorrectCount} câu đáng xem lại. Phần giải nghĩa nằm ngay dưới đáp án đúng của từng câu.`}
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 onClick={() => {
                   const newExam = aiService.generateExam({ type: "adaptive", count: 10 });
@@ -482,49 +517,18 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   timeSpentRef.current = 0;
                   setShowSubmitModal(false);
                 }}
-                className="px-5 py-2.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
+                className="px-4 h-10 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-bold text-sm rounded transition flex items-center gap-2 cursor-pointer"
               >
                 <Play className="w-4 h-4 fill-current" />
-                <span>Làm thêm 10 câu mới</span>
+                <span className="whitespace-nowrap">Làm thêm 10 câu mới</span>
               </button>
 
               <button
                 onClick={onNavigateHome}
-                className="px-4 py-2.5 bg-bg-surface border border-border-primary hover:bg-bg-card text-text-secondary font-medium text-xs rounded-xl transition cursor-pointer"
+                className="px-4 h-10 border border-border-primary bg-bg-card hover:bg-bg-surface text-text-primary font-bold text-sm rounded transition cursor-pointer"
               >
-                <span>Kết thúc bài làm</span>
+                <span className="whitespace-nowrap">Kết thúc bài làm</span>
               </button>
-            </div>
-          </div>
-
-          {/* 4 Core Summary Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums text-text-muted">Kết quả bài thi</span>
-              <p className="text-lg font-display font-semibold text-text-primary">
-                {correctCount} / {examQuestions.length} <span className="text-xs font-sans font-normal text-text-muted">đúng</span>
-              </p>
-            </div>
-
-            <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums text-text-muted">Khái niệm đã thông thạo</span>
-              <p className="text-lg font-display font-semibold text-brand-success">
-                +{Math.max(1, Math.floor(correctCount / 3))} <span className="text-xs font-sans font-normal text-text-muted">khái niệm</span>
-              </p>
-            </div>
-
-            <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums text-text-muted">Hiểu sai đã sửa</span>
-              <p className="text-lg font-display font-semibold text-brand-warning">
-                {incorrectCount > 0 ? "1 hiểu sai" : "0 bẫy sai"}
-              </p>
-            </div>
-
-            <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 text-center space-y-1">
-              <span className="text-2xs tabular-nums text-text-muted">Độ ghi nhớ dự đoán</span>
-              <p className="text-lg font-display font-semibold text-brand-info">
-                71% &rarr; {Math.min(96, 71 + Math.round((correctCount / examQuestions.length) * 18))}%
-              </p>
             </div>
           </div>
         </div>
