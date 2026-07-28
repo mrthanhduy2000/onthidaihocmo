@@ -125,12 +125,12 @@ export const LearningObservatoryView: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans">
       {/* Page Header Banner */}
       <div className="bg-gradient-to-br from-bg-card via-bg-surface to-bg-card border border-border-primary rounded-2xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-brand-info/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-brand-info-bg rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-2xs tabular-nums font-semibold bg-brand-info/10 text-brand-info border border-brand-info/20">
+              <span className="px-2.5 py-0.5 rounded-full text-2xs tabular-nums font-semibold bg-brand-info-bg text-brand-info border border-brand-info/20">
                 PHASE NEXT — PRODUCT INTELLIGENCE
               </span>
               <span className="text-xs text-text-muted tabular-nums">
@@ -211,7 +211,7 @@ export const LearningObservatoryView: React.FC = () => {
           onClick={() => setActiveTab("observatory")}
           className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition flex items-center gap-2 whitespace-nowrap border-b-2 ${
             activeTab === "observatory"
-              ? "border-brand-info text-brand-info bg-brand-info/5"
+              ? "border-brand-info text-brand-info bg-brand-info-bg"
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
@@ -223,14 +223,14 @@ export const LearningObservatoryView: React.FC = () => {
           onClick={() => setActiveTab("concept_health")}
           className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition flex items-center gap-2 whitespace-nowrap border-b-2 ${
             activeTab === "concept_health"
-              ? "border-brand-info text-brand-info bg-brand-info/5"
+              ? "border-brand-info text-brand-info bg-brand-info-bg"
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
           <Brain className="w-3.5 h-3.5" />
           <span>Sức khỏe Khái niệm & Câu hỏi</span>
           {(deadConcepts.length > 0 || overusedConcepts.length > 0) && (
-            <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-warning/20 text-brand-warning tabular-nums">
+            <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-warning-bg text-brand-warning tabular-nums">
               {deadConcepts.length + overusedConcepts.length}
             </span>
           )}
@@ -240,7 +240,7 @@ export const LearningObservatoryView: React.FC = () => {
           onClick={() => setActiveTab("pedagogy")}
           className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition flex items-center gap-2 whitespace-nowrap border-b-2 ${
             activeTab === "pedagogy"
-              ? "border-brand-info text-brand-info bg-brand-info/5"
+              ? "border-brand-info text-brand-info bg-brand-info-bg"
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
@@ -252,14 +252,14 @@ export const LearningObservatoryView: React.FC = () => {
           onClick={() => setActiveTab("author_center")}
           className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition flex items-center gap-2 whitespace-nowrap border-b-2 ${
             activeTab === "author_center"
-              ? "border-brand-info text-brand-info bg-brand-info/5"
+              ? "border-brand-info text-brand-info bg-brand-info-bg"
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
           <span>Khu vực Tác giả & Nợ Kỹ thuật</span>
           {techDebts.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-info/20 text-brand-info tabular-nums">
+            <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-info-bg text-brand-info tabular-nums">
               {techDebts.length}
             </span>
           )}
@@ -269,7 +269,7 @@ export const LearningObservatoryView: React.FC = () => {
           onClick={() => setActiveTab("evolution")}
           className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition flex items-center gap-2 whitespace-nowrap border-b-2 ${
             activeTab === "evolution"
-              ? "border-brand-info text-brand-info bg-brand-info/5"
+              ? "border-brand-info text-brand-info bg-brand-info-bg"
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
@@ -372,7 +372,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <AlertOctagon className="w-4 h-4 text-brand-warning" />
                   <span>Phát hiện khái niệm chưa khai thác</span>
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-xs tabular-nums font-bold bg-brand-warning/10 text-brand-warning">
+                <span className="px-2 py-0.5 rounded-full text-xs tabular-nums font-bold bg-brand-warning-bg text-brand-warning">
                   {deadConcepts.length} Khái niệm
                 </span>
               </div>
@@ -387,12 +387,12 @@ export const LearningObservatoryView: React.FC = () => {
                     <div key={idx} className="p-3 bg-bg-surface rounded-lg border border-border-primary/80 space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-text-primary">{dc.concept}</span>
-                        <span className="text-2xs tabular-nums font-semibold text-brand-warning bg-brand-warning/10 px-2 py-0.5 rounded">
+                        <span className="text-2xs tabular-nums font-semibold text-brand-warning bg-brand-warning-bg px-2 py-0.5 rounded">
                           {dc.questionCount} Câu hỏi (Rủi ro: {dc.exposureRisk})
                         </span>
                       </div>
                       <p className="text-2xs text-text-muted">{dc.reason}</p>
-                      <div className="text-2xs tabular-nums text-brand-info bg-brand-info/5 p-2 rounded border border-brand-info/10">
+                      <div className="text-2xs tabular-nums text-brand-info bg-brand-info-bg p-2 rounded border border-brand-info/10">
                         {dc.explainability.formula}
                       </div>
                     </div>
@@ -408,7 +408,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <PieChart className="w-4 h-4 text-brand-info" />
                   <span>Cân bằng Bậc nhận thức Bloom</span>
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-xs tabular-nums font-bold bg-brand-info/10 text-brand-info">
+                <span className="px-2 py-0.5 rounded-full text-xs tabular-nums font-bold bg-brand-info-bg text-brand-info">
                   Điểm: {bloomHealth.healthScore}/100
                 </span>
               </div>
@@ -453,7 +453,7 @@ export const LearningObservatoryView: React.FC = () => {
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Phát hiện các khái niệm kiến thức có ít hơn 2 câu hỏi trong ngân hàng dữ liệu.</p>
               </div>
-              <span className="text-xs tabular-nums font-semibold px-3 py-1 bg-brand-warning/10 text-brand-warning rounded-full border border-brand-warning/20">
+              <span className="text-xs tabular-nums font-semibold px-3 py-1 bg-brand-warning-bg text-brand-warning rounded-full border border-brand-warning/20">
                 {deadConcepts.length} Khái niệm cần bổ sung
               </span>
             </div>
@@ -463,7 +463,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <div key={idx} className="p-4 bg-bg-surface rounded-xl border border-border-primary space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-sm font-bold text-text-primary">{dc.concept}</span>
-                    <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning/15 text-brand-warning font-semibold">
+                    <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning-bg text-brand-warning font-semibold">
                       Chapter {dc.chapterId}
                     </span>
                   </div>
@@ -494,7 +494,7 @@ export const LearningObservatoryView: React.FC = () => {
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Cảnh báo các khái niệm chiếm tỷ lệ câu hỏi vượt quá 20% dung lượng ngân hàng đề.</p>
               </div>
-              <span className="text-xs tabular-nums font-semibold px-3 py-1 bg-brand-info/10 text-brand-info rounded-full border border-brand-info/20">
+              <span className="text-xs tabular-nums font-semibold px-3 py-1 bg-brand-info-bg text-brand-info rounded-full border border-brand-info/20">
                 {overusedConcepts.length} Khái niệm thiên vị
               </span>
             </div>
@@ -510,7 +510,7 @@ export const LearningObservatoryView: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-text-primary">{oc.concept}</span>
-                        <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning/15 text-brand-warning font-semibold">
+                        <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning-bg text-brand-warning font-semibold">
                           {oc.representationRatioPct}% Tỷ trọng
                         </span>
                       </div>
@@ -543,7 +543,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <div key={idx} className="p-4 bg-bg-surface rounded-xl border border-border-primary space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">Câu hỏi #{report.questionId}: "{report.questionSnippet}"</span>
-                    <span className="text-xs tabular-nums font-semibold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded">
+                    <span className="text-xs tabular-nums font-semibold text-brand-success bg-brand-success-bg px-2.5 py-0.5 rounded">
                       Hiệu quả bẫy: {report.overallEfficiencyPct}%
                     </span>
                   </div>
@@ -552,9 +552,9 @@ export const LearningObservatoryView: React.FC = () => {
                     {report.optionsHealth.map((opt, oIdx) => (
                       <div key={oIdx} className={`p-2.5 rounded-lg border text-xs space-y-1 ${
                         opt.isCorrect 
-                          ? "bg-brand-success/5 border-brand-success/30" 
+                          ? "bg-brand-success-bg border-brand-success/30" 
                           : opt.status === "DEAD_DISTRACTOR"
-                          ? "bg-brand-warning/10 border-brand-warning/30"
+                          ? "bg-brand-warning-bg border-brand-warning/30"
                           : "bg-bg-card border-border-primary"
                       }`}>
                         <div className="flex items-center justify-between tabular-nums font-bold">
@@ -598,7 +598,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">{bp.blueprintType}</span>
                     <span className={`text-2xs tabular-nums font-bold px-2 py-0.5 rounded ${
-                      bp.status === "BALANCED" ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
+                      bp.status === "BALANCED" ? "bg-brand-success-bg text-brand-success" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       {bp.status} ({bp.alignmentScore}/100)
                     </span>
@@ -652,7 +652,7 @@ export const LearningObservatoryView: React.FC = () => {
                     </div>
 
                     <div className={`px-2.5 py-1 rounded tabular-nums font-bold text-2xs ${
-                      dd.driftType === "CALIBRATED" ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
+                      dd.driftType === "CALIBRATED" ? "bg-brand-success-bg text-brand-success" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       Độ lệch: {dd.driftDeltaPct}% ({dd.driftType})
                     </div>
@@ -685,7 +685,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">{rec.title}</span>
                     <span className={`text-2xs tabular-nums px-2 py-0.5 rounded font-bold ${
-                      rec.priority === "URGENT" ? "bg-red-500/10 text-red-500" : "bg-brand-warning/10 text-brand-warning"
+                      rec.priority === "URGENT" ? "bg-red-500/10 text-red-500" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       {rec.priority}
                     </span>
@@ -711,7 +711,7 @@ export const LearningObservatoryView: React.FC = () => {
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Danh sách các thiếu sót về dẫn nguồn giáo trình, lời giải chi tiết hoặc căn cứ học thuật.</p>
               </div>
-              <span className="text-xs tabular-nums font-bold px-3 py-1 bg-brand-warning/10 text-brand-warning rounded-full">
+              <span className="text-xs tabular-nums font-bold px-3 py-1 bg-brand-warning-bg text-brand-warning rounded-full">
                 {techDebts.length} Mục nợ cần khắc phục
               </span>
             </div>
@@ -722,7 +722,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-text-primary">Mục Nợ #{debt.id}: {debt.debtCategory}</span>
-                      <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning">
+                      <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning-bg text-brand-warning">
                         -{debt.debtPoints} điểm
                       </span>
                     </div>
@@ -753,7 +753,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <p className="text-xs text-text-muted mt-0.5">Kiểm định các Quality Gates bắt buộc trước khi phê duyệt bộ đề thi chính thức.</p>
               </div>
               <span className={`text-xs tabular-nums font-bold px-3 py-1 rounded-full ${
-                readiness.isReady ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
+                readiness.isReady ? "bg-brand-success-bg text-brand-success" : "bg-brand-warning-bg text-brand-warning"
               }`}>
                 {readiness.isReady ? "ĐÃ ĐẠT CHUẨN PHÁT HÀNH" : "CẦN HOÀN THIỆN THÊM"}
               </span>

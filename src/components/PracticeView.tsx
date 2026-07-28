@@ -884,7 +884,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       <button
                         onClick={() => handleRequestAIExplanation(activeQuestion.id)}
                         disabled={aiLoading[activeQuestion.id]}
-                        className="bg-brand-info/10 text-brand-info border border-brand-info/30 text-2xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-info/20 transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="bg-brand-info-bg text-brand-info border border-brand-info/30 text-2xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-info-bg transition duration-150 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>{aiLoading[activeQuestion.id] ? "Đang phân tích..." : "Nhờ gia sư AI phân tích sâu"}</span>

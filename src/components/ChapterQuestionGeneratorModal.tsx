@@ -117,7 +117,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
 
         {addedCount > 0 ? (
           <div className="space-y-4 py-4 text-center">
-            <div className="w-12 h-12 mx-auto rounded-full bg-brand-success/10 text-brand-success flex items-center justify-center">
+            <div className="w-12 h-12 mx-auto rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div className="space-y-1">
@@ -145,7 +145,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
         ) : (
           <>
             <div className="space-y-3 text-xs">
-              <div className="p-2.5 bg-brand-info/5 border border-brand-info/20 rounded-xl text-2xs text-text-muted">
+              <div className="p-2.5 bg-brand-info-bg border border-brand-info/20 rounded-xl text-2xs text-text-muted">
                 Câu hỏi tạo ra sẽ được gán trọn vào <strong className="text-brand-info">Chương {chapterId} - {chapterTitle}</strong>.
               </div>
 
@@ -176,7 +176,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
                       onClick={() => setGenCount(n)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                         genCount === n
-                          ? "bg-brand-info/10 text-brand-info border-brand-info/40"
+                          ? "bg-brand-info-bg text-brand-info border-brand-info/40"
                           : "bg-bg-surface text-text-muted border-border-primary hover:text-text-primary"
                       }`}
                     >

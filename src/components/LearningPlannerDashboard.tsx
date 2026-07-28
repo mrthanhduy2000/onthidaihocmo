@@ -168,7 +168,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
               <span>{tab.label}</span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span className={`px-1.5 py-0.2 text-2xs rounded-full tabular-nums font-bold ${
-                  isActive ? "bg-bg-card text-text-primary" : "bg-brand-warning/20 text-brand-warning"
+                  isActive ? "bg-bg-card text-text-primary" : "bg-brand-warning-bg text-brand-warning"
                 }`}>
                   {tab.count}
                 </span>
@@ -190,8 +190,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                 <span className="text-xs tabular-nums text-text-muted">Điểm dự báo</span>
                 <span className={`px-2 py-0.5 text-2xs tabular-nums rounded-full border ${
                   prediction.confidenceLevel === "Cao" 
-                    ? "bg-brand-success/10 text-brand-success border-brand-success/20" 
-                    : "bg-brand-warning/10 text-brand-warning border-brand-warning/20"
+                    ? "bg-brand-success-bg text-brand-success border-brand-success/20" 
+                    : "bg-brand-warning-bg text-brand-warning border-brand-warning/20"
                 }`}>
                   Độ tin cậy: {prediction.confidenceLevel}
                 </span>
@@ -247,10 +247,10 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                 <span className="text-xs tabular-nums text-text-muted">Nguy cơ trượt mục tiêu</span>
                 <span className={`px-2 py-0.5 text-2xs tabular-nums rounded-full ${
                   prediction.riskReport.level === "Thấp" 
-                    ? "bg-brand-success/10 text-brand-success" 
+                    ? "bg-brand-success-bg text-brand-success" 
                     : prediction.riskReport.level === "Trung bình"
-                    ? "bg-brand-warning/10 text-brand-warning"
-                    : "bg-brand-error/10 text-brand-error"
+                    ? "bg-brand-warning-bg text-brand-warning"
+                    : "bg-brand-error-bg text-brand-error"
                 }`}>
                   Mức nguy cơ: {prediction.riskReport.level}
                 </span>
@@ -432,7 +432,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-text-primary">{sub.name}</span>
                         {isCurrent && (
-                          <span className="px-2 py-0.2 text-2xs bg-brand-info/10 text-brand-info tabular-nums rounded-full">Đang chọn</span>
+                          <span className="px-2 py-0.2 text-2xs bg-brand-info-bg text-brand-info tabular-nums rounded-full">Đang chọn</span>
                         )}
                       </div>
                       <span className="text-xs tabular-nums text-brand-warning font-bold">
@@ -504,9 +504,9 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-text-primary">{act.title}</span>
                       <span className={`px-2 py-0.2 text-2xs tabular-nums rounded-full ${
-                        act.priority === "Rất cao" ? "bg-brand-success/10 text-brand-success"
+                        act.priority === "Rất cao" ? "bg-brand-success-bg text-brand-success"
                           : act.priority === "Thấp" ? "bg-bg-card text-text-muted"
-                          : "bg-brand-info/10 text-brand-info"
+                          : "bg-brand-info-bg text-brand-info"
                       }`}>
                         Ưu tiên {act.priority}
                       </span>
@@ -563,9 +563,9 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-text-primary">{item.conceptName}</span>
                       <span className={`px-2 py-0.2 text-2xs tabular-nums rounded-full ${
-                        item.priority === "Cao" ? "bg-brand-error/10 text-brand-error"
+                        item.priority === "Cao" ? "bg-brand-error-bg text-brand-error"
                           : item.priority === "Thấp" ? "bg-bg-card text-text-muted"
-                          : "bg-brand-warning/10 text-brand-warning"
+                          : "bg-brand-warning-bg text-brand-warning"
                       }`}>
                         {item.priority}
                       </span>
@@ -591,7 +591,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                       </button>
                       <button
                         onClick={() => handleResolveDebt(item.id)}
-                        className="px-3 py-1 bg-bg-card border border-border-primary text-brand-success text-xs rounded-lg hover:bg-brand-success/10 transition cursor-pointer"
+                        className="px-3 py-1 bg-bg-card border border-border-primary text-brand-success text-xs rounded-lg hover:bg-brand-success-bg transition cursor-pointer"
                       >
                         Xong
                       </button>
@@ -701,7 +701,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             {sessions.length > 0 && (
               <button
                 onClick={() => setShowClearHistoryConfirm(true)}
-                className="px-3 py-1.5 bg-brand-error/10 text-brand-error hover:bg-brand-error/20 text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-brand-error-bg text-brand-error hover:bg-brand-error-bg text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Xóa toàn bộ lịch sử</span>
@@ -742,7 +742,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     </button>
                     <button
                       onClick={() => setSessionToDelete(sess.id)}
-                      className="px-3 py-1.5 bg-bg-card border border-border-primary text-brand-error text-xs rounded-lg hover:bg-brand-error/10 transition cursor-pointer"
+                      className="px-3 py-1.5 bg-bg-card border border-border-primary text-brand-error text-xs rounded-lg hover:bg-brand-error-bg transition cursor-pointer"
                     >
                       Xóa
                     </button>

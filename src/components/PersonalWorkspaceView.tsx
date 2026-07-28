@@ -521,7 +521,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             className="w-full bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 hover:border-brand-info rounded-2xl p-5 flex items-center justify-between gap-4 transition cursor-pointer text-left group shadow-sm"
           >
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-info/15 text-brand-info flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
                 <Shuffle className="w-5 h-5" />
               </div>
               <div>
@@ -642,7 +642,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                       {res.type}
                     </span>
                     <span className={`px-2 py-0.2 text-2xs tabular-nums rounded-full font-bold ${
-                      res.status === "available" ? "bg-brand-success/10 text-brand-success" : "bg-brand-warning/10 text-brand-warning"
+                      res.status === "available" ? "bg-brand-success-bg text-brand-success" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       {res.status === "available" ? "Đã có ✓" : "Còn thiếu"}
                     </span>
@@ -736,7 +736,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                 <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-brand-info border-2 border-bg-card" />
                 <div className="flex items-center gap-2 text-xs tabular-nums">
                   <span className="text-text-muted">{item.date}</span>
-                  <span className="px-2 py-0.2 bg-brand-info/10 text-brand-info rounded-full font-bold">{item.type}</span>
+                  <span className="px-2 py-0.2 bg-brand-info-bg text-brand-info rounded-full font-bold">{item.type}</span>
                 </div>
                 <h4 className="text-xs font-semibold text-text-primary">{item.title}</h4>
                 <p className="text-xs text-text-muted">{item.detail}</p>
@@ -931,7 +931,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             {successCount > 0 ? (
               /* Trạng thái thành công */
               <div className="space-y-4 py-4 text-center">
-                <div className="w-12 h-12 mx-auto rounded-full bg-brand-success/10 text-brand-success flex items-center justify-center">
+                <div className="w-12 h-12 mx-auto rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div className="space-y-1">
@@ -1037,7 +1037,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                           onClick={() => setGenCount(n)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${
                             genCount === n
-                              ? "bg-brand-info/10 text-brand-info border-brand-info/40"
+                              ? "bg-brand-info-bg text-brand-info border-brand-info/40"
                               : "bg-bg-surface text-text-muted border-border-primary hover:text-text-primary"
                           }`}
                         >

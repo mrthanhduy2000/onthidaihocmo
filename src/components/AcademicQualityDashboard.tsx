@@ -166,7 +166,7 @@ export default function AcademicQualityDashboard() {
 
           {/* Missing Concepts Warning */}
           {healthOverview.missingConcepts.length > 0 && (
-            <div className="bg-brand-warning/10 border border-brand-warning/30 rounded-2xl p-5 space-y-2">
+            <div className="bg-brand-warning-bg border border-brand-warning/30 rounded-2xl p-5 space-y-2">
               <div className="text-xs font-bold text-brand-warning flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4" />
                 <span>Khái niệm chưa được khai thác câu hỏi ({healthOverview.missingConcepts.length}):</span>
@@ -194,9 +194,9 @@ export default function AcademicQualityDashboard() {
                   <div className="flex items-center justify-between font-semibold text-text-primary">
                     <span className="truncate max-w-[180px]">{cd.conceptName}</span>
                     <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
-                      cd.coverageStatus === "FULL" ? "bg-brand-success/20 text-brand-success" :
-                      cd.coverageStatus === "PARTIAL" ? "bg-brand-warning/20 text-brand-warning" :
-                      "bg-brand-error/20 text-brand-error"
+                      cd.coverageStatus === "FULL" ? "bg-brand-success-bg text-brand-success" :
+                      cd.coverageStatus === "PARTIAL" ? "bg-brand-warning-bg text-brand-warning" :
+                      "bg-brand-error-bg text-brand-error"
                     }`}>
                       {cd.coverageStatus}
                     </span>

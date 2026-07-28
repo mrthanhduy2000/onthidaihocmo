@@ -97,7 +97,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
       {/* 5 CORE QUESTIONS SIMPLIFIED BAR */}
       <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-info/10 text-brand-info flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center font-bold">
             <Calendar className="w-5 h-5" />
           </div>
           <div>
@@ -111,7 +111,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
         <div className="h-8 w-[1px] bg-border-primary/60 hidden sm:block" />
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-success/10 text-brand-success flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-brand-success-bg text-brand-success flex items-center justify-center font-bold">
             <Target className="w-5 h-5" />
           </div>
           <div>
@@ -125,7 +125,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
         <div className="h-8 w-[1px] bg-border-primary/60 hidden lg:block" />
 
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-warning/10 text-brand-warning flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-xl bg-brand-warning-bg text-brand-warning flex items-center justify-center font-bold">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
@@ -151,7 +151,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
         className="w-full bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 hover:border-brand-info rounded-2xl p-5 flex items-center justify-between gap-4 transition cursor-pointer text-left group"
       >
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-info/15 text-brand-info flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
             <Shuffle className="w-5 h-5" />
           </div>
           <div>

@@ -123,7 +123,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
 
       {wrongQuestionsList.length === 0 ? (
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-12 text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-brand-success/10 text-brand-success mx-auto flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-brand-success-bg text-brand-success mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-medium text-text-primary">Tuyệt vời! Bạn chưa có câu làm sai nào</h3>
@@ -177,9 +177,9 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
               // Priority calculation
               const priority = count >= 3 ? "Cao" : count === 2 ? "Trung bình" : "Thấp";
               const priorityColor = priority === "Cao" 
-                ? "bg-brand-warning/10 text-brand-warning border-brand-warning/20"
+                ? "bg-brand-warning-bg text-brand-warning border-brand-warning/20"
                 : priority === "Trung bình"
-                ? "bg-brand-info/10 text-brand-info border-brand-info/20"
+                ? "bg-brand-info-bg text-brand-info border-brand-info/20"
                 : "bg-bg-surface text-text-muted border-border-primary";
 
               return (
@@ -202,7 +202,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                           Chương {q.chapterId}: {ch?.title || ""}
                         </span>
                         {q.concept && (
-                          <span className="px-2 py-0.5 rounded bg-brand-info/10 text-brand-info font-medium border border-brand-info/20">
+                          <span className="px-2 py-0.5 rounded bg-brand-info-bg text-brand-info font-medium border border-brand-info/20">
                             Khái niệm: {q.concept}
                           </span>
                         )}
@@ -289,7 +289,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                     <div className="border-t border-border-primary/60 bg-bg-surface/40 p-5 space-y-5 rounded-b-2xl">
                       {/* Misconception Alert */}
                       {q.misconception && (
-                        <div className="p-3.5 bg-brand-warning/10 border border-brand-warning/20 rounded-xl flex items-start gap-3 text-xs">
+                        <div className="p-3.5 bg-brand-warning-bg border border-brand-warning/20 rounded-xl flex items-start gap-3 text-xs">
                           <AlertTriangle className="w-4 h-4 text-brand-warning shrink-0 mt-0.5" />
                           <div>
                             <span className="font-semibold text-brand-warning block mb-0.5">Hiểu sai cần tránh:</span>
@@ -309,7 +309,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                                 key={key}
                                 className={`p-3 rounded-xl border text-xs flex items-start gap-2 ${
                                   isCorrect 
-                                    ? "bg-brand-success/10 border-brand-success/30 text-text-primary font-medium" 
+                                    ? "bg-brand-success-bg border-brand-success/30 text-text-primary font-medium" 
                                     : "bg-bg-card border-border-primary/60 text-text-muted"
                                 }`}
                               >

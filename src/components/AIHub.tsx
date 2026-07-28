@@ -189,7 +189,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                     {/* Node Circle Pin */}
                     <div className={`absolute -left-[17px] top-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold tabular-nums ${
                       isUnlocked 
-                        ? "bg-brand-info/10 border-brand-info text-brand-info" 
+                        ? "bg-brand-info-bg border-brand-info text-brand-info" 
                         : "bg-bg-surface border-border-primary text-text-muted"
                     }`}>
                       {isUnlocked ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
@@ -207,7 +207,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                         <h4 className="text-sm font-semibold text-text-primary">{ch.title}</h4>
                       </div>
                       <span className={`text-2xs tabular-nums px-2 py-0.5 rounded border whitespace-nowrap shrink-0 ${
-                        isUnlocked ? "bg-brand-success/10 text-brand-success border-brand-success/20" : "bg-bg-surface text-text-muted border-border-primary"
+                        isUnlocked ? "bg-brand-success-bg text-brand-success border-brand-success/20" : "bg-bg-surface text-text-muted border-border-primary"
                       }`}>
                         {isUnlocked ? "Đã đủ điều kiện" : "Cần ôn chương trước"}
                       </span>
@@ -270,7 +270,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
       {activeTab === "chat" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl overflow-hidden flex flex-col h-[600px]">
           <div className="p-4 bg-bg-surface border-b border-border-primary flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-info/10 text-brand-info flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center font-bold">
               <Bot className="w-5 h-5" />
             </div>
             <div>
@@ -286,7 +286,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                 className={`flex gap-3 ${msg.sender === "user" ? "flex-row-reverse" : ""}`}
               >
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 ${
-                  msg.sender === "user" ? "bg-text-primary text-bg-app font-bold" : "bg-brand-info/10 text-brand-info font-bold"
+                  msg.sender === "user" ? "bg-text-primary text-bg-app font-bold" : "bg-brand-info-bg text-brand-info font-bold"
                 }`}>
                   {msg.sender === "user" ? "U" : <Bot className="w-4 h-4" />}
                 </div>

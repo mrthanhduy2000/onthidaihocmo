@@ -59,6 +59,102 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Nền theo độ mờ là gốc rễ 15 chỗ rớt tương phản, và một lỗi trong chính bộ đo của tôi
+
+Vòng này rà bốn màn **chưa từng được kiểm**: Tổng quan, Chương trình, Công cụ hệ thống, Dự báo
+và Kế hoạch.
+
+#### Trước hết: bộ đo của tôi đã sai, suýt báo nhầm lỗi
+
+Lần quét đầu, màn Tổng quan báo 12 chỗ rớt tương phản, nặng nhất là chữ logo chỉ **1,11:1**.
+Con số đó vô lý vì trên ảnh chụp chữ logo đọc rõ ràng. Truy ra thì lỗi nằm ở **bộ đọc màu của
+tôi**, không phải ở ứng dụng.
+
+Nền header trả về chuỗi `oklab(0.999994 0.0000455678 0.0000200868 / 0.9)`, tức **màu trắng**.
+Bộ đọc của tôi bốc ba số đầu bằng biểu thức chính quy, ra `[0.999994, 0.0000455678,
+0.0000200868]`, hiểu thành gần như **đen**. Mọi phép tính tương phản trên nền ấy đều sai.
+
+Đã viết lại bộ đọc màu: vẽ chuỗi màu lên canvas 1x1 rồi đọc ngược điểm ảnh, nhờ đó trình duyệt
+tự quy đổi mọi định dạng (`oklab`, `lab`, `color()`, `rgb`, hex) về RGB thật. Tự kiểm chứng lại
+bộ đọc trước khi tin nó:
+
+| Chuỗi vào | Ra |
+|---|---|
+| `rgb(17, 17, 17)` | `[17, 17, 17, 1]` |
+| `oklab(0.999994 ... / 0.9)` | `[255, 255, 255, 0.9]` |
+| `oklab(0.5 0 0)` | `[99, 99, 99, 1]` |
+
+**Bài học cho người sau**: dự án dùng Tailwind v4, và Tailwind v4 xuất màu ra `oklab` khi có
+pha trộn độ mờ. Bất kỳ đoạn đo màu nào bằng biểu thức chính quy đều sẽ sai âm thầm.
+
+#### Lỗi thật, sau khi đo đúng
+
+Ba chỗ lẻ trên màn Tổng quan, đều sát ngưỡng: `#6b6b75` trên `#e4ebfa` cho 4,41; `#2563eb`
+trên `#e9effd` cho 4,49; `#15803d` trên `#f1f1f4` cho 4,45. Nguyên nhân: lần hiệu chỉnh trước
+chỉ đo trên **nền trắng và nền cùng tông của chính màu đó**, bỏ sót các nền khác. Đã hạ mỗi
+màu 2 tới 3% độ sáng, tìm bằng vòng lặp cho tới khi đạt trên **mọi** nền thật đang dùng:
+
+| Token | Trước | Sau | Nền tệ nhất |
+|---|---|---|---|
+| `--text-muted` | `#6b6b75` | `#686871` | 4,41 lên 4,62 |
+| `--color-info` | `#2563eb` | `#2461e6` | 4,49 lên 4,64 |
+| `--color-success` | `#15803d` | `#157d3c` | 4,45 lên 4,60 |
+
+`--color-warning` và `--color-error` đã đạt trên mọi nền, không đụng tới.
+
+#### Gốc rễ có hệ thống: nền dựng bằng độ mờ
+
+Ba màn còn lại cho **15 chỗ rớt** với các nền lạ: `#dee7fb`, `#e0e6f5`, `#e6c7c9`, `#f9ece6`.
+Chúng đậm hơn hẳn token nền chuyên dụng (`#eff6ff`, `#fef2f2`), nên hạ màu chữ thêm nữa cũng
+không cứu được mà chỉ làm hỏng tính cách giao diện.
+
+Kiểm kê ra nguyên nhân: **134 chỗ dựng nền bằng độ mờ** (`bg-brand-info/10`,
+`bg-brand-error/20`...) so với 63 chỗ dùng token nền chuyên dụng. Nền dựng bằng độ mờ có ba
+tật:
+
+1. Màu cuối phụ thuộc vào thứ nằm **sau** nó, nên cùng một lớp cho ra màu khác nhau tuỳ chỗ
+   đặt. Đo được `#e6c7c9` trong khi 20% của `#b91c1c` trên nền trắng phải ra `#f1d1d1`, tức
+   thực tế có nhiều lớp mờ chồng lên nhau.
+2. Trải ra sáu mức độ mờ khác nhau (5, 10, 15, 20, 25, 55), không thành một ngôn ngữ bề mặt.
+3. Không chỉnh tập trung được, vì không phải là token.
+
+Đã đổi **129 chỗ** ở các mức 5/10/15/20 sang token nền chuyên dụng. **Giữ nguyên 5 chỗ** ở mức
+25/55/90 vì đó là các mức đậm nhạt của biểu đồ nhiệt lịch học và một hiệu ứng rê chuột, nơi độ
+mờ chính là thứ mang thông tin.
+
+#### Kiểm chứng
+
+Quét **mười màn** (sáu màn chính cộng bốn màn mới rà) ở cả 1280px lẫn 375px, dò năm loại lỗi:
+tràn ngang, chữ dưới 12px, chữ viết hoa, font đơn cách, chữ ngắn bị bóp, và tương phản dưới
+ngưỡng WCAG AA tính theo đúng chồng nền thật.
+
+**Kết quả: 15 chỗ rớt tương phản xuống 0. Cả mười màn sạch cả năm loại lỗi, ở cả hai bề rộng.**
+
+`npm run check` đạt toàn bộ 6 chặng.
+
+**Một cảnh báo giả đã loại**: sau khi sửa, màn Bàn học có lúc hiện rỗng chỉ còn dải thông báo.
+Tải lại trang thì render đủ 1485 ký tự. Đây là hiện tượng tạm thời của cơ chế nạp nóng Vite,
+không phải lỗi.
+
+#### Còn nợ
+
+- Màn Chương trình và Công cụ hệ thống còn chuỗi **tiếng Anh** trong giao diện tiếng Việt:
+  "FOUNDATION", "HIGH", "CH4", "PHASE NEXT — PRODUCT INT". Chuỗi cuối còn chứa **dấu gạch ngang
+  dài**, phạm quy ước viết mã của dự án.
+- Thang khoảng cách: đã đo và **cố ý không sửa**, xem mục ngay dưới.
+
+#### Đã đo rồi cố ý không sửa: thang khoảng cách
+
+Đo toàn bộ đệm, khe, lề đang hiển thị: **57 trên 112 giá trị đệm nằm ngoài thang
+4/8/12/16/24/32/48 của Khan Academy**, tức 51%. Khe 12 trên 30, lề 5 trên 17.
+
+Nhìn qua thì đây có vẻ là lỗi nhất quán. Nhưng các giá trị lệch là 2, 6, 10, 14, 20, tức đúng
+các nấc `.5` của Tailwind. Đây **không phải số ngẫu nhiên** mà là một thang 2px mạch lạc, chỉ
+mịn hơn thang Khan. Chênh 20 so với 24, hay 6 so với 8, mắt không phân biệt được, nên chuẩn hoá
+chúng là dọn dẹp thẩm mỹ thuần tuý. Trượt luật Đàm đặt ra. Không làm.
+
+---
+
 ### 28/07/2026 — Gỡ chữ viết hoa khỏi 154 chỗ, dấu vết bảng điều khiển cuối cùng
 
 **Đã làm**: gỡ `uppercase` khỏi toàn bộ 154 chỗ, kèm 78 chỗ `tracking-wider` đi cặp với nó.

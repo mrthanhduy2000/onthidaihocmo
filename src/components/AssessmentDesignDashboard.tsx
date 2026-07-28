@@ -143,7 +143,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
             <FileCheck className="w-4 h-4 text-brand-success" />
             <span>Báo cáo kiểm định đề thi</span>
             <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
-              reviewResult.passed ? "bg-brand-success/10 text-brand-success border border-brand-success/20" : "bg-brand-warning/10 text-brand-warning border border-brand-warning/20"
+              reviewResult.passed ? "bg-brand-success-bg text-brand-success border border-brand-success/20" : "bg-brand-warning-bg text-brand-warning border border-brand-warning/20"
             }`}>
               Điểm: {reviewResult.overallScore}/100 ({reviewResult.passed ? "ĐẠT" : "CẢNH BÁO"})
             </span>
@@ -163,7 +163,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                 key={key} 
                 title={check.details}
                 className={`p-2 rounded-lg border text-center transition ${
-                  isPass ? "bg-brand-success/5 border-brand-success/20 text-brand-success" : "bg-brand-warning/5 border-brand-warning/20 text-brand-warning"
+                  isPass ? "bg-brand-success-bg border-brand-success/20 text-brand-success" : "bg-brand-warning-bg border-brand-warning/20 text-brand-warning"
                 }`}
               >
                 <div className="text-2xs tabular-nums text-text-muted">{key}</div>
@@ -301,7 +301,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
                   <td className="p-3 tabular-nums text-text-muted">{q.bloom}</td>
                   <td className="p-3">
                     <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
-                      q.difficulty === "Dễ" ? "bg-brand-success/10 text-brand-success" : q.difficulty === "Trung bình" ? "bg-brand-warning/10 text-brand-warning" : "bg-brand-error/10 text-brand-error"
+                      q.difficulty === "Dễ" ? "bg-brand-success-bg text-brand-success" : q.difficulty === "Trung bình" ? "bg-brand-warning-bg text-brand-warning" : "bg-brand-error-bg text-brand-error"
                     }`}>
                       {q.difficulty}
                     </span>

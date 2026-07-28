@@ -18,9 +18,9 @@ export default function SessionRecoveryBanner({ session, onResume, onDiscard }: 
   const totalCount = session.questions?.length || 0;
 
   return (
-    <div className="bg-brand-info/10 border border-brand-info/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-sm">
+    <div className="bg-brand-info-bg border border-brand-info/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="p-2 bg-brand-info/20 text-brand-info rounded-xl shrink-0 mt-0.5">
+        <div className="p-2 bg-brand-info-bg text-brand-info rounded-xl shrink-0 mt-0.5">
           <AlertCircle className="w-5 h-5" />
         </div>
         <div className="space-y-1">

@@ -91,7 +91,7 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
                   <div className="flex items-center justify-between font-semibold text-text-primary">
                     <span>{risk.title}</span>
                     <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
-                      risk.level === "CRITICAL" ? "bg-brand-error/20 text-brand-error" : "bg-brand-warning/20 text-brand-warning"
+                      risk.level === "CRITICAL" ? "bg-brand-error-bg text-brand-error" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       {risk.level}
                     </span>

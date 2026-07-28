@@ -150,10 +150,10 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-brand-info/10 text-brand-info flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center font-bold">
                   <Brain className="w-5 h-5" />
                 </div>
-                <span className="text-2xs tabular-nums font-medium px-2 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20">
+                <span className="text-2xs tabular-nums font-medium px-2 py-0.5 rounded bg-brand-info-bg text-brand-info border border-brand-info/20">
                   Phổ biến nhất
                 </span>
               </div>
@@ -234,10 +234,10 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl bg-brand-warning/10 text-brand-warning flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-xl bg-brand-warning-bg text-brand-warning flex items-center justify-center font-bold">
                   <RotateCcw className="w-5 h-5" />
                 </div>
-                <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning/10 text-brand-warning font-semibold">
+                <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning-bg text-brand-warning font-semibold">
                   {incorrectCount} câu sai
                 </span>
               </div>
@@ -272,7 +272,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
       {/* Giải đề ngẫu nhiên tổng hợp: rút câu ngẫu nhiên trải rộng mọi chương, ưu tiên câu ít gặp gần đây */}
       <div className="bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-info/15 text-brand-info flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
             <Shuffle className="w-5 h-5" />
           </div>
           <div>
@@ -365,7 +365,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                       isEmpty
                         ? "bg-bg-surface/50 border-border-primary/50"
                         : isSuggested
-                        ? "bg-brand-info/5 border-brand-info/50 hover:border-brand-info"
+                        ? "bg-brand-info-bg border-brand-info/50 hover:border-brand-info"
                         : "bg-bg-surface hover:bg-bg-surface-hover border-border-primary/80 hover:border-brand-info/50"
                     }`}
                   >
@@ -379,17 +379,17 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-2xs tabular-nums text-brand-info font-semibold">Chương {ch.id}</span>
                           {isSuggested && !isEmpty && (
-                            <span className="text-2xs tabular-nums px-1.5 py-0.5 rounded bg-brand-info/10 text-brand-info border border-brand-info/20 flex items-center gap-1">
+                            <span className="text-2xs tabular-nums px-1.5 py-0.5 rounded bg-brand-info-bg text-brand-info border border-brand-info/20 flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" /> Nên làm tiếp
                             </span>
                           )}
                           {accuracy !== null && (
                             <span className={`text-2xs tabular-nums px-1.5 py-0.5 rounded border ${
                               accuracy >= 80
-                                ? "bg-brand-success/10 text-brand-success border-brand-success/20"
+                                ? "bg-brand-success-bg text-brand-success border-brand-success/20"
                                 : accuracy >= 50
-                                ? "bg-brand-warning/10 text-brand-warning border-brand-warning/20"
-                                : "bg-brand-error/10 text-brand-error border-brand-error/20"
+                                ? "bg-brand-warning-bg text-brand-warning border-brand-warning/20"
+                                : "bg-brand-error-bg text-brand-error border-brand-error/20"
                             }`}>
                               Đúng {accuracy}%
                             </span>
@@ -406,7 +406,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                         <button
                           onClick={() => setGenChapter({ id: ch.id, title: ch.title })}
                           title={`Dùng AI tạo câu hỏi cho Chương ${ch.id}`}
-                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-2xs font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info/10 transition cursor-pointer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-2xs font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info-bg transition cursor-pointer"
                         >
                           <Sparkles className="w-3 h-3" />
                           <span className="hidden sm:inline">{isEmpty ? "Tạo bằng AI" : "Tạo thêm"}</span>
@@ -468,7 +468,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 disabled={bookmarkCount === 0}
                 className={`w-full py-2.5 px-3 rounded-xl text-xs font-medium transition flex items-center justify-center gap-2 ${
                   bookmarkCount > 0 
-                    ? "bg-brand-success/10 border border-brand-success/30 text-brand-success hover:bg-brand-success/20" 
+                    ? "bg-brand-success-bg border border-brand-success/30 text-brand-success hover:bg-brand-success-bg" 
                     : "bg-bg-surface text-text-muted border border-border-primary cursor-not-allowed"
                 }`}
               >

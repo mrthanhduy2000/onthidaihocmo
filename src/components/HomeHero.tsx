@@ -64,13 +64,13 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
   return (
     <div className="relative overflow-hidden bg-bg-card border border-border-primary/80 rounded-2xl p-6 sm:p-8 shadow-sm transition hover:border-border-primary space-y-6">
       {/* Subtle background ambient highlight */}
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-info/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-info-bg rounded-full blur-3xl pointer-events-none" />
 
       {/* Break Recommendation Hero Banner if high fatigue */}
       {needsBreak ? (
         <div className="bg-brand-warning-bg/40 border border-brand-warning-border/40 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-brand-warning/10 text-brand-warning flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-brand-warning-bg text-brand-warning flex items-center justify-center shrink-0">
               <Coffee className="w-5 h-5" />
             </div>
             <div>
@@ -93,7 +93,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
         {/* Top Rhythm & Eyebrow Badges */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-info/10 text-brand-info border border-brand-info/20 text-xs font-semibold rounded-full">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-info-bg text-brand-info border border-brand-info/20 text-xs font-semibold rounded-full">
               <RhythmIcon className="w-3.5 h-3.5" />
               <span>{timeOfRhythm.label} • {timeOfRhythm.strategy}</span>
             </span>

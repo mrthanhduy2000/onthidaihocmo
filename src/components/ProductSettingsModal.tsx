@@ -254,7 +254,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </div>
 
               {importStatus && (
-                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
+                <div className="p-2.5 bg-brand-success-bg border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>{importStatus}</span>
                 </div>
@@ -277,7 +277,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </p>
 
               {resetDone ? (
-                <div className="p-2.5 bg-brand-success/10 border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
+                <div className="p-2.5 bg-brand-success-bg border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Đã làm mới tiến trình. Số liệu đã về 0.</span>
                 </div>
@@ -302,7 +302,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               ) : (
                 <button
                   onClick={() => setConfirmReset(true)}
-                  className="px-4 py-2 bg-bg-card border border-brand-warning/40 text-brand-warning font-semibold text-xs rounded-xl hover:bg-brand-warning/10 transition cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-bg-card border border-brand-warning/40 text-brand-warning font-semibold text-xs rounded-xl hover:bg-brand-warning-bg transition cursor-pointer flex items-center gap-1.5"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Làm mới tiến trình môn này</span>

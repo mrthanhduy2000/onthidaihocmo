@@ -33,9 +33,9 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 85) return "text-brand-success bg-brand-success/10 border-brand-success/30";
-    if (score >= 70) return "text-brand-warning bg-brand-warning/10 border-brand-warning/30";
-    return "text-brand-error bg-brand-error/10 border-brand-error/30";
+    if (score >= 85) return "text-brand-success bg-brand-success-bg border-brand-success/30";
+    if (score >= 70) return "text-brand-warning bg-brand-warning-bg border-brand-warning/30";
+    return "text-brand-error bg-brand-error-bg border-brand-error/30";
   };
 
   return (
@@ -43,7 +43,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
       {/* Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-primary/60 pb-3">
         <div className="flex items-center gap-2.5">
-          <span className="text-xs tabular-nums font-bold text-brand-info bg-brand-info/10 border border-brand-info/20 px-2.5 py-0.5 rounded-full">
+          <span className="text-xs tabular-nums font-bold text-brand-info bg-brand-info-bg border border-brand-info/20 px-2.5 py-0.5 rounded-full">
             #{question.id}
           </span>
 
@@ -59,12 +59,12 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
         <div className="flex items-center gap-3">
           {/* Quality Gate Badge */}
           {profile.gatePassed ? (
-            <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-success bg-brand-success/10 border border-brand-success/30 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-success bg-brand-success-bg border border-brand-success/30 px-2.5 py-1 rounded-full">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Gate PASSED</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-error bg-brand-error/10 border border-brand-error/30 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-error bg-brand-error-bg border border-brand-error/30 px-2.5 py-1 rounded-full">
               <XCircle className="w-3.5 h-3.5" />
               <span>Gate FAILED ({profile.gateViolations.length})</span>
             </span>
@@ -90,7 +90,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
             return (
               <div 
                 key={key} 
-                className={`p-2 rounded-lg border ${isCorrect ? "bg-brand-success/5 border-brand-success/40 text-brand-success font-medium" : "bg-bg-surface border-border-primary/60 text-text-muted"}`}
+                className={`p-2 rounded-lg border ${isCorrect ? "bg-brand-success-bg border-brand-success/40 text-brand-success font-medium" : "bg-bg-surface border-border-primary/60 text-text-muted"}`}
               >
                 <span className="tabular-nums font-bold mr-1.5">{key}:</span>
                 <span>{val}</span>
@@ -102,7 +102,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
 
       {/* Gate Violations Warning if any */}
       {profile.gateViolations.length > 0 && (
-        <div className="bg-brand-error/10 border border-brand-error/30 rounded-xl p-3 space-y-1 text-xs text-brand-error">
+        <div className="bg-brand-error-bg border border-brand-error/30 rounded-xl p-3 space-y-1 text-xs text-brand-error">
           <div className="font-bold flex items-center gap-1.5">
             <AlertTriangle className="w-4 h-4" />
             <span>Vi phạm tiêu chuẩn Quality Gate:</span>
@@ -120,9 +120,9 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
         <div className="flex items-center gap-2">
           {/* Human Review Status Pill */}
           <span className={`px-2.5 py-0.5 rounded-full text-2xs tabular-nums font-bold ${
-            profile.humanReview.status === "APPROVED" ? "bg-brand-success/20 text-brand-success border border-brand-success/30" :
-            profile.humanReview.status === "NEEDS_REVISION" ? "bg-brand-warning/20 text-brand-warning border border-brand-warning/30" :
-            profile.humanReview.status === "REJECTED" ? "bg-brand-error/20 text-brand-error border border-brand-error/30" :
+            profile.humanReview.status === "APPROVED" ? "bg-brand-success-bg text-brand-success border border-brand-success/30" :
+            profile.humanReview.status === "NEEDS_REVISION" ? "bg-brand-warning-bg text-brand-warning border border-brand-warning/30" :
+            profile.humanReview.status === "REJECTED" ? "bg-brand-error-bg text-brand-error border border-brand-error/30" :
             "bg-bg-surface text-text-muted border border-border-primary"
           }`}>
             Giảng viên: {profile.humanReview.status}

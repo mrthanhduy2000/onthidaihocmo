@@ -26,7 +26,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
       {/* Progress Story Highlights */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-success/10 text-brand-success flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-brand-success-bg text-brand-success flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-4 h-4" />
           </div>
           <div>
@@ -36,7 +36,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
         </div>
 
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-warning/10 text-brand-warning flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-brand-warning-bg text-brand-warning flex items-center justify-center shrink-0">
             <RefreshCw className="w-4 h-4" />
           </div>
           <div>
@@ -46,7 +46,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
         </div>
 
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-info/10 text-brand-info flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
             <Brain className="w-4 h-4" />
           </div>
           <div>

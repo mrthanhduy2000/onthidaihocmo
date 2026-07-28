@@ -32,13 +32,13 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
 
   const getStageBadgeColor = (stage: CurriculumStage) => {
     switch (stage) {
-      case "FOUNDATION": return "bg-brand-info/15 text-brand-info border-brand-info/30";
-      case "UNDERSTANDING": return "bg-brand-info/20 text-brand-info border-brand-info/40";
-      case "APPLICATION": return "bg-brand-warning/15 text-brand-warning border-brand-warning/30";
-      case "CONSOLIDATION": return "bg-brand-warning/20 text-brand-warning border-brand-warning/40";
-      case "EXAM_PREPARATION": return "bg-brand-error/15 text-brand-error border-brand-error/30";
-      case "FINAL_REVIEW": return "bg-brand-error/20 text-brand-error border-brand-error/40";
-      case "MASTERY": return "bg-brand-success/15 text-brand-success border-brand-success/30";
+      case "FOUNDATION": return "bg-brand-info-bg text-brand-info border-brand-info/30";
+      case "UNDERSTANDING": return "bg-brand-info-bg text-brand-info border-brand-info/40";
+      case "APPLICATION": return "bg-brand-warning-bg text-brand-warning border-brand-warning/30";
+      case "CONSOLIDATION": return "bg-brand-warning-bg text-brand-warning border-brand-warning/40";
+      case "EXAM_PREPARATION": return "bg-brand-error-bg text-brand-error border-brand-error/30";
+      case "FINAL_REVIEW": return "bg-brand-error-bg text-brand-error border-brand-error/40";
+      case "MASTERY": return "bg-brand-success-bg text-brand-success border-brand-success/30";
       default: return "bg-bg-surface text-text-muted border-border-primary";
     }
   };
@@ -145,14 +145,14 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
             <div 
               key={ch.chapterId} 
               className={`p-4 rounded-xl border transition space-y-2 ${
-                ch.status === "COMPLETED" ? "bg-brand-success/5 border-brand-success/40" :
-                ch.status === "WEAK" ? "bg-brand-warning/5 border-brand-warning/40" :
+                ch.status === "COMPLETED" ? "bg-brand-success-bg border-brand-success/40" :
+                ch.status === "WEAK" ? "bg-brand-warning-bg border-brand-warning/40" :
                 ch.status === "LOCKED" ? "bg-bg-surface/50 border-border-primary/40 opacity-60" :
                 "bg-bg-card border-border-primary/80 hover:border-brand-info/60"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-2xs tabular-nums font-bold text-brand-info bg-brand-info/10 px-2 py-0.5 rounded">
+                <span className="text-2xs tabular-nums font-bold text-brand-info bg-brand-info-bg px-2 py-0.5 rounded">
                   {ch.code}
                 </span>
 
@@ -258,7 +258,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
                   <div className="flex items-center justify-between font-semibold text-text-primary">
                     <span>{debt.concept}</span>
                     <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
-                      debt.priority === "HIGH" ? "bg-brand-error/20 text-brand-error" : "bg-brand-warning/20 text-brand-warning"
+                      debt.priority === "HIGH" ? "bg-brand-error-bg text-brand-error" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       {debt.priority}
                     </span>
