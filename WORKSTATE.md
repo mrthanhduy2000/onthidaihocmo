@@ -56,10 +56,15 @@ phương án, đúng chỗ Khan đặt phần ấy. Không mẩu nào mất đi,
 lúc dùng được: biết trước "câu này kiểm tra khái niệm X" là gợi ý không ai xin, còn biết sau
 khi chốt đáp án thì đó là câu trả lời cho "giờ đi ôn lại phần nào".
 
-**Còn nợ của lượt này**: ở khổ 375px, cụm tiêu đề phiên cộng đồng hồ đếm ngược chiếm **179px
-trước khi tới câu hỏi**, khoảng 22% chiều cao màn hình. Lại là chrome nằm trên câu hỏi, đúng
-loại vừa dọn, và đau nhất ở khổ nhỏ nhất. Chưa sửa vì chưa đo phần đầu trang bài tập của Khan
-ở khổ hẹp.
+Lượt 3 cùng ngày: đầu phiên gộp về **một hàng ở mọi khổ** kèm đường kẻ chân như Khan. Ở 375px,
+chrome trước khi tới câu hỏi từ **179px xuống 130px** (Khan: 73px). Thủ phạm là
+`flex-col sm:flex-row`: dưới 640px thì đồng hồ đếm ngược rơi hẳn xuống một hàng riêng, đúng ở
+khổ nhỏ nhất nơi mỗi điểm ảnh dọc đắt nhất. Phần còn chênh so với Khan là ba chức năng thật mà
+trang của họ không có: nút quay lại, phụ đề phiên, đồng hồ.
+
+**Việc tiếp theo đã nhìn thấy**: ở trạng thái ĐÃ NỘP, ngay dưới đầu phiên là thẻ "Tổng quan kết
+quả & Tiến trình củng cố" gồm **bốn ô số liệu đóng khung**. Đúng loại mà NGONNGUTHIETKE.md ghi
+là ngược với Khan: "nội dung là chủ thể, số liệu là chú thích của nội dung".
 
 ---
 

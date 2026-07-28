@@ -386,31 +386,49 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
   // phương án, đúng lối một cột nội dung của các sản phẩm đọc dài.
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6 animate-fade-in-up">
-      {/* Top Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
-        <div className="flex items-center gap-3.5">
-          <button 
+      {/*
+        ĐẦU PHIÊN: MỘT HÀNG DUY NHẤT Ở MỌI KHỔ, VÀ CÓ ĐƯỜNG KẺ NGĂN.
+
+        Đo ngày 29/07/2026, khổ 375px:
+
+        | | Khan Academy | Bản trước của dự án |
+        |---|---|---|
+        | Chrome trước khi tới câu hỏi | **73px** | **179px**, tức 22% chiều cao màn hình |
+        | Cách xếp | tiêu đề bài một dòng, rồi một dòng tiến độ gọn | tiêu đề xuống dòng, **đồng hồ rơi hẳn xuống một hàng riêng** |
+        | Ngăn cách với câu hỏi | có một đường kẻ | không có gì |
+
+        Thủ phạm là `flex-col sm:flex-row`: dưới mốc 640px thì cụm tiêu đề và đồng hồ xếp
+        chồng, nên đúng ở khổ nhỏ nhất, nơi mỗi điểm ảnh dọc đắt nhất, lại tốn thêm nguyên
+        một hàng cho một con số đếm giờ.
+
+        Nay một hàng ở mọi khổ: tiêu đề co lại được và cắt bằng dấu ba chấm nếu quá dài, đồng
+        hồ giữ nguyên bề rộng. Thêm đường kẻ chân đúng như Khan, để phần điều khiển phiên tách
+        hẳn khỏi phần nội dung học.
+      */}
+      <div className="flex items-center justify-between gap-3 pb-4 border-b border-border-primary">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
             onClick={onNavigateHome}
-            className="p-2 border border-border-primary bg-bg-card rounded-lg hover:bg-bg-surface text-text-secondary transition duration-150 cursor-pointer"
+            className="p-2 border border-border-primary bg-bg-card rounded-lg hover:bg-bg-surface text-text-secondary transition duration-150 cursor-pointer shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div>
-            <h1 className="text-md font-medium font-display text-text-primary">
+          <div className="min-w-0">
+            <h1 className="text-md font-medium font-display text-text-primary truncate">
               {exam.examType === "ai-smart" ? "Đề thi thử thông minh" :
                exam.examType === "adaptive" ? "Học tập thích ứng" :
                exam.examType === "chapter" ? `Luyện tập Chương ${exam.chapterId}` :
                exam.examType === "topic" ? `Luyện tập Chủ đề ${exam.topicId}` :
                exam.examType === "random" ? "Luyện tập Ngẫu nhiên" : "Luyện tập theo Thứ tự gốc"}
             </h1>
-            <p className="text-2xs text-text-muted mt-0.5 font-sans">
+            <p className="text-2xs text-text-muted mt-0.5 font-sans truncate">
               {exam.isSubmitted ? "Xem lại đáp án và phân tích lý luận từ hệ thống AI" : `Phiên ôn luyện: ${examQuestions.length} câu hỏi lý thuyết`}
             </p>
           </div>
         </div>
 
         {/* Timer / Progress Widgets */}
-        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+        <div className="flex items-center gap-2.5 shrink-0">
           {!exam.isSubmitted && (
             <div className="bg-bg-surface border border-border-primary/80 px-3 py-1.5 rounded-lg flex items-center gap-2">
               <Clock className="w-4 h-4 text-text-muted" />

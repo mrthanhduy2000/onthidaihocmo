@@ -59,6 +59,35 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 3), đầu phiên gộp về một hàng, trả lại 49px cho khổ điện thoại
+
+**Số đo ở khổ 375px**
+
+| | Khan Academy | Trước | Sau |
+|---|---|---|---|
+| Chrome trước khi tới câu hỏi | **73px** | **179px**, tức 22% chiều cao màn hình | **130px** |
+| Cách xếp đầu trang | tiêu đề bài một dòng, rồi một dòng tiến độ gọn | tiêu đề xuống dòng, **đồng hồ rơi hẳn xuống hàng riêng** | một hàng: tiêu đề bên trái, đồng hồ bên phải |
+| Ngăn cách với câu hỏi | có một đường kẻ | không có gì | có đường kẻ |
+
+**Thủ phạm**: `flex-col sm:flex-row`. Dưới mốc 640px thì cụm tiêu đề và đồng hồ xếp chồng, nên
+đúng ở khổ nhỏ nhất, nơi mỗi điểm ảnh dọc đắt nhất, lại tốn nguyên một hàng cho một con số đếm
+giờ. Nay một hàng ở mọi khổ, tiêu đề co lại được và cắt bằng dấu ba chấm, đồng hồ giữ bề rộng.
+
+Vẫn còn nhiều hơn Khan (130 so với 73) nhưng phần chênh là ba chức năng thật mà trang của họ
+không có: nút quay lại, dòng phụ đề phiên, và đồng hồ đếm ngược. Không gỡ chức năng nào.
+
+**Kiểm chứng**: `npm run check` 197/197. Đo trên bản chạy thật ở 375px và 1280px: 0 tràn ngang,
+0 phần tử vượt khung, tiêu đề không bị cắt ở cả hai khổ. Nhân tiện xem được cả trạng thái SAU
+KHI NỘP (đề tự nộp khi hết giờ): đầu phiên đổi sang chip "Kết quả: 2 / 10 câu đúng" vẫn nằm gọn
+trên một hàng.
+
+**Việc tiếp theo đã nhìn thấy**: ngay dưới đầu phiên ở trạng thái đã nộp là thẻ "Tổng quan kết
+quả & Tiến trình củng cố" gồm **bốn ô số liệu đóng khung**. Đây đúng loại mà NGONNGUTHIETKE.md
+ghi là ngược với Khan: "nội dung là chủ thể, số liệu là chú thích của nội dung". Khan viết tiến
+độ thành câu chứ không đóng mỗi con số vào một cái thẻ.
+
+---
+
 ### 29/07/2026 (lượt 2), dời siêu dữ liệu xuống khối "Nội dung liên quan"
 
 **Đổi gì**: gỡ toàn bộ cụm ba mẩu siêu dữ liệu (chủ đề, khái niệm đang kiểm tra, yêu cầu trước)
