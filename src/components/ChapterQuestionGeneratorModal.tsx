@@ -136,7 +136,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
               </button>
               <button
                 onClick={onClose}
-                className="px-4 py-1.5 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 cursor-pointer"
+                className="px-4 py-1.5 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot cursor-pointer"
               >
                 Xong
               </button>
@@ -216,7 +216,7 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
               <button
                 disabled={isBusy}
                 onClick={handleGenerate}
-                className="px-4 py-1.5 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-1.5 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5"
               >
                 {isBusy ? (
                   "Đang tạo..."

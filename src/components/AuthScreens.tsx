@@ -129,7 +129,7 @@ export function LoginScreen() {
         <button
           type="submit"
           disabled={status === "sending" || !email.trim()}
-          className="w-full py-2.5 bg-text-primary text-bg-card font-semibold text-sm rounded-xl hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2"
+          className="w-full py-2.5 bg-nut-chinh text-white font-semibold text-sm rounded-xl hover:bg-nut-chinh-re-chuot disabled:opacity-50 transition flex items-center justify-center gap-2"
         >
           {status === "sending" ? (
             <>

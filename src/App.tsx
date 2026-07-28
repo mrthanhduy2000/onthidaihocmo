@@ -108,32 +108,56 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg-app text-text-primary font-sans transition-colors duration-200">
       
-      {/* Top compact system-like high-density header - hidden during Deep Focus Mode */}
+      {/*
+        THANH ĐIỀU HƯỚNG NỀN SẪM, đổi ngày 28/07/2026 theo bản đặc tả Khan Academy.
+        Ẩn trong chế độ tập trung sâu.
+
+        Trước đó thanh này nền trắng mờ, cao 48px, tách khỏi nội dung bằng một đường kẻ 1px.
+        Cả thanh lẫn trang đều trắng nên mắt phải tự dò ranh giới giữa vùng công cụ và vùng
+        bài học. Nay là một dải sẫm cao 60px chạy hết bề ngang: ranh giới ấy được đọc xong
+        trong một lần liếc, và vùng nội dung sáng nằm gọn trong khung sẫm giúp mắt neo lại
+        đúng chỗ cần đọc suốt buổi.
+
+        Đo trên Khan: nền `#0b2149`, cao 62px. Ở đây dùng sắc navy khác trong cùng họ (xem
+        `--nav-nen` trong index.css), không lấy đúng mã màu của họ.
+
+        HAI CÁI BẪY ĐÃ VẤP KHI VIẾT ĐÚNG CHÚ THÍCH NÀY, ghi lại cho người sau:
+
+        1. Chú thích phải nằm NGOÀI biểu thức điều kiện bọc thẻ header. Đặt một khối chú thích
+           JSX ngay bên trong dấu ngoặc của một biểu thức logic là lỗi cú pháp, vì chỗ đó chỉ
+           nhận đúng MỘT biểu thức.
+        2. Trong RUỘT chú thích JSX, tuyệt đối không viết cặp dấu sao kèm gạch chéo, vì chính
+           nó đóng khối chú thích ngay giữa chừng và phần còn lại rơi ra ngoài thành mã.
+      */}
       {!isDeepFocus && (
-        <header className="sticky top-0 z-40 bg-bg-card/90 backdrop-blur-md border-b border-border-primary/80">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
-            
+        <header className="sticky top-0 z-40 bg-nav-nen">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
+
             {/* Logo & Subject Selector */}
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 cursor-pointer" onClick={handleNavigateHome}>
-                <div className="w-7 h-7 rounded-lg bg-text-primary flex items-center justify-center text-bg-card shadow-sm transition hover:opacity-95">
+                <div className="w-7 h-7 rounded-md bg-nav-chu/95 flex items-center justify-center text-nav-nen transition hover:bg-nav-chu">
                   <GraduationCap className="w-4 h-4" />
                 </div>
                 {/* `whitespace-nowrap`: không có nó, khi hộp bị bó hẹp chữ này rơi xuống thành
                     một CỘT DỌC 5 dòng cao hơn cả thanh header. Hiện từ mốc `xl` trở lên vì
                     dưới mức đó chỗ trống phải nhường cho thanh điều hướng, xem chú thích ở
                     thanh đó. Biểu tượng mũ tốt nghiệp vẫn đứng đó làm lối về trang chủ. */}
-                <span className="font-display font-medium text-xs tracking-wider text-text-primary hidden xl:inline-block whitespace-nowrap">
+                {/* Hiện từ mốc `2xl` chứ không phải `xl`: sau khi thanh điều hướng đổi sang
+                    chữ 14px và ô cao 36px cho khớp Khan, ba cụm trong thanh đòi 1192px trên
+                    khung 1200px, chỉ dư 8px, nên nhãn "Tìm nhanh" bị gãy đôi. Chữ logo là thứ
+                    ít giá trị nhất trong ba cụm nên nó nhường chỗ. */}
+                <span className="font-display font-semibold text-sm tracking-wide text-nav-chu hidden 2xl:inline-block whitespace-nowrap">
                   ÔN THI ĐẠI HỌC MỞ
                 </span>
               </div>
-              
-              <div className="h-4 w-[1px] bg-border-primary/80" />
-              
+
+              <div className="h-5 w-[1px] bg-nav-vach" />
+
               <select
                 value={activeSubjectId}
                 onChange={(e) => handleSubjectChange(e.target.value)}
-                className="bg-bg-surface hover:bg-bg-surface-hover text-text-primary border border-border-primary rounded-md px-2 py-1 text-2xs font-sans font-medium cursor-pointer transition focus:outline-none focus:ring-1 focus:ring-text-primary/10 max-w-[130px] sm:max-w-[220px] truncate"
+                className="bg-nav-re-chuot hover:bg-nav-dang-mo text-nav-chu border border-nav-vach rounded-md px-2.5 py-1.5 text-xs font-sans font-medium cursor-pointer transition focus:outline-none max-w-[130px] sm:max-w-[220px] truncate"
               >
                 {dbService.getSubjects().map((sub) => (
                   <option key={sub.id} value={sub.id}>
@@ -169,13 +193,13 @@ export default function App() {
                   key={view}
                   onClick={() => { setActiveExam(null); setCurrentView(view as any); }}
                   aria-current={dangMo ? "page" : undefined}
-                  className={`px-3 py-1.5 text-xs rounded-md transition flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`px-3 h-9 text-sm rounded-md transition flex items-center gap-2 whitespace-nowrap ${
                     dangMo
-                      ? "bg-bg-surface text-text-primary border border-border-primary font-semibold"
-                      : "text-text-muted hover:text-text-primary hover:bg-bg-surface/50 font-medium border border-transparent"
+                      ? "bg-nav-dang-mo text-nav-chu font-bold"
+                      : "text-nav-chu-mo hover:text-nav-chu hover:bg-nav-re-chuot font-medium"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                   <span>{nhan}</span>
                 </button>
               );
@@ -193,35 +217,38 @@ export default function App() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="px-2 py-1 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-2xs tabular-nums text-text-muted hover:text-text-primary flex items-center gap-1 transition cursor-pointer"
+              className="px-2.5 h-9 bg-nav-re-chuot border border-nav-vach hover:bg-nav-dang-mo rounded-md text-xs tabular-nums text-nav-chu-mo hover:text-nav-chu flex items-center gap-1.5 transition cursor-pointer"
               title="Mở tìm nhanh (Ctrl + K)"
             >
-              <Command className="w-3 h-3 text-brand-info" />
-              <span className="hidden lg:inline">Tìm nhanh</span>
+              <Command className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline whitespace-nowrap">Tìm nhanh</span>
             </button>
 
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-1.5 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-md text-text-muted hover:text-text-primary transition cursor-pointer"
+              className="w-9 h-9 bg-nav-re-chuot border border-nav-vach hover:bg-nav-dang-mo rounded-md text-nav-chu-mo hover:text-nav-chu transition cursor-pointer flex items-center justify-center"
               title="Cài đặt, giao diện và sao lưu"
             >
-              <SettingsIcon className="w-3.5 h-3.5" />
+              <SettingsIcon className="w-4 h-4" />
             </button>
 
             {(stats.studyStreak > 0 || stats.totalSolved > 0) && (
               <>
-                <div className="h-4 w-[1px] bg-border-primary/85 hidden lg:block" />
-                <div className="hidden lg:flex items-center gap-3 text-xs">
+                <div className="h-5 w-[1px] bg-nav-vach hidden lg:block" />
+                {/* Trên nền sẫm, màu ngữ nghĩa cam và xanh lá của chế độ sáng không còn đủ
+                    tương phản, nên hai chỉ số này dùng luôn màu chữ của thanh. Ý nghĩa vẫn nằm
+                    ở biểu tượng ngọn lửa và huy hiệu. */}
+                <div className="hidden lg:flex items-center gap-3 text-xs text-nav-chu">
                   {stats.studyStreak > 0 && (
-                    <div className="flex items-center gap-1 text-brand-warning font-medium" title="Chuỗi ngày học tập">
-                      <Flame className="w-3.5 h-3.5 fill-current" />
-                      <span>{stats.studyStreak} ngày</span>
+                    <div className="flex items-center gap-1.5 font-semibold" title="Chuỗi ngày học tập">
+                      <Flame className="w-4 h-4 fill-current" />
+                      <span className="tabular-nums">{stats.studyStreak} ngày</span>
                     </div>
                   )}
                   {stats.totalSolved > 0 && (
-                    <div className="flex items-center gap-1 text-brand-success font-medium" title="Tỷ lệ làm đúng">
-                      <Award className="w-3.5 h-3.5" />
-                      <span>{Math.round((stats.totalCorrect / stats.totalSolved) * 100)}%</span>
+                    <div className="flex items-center gap-1.5 font-semibold" title="Tỷ lệ làm đúng">
+                      <Award className="w-4 h-4" />
+                      <span className="tabular-nums">{Math.round((stats.totalCorrect / stats.totalSolved) * 100)}%</span>
                     </div>
                   )}
                 </div>

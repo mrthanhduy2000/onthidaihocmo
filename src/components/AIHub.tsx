@@ -286,14 +286,14 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                 className={`flex gap-3 ${msg.sender === "user" ? "flex-row-reverse" : ""}`}
               >
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 ${
-                  msg.sender === "user" ? "bg-text-primary text-bg-app font-bold" : "bg-brand-info-bg text-brand-info font-bold"
+                  msg.sender === "user" ? "bg-nut-chinh text-white font-bold" : "bg-brand-info-bg text-brand-info font-bold"
                 }`}>
                   {msg.sender === "user" ? "U" : <Bot className="w-4 h-4" />}
                 </div>
 
                 <div className={`max-w-[80%] rounded-2xl p-4 text-xs leading-relaxed ${
                   msg.sender === "user" 
-                    ? "bg-text-primary text-bg-card font-medium" 
+                    ? "bg-nut-chinh text-white font-medium" 
                     : "bg-bg-surface border border-border-primary text-text-primary"
                 }`}>
                   <SimpleMarkdown content={msg.text} />
@@ -347,7 +347,7 @@ export default function AIHub({ onStartExam }: AIHubProps) {
               <button
                 onClick={handleSendMessage}
                 disabled={loadingChat || !chatInput.trim()}
-                className="px-4 py-2 bg-text-primary text-bg-card hover:opacity-95 rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer flex items-center gap-1"
+                className="px-4 py-2 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer flex items-center gap-1"
               >
                 <Send className="w-3.5 h-3.5" />
               </button>

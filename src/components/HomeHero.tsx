@@ -164,7 +164,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-border-primary/60">
           <button
             onClick={() => onExecutePrimary(action.primaryAction)}
-            className="w-full sm:w-auto px-7 py-3.5 bg-text-primary hover:opacity-95 text-bg-card font-semibold text-sm rounded-xl shadow-sm transition flex items-center justify-center gap-2 group cursor-pointer"
+            className="w-full sm:w-auto px-7 py-3.5 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-semibold text-sm rounded-xl shadow-sm transition flex items-center justify-center gap-2 group cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current transition group-hover:scale-110" />
             <span>{action.primaryAction.label}</span>

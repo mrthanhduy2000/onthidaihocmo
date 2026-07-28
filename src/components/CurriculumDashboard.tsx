@@ -157,7 +157,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
 
           <button
             onClick={handleStartRecommendedPractice}
-            className="px-5 py-2.5 bg-text-primary hover:opacity-95 text-bg-card font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+            className="px-5 py-2.5 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto cursor-pointer"
           >
             <Play className="w-4 h-4 fill-current" />
             {/* `.toUpperCase()` trên giá trị liệt kê của engine in ra "CHAPTER" / "MOCK" /

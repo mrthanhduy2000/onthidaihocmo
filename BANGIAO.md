@@ -59,6 +59,79 @@ sao, và còn nợ gì.
 
 ---
 
+### 28/07/2026 — Khan Academy là BẢN ĐẶC TẢ: thanh navy, nút xanh, thẻ phẳng
+
+Chỉ thị của Đàm đổi mức: các đợt trước là "học triết lý thiết kế", đợt này coi Khan Academy là
+**bản đặc tả** và phải đạt "cảm giác sử dụng gần giống", kèm báo cáo phần trăm khoảng cách.
+
+**Về con số phần trăm.** Tự phán "Typography 72%" là bịa. Nên định nghĩa nó thành đại lượng đo
+được: **số thuộc tính thiết kế khớp Khan trong tổng số thuộc tính đã đo**, mỗi thuộc tính có
+ngưỡng khớp rõ ràng, và liệt kê đủ từng thuộc tính. Bảng đầy đủ nằm trong WORKSTATE.md.
+
+#### Ba thay đổi cấu trúc lớn
+
+**1. Thanh điều hướng nền sẫm.** Đây là chữ ký dễ nhận ra nhất của Khan: một dải navy rất sẫm
+chạy hết bề ngang, chữ trắng, đo được `#0b2149` cao 62px. Trước đó thanh của dự án nền trắng
+mờ cao 48px, tách khỏi nội dung bằng đường kẻ 1px, nên cả thanh lẫn trang đều trắng và mắt
+phải tự dò ranh giới giữa vùng công cụ với vùng bài học. Nay là dải sẫm cao 60px. Dùng sắc
+navy khác (`#16294d`), **không lấy đúng mã màu của họ**.
+
+**2. Nút hành động chính đổi từ ĐEN sang XANH.** 33 nút chính trong 13 file đều đang dùng nền
+đen. Đen tuyền là ngôn ngữ của công cụ lập trình, đọc ra "Vercel, Linear" chứ không ra "chỗ để
+học"; Khan dùng xanh dương cho mọi hành động chính. Chọn `#1a5fd0`, chữ trắng đạt **5,85:1**
+(Khan là 5,02:1). Ba trạng thái đổi bằng MÀU chứ không bằng `opacity` như bản cũ: `opacity` làm
+chữ trắng nhạt theo nên tương phản tụt, còn đổi màu nền thì tương phản còn tăng lên 6,66 và
+7,50.
+
+**3. Đặc tả nút ép về một mối.** Đo Khan: nút chính cao 40px, bo 4px, đệm ngang 16px, chữ 16px
+đậm 700, **một đặc tả duy nhất**. Dự án có 33 nút mỗi chỗ một hình dạng (cao 32, bo 8, chữ 13
+đậm 600), nên người học không học được hình dạng "đây là việc chính" một lần rồi nhận ra ở mọi
+nơi. Ép tại tầng CSS qua chính lớp màu nền mà cả 33 chỗ dùng chung, thay vì sửa 33 chỗ và chắc
+chắn bỏ sót. Chữ đặt 15px thay vì 16px vì 16px làm nút trong bảng dày nở quá khổ.
+
+#### Bốn thay đổi ở tầng token
+
+| Token | Trước | Sau | Căn cứ |
+|---|---|---|---|
+| Bo góc thẻ (`xl`, `2xl`) | 12px, 16px | **8px** | Khan chỉ có 4/8/viên thuốc |
+| Bo góc điều khiển (`md`) | 6px | **4px** | như trên |
+| Khung tối đa | 1280px | **1200px** | đo trên Khan |
+| Đổ bóng thẻ | vệt 4% | **không có** | thẻ Khan hoàn toàn không đổ bóng |
+
+**Tự sửa một kết luận cũ của chính mình**: vòng trước tôi đo thang bo góc rồi kết luận KHÔNG
+sửa vì "bo góc là tín hiệu yếu". Kết luận đó đúng khi mục tiêu là giảm tải nhận thức. Chỉ thị
+lần này đổi mục tiêu sang độ giống, mà bo góc lại là thứ mắt nhận ra nhanh nhất khi đặt hai
+giao diện cạnh nhau. Nên lần này sửa.
+
+Đo lại trên trang: bo góc chỉ còn **8px (37 lần), 4px (9 lần), viên thuốc (2 lần)**, đúng ba
+mốc của Khan. Số kiểu đổ bóng trên trang: **0**.
+
+#### Hai cái bẫy cú pháp đã vấp, ghi cho người sau
+
+1. Đặt khối chú thích JSX ngay **bên trong** dấu ngoặc của biểu thức `&&` là lỗi cú pháp, vì
+   chỗ đó chỉ nhận đúng một biểu thức. Tôi đã vấp hai lần trong dự án này.
+2. Trong **ruột** chú thích JSX, viết cặp dấu sao kèm gạch chéo sẽ đóng khối chú thích ngay
+   giữa chừng và phần còn lại rơi ra ngoài thành mã. Đây là lỗi tôi tự tạo khi định ghi lại
+   bài học của lỗi thứ nhất.
+
+#### Kiểm chứng
+
+Sáu màn chính ở 1280px: không tràn, không chữ dưới 12px, không viết hoa, không đơn cách, không
+chữ bị bóp, **không chỗ nào rớt tương phản**. Khổ 375px kiểm bằng ảnh chụp: thanh navy, nút
+xanh, thanh đáy sáu mục đều bình thường. `npm run check` đạt toàn bộ 6 chặng.
+
+#### Còn khác Khan những gì
+
+- **Không có khung điều hướng bên trái.** Khan có một cột trái 405px liệt kê chương của khoá
+  học. Dự án này điều hướng ngang. **Cố ý không thêm**, vì đó là đổi kiến trúc thông tin, mà
+  Đàm cấm.
+- **H1 vẫn 24px** so với 36px của Khan, và còn dùng bốn độ đậm (400/500/600/700) so với hai của
+  Khan. Đây là việc lớn tiếp theo.
+- **Nền trang** vẫn `#fafafc` xám, Khan là trắng.
+- **Cột đọc câu hỏi** rộng 896px, Khan là 592px.
+
+---
+
 ### 28/07/2026 — Giá trị liệt kê của engine đang rò ra màn hình bằng tiếng Anh
 
 Vòng này rà một hạng mục chưa ai đụng: **chuỗi tiếng Anh trong một sản phẩm thuần tiếng Việt.**

@@ -341,7 +341,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
             {/* Main Primary Action Button (Continue Learning) */}
             <button
               onClick={() => onStartExam("adaptive")}
-              className="px-5 py-2.5 bg-text-primary text-bg-card hover:opacity-90 font-semibold text-xs rounded-xl transition cursor-pointer flex items-center gap-2 shadow-sm"
+              className="px-5 py-2.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-semibold text-xs rounded-xl transition cursor-pointer flex items-center gap-2 shadow-sm"
             >
               <Play className="w-4 h-4 fill-current" />
               <span>Bắt đầu ôn</span>
@@ -422,7 +422,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               onClick={() => setActiveTab(tab.key as any)}
               className={`px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
                 isActive 
-                  ? "bg-text-primary text-bg-card shadow-sm font-semibold" 
+                  ? "bg-nut-chinh text-white shadow-sm font-semibold" 
                   : "bg-bg-surface hover:bg-bg-card text-text-muted hover:text-text-primary border border-border-primary/60"
               }`}
             >
@@ -465,7 +465,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               <p className="text-xs text-text-muted">Tập trung vào phần dễ quên và các câu từng làm sai.</p>
               <button
                 onClick={() => onStartExam("adaptive")}
-                className="w-full py-2 bg-text-primary text-bg-card hover:opacity-90 text-xs rounded-lg transition font-semibold cursor-pointer"
+                className="w-full py-2 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-xs rounded-lg transition font-semibold cursor-pointer"
               >
                 Ôn ngay
               </button>
@@ -554,7 +554,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   onClick={() => setSelectedConceptForGraph(nut.concept)}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                     nutDangChon?.concept === nut.concept
-                      ? "bg-text-primary text-bg-card font-semibold"
+                      ? "bg-nut-chinh text-white font-semibold"
                       : "bg-bg-surface text-text-muted hover:text-text-primary border border-border-primary/60"
                   }`}
                 >
@@ -620,7 +620,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
               <button
                 onClick={() => setShowImportModal(true)}
-                className="px-3.5 py-2 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 transition cursor-pointer flex items-center gap-1.5"
+                className="px-3.5 py-2 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition cursor-pointer flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 <span>Thêm tài nguyên</span>
@@ -952,7 +952,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                   </button>
                   <button
                     onClick={closeImportModal}
-                    className="px-4 py-1.5 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 cursor-pointer"
+                    className="px-4 py-1.5 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot cursor-pointer"
                   >
                     Xong
                   </button>
@@ -1088,7 +1088,7 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
                     <button
                       disabled={isImporting || !newResTitle.trim()}
                       onClick={handleGenerateFromMaterial}
-                      className="px-4 py-1.5 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-1.5 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot disabled:opacity-50 transition cursor-pointer flex items-center gap-1.5"
                     >
                       {isImporting ? (
                         "Đang tạo..."

@@ -48,7 +48,7 @@ export default function SessionRecoveryBanner({ session, onResume, onDiscard }: 
         </button>
         <button
           onClick={() => onResume(session)}
-          className="px-4 py-1.5 bg-text-primary text-bg-card hover:opacity-90 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+          className="px-4 py-1.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-xs"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
           <span>Tiếp tục làm bài</span>

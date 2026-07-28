@@ -40,6 +40,48 @@
   --do-noi-mat: 0 1px 2px rgba(17, 17, 17, 0.04);
   --do-noi-lop: 0 4px 12px rgba(17, 17, 17, 0.12), 0 1px 3px rgba(17, 17, 17, 0.06);
 
+  /*
+    THANH ĐIỀU HƯỚNG NỀN SẪM.
+
+    Đây là chữ ký cấu trúc dễ nhận ra nhất của Khan Academy: một dải điều hướng nền xanh navy
+    rất sẫm chạy hết bề ngang, chữ trắng, cao khoảng 60px. Đo được trên trang khoá học của họ:
+    nền `#0b2149`, cao 62px.
+
+    **KHÔNG lấy đúng mã màu của họ.** Dùng một sắc navy khác trong cùng họ, hơi ngả tím hơn và
+    sáng hơn một bậc, để sản phẩm này vẫn là bản sắc riêng.
+
+    Vì sao dải sẫm này phục vụ việc học chứ không chỉ để giống: nó tách hẳn vùng ĐIỀU HƯỚNG ra
+    khỏi vùng NỘI DUNG bằng một ranh giới sáng tối, thay vì bằng một đường kẻ 1px mờ như trước.
+    Khi cả thanh trên lẫn nền trang đều trắng, mắt phải tự dò xem đâu là chỗ hết công cụ và bắt
+    đầu bài học. Một dải sẫm làm việc đó xong trong một lần liếc, và trong suốt buổi học dài thì
+    vùng nội dung sáng nằm gọn trong khung sẫm cũng giúp mắt neo lại đúng chỗ cần đọc.
+  */
+  /*
+    NÚT HÀNH ĐỘNG CHÍNH: XANH DƯƠNG HỌC THUẬT, KHÔNG PHẢI ĐEN.
+
+    Trước 28/07/2026 mọi nút chính trong sản phẩm đều nền ĐEN (`bg-text-primary`), 33 chỗ. Đen
+    tuyền là ngôn ngữ của công cụ lập trình, không phải của nền tảng giáo dục: nó đọc ra
+    "Vercel, Linear" chứ không ra "chỗ để học". Khan Academy dùng xanh dương cho mọi hành động
+    chính, đo được `#1865F2`.
+
+    Ở đây dùng một sắc xanh khác, sâu hơn một bậc, để không lấy đúng mã màu của họ. Kiểm tương
+    phản với chữ trắng: 5,85:1, vượt ngưỡng 4,5:1 của WCAG AA (Khan là 5,02:1).
+
+    Ba trạng thái, mỗi bậc tối thêm 8%, để cảm giác bấm có phản hồi thật thay vì chỉ mờ đi bằng
+    `opacity` như bản cũ. `opacity` làm chữ trắng cũng nhạt theo nên tương phản tụt; đổi màu nền
+    thì tương phản còn TĂNG (6,66 và 7,50).
+  */
+  --nut-chinh: #1a5fd0;
+  --nut-chinh-re-chuot: #1857bf;
+  --nut-chinh-bam: #1650af;
+
+  --nav-nen: #16294d;
+  --nav-chu: #ffffff;
+  --nav-chu-mo: rgba(255, 255, 255, 0.74);
+  --nav-re-chuot: rgba(255, 255, 255, 0.10);
+  --nav-dang-mo: rgba(255, 255, 255, 0.16);
+  --nav-vach: rgba(255, 255, 255, 0.18);
+
   /* Color System Light Mode - Crisp, Academic & Premium (Apple/Notion/Arc style) */
   --bg-app: #fafafc;       /* Clean warm off-white */
   --bg-card: #ffffff;      /* Pure white card */
@@ -121,6 +163,22 @@
   */
   --do-noi-mat: 0 1px 2px rgba(0, 0, 0, 0.4);
   --do-noi-lop: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.4);
+
+  /*
+    Chế độ tối: dải điều hướng phải SẪM HƠN nền trang, ngược với chế độ sáng nơi nó sẫm hơn
+    nền. Giữ đúng vai trò phân tách vùng công cụ khỏi vùng nội dung.
+  */
+  /* Chế độ tối: nút chính sáng hơn một bậc cho nổi trên nền sẫm. */
+  --nut-chinh: #3b7ae4;
+  --nut-chinh-re-chuot: #4d86e8;
+  --nut-chinh-bam: #2f6ed6;
+
+  --nav-nen: #0d1526;
+  --nav-chu: #f5f5f7;
+  --nav-chu-mo: rgba(245, 245, 247, 0.66);
+  --nav-re-chuot: rgba(255, 255, 255, 0.08);
+  --nav-dang-mo: rgba(255, 255, 255, 0.14);
+  --nav-vach: rgba(255, 255, 255, 0.14);
 
   /* Color System Dark Mode - Expensive, high-density professional terminal workspace style */
   --bg-app: #0c0c0e;       /* Deep rich dark backdrop */
@@ -246,11 +304,20 @@
     Đây chính là mô hình của Khan Academy: thẻ nội dung tách nhau bằng viền 1px chứ không bằng
     bóng, còn bóng để dành cho thứ đè lên trang.
   */
+  /*
+    Cập nhật 28/07/2026 theo bản đặc tả Khan Academy: thẻ nội dung của họ **hoàn toàn không đổ
+    bóng**, đo đi đo lại trên cả trang khoá học lẫn trang làm bài đều ra `none`. Chúng tách khỏi
+    nhau và khỏi nền bằng đúng một đường viền 1px. Bóng chỉ dành cho thứ thật sự đè lên trang.
+
+    Vòng trước tôi đã rút chín mức xuống hai, nhưng bậc "phẳng" vẫn còn một vệt 4%. Nay bỏ nốt
+    vệt đó: thẻ phẳng tuyệt đối, và nhờ vậy khi một hộp thoại mở ra thì bóng của nó là bóng DUY
+    NHẤT trên màn hình, không lẫn vào đâu được.
+  */
   --shadow-3xs: none;
   --shadow-2xs: none;
-  --shadow-xs: var(--do-noi-mat);
-  --shadow-sm: var(--do-noi-mat);
-  --shadow-md: var(--do-noi-mat);
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
   --shadow-lg: var(--do-noi-lop);
   --shadow-xl: var(--do-noi-lop);
   --shadow-2xl: var(--do-noi-lop);
@@ -261,6 +328,51 @@
     thống nhất thay vì mỗi chỗ một tốc độ.
   */
   --default-transition-duration: 90ms;
+
+  /* Nút hành động chính */
+  --color-nut-chinh: var(--nut-chinh);
+  --color-nut-chinh-re-chuot: var(--nut-chinh-re-chuot);
+  --color-nut-chinh-bam: var(--nut-chinh-bam);
+
+  /* Màu thanh điều hướng, để dùng được bằng lớp tiện ích của Tailwind */
+  --color-nav-nen: var(--nav-nen);
+  --color-nav-chu: var(--nav-chu);
+  --color-nav-chu-mo: var(--nav-chu-mo);
+  --color-nav-re-chuot: var(--nav-re-chuot);
+  --color-nav-dang-mo: var(--nav-dang-mo);
+  --color-nav-vach: var(--nav-vach);
+
+  /*
+    THANG BO GÓC RÚT VỀ ĐÚNG BA MỐC NHƯ KHAN ACADEMY.
+
+    Đo trên trang khoá học và trang làm bài của họ: chỉ tồn tại **4px** cho các nút và ô điều
+    khiển nhỏ, **8px** cho thẻ nội dung và vùng bấm của hàng đáp án, và bo tròn hoàn toàn cho
+    các chip hình viên thuốc. Không có mốc nào khác.
+
+    Dự án này đang dùng sáu mốc: `xl` (12px) 239 lần, `lg` (8px) 167, `2xl` (16px) 100,
+    `full` 99, `md` (6px) 26, `sm` (4px) 4.
+
+    Ở vòng trước tôi đã đo và kết luận KHÔNG sửa bo góc vì nó là tín hiệu yếu. Kết luận đó đúng
+    khi mục tiêu là "giảm tải nhận thức". Nhưng chỉ thị lần này đổi mục tiêu: Khan Academy là
+    **bản đặc tả**, và bo góc là một trong những thứ mắt nhận ra nhanh nhất khi đặt hai giao
+    diện cạnh nhau. Nên lần này sửa, và sửa tại tầng token để không phải đi lại 635 chỗ.
+
+    Ánh xạ: mọi mốc dành cho thẻ gom về 8px, mọi mốc dành cho điều khiển nhỏ gom về 4px.
+  */
+  --radius-sm: 4px;
+  --radius-md: 4px;    /* 6px -> 4px, dành cho nút và ô điều khiển nhỏ */
+  --radius-lg: 8px;
+  --radius-xl: 8px;    /* 12px -> 8px, dành cho thẻ nội dung */
+  --radius-2xl: 8px;   /* 16px -> 8px, thẻ lớn cũng cùng một mốc */
+  --radius-3xl: 12px;  /* 24px -> 12px, chỉ còn dùng cho vài khối rất lớn */
+
+  /*
+    KHUNG NỘI DUNG TỐI ĐA.
+
+    Đo trên Khan Academy: khung của họ rộng **1200px**. Dự án này đang dùng `max-w-7xl`, tức
+    1280px của Tailwind, nên ở màn rộng dòng chữ trải dài hơn Khan 80px. Kéo về 1200px.
+  */
+  --container-7xl: 75rem;
 }
 
 /* Base Aesthetics for premium Workspace style */
@@ -367,7 +479,32 @@ button, select, input, textarea, a, [role="button"], [role="tab"], [role="option
 
 .workspace-card:hover {
   @apply border-border-primary;
-  box-shadow: var(--do-noi-mat);
+}
+
+/*
+  NÚT HÀNH ĐỘNG CHÍNH: ÉP VỀ ĐÚNG MỘT ĐẶC TẢ.
+
+  Đo trên Khan Academy: nút chính cao **40px**, bo góc **4px**, đệm ngang **16px**, chữ
+  **16px đậm 700**. Một đặc tả duy nhất cho toàn sản phẩm, không có biến thể.
+
+  Sản phẩm này có 33 nút chính rải trong 13 file, mỗi chỗ tự khai một bộ lớp riêng: cao 32px,
+  bo 8px, chữ 13px đậm 600, đệm dọc lung tung. Nghĩa là cùng một hành động "đây là việc chính
+  cần bấm" lại có nhiều hình dạng khác nhau tuỳ màn, nên người học không học được hình dạng đó
+  một lần rồi nhận ra ở mọi nơi.
+
+  Thay vì đi sửa 33 chỗ và chắc chắn bỏ sót, ép tại đây một lần qua chính lớp màu nền mà cả 33
+  chỗ đều đã dùng chung. Chữ đặt 15px thay vì 16px của Khan: 16px làm các nút trong bảng dày nở
+  quá khổ, còn 15px giữ đúng bậc `text-sm` sẵn có của thang chữ.
+
+  `:where()` giữ độ ưu tiên bằng 0 nên mọi lớp tiện ích viết tại chỗ vẫn thắng được nếu một nút
+  nào đó thật sự cần khác.
+*/
+:where(button, a).bg-nut-chinh {
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  padding-inline: 16px;
+  font-size: 0.9375rem;
+  font-weight: 700;
 }
 
 /* Subtle input overrides */

@@ -78,7 +78,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setActiveTab("health")}
           className={`px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
             activeTab === "health" 
-              ? "bg-text-primary text-bg-card shadow-sm" 
+              ? "bg-nut-chinh text-white shadow-sm" 
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
@@ -90,7 +90,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setActiveTab("matrix")}
           className={`px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
             activeTab === "matrix" 
-              ? "bg-text-primary text-bg-card shadow-sm" 
+              ? "bg-nut-chinh text-white shadow-sm" 
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
@@ -102,7 +102,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setActiveTab("audits")}
           className={`px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
             activeTab === "audits" 
-              ? "bg-text-primary text-bg-card shadow-sm" 
+              ? "bg-nut-chinh text-white shadow-sm" 
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
@@ -114,7 +114,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setActiveTab("exam_report")}
           className={`px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
             activeTab === "exam_report" 
-              ? "bg-text-primary text-bg-card shadow-sm" 
+              ? "bg-nut-chinh text-white shadow-sm" 
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
@@ -126,7 +126,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setActiveTab("review_queue")}
           className={`px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 cursor-pointer ${
             activeTab === "review_queue" 
-              ? "bg-text-primary text-bg-card shadow-sm" 
+              ? "bg-nut-chinh text-white shadow-sm" 
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
@@ -295,7 +295,7 @@ export default function AcademicQualityDashboard() {
 
               <button
                 onClick={handleGenerateExamReport}
-                className="px-6 py-3 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-95 transition inline-flex items-center gap-2 cursor-pointer"
+                className="px-6 py-3 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition inline-flex items-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Tạo báo cáo kiểm định đề thi ngay</span>
@@ -322,7 +322,7 @@ export default function AcademicQualityDashboard() {
                   onClick={() => setReviewFilter(status)}
                   className={`px-3 py-1 rounded-lg text-xs tabular-nums font-medium transition cursor-pointer ${
                     reviewFilter === status 
-                      ? "bg-text-primary text-bg-card" 
+                      ? "bg-nut-chinh text-white" 
                       : "bg-bg-surface text-text-muted border border-border-primary"
                   }`}
                 >

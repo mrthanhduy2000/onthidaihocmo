@@ -160,7 +160,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
               onClick={() => setActiveTab(tab.key as any)}
               className={`px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
                 isActive 
-                  ? "bg-text-primary text-bg-card shadow-sm font-semibold" 
+                  ? "bg-nut-chinh text-white shadow-sm font-semibold" 
                   : "bg-bg-surface hover:bg-bg-card text-text-muted hover:text-text-primary border border-border-primary/60"
               }`}
             >
@@ -521,7 +521,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     </div>
                     <button
                       onClick={() => onStartExam(act.type === "wrong_notebook" ? "incorrect" : "adaptive")}
-                      className="px-3 py-1.5 bg-text-primary text-bg-card hover:opacity-90 font-semibold text-xs rounded-lg transition cursor-pointer"
+                      className="px-3 py-1.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-semibold text-xs rounded-lg transition cursor-pointer"
                     >
                       Bắt đầu
                     </button>

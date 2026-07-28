@@ -430,7 +430,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
           {!exam.isSubmitted && (
             <button 
               onClick={() => setShowSubmitModal(true)}
-              className="bg-text-primary hover:opacity-90 text-bg-card font-medium text-xs px-4 py-1.5 rounded-lg transition duration-150 flex items-center gap-1.5 cursor-pointer"
+              className="bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-medium text-xs px-4 py-1.5 rounded-lg transition duration-150 flex items-center gap-1.5 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Nộp bài</span>
@@ -472,7 +472,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   timeSpentRef.current = 0;
                   setShowSubmitModal(false);
                 }}
-                className="px-5 py-2.5 bg-text-primary text-bg-card hover:opacity-90 font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Làm thêm 10 câu mới</span>
@@ -772,7 +772,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         */}
                         <span className={`w-6 h-6 rounded shrink-0 flex items-center justify-center font-semibold text-xs ${
                           isSelected && !reveal
-                            ? "bg-text-primary text-bg-card border-2 border-text-primary"
+                            ? "bg-nut-chinh text-white border-2 border-text-primary"
                             : reveal && isCorrect
                             ? "bg-brand-success text-white border-2 border-brand-success"
                             : reveal && isWrongSelection
@@ -961,7 +961,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   <button 
                     disabled={aiLoading[activeQuestion.id]}
                     onClick={() => handleRequestAIExplanation(activeQuestion.id, explanationLevel)}
-                    className="shrink-0 bg-text-primary hover:opacity-95 text-bg-card disabled:opacity-50 text-2xs font-medium px-4 py-2 rounded-lg transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                    className="shrink-0 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white disabled:opacity-50 text-2xs font-medium px-4 py-2 rounded-lg transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{aiExplanations[activeQuestion.id] ? "Làm mới bài giảng AI" : "Yêu cầu Trực tuyến"}</span>
@@ -1342,7 +1342,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 let btnStyle = "border-border-primary bg-bg-card text-text-secondary hover:bg-bg-surface cursor-pointer";
                 
                 if (isActive) {
-                  btnStyle = "bg-text-primary text-bg-card font-semibold border-transparent shadow-xs cursor-pointer";
+                  btnStyle = "bg-nut-chinh text-white font-semibold border-transparent shadow-xs cursor-pointer";
                 } else if (exam.isSubmitted) {
                   const userAnswer = exam.answers[q.id];
                   const isAnswerCorrect = userAnswer === q.correctAnswer;
@@ -1449,7 +1449,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 <button 
                   type="button"
                   onClick={submitExam}
-                  className="w-full sm:w-auto bg-text-primary hover:opacity-95 text-bg-card text-2xs font-medium px-4 py-1.5 rounded-lg transition duration-150 cursor-pointer"
+                  className="w-full sm:w-auto bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white text-2xs font-medium px-4 py-1.5 rounded-lg transition duration-150 cursor-pointer"
                 >
                   Nộp & xem kết quả
                 </button>

@@ -48,7 +48,7 @@ export default function QuickActionFAB({ onNavigate, onOpenUpload, onOpenSearch 
     {
       label: "Hỏi trợ lý AI",
       icon: Brain,
-      color: "bg-text-primary text-bg-card",
+      color: "bg-nut-chinh text-white",
       onClick: () => { onNavigate("ai_coach"); setIsOpen(false); }
     },
     {
@@ -96,7 +96,7 @@ export default function QuickActionFAB({ onNavigate, onOpenUpload, onOpenSearch 
         className={`w-12 h-12 rounded-full flex items-center justify-center shadow-xl transition-all cursor-pointer ${
           isOpen 
             ? "bg-bg-card border-2 border-border-primary text-text-primary rotate-45" 
-            : "bg-text-primary text-bg-card hover:scale-110"
+            : "bg-nut-chinh text-white hover:scale-110"
         }`}
         title="Mở thao tác nhanh"
       >

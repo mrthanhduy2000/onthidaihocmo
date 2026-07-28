@@ -62,7 +62,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
         {/* Action Button */}
         <button
           onClick={handleLaunchExam}
-          className="px-6 py-3 bg-text-primary hover:opacity-95 text-bg-card font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 shrink-0"
+          className="px-6 py-3 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 shrink-0"
         >
           <Play className="w-4 h-4 fill-current" />
           <span>Khởi tạo & Bắt đầu bài thi ({spec.questionCount} câu)</span>

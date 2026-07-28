@@ -240,7 +240,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleExportJSON}
-                  className="px-4 py-2 bg-text-primary text-bg-card font-semibold text-xs rounded-xl hover:opacity-90 transition cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition cursor-pointer flex items-center gap-1.5"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Xuất tệp sao lưu</span>
@@ -317,7 +317,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
         <div className="px-6 py-3.5 border-t border-border-primary bg-bg-surface flex items-center justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-text-primary text-bg-card text-xs font-semibold rounded-xl hover:opacity-90 transition cursor-pointer"
+            className="px-4 py-2 bg-nut-chinh text-white text-xs font-semibold rounded-xl hover:bg-nut-chinh-re-chuot transition cursor-pointer"
           >
             Đóng cài đặt
           </button>
