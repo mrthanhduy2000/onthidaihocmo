@@ -15,11 +15,11 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Tái thiết kế giao diện theo triết lý Khan Academy, **5 vòng ĐÃ XONG** |
+| **Current Milestone** | Tái thiết kế giao diện theo triết lý Khan Academy, **7 vòng ĐÃ XONG** |
 | **Current Phase** | Dừng ở ranh giới commit sạch |
 | **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Năm commit của đợt này đã push |
+| **Bản đang chạy thật** | Bảy commit của đợt này đã push |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
@@ -48,20 +48,37 @@ Chi tiết đầy đủ nằm trong [BANGIAO.md](BANGIAO.md), năm mục ngày 2
 | Chỗ dùng chữ viết hoa | **154** | **0**, trừ tên thương hiệu |
 | Tương phản phương án không chọn sau khi lộ đáp án | **1,85:1**, rớt AA | **5,27:1**, đạt AA |
 | Bốn phương án là bốn thẻ đóng lúc đang suy nghĩ | có | danh sách chữ ngăn bằng đường kẻ |
+| Chỗ dựng nền bằng độ mờ (tương phản không đoán trước được) | **134** | **5**, chỉ còn biểu đồ nhiệt |
+| Chỗ rớt tương phản trên 10 màn | **15** | **0** |
+| Chuỗi tiếng Anh lọt ra giao diện | nhiều, gồm 2 tiêu đề màn cỡ 30px | **0** |
+| Số màn đã rà | 6 | **10** |
 
-**Đã cố ý KHÔNG làm**, để người sau khỏi làm lại: hạ `--text-primary` từ `#111111` (18,88:1)
-xuống cho dịu mắt, và đổi thang bo góc từ sáu mốc về ba mốc. Cả hai đều thuần thẩm mỹ, đúng
-loại mà luật Đàm đặt ra bắt phải loại. Lý do chi tiết trong BANGIAO.md.
+**Đã cố ý KHÔNG làm**, để người sau khỏi làm lại. Cả ba đều thuần thẩm mỹ, đúng loại mà luật
+Đàm đặt ra bắt phải loại. Lý do chi tiết trong BANGIAO.md:
+
+1. Hạ `--text-primary` từ `#111111` (18,88:1) xuống cho dịu mắt.
+2. Đổi thang bo góc từ sáu mốc về ba mốc.
+3. Chuẩn hoá thang khoảng cách. Đo được **57 trên 112 giá trị đệm nằm ngoài** thang
+   4/8/12/16/24/32/48 của Khan, tức 51%, nghe như lỗi lớn. Nhưng các giá trị lệch là 2, 6, 10,
+   14, 20, đúng các nấc `.5` của Tailwind, tức một thang 2px mạch lạc chứ không phải số ngẫu
+   nhiên. Chênh 20 so với 24 mắt không phân biệt được.
 
 **Còn nợ của đợt này**:
 
-- Thẻ câu hỏi ở màn luyện câu còn **bảy phần tử chrome nằm phía trên câu hỏi** (chip số câu,
-  chip mức khó, mã ID, công tắc gia sư, nhãn gia sư, nút đánh dấu, nút báo lỗi). Khan Academy
-  không có gì phía trên câu hỏi. Nên rà xem cái nào thật sự cần đứng đó.
+- Thẻ câu hỏi ở màn luyện câu còn **139px chrome nằm phía trên câu hỏi**, gồm 11 phần tử trong
+  đó 3 bấm được (chip số câu, chip mức khó, mã ID, công tắc gia sư, nhãn gia sư, nút đánh dấu,
+  nút báo lỗi, dòng chủ đề, dòng khái niệm). Khan Academy không có gì phía trên câu hỏi. Đã đo
+  nhưng **chưa sửa**: phần lớn các phần tử này là tính năng thật, mà Đàm cấm gỡ tính năng, nên
+  việc còn lại là giảm sức nặng thị giác chứ không phải bỏ bớt. Cần bàn với Đàm trước.
 - `--font-mono` và JetBrains Mono vẫn còn trong `index.css` dù không còn chỗ nào dùng. Gỡ khỏi
   dòng `@import` sẽ tiết kiệm một lượt tải font.
-- Chưa rà các màn phụ: Tổng quan, Cài đặt, khung chương trình, kiểm tra học liệu, nhật ký hệ
-  thống. Năm vòng vừa rồi mới quét sáu màn chính.
+- Chưa rà màn **Cài đặt và sao lưu** (là hộp thoại, không vào được bằng cách quét màn thường).
+
+**Công cụ để lại cho người sau**: cách đo màu đúng trong dự án này là **vẽ chuỗi màu lên canvas
+1x1 rồi đọc ngược điểm ảnh**, vì Tailwind v4 xuất màu ra `oklab` khi có pha trộn độ mờ và mọi
+cách đọc bằng biểu thức chính quy đều sai âm thầm. Còn muốn dò chuỗi tiếng Anh thì phải duyệt
+**nút văn bản** bằng `TreeWalker` chứ không duyệt phần tử, và phải bắt cả mẫu `[A-Z]{4,}` nằm
+lẫn giữa câu tiếng Việt. Chi tiết trong BANGIAO.md.
 
 ---
 
