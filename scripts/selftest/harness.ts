@@ -2969,6 +2969,44 @@ check("Banner phiên dở dang không in mã chế độ ra màn hình",
     ? "mã chế độ được tra sang tên tiếng Việt, mã lạ thì bỏ hẳn mệnh đề thay vì in ra"
     : "còn render thẳng session.examType vào câu tiếng Việt");
 
+// AG4. Màn Kế hoạch không được dự báo điểm khi chưa có một câu trả lời nào.
+//
+// Đo trên hồ sơ trắng ngày 29/07/2026, màn Kế hoạch hiện ra cho người CHƯA TRẢ LỜI CÂU NÀO:
+//
+//   "Dự báo kết quả 5.0 ± 0.5"        chip viền xanh, góc trên phải, chỗ nổi nhất màn
+//   "Tạm tính khoảng 5.0 ± 0.5 điểm."  20px đậm
+//   "Độ tin cậy còn thấp"              ngay bên dưới, tức màn hình TỰ CÃI chính nó
+//   "Mức sẵn sàng 59%"                 kèm thanh xanh lá đầy 59%
+//   "+0.3 điểm" x3                     ba lời hứa tăng điểm tô xanh lá
+//
+// Con số 5.0 là điểm nền của bộ dự báo khi chưa có bằng chứng. In nó ở cỡ lớn nhất màn rồi ghi
+// chú bên dưới rằng nó chưa đáng tin là cách trình bày tự mâu thuẫn: mắt đọc số trước, đọc lời
+// cảnh báo sau.
+//
+// Cờ `chuaDuTinCay` có sẵn từ lượt 9 KHÔNG đủ: nó là `confidenceLevel !== "Cao"`, vẫn đúng cho
+// người đã làm 200 câu. Cần một ranh giới cứng `totalSolved === 0`.
+const nguonKeHoach = docNguon("src/components/LearningPlannerDashboard.tsx");
+check("Màn Kế hoạch không dự báo điểm khi chưa có bài làm",
+  /const chuaCoBaiLam\s*=\s*dbService\.getStatistics\(\)\.totalSolved === 0/.test(nguonKeHoach)
+    && /chuaCoBaiLam[\s\S]{0,600}?Chưa dự báo được/.test(nguonKeHoach)
+    && /chuaCoBaiLam[\s\S]{0,200}?Chưa đủ dữ liệu/.test(nguonKeHoach),
+  "chưa có bài làm thì thay điểm dự báo bằng lời mời bắt đầu, và chip đầu trang ghi Chưa đủ dữ liệu");
+
+// AG5. Chương CHƯA HỌC không được trình bày như một khoản nợ có màu cảnh báo.
+//
+// Tab "Phần cần sửa" trộn hai loại khác hẳn nhau vào một danh sách: `unlearned_chapter` (chưa
+// làm bài nào của chương) và `wrong_attempt` (đã trả lời sai). Bản cũ cho cả hai cùng một thang
+// ưu tiên và cùng bảng màu, nên hồ sơ trắng hiện **7 mục đều đeo chip ĐỎ "Cao"**, kèm dòng
+// "Lần sai: 0" ở cả bảy.
+//
+// Người vừa mở ứng dụng lần đầu nhìn thấy bảy tín hiệu lỗi đỏ cho việc họ chưa kịp bắt đầu.
+// Đây đúng khuôn đã sửa ở màn Câu sai lượt 6: thang tiến độ từng tô ĐỎ đúng chặng vừa gỡ được.
+check("Chương chưa học không đeo màu cảnh báo",
+  /const laChuaHoc = item\.debtType !== "wrong_attempt"/.test(nguonKeHoach)
+    && /!laChuaHoc && \(/.test(nguonKeHoach)
+    && !/Lần sai: \{item\.wrongCount\}/.test(nguonKeHoach),
+  "chỉ câu từng làm sai mới mang mức ưu tiên có màu, và thôi in dòng Lần sai 0");
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

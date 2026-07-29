@@ -893,7 +893,10 @@ export const examForecaster = {
     if (studyDebtCount > 0) {
       gapActionPlan.push({
         id: "gap_debt",
-        title: `Xử lý ${studyDebtCount} bẫy câu sai tồn đọng (Sổ tay câu sai)`,
+        // Chuỗi HIỂN THỊ. Bản cũ "Xử lý N bẫy câu sai tồn đọng (Sổ tay câu sai)" nhắc "câu sai"
+        // hai lần trong một dòng, và cụm trong ngoặc chỉ lặp lại tên màn mà người học vừa bấm
+        // sang. "Bẫy" và "tồn đọng" cũng là chữ của người làm hệ thống.
+        title: `Làm lại ${studyDebtCount} câu từng sai`,
         type: "debt" as const,
         impact: wrong30Gain,
         timeEstimateMinutes: Math.min(45, studyDebtCount * 3),
@@ -907,7 +910,9 @@ export const examForecaster = {
       const chapName = missingChap ? missingChap.title : "các chương chưa làm bài";
       gapActionPlan.push({
         id: "gap_chapter",
-        title: `Phủ bài tập củng cố ${chapName}`,
+        // "Phủ bài tập củng cố X" là ngôn ngữ thống kê độ phủ, không phải việc người học hình
+      // dung được. Họ chỉ cần biết: luyện chương nào.
+      title: `Luyện ${chapName}`,
         type: "chapter" as const,
         impact: practice30Gain,
         timeEstimateMinutes: 30,
@@ -918,7 +923,9 @@ export const examForecaster = {
 
     gapActionPlan.push({
       id: "gap_mastery",
-      title: "Nâng độ thông thạo ổn định tổng hợp lên trên 80%",
+      // "Độ thông thạo ổn định tổng hợp" là tên nội bộ của một chỉ số ghép. Nói bằng tiếng
+      // thường thì đó là mức nắm chắc kiến thức tính trên toàn bộ khái niệm đã học.
+      title: "Đưa mức nắm chắc kiến thức lên trên 80%",
       type: "mastery" as const,
       impact: 0.3,
       timeEstimateMinutes: 40,
@@ -928,7 +935,10 @@ export const examForecaster = {
 
     gapActionPlan.push({
       id: "gap_mock",
-      title: `Luyện 2 đề Thi thử Tự Thích ứng (${stageLabelVN(stageLabel)})`,
+      // Chuỗi HIỂN THỊ, không phải khoá logic. Bản cũ ra "Luyện 2 đề Thi thử Tự Thích ứng
+      // (Luyện thích ứng)": vừa viết hoa giữa câu kiểu tiếng Anh, vừa lặp lại chính nghĩa của
+      // vế trước trong ngoặc, vì `stageLabelVN` cũng trả về "Luyện thích ứng". Nay nói một lần.
+      title: `Luyện 2 đề thi thử, giai đoạn ${stageLabelVN(stageLabel).toLowerCase()}`,
       type: "mock" as const,
       impact: mock30Gain,
       timeEstimateMinutes: 50,
@@ -1611,7 +1621,11 @@ export const examForecaster = {
         diem: 1000 - c.id,
         item: {
           id: `debt_chap_${c.id}`,
-          conceptName: `Chưa bao phủ bài tập ${c.title}`,
+          // Bản cũ ghi "Chưa bao phủ bài tập X", vừa là cách nói của người làm hệ thống, vừa
+          // nhét TRẠNG THÁI vào chỗ đáng lẽ chỉ là TÊN. Với loại `wrong_attempt` thì trường này
+          // giữ tên khái niệm thuần, nên loại chương cũng phải giữ tên chương thuần cho nhất
+          // quán; trạng thái để tầng trình bày nói, đúng chỗ của nó.
+          conceptName: c.title,
           chapterId: c.id,
           topicId: chuDeDau ? chuDeDau.id : "",
           debtType: "unlearned_chapter",

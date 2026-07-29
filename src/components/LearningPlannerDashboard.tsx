@@ -11,7 +11,6 @@ import {
   Calendar, 
   ShieldCheck, 
   AlertTriangle, 
-  Zap, 
   RotateCcw, 
   Sliders, 
   CheckCircle2, 
@@ -20,9 +19,7 @@ import {
   Copy, 
   Play, 
   Info,
-  CalendarDays,
   Layers,
-  ArrowRight,
   ChevronRight,
   FileSpreadsheet
 } from "lucide-react";
@@ -59,6 +56,38 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
   // Simulator State
   const [simMinutes, setSimMinutes] = useState<number>(goal.dailyStudyMinutes || 45);
   const [simDays, setSimDays] = useState<number>(prediction.metricsBreakdown.remainingDays || 14);
+
+  /*
+    CHƯA TRẢ LỜI CÂU NÀO THÌ CHƯA CÓ GÌ ĐỂ DỰ BÁO.
+
+    Cờ này khác hẳn `chuaDuTinCay` đã dùng từ lượt 9. `chuaDuTinCay` là
+    `confidenceLevel !== "Cao"`, tức vẫn đúng cho một người đã làm 200 câu mà độ tin cậy mới ở
+    mức Trung bình. Còn đây là ranh giới cứng: **không có một mẩu bằng chứng nào**.
+
+    Vì sao cần phân biệt. Mở ứng dụng bằng hồ sơ trắng ngày 29/07/2026, màn Kế hoạch hiện ra
+    cho một người CHƯA TRẢ LỜI CÂU NÀO:
+
+      "Dự báo kết quả 5.0 ± 0.5"          chip viền xanh, góc trên phải, chỗ nổi nhất màn
+      "Tạm tính khoảng 5.0 ± 0.5 điểm."   20px đậm
+      "Độ tin cậy còn thấp"               ngay bên dưới, tức màn hình TỰ CÃI chính nó
+      "Mức sẵn sàng 59%"                  kèm thanh xanh lá đầy 59%
+      "+0.3 điểm", "+0.3 điểm", "+0.4"    ba lời hứa tăng điểm tô xanh lá
+
+    Con số 5.0 là điểm nền của bộ dự báo khi chưa có bằng chứng, không phải phép đo. In nó ở cỡ
+    lớn nhất màn rồi ghi chú bên dưới rằng nó chưa đáng tin là cách trình bày tự mâu thuẫn: mắt
+    đọc con số trước, đọc lời cảnh báo sau.
+
+    Nặng hơn nữa, 59% MÂU THUẪN với màn Bàn học vốn ghi "Nắm chắc kiến thức 0%" cho cùng người
+    ấy. Truy ra thì hai bên đo hai thứ khác nhau: `readinessPercentage` là
+    `predictedScore / targetScore` (5.0/8.5), tức tỷ lệ giữa hai ĐIỂM SỐ, không phải mức nắm
+    kiến thức. Đây là lần thứ tư dự án gặp khuôn "hai đại lượng khác nhau mang cùng một tên"
+    (trước đó: độ phủ ở màn Báo cáo, hoàn thành ở màn Tổng quan, và độ tự tin giữa hai kho).
+    Sửa ở tầng trình bày là đủ và đúng chỗ: gọi đúng tên thứ nó đang đo.
+
+    KHÔNG đụng một phép tính nào của bộ dự báo. Engine vẫn tính y như cũ và vẫn tự khai độ tin
+    cậy y như cũ; chỉ có tầng trình bày thôi khẳng định thứ nó không biết.
+  */
+  const chuaCoBaiLam = dbService.getStatistics().totalSolved === 0;
 
   // Re-calculate when goal updates or active subject changes
   useEffect(() => {
@@ -137,16 +166,25 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           </p>
         </div>
 
-        {/* Top Summary Chips */}
+        {/*
+          Chip dự báo là chỗ NỔI NHẤT màn: viền xanh, chữ xanh đậm, góc trên phải. Với hồ sơ
+          trắng nó in "5.0 ± 0.5", tức khẳng định mạnh nhất trên màn lại là con số ít căn cứ
+          nhất. Nay khi chưa có bài làm thì nói thẳng là chưa dự báo được, và bỏ luôn viền màu
+          để nó thôi đòi sự chú ý.
+        */}
         <div className="flex items-center gap-3">
           <div className="bg-bg-card border border-border-primary/80 rounded-xl px-4 py-2 text-right">
             <span className="text-2xs tabular-nums text-text-muted block">Mục tiêu hiện tại</span>
             <span className="text-sm font-semibold text-text-primary">{goal.targetScore.toFixed(1)} điểm</span>
           </div>
 
-          <div className="bg-bg-card border border-brand-info/30 rounded-xl px-4 py-2 text-right">
-            <span className="text-2xs tabular-nums text-brand-info block">Dự báo kết quả</span>
-            <span className="text-sm font-bold text-brand-info">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</span>
+          <div className={`bg-bg-card border rounded-xl px-4 py-2 text-right ${chuaCoBaiLam ? "border-border-primary/80" : "border-brand-info/30"}`}>
+            <span className={`text-2xs tabular-nums block ${chuaCoBaiLam ? "text-text-muted" : "text-brand-info"}`}>Dự báo kết quả</span>
+            <span className={`text-sm font-bold ${chuaCoBaiLam ? "text-text-muted" : "text-brand-info"}`}>
+              {chuaCoBaiLam
+                ? "Chưa đủ dữ liệu"
+                : `${prediction.predictedScore.toFixed(1)} ± ${prediction.confidenceMargin.toFixed(1)}`}
+            </span>
           </div>
         </div>
       </div>
@@ -223,6 +261,40 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           */}
           {(() => {
             const chuaDuTinCay = prediction.confidenceLevel !== "Cao";
+
+            /*
+              Chưa có một câu nào thì màn này không dự báo, mà MỜI BẮT ĐẦU.
+
+              Theo bản đo trên Khan cho người chưa học: tiêu đề khối là một câu mệnh lệnh
+              20px/700 nói việc cần làm, mô tả 14px/400, và không đóng khung gì cả. Con số nào
+              có thật thì vẫn hiện (mục tiêu, số ngày), con số nào là điểm nền của engine thì
+              không hiện.
+            */
+            if (chuaCoBaiLam) {
+              return (
+                <div className="space-y-3 max-w-[46rem]">
+                  <h3 className="text-sm font-bold text-text-muted font-sans">Điểm dự báo</h3>
+                  <p className="text-xl font-bold text-text-primary font-sans leading-snug">
+                    Chưa dự báo được, vì bạn chưa trả lời câu nào.
+                  </p>
+                  <p className="text-sm text-text-secondary font-sans leading-relaxed">
+                    Mục tiêu của bạn là {prediction.targetScore.toFixed(1)} điểm, còn{" "}
+                    {prediction.metricsBreakdown.remainingDays} ngày nữa tới kỳ thi. Làm xong lượt
+                    ôn đầu tiên là màn này bắt đầu ước lượng được điểm, và mọi việc cần làm bên
+                    dưới sẽ tính theo đúng chỗ bạn còn yếu.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => onStartExam("adaptive")}
+                      className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
+                    >
+                      Bắt đầu lượt đầu tiên
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0">
 
@@ -246,8 +318,15 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   <p className="text-xl font-bold text-text-primary font-sans leading-snug">
                     Còn {prediction.gap.toFixed(1)} điểm nữa là tới {prediction.targetScore.toFixed(1)}.
                   </p>
+                  {/*
+                    NHÃN CŨ GỌI SAI TÊN ĐẠI LƯỢNG. `readinessPercentage` là
+                    `predictedScore / targetScore`, tức điểm dự báo đang bằng bao nhiêu phần trăm
+                    MỤC TIÊU, chứ không phải mức nắm kiến thức. Gọi nó là "mức sẵn sàng" khiến nó
+                    mâu thuẫn với "Nắm chắc kiến thức 0%" ở màn Bàn học, dù cả hai đều đúng theo
+                    định nghĩa riêng. Nay nói thẳng ra nó đo gì.
+                  */}
                   <p className="text-sm text-text-secondary font-sans">
-                    Mức sẵn sàng {prediction.readinessPercentage}%.
+                    Điểm dự báo đang bằng {prediction.readinessPercentage}% mục tiêu.
                   </p>
                   <div className="w-full bg-bg-surface rounded-full h-1.5 overflow-hidden">
                     <div
@@ -274,60 +353,88 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             );
           })()}
 
-          {/* Target Gap Action Plan */}
-          <div className="bg-bg-card border border-border-primary rounded-2xl p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Zap className="w-4 h-4 text-brand-info" />
-              Việc cần làm để đi hết {prediction.gap.toFixed(1)} điểm còn lại
+          {/*
+            DANH SÁCH VIỆC CẦN LÀM, DỰNG LẠI THÀNH HÀNG.
+
+            Bản cũ là lưới `md:grid-cols-2`, mỗi việc một thẻ có nền riêng và viền riêng, nằm
+            trong một thẻ lớn cũng có nền và viền. Đây là danh sách việc, tức đúng khuôn
+            AGENTS.md 4.9g mục 3: danh sách nội dung là HÀNG chứ không phải THẺ.
+
+            Con số "+0.3 điểm" cũng chỉ hiện khi đã có bằng chứng. Với hồ sơ trắng, `impact` được
+            suy ra từ khoảng cách tới mục tiêu, mà khoảng cách ấy lại tính từ điểm nền 5.0 chứ
+            không từ bài làm nào. Hứa "+0.3 điểm" cho một người chưa trả lời câu nào là khẳng
+            định thứ mình không biết, và tô nó màu xanh lá làm lời hứa nghe chắc hơn nữa. Việc
+            vẫn hiện đủ, thời lượng vẫn hiện đủ, chỉ thôi hứa con số.
+          */}
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-text-primary font-sans">
+              {chuaCoBaiLam
+                ? "Việc nên làm trước"
+                : `Việc cần làm để đi hết ${prediction.gap.toFixed(1)} điểm còn lại`}
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
               {prediction.gapActionPlan.map((action) => (
-                <div key={action.id} className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-text-primary">{action.title}</span>
-                    <span className="text-xs tabular-nums font-bold text-brand-success">+{action.impact.toFixed(1)} điểm</span>
+                <div key={action.id} className="py-4 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <h4 className="text-base font-bold text-text-primary font-sans">{action.title}</h4>
+                    <p className="text-sm text-text-secondary font-sans pt-0.5">
+                      Khoảng {action.timeEstimateMinutes} phút
+                      {chuaCoBaiLam ? "" : `, ước tính thêm ${action.impact.toFixed(1)} điểm`}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between text-2xs text-text-muted">
-                    <span>Thời lượng ước tính: ~{action.timeEstimateMinutes} phút</span>
-                    <button
-                      onClick={() => onStartExam(action.type === "debt" ? "incorrect" : action.type === "mock" ? "ai-smart" : "adaptive")}
-                      className="text-brand-info font-medium hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>Thực hiện</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => onStartExam(action.type === "debt" ? "incorrect" : action.type === "mock" ? "ai-smart" : "adaptive")}
+                    className="shrink-0 px-4 h-9 bg-bg-surface border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer"
+                  >
+                    Làm ngay
+                  </button>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Milestone Planner Timeline */}
-          <div className="bg-bg-card border border-border-primary rounded-2xl p-5 sm:p-6 space-y-4">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-brand-info" />
-              Cột mốc lộ trình
-            </h3>
+          {/*
+            CỘT MỐC LỘ TRÌNH.
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-1">
-                <span className="text-2xs tabular-nums text-brand-info">Trong 3 ngày tới</span>
-                <h4 className="text-xs font-semibold text-text-primary">Xử lý xong 100% Sổ tay câu sai</h4>
-                <p className="text-2xs text-text-muted">Giúp xóa rủi ro mất điểm bẫy quen thuộc.</p>
-              </div>
+            Ba thẻ cũ mang ba màu nhãn khác nhau (xanh dương, cam, xanh lá) cho ba mốc thời gian.
+            Màu không mang nghĩa nào cả: mốc 7 ngày không "cảnh báo" hơn mốc 3 ngày. Đó là màu
+            trang trí đội lốt màu ngữ nghĩa, và nó làm hỏng quy ước màu của phần còn lại.
 
-              <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-1">
-                <span className="text-2xs tabular-nums text-brand-warning">Trong 7 ngày tới</span>
-                <h4 className="text-xs font-semibold text-text-primary">Đạt độ thông thạo 80% toàn bộ các chương</h4>
-                <p className="text-2xs text-text-muted">Bảo đảm kiến thức nền tảng trước khi làm đề.</p>
-              </div>
+            Mốc đầu tiên còn nói sai với người mới: "Xử lý xong 100% Sổ tay câu sai" trong khi sổ
+            câu sai đang trống. Nay mốc ấy đổi theo trạng thái thật của sổ.
+          */}
+          <div className="space-y-3">
+            <h3 className="text-xl font-bold text-text-primary font-sans">Cột mốc lộ trình</h3>
 
-              <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-1">
-                <span className="text-2xs tabular-nums text-brand-success">Trong 10 ngày tới</span>
-                <h4 className="text-xs font-semibold text-text-primary">Làm 2 đề thi thử Tự Thích ứng</h4>
-                <p className="text-2xs text-text-muted">Tối ưu điểm số tiệm cận mốc mong muốn.</p>
-              </div>
+            <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+              {[
+                {
+                  moc: "Trong 3 ngày tới",
+                  viec: chuaCoBaiLam ? "Làm xong lượt ôn đầu tiên" : "Làm lại hết các câu trong sổ câu sai",
+                  vi: chuaCoBaiLam
+                    ? "Đây là mốc mở khoá mọi dự báo và gợi ý của màn này."
+                    : "Xoá rủi ro mất điểm ở đúng những bẫy bạn từng mắc.",
+                },
+                {
+                  moc: "Trong 7 ngày tới",
+                  viec: "Đạt độ thạo 80% ở toàn bộ các chương",
+                  vi: "Chắc phần nền trước khi chuyển sang luyện đề.",
+                },
+                {
+                  moc: "Trong 10 ngày tới",
+                  viec: "Làm 2 đề thi thử",
+                  vi: "Tập nhịp làm bài và đo lại mức sẵn sàng sát ngày thi.",
+                },
+              ].map(m => (
+                <div key={m.moc} className="py-4 flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
+                  <span className="text-sm text-text-muted font-sans sm:w-40 sm:shrink-0">{m.moc}</span>
+                  <div className="min-w-0">
+                    <h4 className="text-base font-bold text-text-primary font-sans">{m.viec}</h4>
+                    <p className="text-sm text-text-secondary font-sans pt-0.5">{m.vi}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -540,65 +647,116 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
         </div>
       )}
 
-      {/* TAB 4: STUDY DEBT */}
-      {activeTab === "debt" && (
-        <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between border-b border-border-primary pb-4">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-brand-warning" />
-              Sổ quản lý nợ học tập
-            </h3>
-            <span className="text-xs tabular-nums text-text-muted">
-              {debtItems.filter(i => i.status === "pending").length} mục tồn đọng
-            </span>
+      {/*
+        TAB 4: HAI LOẠI KHÁC HẲN NHAU ĐANG BỊ TRỘN VÀO MỘT DANH SÁCH.
+
+        Đo trên hồ sơ trắng ngày 29/07/2026: tab này hiện **7 mục, cả 7 đều đeo chip ĐỎ "Cao"**,
+        và cả 7 đều ghi "Lần sai: 0". Truy ra thì chúng là 7 CHƯƠNG CHƯA HỌC, không phải 7 câu
+        làm sai. Người vừa mở ứng dụng lần đầu nhìn thấy bảy tín hiệu lỗi đỏ cho việc họ chưa
+        kịp bắt đầu.
+
+        Đây đúng khuôn đã sửa ở màn Câu sai lượt 6: thang tiến độ tô ĐỎ đúng chặng người học vừa
+        gỡ được. Chưa tới thì để trống, không tô màu báo lỗi vào lộ trình học.
+
+        `debtType` phân biệt sẵn hai loại (`unlearned_chapter` và `wrong_attempt`) nhưng tầng
+        trình bày cũ gộp chúng làm một, cùng gọi là "nợ", cùng thang ưu tiên, cùng bảng màu.
+        Nay tách: chương chưa học là **việc phía trước** (không màu cảnh báo, không đếm lần sai),
+        câu làm sai mới là **việc cần sửa**.
+
+        Giữ nguyên toàn bộ chức năng: ba nút Sửa ngay, Hoãn, Xong vẫn còn đủ ở mọi mục.
+      */}
+      {activeTab === "debt" && (() => {
+        const dsCho = debtItems.filter(i => i.status === "pending");
+        const soChuaHoc = dsCho.filter(i => i.debtType !== "wrong_attempt").length;
+        const soLamSai = dsCho.length - soChuaHoc;
+        return (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold text-text-primary font-sans">Phần cần sửa</h3>
+            <p className="text-sm text-text-secondary font-sans">
+              {dsCho.length === 0
+                ? "Không còn mục nào đang chờ."
+                : [
+                    soLamSai > 0 ? `${soLamSai} câu từng làm sai` : "",
+                    soChuaHoc > 0 ? `${soChuaHoc} chương chưa làm bài nào` : "",
+                  ].filter(Boolean).join(", ") + "."}
+            </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
             {debtItems.length === 0 ? (
-              <div className="p-8 text-center text-xs text-text-muted space-y-2 tabular-nums">
-                <CheckCircle2 className="w-6 h-6 text-brand-success mx-auto" />
-                <p>Không có nợ học tập tồn đọng! Bạn đã dứt điểm 100% câu sai.</p>
+              /*
+                Trạng thái rỗng ở đây có HAI nghĩa hoàn toàn khác nhau, và bản cũ chỉ nói một:
+                "Bạn đã dứt điểm 100% câu sai" đúng với người đã học xong, nhưng sai với người
+                chưa bắt đầu. Cùng lỗi với "Sổ câu sai đang sạch" đã sửa ở màn Bàn học.
+              */
+              <div className="py-8">
+                {chuaCoBaiLam ? (
+                  <p className="text-sm text-text-secondary font-sans">
+                    Chưa có gì ở đây. Sau lượt ôn đầu tiên, những câu bạn làm sai và những chương
+                    chưa đụng tới sẽ được liệt kê tại đây.
+                  </p>
+                ) : (
+                  <p className="text-sm text-text-secondary font-sans flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-brand-success shrink-0" />
+                    Không còn mục nào cần sửa. Bạn đã làm lại hết các câu từng sai.
+                  </p>
+                )}
               </div>
             ) : (
-              debtItems.map(item => (
-                <div key={item.id} className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  item.status === "resolved" 
-                    ? "bg-bg-surface/40 border-border-primary/40 opacity-60" 
-                    : "bg-bg-surface border-border-primary"
+              debtItems.map(item => {
+                const laChuaHoc = item.debtType !== "wrong_attempt";
+                return (
+                <div key={item.id} className={`py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  item.status === "resolved" ? "opacity-60" : ""
                 }`}>
-                  <div className="space-y-1">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-text-primary">{item.conceptName}</span>
-                      <span className={`px-2 py-0.2 text-2xs tabular-nums rounded-full ${
-                        item.priority === "Cao" ? "bg-brand-error-bg text-brand-error"
-                          : item.priority === "Thấp" ? "bg-bg-card text-text-muted"
-                          : "bg-brand-warning-bg text-brand-warning"
-                      }`}>
-                        {item.priority}
-                      </span>
+                      <span className="text-base font-bold text-text-primary font-sans">{item.conceptName}</span>
+                      {/*
+                        Chỉ câu TỪNG LÀM SAI mới đeo mức ưu tiên có màu. Chương chưa học không
+                        phải lỗi của ai, nên không mang màu cảnh báo.
+                      */}
+                      {!laChuaHoc && (
+                        <span className={`px-2 py-0.2 text-2xs tabular-nums rounded-full shrink-0 ${
+                          item.priority === "Cao" ? "bg-brand-error-bg text-brand-error"
+                            : item.priority === "Thấp" ? "bg-bg-card text-text-muted"
+                            : "bg-brand-warning-bg text-brand-warning"
+                        }`}>
+                          {item.priority}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-2xs tabular-nums text-text-muted block">
-                      Loại nợ: {item.debtType === "wrong_attempt" ? "Câu trả lời sai trong thi" : "Chưa hoàn thành chương"} • Lần sai: {item.wrongCount}
+                    <span className="text-sm text-text-secondary font-sans block pt-0.5">
+                      {/* "Lần sai: 0" là dòng vô nghĩa, chỉ nói số lần sai khi đã từng sai. */}
+                      {laChuaHoc
+                        ? "Chương này bạn chưa làm bài nào."
+                        : `Đã sai ${item.wrongCount} lần trong lúc luyện.`}
                     </span>
                   </div>
 
                   {item.status === "pending" && (
                     <div className="flex items-center gap-2 shrink-0">
+                      {/*
+                        Nút chính đổi CHỮ theo loại: chương chưa học thì "Học ngay", câu từng sai
+                        mới là "Sửa ngay". Và bỏ nền cam khỏi nút: màu cảnh báo trên nút chính
+                        của một danh sách bảy mục biến cả tab thành bảng sự cố.
+                      */}
                       <button
-                        onClick={() => onStartExam("incorrect")}
-                        className="px-3 py-1 bg-brand-warning text-bg-card font-semibold text-xs rounded-lg hover:opacity-90 transition cursor-pointer"
+                        onClick={() => onStartExam(laChuaHoc ? "adaptive" : "incorrect")}
+                        className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
                       >
-                        Sửa ngay
+                        {laChuaHoc ? "Học ngay" : "Sửa ngay"}
                       </button>
                       <button
                         onClick={() => handlePostponeDebt(item.id)}
-                        className="px-3 py-1 bg-bg-card border border-border-primary text-text-muted text-xs rounded-lg hover:text-text-primary transition cursor-pointer"
+                        className="px-4 h-9 bg-bg-surface border border-border-primary text-text-secondary hover:text-text-primary text-sm rounded transition cursor-pointer"
                       >
                         Hoãn
                       </button>
                       <button
                         onClick={() => handleResolveDebt(item.id)}
-                        className="px-3 py-1 bg-bg-card border border-border-primary text-brand-success text-xs rounded-lg hover:bg-brand-success-bg transition cursor-pointer"
+                        className="px-4 h-9 bg-bg-surface border border-border-primary text-text-secondary hover:text-text-primary text-sm rounded transition cursor-pointer"
                       >
                         Xong
                       </button>
@@ -606,14 +764,19 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   )}
 
                   {item.status === "resolved" && (
-                    <span className="text-xs tabular-nums text-brand-success font-semibold shrink-0">Đã giải quyết ✓</span>
+                    <span className="text-sm text-brand-success shrink-0 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Đã xong
+                    </span>
                   )}
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* TAB 5: WHAT-IF SIMULATOR */}
       {activeTab === "simulator" && (

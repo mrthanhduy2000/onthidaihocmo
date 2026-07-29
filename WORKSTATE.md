@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười bốn lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và bắt đầu lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau mười lăm lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,36 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Bàn học nhìn bằng con mắt người CHƯA bắt đầu
+## Lượt mới nhất: màn Kế hoạch, dự báo điểm cho người chưa trả lời câu nào
+
+Ca nặng nhất của cả đợt. Màn này dựng nguyên một kế hoạch chi tiết, có con số tới một chữ số
+thập phân, cho một người **chưa trả lời một câu**.
+
+| Hiện trên màn với hồ sơ trắng | Vấn đề |
+|---|---|
+| "Dự báo kết quả **5.0 ± 0.5**" | chip viền xanh, chỗ NỔI NHẤT màn |
+| "Độ tin cậy còn thấp" ngay dưới | màn hình **tự cãi chính nó** |
+| "Mức sẵn sàng **59%**" | mâu thuẫn với "Nắm chắc kiến thức **0%**" ở màn Bàn học |
+| "**+0.3 điểm**" x3 | hứa tăng điểm khi chưa có căn cứ |
+| **7 chip ĐỎ "Cao"** | thật ra là 7 CHƯƠNG CHƯA HỌC, đều ghi "Lần sai: 0" |
+
+Truy ra: **59% là `predictedScore / targetScore`**, tức tỷ lệ giữa hai ĐIỂM SỐ chứ không phải
+mức nắm kiến thức. Lần thứ tư gặp khuôn "hai đại lượng khác nhau mang cùng một tên".
+
+Cờ mới `chuaCoBaiLam` (`totalSolved === 0`), khác `chuaDuTinCay` có từ lượt 9 vốn quá rộng nên
+lượt ấy sửa được cảnh báo mà không chạm tới chip đầu trang, thanh 59% và ba con số "+0.3 điểm".
+
+Năm chuỗi giọng kỹ sư đã dịch trong `examForecaster`, chỉ đổi CHỮ không đụng ngưỡng.
+
+Bộ kiểm 207 lên **209**. `AG4`, `AG5`, cả hai đã thử phá và đều bắt được.
+
+**Một sự việc cần biết**: kho `localStorage` của `localhost:3000` trong phiên này từ 12 khóa
+(`totalSolved: 7`) rút còn 3 khóa (`totalSolved: 0`). **Chưa truy được nguyên nhân.** Đây là
+dữ liệu dev cục bộ, không phải bản chạy thật.
+
+---
+
+## Lượt trước: màn Bàn học nhìn bằng con mắt người CHƯA bắt đầu
 
 **Mở ra một lượt rà hoàn toàn mới.** Mười ba lượt trước đều dùng hồ sơ đã có dữ liệu, nên chưa
 lượt nào từng thấy nhánh trạng thái rỗng, mà đó lại là màn hình người học gặp ở giây đầu tiên.
@@ -688,7 +717,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **207**, chia 33 nhóm A đến AG, đạt toàn bộ |
+| Phép tự kiểm chứng | **209**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

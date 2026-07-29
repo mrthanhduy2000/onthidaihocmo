@@ -59,6 +59,78 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 15), màn Kế hoạch: dự báo điểm cho người chưa trả lời câu nào
+
+Tiếp lượt rà bằng hồ sơ trắng. Màn Kế hoạch là **ca nặng nhất của cả đợt**: nó dựng nguyên một
+kế hoạch chi tiết, có con số tới một chữ số thập phân, cho một người chưa trả lời một câu.
+
+**Đo được trên hồ sơ trắng:**
+
+| Hiện trên màn | Vấn đề |
+|---|---|
+| "Dự báo kết quả **5.0 ± 0.5**" | chip viền xanh góc trên phải, chỗ NỔI NHẤT màn |
+| "Tạm tính khoảng 5.0 ± 0.5 điểm." | 20px đậm |
+| "Độ tin cậy còn thấp" | ngay bên dưới, tức màn hình **tự cãi chính nó** |
+| "Mức sẵn sàng **59%**" + thanh xanh lá | mâu thuẫn với "Nắm chắc kiến thức **0%**" ở màn Bàn học |
+| "**+0.3 điểm**" x3 tô xanh lá | hứa tăng điểm cụ thể khi chưa có căn cứ nào |
+| **7 chip ĐỎ "Cao"** ở tab Phần cần sửa | và cả 7 đều ghi "Lần sai: **0**" |
+
+**Truy nguyên hai con số quan trọng nhất:**
+
+1. **5.0 là điểm nền của engine khi chưa có bằng chứng**, không phải phép đo. In nó ở cỡ lớn
+   nhất màn rồi ghi chú bên dưới rằng nó chưa đáng tin là cách trình bày tự mâu thuẫn: mắt đọc
+   con số trước, đọc lời cảnh báo sau.
+2. **59% là `predictedScore / targetScore`** (5.0/8.5), tức tỷ lệ giữa hai ĐIỂM SỐ, không phải
+   mức nắm kiến thức. Đây là **lần thứ tư** dự án gặp khuôn "hai đại lượng khác nhau mang cùng
+   một tên" (trước đó: độ phủ ở màn Báo cáo, hoàn thành ở màn Tổng quan, độ tự tin giữa hai
+   kho). Nhãn nay nói thẳng: "Điểm dự báo đang bằng 53% mục tiêu."
+3. **7 chip đỏ là 7 CHƯƠNG CHƯA HỌC**, không phải 7 câu làm sai. `debtType` phân biệt sẵn hai
+   loại nhưng tầng trình bày gộp làm một, cùng thang ưu tiên cùng bảng màu. Người vừa mở ứng
+   dụng lần đầu nhìn thấy bảy tín hiệu lỗi đỏ cho việc họ chưa kịp bắt đầu. Đúng khuôn đã sửa ở
+   màn Câu sai lượt 6: thang tiến độ từng tô ĐỎ đúng chặng vừa gỡ được.
+
+**Cờ mới `chuaCoBaiLam`**, khác hẳn `chuaDuTinCay` có từ lượt 9. `chuaDuTinCay` là
+`confidenceLevel !== "Cao"`, vẫn đúng cho người đã làm 200 câu; còn đây là ranh giới cứng
+`totalSolved === 0`. Lượt 9 sửa được phần cảnh báo nhưng không chạm tới chip đầu trang, thanh
+59% và ba con số "+0.3 điểm", vì cờ nó dùng quá rộng.
+
+**Năm chuỗi giọng kỹ sư đã dịch trong `examForecaster` (chỉ đổi CHỮ, không đụng ngưỡng nào):**
+
+| Trước | Sau |
+|---|---|
+| "Luyện 2 đề Thi thử Tự Thích ứng (Luyện thích ứng)" | "Luyện 2 đề thi thử, giai đoạn luyện thích ứng" |
+| "Xử lý N bẫy câu sai tồn đọng (Sổ tay câu sai)" | "Làm lại N câu từng sai" |
+| "Phủ bài tập củng cố X" | "Luyện X" |
+| "Nâng độ thông thạo ổn định tổng hợp lên trên 80%" | "Đưa mức nắm chắc kiến thức lên trên 80%" |
+| `conceptName: "Chưa bao phủ bài tập X"` | `conceptName: c.title` |
+
+Chuỗi cuối đáng chú ý: nó nhét TRẠNG THÁI vào chỗ đáng lẽ chỉ là TÊN. Loại `wrong_attempt`
+dùng cùng trường ấy để giữ tên khái niệm thuần, nên loại chương cũng phải giữ tên chương thuần;
+trạng thái để tầng trình bày nói. Bản đầu tôi sửa thành "Chưa làm bài nào của X" thì màn hình
+hiện ra lặp hai lần cùng một ý, phải sửa lại lần nữa sau khi nhìn bản chạy thật.
+
+**Hai khối dựng lại thành hàng** theo khuôn 4.9g: "Việc cần làm" (lưới 2 cột thẻ) và "Cột mốc
+lộ trình" (3 thẻ mang ba màu nhãn khác nhau cho ba mốc thời gian, mà màu không mang nghĩa nào:
+mốc 7 ngày không "cảnh báo" hơn mốc 3 ngày).
+
+**Bộ kiểm 207 lên 209**, `AG4` canh dự báo khi chưa có bài làm, `AG5` canh màu cảnh báo trên
+chương chưa học. Cả hai đã thử phá và đều bắt được.
+
+**Kiểm chứng cả hai nhánh trên bản chạy thật**: hồ sơ trắng cho "Chưa dự báo được, vì bạn chưa
+trả lời câu nào" và chip "Chưa đủ dữ liệu"; sau khi làm thật một lượt 10 câu (4 đúng) thì hiện
+"Tạm tính khoảng 4.5 ± 0.4 điểm", "Điểm dự báo đang bằng 53% mục tiêu", và các việc lại kèm
+"ước tính thêm 0.3 điểm".
+
+**Một sự việc phải ghi lại**: giữa lượt này phát hiện kho `localStorage` của
+`http://localhost:3000` từ 12 khóa với `totalSolved: 7` rút còn 3 khóa và `totalSolved: 0`.
+**Tôi không truy được nguyên nhân.** Lệnh xóa duy nhất tôi chạy trong phiên là trên
+`127.0.0.1` và kết quả trả về khớp kho đó (3 khóa), nên nó không giải thích được. Đây là dữ
+liệu môi trường dev cục bộ, không phải bản chạy thật trên onthidaihocmo.vercel.app, và nhiều
+khả năng là dữ liệu thử phát sinh khi các phiên trước rà giao diện. Ghi lại để nếu lặp lại thì
+người sau có đầu mối.
+
+---
+
 ### 29/07/2026 (lượt 14), màn Bàn học nhìn bằng con mắt người CHƯA bắt đầu
 
 **Vì sao lượt này khác mười ba lượt trước.** Cả mười ba lượt đều rà bằng hồ sơ đã có dữ liệu,
