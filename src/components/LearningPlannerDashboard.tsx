@@ -118,14 +118,23 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-5">
-        <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info mb-1">
-            <TrendingUp className="w-4 h-4 text-brand-info" />
-            <span>Kế hoạch ôn thi và dự báo điểm</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-light text-text-primary tracking-tight">
+        {/*
+          Một tiêu đề, không phải hai.
+
+          Bản cũ có một dòng nhãn màu xanh dương "Kế hoạch ôn thi và dự báo điểm" nằm ngay trên
+          tiêu đề "Kế hoạch đạt điểm mục tiêu". Hai dòng nói cùng một việc, và dòng trên còn
+          mang màu của liên kết nên mời người ta bấm vào chỗ không bấm được. Cùng lỗi đã sửa ở
+          màn Báo cáo cùng ngày.
+
+          Nay một tiêu đề, và dòng dưới nói việc màn này làm được cho người học.
+        */}
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-bold font-sans text-text-primary">
             Kế hoạch đạt điểm mục tiêu
           </h1>
+          <p className="text-base text-text-secondary font-sans max-w-[40rem]">
+            Dự báo điểm theo dữ liệu học hiện tại, và những việc cần làm để rút ngắn khoảng cách.
+          </p>
         </div>
 
         {/* Top Summary Chips */}
@@ -181,97 +190,95 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {/* TAB 1: FORECAST & GAP ANALYSIS */}
       {activeTab === "forecast" && (
         <div className="space-y-6">
-          {/* Main Forecast Hero Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            {/* Metric 1: Forecast Score Card */}
-            <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums text-text-muted">Điểm dự báo</span>
-                <span className={`px-2 py-0.5 text-2xs tabular-nums rounded-full border ${
-                  prediction.confidenceLevel === "Cao" 
-                    ? "bg-brand-success-bg text-brand-success border-brand-success/20" 
-                    : "bg-brand-warning-bg text-brand-warning border-brand-warning/20"
-                }`}>
-                  Độ tin cậy: {prediction.confidenceLevel}
-                </span>
-              </div>
+          {/*
+            BA THẺ BÁO ĐỘNG ĐỔI THÀNH BA CÂU.
 
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl sm:text-4xl font-display font-light text-text-primary">
-                  {prediction.predictedScore.toFixed(1)}
-                </span>
-                <span className="text-sm tabular-nums text-text-muted">
-                  ± {prediction.confidenceMargin.toFixed(1)}
-                </span>
-              </div>
+            VẤN ĐỀ NẶNG NHẤT KHÔNG PHẢI CÁCH BÀY, MÀ LÀ CHÍNH MÀN NÀY TỰ MÂU THUẪN.
 
-              <p className="text-xs text-text-muted leading-relaxed">
-                Dựa trên dữ liệu học tập hiện tại, hệ thống dự báo khả năng đạt khoảng{" "}
-                <strong className="text-text-primary font-medium">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</strong>{" "}
-                nếu duy trì kế hoạch học hiện tại.
-              </p>
-            </div>
+            Đo trên bản chạy thật với một hồ sơ mới trả lời 7 trên 292 câu, màn hình nói cùng
+            lúc hai điều ngược nhau:
 
-            {/* Metric 2: Target & Gap Card */}
-            <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums text-text-muted">Mục tiêu và khoảng cách</span>
-                <span className="text-xs tabular-nums font-bold text-brand-warning">
-                  Còn thiếu: -{prediction.gap.toFixed(1)}
-                </span>
-              </div>
+              "Độ tin cậy: **Cần thêm dữ liệu**"        <- hệ thống tự nhận là chưa biết
+              "Nguy cơ trượt mục tiêu, mức Trung bình"  <- rồi phát cảnh báo dựa trên chính
+              "Còn thiếu: **-5.5**" tô cam                  con số vừa nhận là chưa đủ căn cứ
+              "cần được **bù đắp khẩn cấp**"
 
-              <div className="flex items-center justify-between pt-1">
-                <div>
-                  <span className="text-2xs text-text-muted block">Mục tiêu</span>
-                  <span className="text-2xl font-display font-medium text-text-primary">{prediction.targetScore.toFixed(1)}</span>
+            Một dự báo tự khai là chưa đủ dữ liệu thì không được đóng khung bằng chữ đậm màu
+            cảnh báo và từ "khẩn cấp". Đây đúng điều luật của dự án cấm: không đóng khung con số
+            chưa chắc chắn bằng màu sắc mang tính khẳng định.
+
+            BA ĐIỀU SỬA, KHÔNG ĐỘNG VÀO MỘT PHÉP TÍNH NÀO:
+
+            1. **Mức độ nhấn bám theo độ tin cậy.** Khi bộ dự báo còn ghi "Cần thêm dữ liệu" thì
+               cả khối trình bày ở dạng tạm tính, và phần lý do đổi tên thành "Chỗ cần chú ý"
+               thay vì "Nguy cơ trượt mục tiêu". Con số vẫn hiện đủ, chỉ thôi hò hét.
+            2. **Bỏ dấu trừ khỏi khoảng cách.** "-5.5" là cùng một sự thật với "còn 5,5 điểm
+               nữa", nhưng một bên là điểm âm còn một bên là quãng đường. Khan không bao giờ
+               trình bày tiến độ bằng số âm.
+            3. **Bỏ tam giác cảnh báo** trên từng dòng lý do. Ba tam giác vàng xếp dọc biến một
+               danh sách việc cần làm thành một bảng sự cố.
+
+            Cách bày theo đúng ngôn ngữ đã dùng ở màn Bàn học và Báo cáo: câu dẫn, số nằm trong
+            câu, vạch dọc ngăn thay cho thẻ đóng khung.
+          */}
+          {(() => {
+            const chuaDuTinCay = prediction.confidenceLevel !== "Cao";
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0">
+
+                {/* Điểm dự báo */}
+                <div className="space-y-3 md:pr-6">
+                  <h3 className="text-sm font-bold text-text-muted font-sans">Điểm dự báo</h3>
+                  <p className="text-xl font-bold text-text-primary font-sans leading-snug">
+                    {chuaDuTinCay ? "Tạm tính khoảng " : "Dự báo khoảng "}
+                    {prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)} điểm.
+                  </p>
+                  <p className="text-sm text-text-secondary font-sans">
+                    {chuaDuTinCay
+                      ? `Độ tin cậy còn thấp (${prediction.confidenceLevel}). Làm thêm bài để con số này bám sát thực tế hơn.`
+                      : "Tính trên dữ liệu học tập hiện tại, nếu bạn giữ nhịp học như bây giờ."}
+                  </p>
                 </div>
-                <div className="text-right">
-                  <span className="text-2xs text-text-muted block">Sẵn sàng</span>
-                  <span className="text-2xl font-display font-medium text-brand-success">{prediction.readinessPercentage}%</span>
+
+                {/* Mục tiêu và quãng đường còn lại */}
+                <div className="space-y-3 md:px-6 md:border-l md:border-border-primary">
+                  <h3 className="text-sm font-bold text-text-muted font-sans">Mục tiêu</h3>
+                  <p className="text-xl font-bold text-text-primary font-sans leading-snug">
+                    Còn {prediction.gap.toFixed(1)} điểm nữa là tới {prediction.targetScore.toFixed(1)}.
+                  </p>
+                  <p className="text-sm text-text-secondary font-sans">
+                    Mức sẵn sàng {prediction.readinessPercentage}%.
+                  </p>
+                  <div className="w-full bg-bg-surface rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-brand-success h-full transition-all duration-300"
+                      style={{ width: `${prediction.readinessPercentage}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Chỗ cần chú ý */}
+                <div className="space-y-3 md:pl-6 md:border-l md:border-border-primary">
+                  <h3 className="text-sm font-bold text-text-muted font-sans">
+                    {chuaDuTinCay ? "Chỗ cần chú ý" : `Nguy cơ trượt mục tiêu: mức ${prediction.riskReport.level}`}
+                  </h3>
+                  <ul className="space-y-2">
+                    {prediction.riskReport.reasons.map((reason, idx) => (
+                      <li key={idx} className="text-base text-text-secondary font-sans leading-snug">
+                        {reason}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-
-              <div className="w-full bg-bg-surface border border-border-primary/80 rounded-full h-2 overflow-hidden">
-                <div 
-                  className="bg-brand-success h-full transition-all duration-300" 
-                  style={{ width: `${prediction.readinessPercentage}%` }} 
-                />
-              </div>
-            </div>
-
-            {/* Metric 3: Risk Level Card */}
-            <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs tabular-nums text-text-muted">Nguy cơ trượt mục tiêu</span>
-                <span className={`px-2 py-0.5 text-2xs tabular-nums rounded-full ${
-                  prediction.riskReport.level === "Thấp" 
-                    ? "bg-brand-success-bg text-brand-success" 
-                    : prediction.riskReport.level === "Trung bình"
-                    ? "bg-brand-warning-bg text-brand-warning"
-                    : "bg-brand-error-bg text-brand-error"
-                }`}>
-                  Mức nguy cơ: {prediction.riskReport.level}
-                </span>
-              </div>
-
-              <ul className="space-y-1.5 pt-1">
-                {prediction.riskReport.reasons.map((reason, idx) => (
-                  <li key={idx} className="text-xs text-text-muted flex items-start gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-brand-warning shrink-0 mt-0.5" />
-                    <span>{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Target Gap Action Plan */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-5 sm:p-6 space-y-4">
             <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
               <Zap className="w-4 h-4 text-brand-info" />
-              Hành động cụ thể dứt điểm khoảng cách (-{prediction.gap.toFixed(1)} điểm)
+              Việc cần làm để đi hết {prediction.gap.toFixed(1)} điểm còn lại
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau bảy lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo).
+**Cập nhật lần cuối**: 29/07/2026, sau tám lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo, Kế hoạch).
 
 ---
 
@@ -25,7 +25,30 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Báo cáo, ba con số 48px thành ba câu
+## Lượt mới nhất: màn Kế hoạch, màn hình đang tự mâu thuẫn với chính nó
+
+Màn thứ năm. Vấn đề nặng nhất không phải cách bày mà là **màn hình nói cùng lúc hai điều ngược
+nhau**, với hồ sơ mới trả lời 7 trên 292 câu:
+
+| Dòng hiện trên màn | Ý nghĩa |
+|---|---|
+| "Độ tin cậy: **Cần thêm dữ liệu**" | hệ thống tự nhận là **chưa biết** |
+| "Nguy cơ trượt mục tiêu, mức Trung bình" | rồi phát cảnh báo |
+| "Còn thiếu: **-5.5**" tô cam đậm | dựa trên chính con số vừa nhận là chưa đủ căn cứ |
+| "cần được **bù đắp khẩn cấp**" | kèm hai tam giác cảnh báo |
+
+Đúng điều luật Đàm đặt ra: không đóng khung con số chưa chắc chắn bằng màu sắc mang tính khẳng
+định. Đã sửa: mức độ nhấn bám theo độ tin cậy, bỏ dấu trừ, bỏ tam giác cảnh báo, bỏ tiêu đề đôi.
+Hai chuỗi mẫu trong service đổi CHỮ (bỏ "khẩn cấp", bỏ "triệt phá"), giữ nguyên ngưỡng và phép
+tính.
+
+**Tìm ra nhưng KHÔNG sửa**: `homeHeroDecision.ts` có bốn chuỗi `Trọng tài hệ thống (Arbitration
+Utility: 0.42): ...`, tiếng Anh nội bộ kèm số gỡ lỗi. Nhưng nó chảy vào `Dashboard.tsx` vốn
+**không được import ở đâu cả**, tức mã chết thuộc Nợ 1, không lộ ra màn hình nào.
+
+---
+
+## Lượt trước: màn Báo cáo, ba con số 48px thành ba câu
 
 Màn thứ tư của đợt.
 

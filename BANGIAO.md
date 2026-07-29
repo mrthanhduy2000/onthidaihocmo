@@ -59,6 +59,60 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 8), màn Kế hoạch: màn hình đang tự mâu thuẫn với chính nó
+
+Màn thứ năm. Vấn đề nặng nhất ở đây không phải cách bày mà là **màn hình nói cùng lúc hai điều
+ngược nhau**.
+
+Đo trên bản chạy thật với hồ sơ mới trả lời 7 trên 292 câu:
+
+| Dòng hiện trên màn | Ý nghĩa |
+|---|---|
+| "Độ tin cậy: **Cần thêm dữ liệu**" | hệ thống tự nhận là **chưa biết** |
+| "Nguy cơ trượt mục tiêu, mức Trung bình" | rồi phát cảnh báo |
+| "Còn thiếu: **-5.5**", tô cam đậm | dựa trên chính con số vừa nhận là chưa đủ căn cứ |
+| "cần được **bù đắp khẩn cấp**" | kèm hai tam giác cảnh báo |
+
+Một dự báo tự khai là chưa đủ dữ liệu thì không được đóng khung bằng chữ đậm màu cảnh báo và
+từ "khẩn cấp". Đây đúng điều luật Đàm đặt ra: **không đóng khung con số chưa chắc chắn bằng
+biểu đồ hay màu sắc mang tính khẳng định**.
+
+**Bốn điều sửa, KHÔNG động vào một phép tính hay một ngưỡng nào:**
+
+1. **Mức độ nhấn bám theo độ tin cậy.** Khi bộ dự báo còn ghi "Cần thêm dữ liệu" thì khối
+   trình bày ở dạng tạm tính ("Tạm tính khoảng 3.0 ± 0.9 điểm."), và phần lý do đổi tên thành
+   "Chỗ cần chú ý" thay vì "Nguy cơ trượt mục tiêu". Con số vẫn hiện đủ, chỉ thôi hò hét.
+2. **Bỏ dấu trừ.** "-5.5" và "còn 5,5 điểm nữa" là cùng một sự thật, nhưng một bên là điểm âm
+   còn một bên là quãng đường. Tiến độ học không nên trình bày bằng số âm.
+3. **Bỏ tam giác cảnh báo** trên từng dòng lý do. Ba tam giác vàng xếp dọc biến một danh sách
+   việc cần làm thành một bảng sự cố.
+4. **Bỏ tiêu đề đôi**: dòng nhãn xanh dương "Kế hoạch ôn thi và dự báo điểm" nằm ngay trên tiêu
+   đề "Kế hoạch đạt điểm mục tiêu", hai dòng nói cùng một việc và dòng trên mang màu liên kết
+   nên mời bấm vào chỗ không bấm được. Cùng lỗi đã sửa ở màn Báo cáo cùng ngày.
+
+**Hai chuỗi trong service cũng đổi CHỮ**, giữ nguyên ngưỡng và phép tính. Đây là chuỗi mẫu chỉ
+để hiển thị, cùng loại đã từng sửa ngày 28/07:
+
+| Trước | Sau |
+|---|---|
+| `Khoảng cách điểm mục tiêu (-5.5 điểm) cần được bù đắp khẩn cấp.` | `Còn 5.5 điểm nữa mới tới mục tiêu, cần bù dần bằng lịch học đều.` |
+| `Có 5 bẫy câu sai trong Sổ tay chưa được triệt phá.` | `Còn 5 câu trong sổ câu sai chưa làm lại.` |
+
+"Triệt phá" là từ của chuyện đánh trận, không phải của chuyện học.
+
+**Một thứ tìm ra nhưng KHÔNG sửa, ghi lại để khỏi ai mất công**: `homeHeroDecision.ts` có bốn
+chuỗi dạng `Trọng tài hệ thống (Arbitration Utility: 0.42): ...`, tức tiếng Anh nội bộ kèm một
+con số trông như số gỡ lỗi. Truy đường gọi thì nó chảy vào `learningJourneyOrchestrator` rồi
+vào `Dashboard.tsx`, mà **`Dashboard.tsx` không được import ở đâu cả** và ngay cả ở đó trường
+`.reason` cũng không được render. Tức nó nằm trong mã chết, thuộc Nợ 1, không lộ ra màn hình
+nào. Không tự ý dọn.
+
+**Kiểm chứng**: `npm run check` 201/201. Trên bản chạy thật, sau khi tải lại trang để bộ dự báo
+tính lại từ đầu: 0 chỗ còn chữ "khẩn cấp", 0 chỗ còn "triệt phá", 0 dấu trừ trước số điểm, tiêu
+đề đôi đã hết, 0 tràn ngang ở cả 1280px lẫn 375px, 0 chỗ rớt tương phản.
+
+---
+
 ### 29/07/2026 (lượt 7), màn Báo cáo: ba con số 48px thành ba câu, và sửa một mâu thuẫn số liệu
 
 Màn thứ tư. Ba khối dẫn dắt của màn này là ba con số cỡ **48px chữ mảnh**, mỗi con số một thẻ

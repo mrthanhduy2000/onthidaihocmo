@@ -940,11 +940,25 @@ export const examForecaster = {
     const mitigations: string[] = [];
 
     if (gap > 1.0) {
-      riskReasons.push(`Khoảng cách điểm mục tiêu (-${gap} điểm) cần được bù đắp khẩn cấp.`);
+      /*
+        Chỉ đổi CHỮ, không đổi ngưỡng và không đổi phép tính.
+
+        Bản cũ: "Khoảng cách điểm mục tiêu (-5.5 điểm) cần được bù đắp khẩn cấp." Hai chỗ sai
+        về cách nói, cùng nằm trong một câu:
+
+        1. Dấu trừ. "-5.5" và "còn 5,5 điểm nữa" là cùng một sự thật, nhưng một bên là điểm âm
+           còn một bên là quãng đường. Tiến độ học không bao giờ nên trình bày bằng số âm.
+        2. "Khẩn cấp". Câu này hiện ra ngay cạnh dòng "Độ tin cậy: Cần thêm dữ liệu", tức hệ
+           thống vừa tự nhận là chưa đủ căn cứ rồi lại phát cảnh báo khẩn dựa trên chính con số
+           ấy. Với một hồ sơ mới trả lời 7 trên 292 câu thì đó là lời hù dọa không có cơ sở.
+      */
+      riskReasons.push(`Còn ${gap} điểm nữa mới tới mục tiêu, cần bù dần bằng lịch học đều.`);
       mitigations.push(`Tăng thời lượng học hàng ngày từ ${goal.dailyStudyMinutes || 45} lên ${Math.min(120, (goal.dailyStudyMinutes || 45) + 30)} phút/ngày.`);
     }
     if (studyDebtCount >= 5) {
-      riskReasons.push(`Có ${studyDebtCount} bẫy câu sai trong Sổ tay chưa được triệt phá.`);
+      // Cùng lý do như câu trên: chỉ đổi CHỮ, giữ nguyên ngưỡng và phép tính. "Triệt phá" là
+      // từ của chuyện đánh trận, không phải của chuyện học. Sổ câu sai là chỗ để làm lại.
+      riskReasons.push(`Còn ${studyDebtCount} câu trong sổ câu sai chưa làm lại.`);
       mitigations.push("Ưu tiên dọn sạch Sổ tay câu sai trước khi làm đề thi thử mới.");
     }
     if (remainingDays <= 5 && readinessPercentage < 75) {
