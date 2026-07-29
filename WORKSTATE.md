@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười một lượt tái thiết kế giao diện theo Khan Academy (Luyện câu, Bàn học, Câu sai, Báo cáo, Kế hoạch, Hỏi AI, Tổng quan).
+**Cập nhật lần cuối**: 29/07/2026, sau mười hai lượt tái thiết kế giao diện theo Khan Academy (Luyện câu, Bàn học, Câu sai, Báo cáo, Kế hoạch, Hỏi AI, Tổng quan, Chương trình).
 
 ---
 
@@ -25,7 +25,24 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Tổng quan, và hai chỗ tôi kết luận SAI ở lượt trước
+## Lượt mới nhất: màn Chương trình, bản đồ chương dựng lại thành hàng
+
+Màn thứ tám. Áp lại đúng ba khuôn đã ghi ở AGENTS.md 4.9f, không phải nghĩ mới.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Dòng dẫn dưới tiêu đề | "**Lớp** hoạch định chiến lược học tập toàn diện..." | câu nói việc người học cần làm |
+| Bốn thẻ số liệu | mỗi số một thẻ có nền và viền | một dòng chữ ngăn bằng vạch dọc |
+| Thang mức sẵn sàng | **21/100** | **21%** |
+| Bản đồ chương | lưới thẻ, mã "CH1" tô nền làm neo, tên chương bị `line-clamp-1` cắt cụt | hàng, tên đầy đủ |
+
+"Lớp hoạch định" là chữ của kiến trúc phần mềm, và cả câu mô tả BẢN THÂN MÀN HÌNH. Mã "CH1" là
+thứ nổi nhất trong mỗi thẻ trong khi TÊN chương mới là thứ cần đọc mà lại bị cắt cụt. Mức sẵn
+sàng dùng thang trên 100 ở màn này nhưng là phần trăm ở mọi màn khác.
+
+---
+
+## Lượt trước: màn Tổng quan, và hai chỗ tôi kết luận SAI ở lượt trước
 
 **Đính chính**: lượt 8 tôi ghi rằng bốn chuỗi `Trọng tài hệ thống (Arbitration Utility: 0.42)`
 nằm trong mã chết. **Cả hai vế đều sai**: `Dashboard.tsx` chính là màn Tổng quan, được App.tsx

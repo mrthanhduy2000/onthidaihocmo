@@ -474,7 +474,9 @@ export const curriculumIntelligenceEngine = {
         // Hai dòng này CHỈ để hiển thị, không tham gia tính toán. Đổi sang tiếng Việt ngày
         // 28/07/2026 cho khớp với `decision`, `reason`, `evidence` ngay bên cạnh vốn đã là
         // tiếng Việt. Giá trị số giữ nguyên.
-        metrics: `Tỷ lệ đúng: ${masteryScore}%, Mức sẵn sàng: ${readinessScore}/100`,
+        // Cùng một đại lượng thì phải cùng một thang đo: cả ứng dụng dùng phần trăm, riêng chuỗi
+        // này dùng thang trên 100 nên người học phải tự đổi đơn vị để so với các màn khác.
+        metrics: `Tỷ lệ đúng: ${masteryScore}%, mức sẵn sàng: ${readinessScore}%`,
         policy: "Quy tắc chiến lược ôn tập, bản v2026.1",
         timestamp: TimeService.now().toISOString()
       }

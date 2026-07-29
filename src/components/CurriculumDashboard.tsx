@@ -104,8 +104,17 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
                 Khung chương trình và chiến lược ôn tập
               </h1>
             </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Lớp hoạch định chiến lược học tập toàn diện. Điều phối lộ trình, phân bổ thời gian & nâng cao mức sẵn sàng thi.
+            {/*
+              Bản cũ: "Lớp hoạch định chiến lược học tập toàn diện. Điều phối lộ trình, phân bổ
+              thời gian & nâng cao mức sẵn sàng thi."
+
+              "Lớp" ở đây là chữ của kiến trúc phần mềm (một tầng trong hệ thống), không phải
+              chữ người học dùng. Cả câu mô tả BẢN THÂN MÀN HÌNH đang làm gì, y hệt câu "Nền
+              tảng ghi nhận thời gian làm bài thực tế..." đã gỡ ở màn Báo cáo. Một màn kế hoạch
+              nói về việc người học cần làm, không nói về chính nó.
+            */}
+            <p className="text-base text-text-secondary font-sans max-w-[40rem]">
+              Nên học chương nào trước, mỗi ngày bao nhiêu, và còn bao xa mới tới mục tiêu.
             </p>
           </div>
 
@@ -116,32 +125,39 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
           </div>
         </div>
 
-        {/* 4 Core Strategy Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted">Sẵn sàng thi</div>
-            <div className="text-2xl tabular-nums font-bold text-brand-info">{plan.readinessScore}/100</div>
-            <div className="text-2xs text-text-muted">Chỉ số tự tin làm bài</div>
-          </div>
+        {/*
+          BỐN THẺ SỐ LIỆU ĐỔI THÀNH MỘT DÒNG CHỮ, theo đúng khuôn 2 ở AGENTS.md 4.9f. Đây là màn
+          thứ năm áp cùng khuôn ấy, nên bốn màn Bàn học, Báo cáo, Kế hoạch, Trí nhớ và màn này
+          nay đọc lên cùng một giọng.
 
-          <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted">Độ thông thạo</div>
-            <div className="text-2xl tabular-nums font-bold text-brand-success">{plan.masteryScore}%</div>
-            <div className="text-2xs text-text-muted">Tỷ lệ chính xác tổng thể</div>
-          </div>
+          Kèm hai chỗ sửa chữ:
+          - **"21/100"** đổi thành phần trăm. Cả ứng dụng đo mức sẵn sàng bằng phần trăm, riêng
+            màn này dùng thang trên 100 nên người học phải đổi đơn vị trong đầu để so với các
+            màn khác. Cùng một đại lượng thì phải cùng một thang đo.
+          - **"14 Ngày"** viết hoa chữ Ngày giữa câu, kiểu tiếng Anh. Tiếng Việt không viết hoa
+            giữa câu.
 
-          <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted">Nhiệm vụ hôm nay</div>
-            <div className="text-xs font-semibold text-text-primary truncate">{plan.todayGoal}</div>
-            <div className="text-2xs tabular-nums text-brand-info">{plan.estimatedStudyTime} phút dự kiến</div>
-          </div>
-
-          <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-1">
-            <div className="text-2xs tabular-nums text-text-muted">Đếm ngược kỳ thi</div>
-            <div className="text-2xl tabular-nums font-bold text-brand-warning">{plan.examDaysRemaining} Ngày</div>
-            <div className="text-2xs text-text-muted">Tính từ ngày thi trong mục tiêu môn học</div>
-          </div>
+          Nhiệm vụ hôm nay tách riêng thành một câu vì nó là VIỆC CẦN LÀM chứ không phải một
+          con số đo được, và trước đó nó bị `truncate` cắt cụt giữa chừng trong một cái thẻ hẹp.
+        */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-1 text-sm text-text-secondary font-sans">
+          <span>
+            Mức sẵn sàng <strong className="text-text-primary">{plan.readinessScore}%</strong>
+          </span>
+          <span className="sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
+            Độ thông thạo <strong className="text-text-primary">{plan.masteryScore}%</strong>
+          </span>
+          <span className="sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
+            Còn <strong className="text-text-primary">{plan.examDaysRemaining} ngày</strong> tới kỳ thi
+          </span>
         </div>
+
+        <p className="text-xl font-bold text-text-primary font-sans leading-snug max-w-[42rem]">
+          Hôm nay: {plan.todayGoal}
+          <span className="block text-base font-normal text-text-secondary pt-1">
+            Dự kiến khoảng {plan.estimatedStudyTime} phút.
+          </span>
+        </p>
 
         {/* Strategic Hero Action Callout */}
         <div className="bg-gradient-to-r from-brand-info/10 via-bg-surface to-bg-surface border border-brand-info/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -174,66 +190,55 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
             <BookOpen className="w-4 h-4 text-brand-info" />
             Bản đồ tiến trình học phần
           </h2>
-          <span className="text-2xs tabular-nums text-text-muted">7 Chương trọng tâm</span>
+          <span className="text-sm text-text-muted">{plan.chapterStatuses.length} chương</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {plan.chapterStatuses.map((ch) => (
-            <div 
-              key={ch.chapterId} 
-              className={`p-4 rounded-xl border transition space-y-2 ${
-                ch.status === "COMPLETED" ? "bg-brand-success-bg border-brand-success/40" :
-                ch.status === "WEAK" ? "bg-brand-warning-bg border-brand-warning/40" :
-                ch.status === "LOCKED" ? "bg-bg-surface/50 border-border-primary/40 opacity-60" :
-                "bg-bg-card border-border-primary/80 hover:border-brand-info/60"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-2xs tabular-nums font-bold text-brand-info bg-brand-info-bg px-2 py-0.5 rounded">
-                  {ch.code}
-                </span>
+        {/*
+          BẢN ĐỒ CHƯƠNG DỰNG LẠI THÀNH HÀNG, theo khuôn 3 ở AGENTS.md 4.9f và theo đúng bản đo
+          trang khoá học của Khan (mỗi mục là một hàng, không thẻ, không nền, không bo góc).
 
-                {ch.status === "COMPLETED" && (
-                  <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-success">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Hoàn thành</span>
-                  </span>
-                )}
-                {ch.status === "WEAK" && (
-                  <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-warning">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>Cần củng cố</span>
-                  </span>
-                )}
-                {ch.status === "LOCKED" && (
-                  <span className="inline-flex items-center gap-1 text-2xs tabular-nums text-text-muted">
-                    <Lock className="w-4 h-4" />
-                    <span>Chưa mở</span>
-                  </span>
-                )}
-                {ch.status === "READY" && (
-                  <span className="inline-flex items-center gap-1 text-2xs tabular-nums text-brand-info">
-                    <span>Sẵn sàng học</span>
-                  </span>
-                )}
-              </div>
+          Ba lỗi của bản cũ:
 
-              <div className="font-semibold text-xs text-text-primary line-clamp-1">{ch.title}</div>
+          1. **Mã chương "CH1" làm neo thị giác.** Nó là thứ đầu tiên và nổi nhất trong mỗi thẻ,
+             tô nền xanh, trong khi TÊN chương mới là thứ người học cần đọc. Khan không bao giờ
+             hiện mã nội bộ; họ hiện tên bài.
+          2. **`line-clamp-1` cắt tên chương cụt.** Tên dài như "Chương 2: Yếu tố môi trường ảnh
+             hưởng đến hành vi khách hàng" bị cắt giữa chừng, mà đó lại là thông tin chính.
+          3. **Nền tô theo trạng thái.** Chương yếu tô nền cam, chương xong tô nền xanh, nên cả
+             lưới thành một bảng màu. Trạng thái nay nói bằng CHỮ ngay cạnh tên chương, còn nền
+             để trắng cho dễ đọc.
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-2xs tabular-nums text-text-muted">
-                  <span>Thông thạo</span>
-                  <span>{ch.masteryScore}%</span>
+          Giữ nguyên đủ bốn trạng thái và thanh tiến độ.
+        */}
+        <div className="divide-y divide-border-primary/70 border-y border-border-primary/70">
+          {plan.chapterStatuses.map((ch) => {
+            const trangThai =
+              ch.status === "COMPLETED" ? { chu: "Đã xong", mau: "text-brand-success", Icon: CheckCircle2 } :
+              ch.status === "WEAK" ? { chu: "Cần củng cố", mau: "text-text-secondary", Icon: AlertTriangle } :
+              ch.status === "LOCKED" ? { chu: "Chưa mở", mau: "text-text-muted", Icon: Lock } :
+              { chu: "Sẵn sàng học", mau: "text-text-secondary", Icon: BookOpen };
+            const TrangThaiIcon = trangThai.Icon;
+
+            return (
+              <div key={ch.chapterId} className={`py-3.5 space-y-2 ${ch.status === "LOCKED" ? "text-text-muted" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <TrangThaiIcon className={`w-5 h-5 mt-0.5 shrink-0 ${trangThai.mau}`} />
+                  <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+                    <span className="text-base font-medium text-text-primary">{ch.title}</span>
+                    <span className={`text-sm ${trangThai.mau}`}>{trangThai.chu}</span>
+                    <span className="text-sm text-text-muted">thông thạo {ch.masteryScore}%</span>
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-bg-surface rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full ${ch.masteryScore >= 80 ? "bg-brand-success" : "bg-brand-info"}`} 
-                    style={{ width: `${ch.masteryScore}%` }} 
+
+                <div className="ml-8 w-full max-w-[32rem] h-1.5 bg-bg-surface rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${ch.masteryScore >= 80 ? "bg-brand-success" : "bg-brand-info"}`}
+                    style={{ width: `${ch.masteryScore}%` }}
                   />
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

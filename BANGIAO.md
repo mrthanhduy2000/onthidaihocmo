@@ -59,6 +59,36 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 12), màn Chương trình: bản đồ chương dựng lại thành hàng
+
+Màn thứ tám. Áp lại đúng ba khuôn đã ghi ở AGENTS.md 4.9f, không phải nghĩ mới.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Dòng dẫn dưới tiêu đề | "**Lớp** hoạch định chiến lược học tập toàn diện..." | "Nên học chương nào trước, mỗi ngày bao nhiêu, và còn bao xa mới tới mục tiêu." |
+| Bốn thẻ số liệu | mỗi số một thẻ có nền và viền | một dòng chữ ngăn bằng vạch dọc |
+| Thang mức sẵn sàng | **21/100** | **21%** |
+| Bản đồ chương | lưới thẻ, mã "CH1" tô nền làm neo, tên chương bị `line-clamp-1` cắt cụt | hàng, tên chương đầy đủ, trạng thái nói bằng chữ |
+| "14 Ngày" | viết hoa giữa câu | "14 ngày" |
+
+Ba điều đáng nói:
+
+1. **"Lớp hoạch định"** là chữ của kiến trúc phần mềm (một tầng trong hệ thống), không phải chữ
+   người học dùng, và cả câu mô tả BẢN THÂN MÀN HÌNH. Cùng lỗi với "Nền tảng ghi nhận thời gian
+   làm bài thực tế..." đã gỡ ở màn Báo cáo.
+2. **Mã chương "CH1" làm neo thị giác**: nó là thứ nổi nhất trong mỗi thẻ, tô nền xanh, trong
+   khi TÊN chương mới là thứ cần đọc, mà tên lại bị cắt cụt bằng `line-clamp-1`. Khan không bao
+   giờ hiện mã nội bộ.
+3. **Hai thang đo cho cùng một đại lượng.** Mức sẵn sàng hiện ở thang trên 100 tại màn này
+   nhưng là phần trăm ở mọi màn khác, nên người học phải tự đổi đơn vị để so sánh. Còn một chuỗi
+   nữa trong `curriculumIntelligenceEngine` cũng ghi `/100`, đã sửa luôn (chỉ đổi CHỮ trong
+   chuỗi hiển thị, không đụng phép tính).
+
+**Kiểm chứng**: `npm run check` 204/204. Trên bản chạy thật: 0 chỗ còn thang `/100`, 0 mã "CH1",
+tên chương dài nhất hiện đủ không bị cắt, 0 tràn ngang.
+
+---
+
 ### 29/07/2026 (lượt 11), màn Tổng quan, và HAI CHỖ TÔI KẾT LUẬN SAI Ở LƯỢT TRƯỚC
 
 **Đính chính trước, vì nó ảnh hưởng tới người đọc sau.** Ở lượt 8 tôi ghi rằng bốn chuỗi
