@@ -116,7 +116,18 @@ export const homeHeroDecisionEngine = {
         subtitle: `Sửa ${count} câu làm sai & khôi phục độ bền ghi nhớ`,
         estimatedTimeMinutes: Math.ceil(count * 1.2),
         expectedBenefit: "Tăng khả năng ghi nhớ từ 65% lên 90%",
-        reason: `Trọng tài hệ thống (Arbitration Utility: ${(adjRetention).toFixed(2)}): ${debtCount} bẫy câu sai cần triệt phá ưu tiên hàng đầu.`,
+      /*
+        Chuỗi này HIỆN RA MÀN HÌNH, dưới nhãn "Vì sao nên làm mục này" ở màn Tổng quan.
+
+        Bản cũ in nguyên văn `Trọng tài hệ thống (Arbitration Utility: 0.88): ... độ bao phủ
+        syllabus.` Ba thứ sai trong một câu: tên cơ chế nội bộ bằng tiếng Anh, một số thực gỡ
+        lỗi, và từ "syllabus". Đây là câu trả lời cho câu hỏi quan trọng nhất của màn hình
+        ("vì sao tôi nên làm việc này"), nên nó phải nói được lý do bằng tiếng của người học.
+
+        Chỉ đổi CHỮ. Giá trị `adj*` vẫn được tính y như cũ và vẫn quyết định mục nào thắng;
+        chỉ là con số nội bộ ấy thôi hiện ra cho người học đọc.
+      */
+        reason: `Bạn còn ${debtCount} câu từng làm sai chưa ôn lại, đó là chỗ mất điểm chắc chắn nhất.`,
         confidence: 94,
         primaryAction: {
           label: `Bắt đầu ôn ${count} câu`,
@@ -138,7 +149,7 @@ export const homeHeroDecisionEngine = {
         subtitle: `Tập trung 10 câu thích ứng thuộc Chương ${chId}`,
         estimatedTimeMinutes: 10,
         expectedBenefit: "Nâng tỷ lệ chính xác chương yếu lên trên 80%",
-        reason: `Trọng tài hệ thống (Arbitration Utility: ${(adjWeakChapter).toFixed(2)}): Tỷ lệ làm đúng Chương ${chId} ở mức thấp.`,
+        reason: `Tỷ lệ làm đúng ở Chương ${chId} đang thấp hơn các chương khác.`,
         confidence: 90,
         primaryAction: {
           label: `Bắt đầu ôn Chương ${chId}`,
@@ -160,7 +171,7 @@ export const homeHeroDecisionEngine = {
         subtitle: "20 câu chuẩn cấu trúc đề thi chính thức với phân bổ Bloom chuẩn",
         estimatedTimeMinutes: 20,
         expectedBenefit: "Đo lường điểm số dự kiến & luyện tập phản xạ áp lực thời gian",
-        reason: `Trọng tài hệ thống (Arbitration Utility: ${(adjMock).toFixed(2)}): Năng lực ổn định, sẵn sàng kiểm tra áp lực tổng hợp.`,
+        reason: "Kết quả của bạn đã ổn định, đây là lúc thử sức với một đề đầy đủ.",
         confidence: 88,
         primaryAction: {
           label: "Bắt đầu đề thi thử 20 câu",
@@ -181,7 +192,7 @@ export const homeHeroDecisionEngine = {
       subtitle: "Thuật toán tự động chọn câu hỏi vừa sức theo nhịp tư duy",
       estimatedTimeMinutes: 10,
       expectedBenefit: "Mở rộng độ bao phủ chương & tối ưu hóa lộ trình cá nhân",
-      reason: `Trọng tài hệ thống (Arbitration Utility: ${(adjAdaptive).toFixed(2)}): Duy trì nhịp học thích ứng mở rộng độ bao phủ syllabus.`,
+      reason: "Giữ nhịp học đều và mở rộng dần sang các phần chương trình chưa chạm tới.",
       confidence: 92,
       primaryAction: {
         label: "Bắt đầu bài thi thích ứng (10 câu)",

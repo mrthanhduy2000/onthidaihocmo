@@ -2753,6 +2753,50 @@ check("Bốn màu ngữ nghĩa đọc được trên nền cùng tông của ch�
     ? `đạt chuẩn WCAG AA: ${capDat.join(", ")}`
     : `chưa đạt 4,5:1: ${capHong.join(", ")}`);
 
+// AE10. Màn Tổng quan không được tự bịa ra số ngày còn lại và số câu của ngân hàng.
+//
+// Đo trên bản chạy thật ngày 29/07/2026, màn Tổng quan hiện cùng lúc BỐN con số nói HAI sự
+// thật khác nhau:
+//
+//   "1. Thời gian tới kỳ thi: Còn 14 ngày"     dải trên, lấy từ bộ dự báo
+//   "Tiến trình tới kỳ thi: Còn 12 ngày"       khối giữa, VIẾT CỨNG `const daysLeft = 12`
+//   "3. Tiến độ hiện tại: Đã hoàn thành 1%"    dải trên
+//   "Đã hoàn thành: 12%"                       khối giữa, chia cho hằng số 60
+//
+// Hai nguyên nhân, đều thuộc họ lỗi ở bất biến 4.9:
+//   1. `daysLeft = 12` là hằng số viết tay đội lốt phép đo, đặt cạnh một phép đếm thật.
+//   2. Mẫu số **60** là số câu của MÔN ĐÃ ĐÓNG (ngân hàng cũ id 1 tới 60). Môn đang mở có 292
+//      câu, nên phần trăm hoàn thành đang tính trên ngân hàng của một môn khác.
+//
+// Cái thứ hai nguy hiểm hơn cái thứ nhất vì nó im lặng đúng cho môn cũ và sai cho mọi môn sau.
+const nguonHero = docNguon("src/components/HomeHero.tsx");
+const bipHero: string[] = [];
+if (/const daysLeft\s*=\s*\d+\s*;/.test(nguonHero)) bipHero.push("số ngày còn lại viết cứng");
+if (/totalSolved\s*\/\s*60\b/.test(nguonHero)) bipHero.push("chia cho 60 câu của môn đã đóng");
+check("Màn Tổng quan không bịa số ngày và số câu ngân hàng",
+  bipHero.length === 0 && /questions\.length/.test(nguonHero),
+  bipHero.length === 0
+    ? "số ngày suy từ ngày thi đã đặt, phần trăm tính trên ngân hàng thật của môn đang mở"
+    : `${bipHero.length} con số bịa: ${bipHero.join(" | ")}`);
+
+// AE11. Lý do gợi ý hiện cho người học không được chứa tên cơ chế nội bộ hay số gỡ lỗi.
+//
+// Chuỗi `reason` của `homeHeroDecision` HIỆN RA MÀN HÌNH dưới nhãn "Vì sao nên làm mục này".
+// Bản cũ in nguyên văn: `Trọng tài hệ thống (Arbitration Utility: 0.88): Duy trì nhịp học
+// thích ứng mở rộng độ bao phủ syllabus.` Ba thứ sai trong một câu: tên cơ chế nội bộ bằng
+// tiếng Anh, một số thực gỡ lỗi, và từ "syllabus".
+//
+// Đây là câu trả lời cho câu hỏi quan trọng nhất của màn hình, nên nó phải nói bằng tiếng của
+// người học. Giá trị `adj*` vẫn được tính y như cũ và vẫn quyết định mục nào thắng.
+const nguonHero2 = docNguon("src/services/homeHeroDecision.ts");
+const dongReason = (nguonHero2.match(/^\s*reason:.*$/gm) || []);
+const reasonXau = dongReason.filter(d => /Arbitration|Utility|syllabus|triệt phá|Trọng tài hệ thống/.test(d));
+check("Lý do gợi ý viết bằng tiếng của người học",
+  dongReason.length >= 3 && reasonXau.length === 0,
+  reasonXau.length === 0
+    ? `${dongReason.length} lý do, không chuỗi nào chứa tên cơ chế nội bộ hay số gỡ lỗi`
+    : `${reasonXau.length} lý do còn tiếng Anh nội bộ hoặc số gỡ lỗi`);
+
 // AF3b. Không component nào được đi vòng qua bộ token bằng bảng màu thô của Tailwind.
 //
 // VÌ SAO CÓ PHÉP KIỂM NÀY. Phép kiểm AF1 đối chiếu mọi lớp `*-brand-*` với token trong

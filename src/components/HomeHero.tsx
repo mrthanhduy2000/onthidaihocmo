@@ -6,7 +6,8 @@
 import React from "react";
 import { Play, Sparkles, Clock, TrendingUp, HelpCircle, ArrowRight, Sun, Sunset, Moon, Coffee, ShieldCheck } from "lucide-react";
 import { NextBestAction } from "../services/nextBestAction";
-import { dbService } from "../services/db";
+import { dbService, questions } from "../services/db";
+import { TimeService } from "../services/time";
 
 interface HomeHeroProps {
   action: NextBestAction;
@@ -45,8 +46,37 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
   const totalSolved = stats.totalSolved || 0;
   const accuracy = totalSolved > 0 ? Math.round((stats.totalCorrect / totalSolved) * 100) : 0;
   const readiness = Math.min(98, Math.round(accuracy * 0.7 + Math.min(totalSolved / 50, 1) * 30));
-  const daysLeft = 12; // Standard exam timeline benchmark
-  const completionPercent = Math.min(100, Math.round((totalSolved / 60) * 100));
+
+  /*
+    HAI CON SỐ TỰ MÂU THUẪN NGAY TRÊN CÙNG MỘT MÀN HÌNH.
+
+    Đo trên bản chạy thật ngày 29/07/2026, màn Tổng quan hiện cùng lúc:
+
+      "1. Thời gian tới kỳ thi: Còn 14 ngày"     <- dải trên, lấy từ bộ dự báo
+      "Tiến trình tới kỳ thi: Còn 12 ngày"       <- khối này, VIẾT CỨNG
+      "3. Tiến độ hiện tại: Đã hoàn thành 1%"    <- dải trên
+      "Đã hoàn thành: 12%"                       <- khối này
+
+    Nguyên nhân của cả hai:
+
+      const daysLeft = 12;  // Standard exam timeline benchmark
+      const completionPercent = Math.round((totalSolved / 60) * 100);
+
+    Con số 12 là hằng số viết tay đội lốt phép đo, đúng khuôn bất biến 4.9. Còn mẫu số **60**
+    là số câu của **môn ĐÃ ĐÓNG** (ngân hàng cũ chạy từ id 1 tới 60); môn đang mở có 292 câu.
+    Nên phần trăm hoàn thành đang tính trên ngân hàng của một môn khác, sai gấp gần năm lần.
+
+    Sửa: dùng đúng nguồn mà cả ứng dụng đang dùng cho số ngày, và đếm ngân hàng thật của môn
+    đang mở. Không thêm phép tính mới, chỉ thôi tự bịa ra một nguồn thứ hai.
+  */
+  const ngayThi = dbService.getSubjectGoal(dbService.getActiveSubjectId())?.examDate;
+  const daysLeft = ngayThi
+    ? Math.max(0, Math.ceil((TimeService.parseToDate(ngayThi).getTime() - TimeService.now().getTime()) / 86400000))
+    : null;
+  const tongCauNganHang = questions.length;
+  const completionPercent = tongCauNganHang > 0
+    ? Math.min(100, Math.round((totalSolved / tongCauNganHang) * 100))
+    : 0;
 
   // Verbal Confidence level
   let confidenceText = "Phần này vẫn còn dễ nhầm";
@@ -113,12 +143,27 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
         {/* 1. Learning Momentum System Bar */}
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs tabular-nums">
+            {/* Chưa đặt ngày thi thì không bịa ra một con số nào cả. */}
             <div className="flex items-center gap-2">
               <span className="font-semibold text-text-primary">Tiến trình tới kỳ thi:</span>
-              <span className="text-brand-warning font-bold">Còn {daysLeft} ngày</span>
+              <span className="text-text-primary font-bold">
+                {daysLeft === null ? "Chưa đặt ngày thi" : `Còn ${daysLeft} ngày`}
+              </span>
             </div>
+            {/*
+              Nhãn nói rõ nó đếm gì.
+
+              Sau khi sửa mẫu số, hai con số trên màn này vẫn lệch nhau một điểm: dải trên hiện
+              1%, khối này hiện 2%. Không phải lỗi phép tính. `getDashboardOverview` gọi là
+              "hoàn thành" khi đếm câu **làm ĐÚNG** (`totalCorrect`), còn khối này đếm câu **đã
+              TRẢ LỜI** (`totalSolved`). Hai đại lượng khác nhau mang cùng một cái tên, y hệt ca
+              "độ phủ" đã sửa ở màn Báo cáo cùng ngày.
+
+              Sửa ở tầng trình bày là đủ và đúng chỗ: đổi nhãn cho khớp thứ nó đang đếm, không
+              đụng vào phép tính nào của engine.
+            */}
             <div className="flex items-center gap-3 text-2xs text-text-muted">
-              <span>Đã hoàn thành: <strong className="text-text-primary">{completionPercent}%</strong></span>
+              <span>Đã trả lời: <strong className="text-text-primary">{completionPercent}%</strong> ngân hàng</span>
               <span>•</span>
               <span>Sẵn sàng đi thi: <strong className="text-brand-success">{readiness}%</strong></span>
             </div>

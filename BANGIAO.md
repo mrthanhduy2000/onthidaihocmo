@@ -59,6 +59,58 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 11), màn Tổng quan, và HAI CHỖ TÔI KẾT LUẬN SAI Ở LƯỢT TRƯỚC
+
+**Đính chính trước, vì nó ảnh hưởng tới người đọc sau.** Ở lượt 8 tôi ghi rằng bốn chuỗi
+`Trọng tài hệ thống (Arbitration Utility: 0.42)` nằm trong mã chết và không lộ ra màn hình nào.
+**Cả hai vế đều sai:**
+
+1. `Dashboard.tsx` **không phải mã chết**. Nó là màn Tổng quan, được `App.tsx` nhập ở dòng 12 và
+   render khi `currentView === "home"`. Tôi kết luận sai vì grep `from "./Dashboard"` trong khi
+   đường dẫn thật là `from "./components/Dashboard"`.
+2. Chuỗi ấy **có hiện ra màn hình**, dưới nhãn "Vì sao nên làm mục này", do `HomeHero.tsx`
+   render chứ không phải `Dashboard.tsx`. Tôi chỉ grep chữ `reason` trong `Dashboard.tsx`, thấy
+   không có, rồi kết luận là không ai render.
+
+Bài học: **grep không thấy không có nghĩa là không có.** Muốn kết luận một thứ là mã chết thì
+phải truy đủ chuỗi nhập từ điểm vào, không được dừng ở một lần grep hụt.
+
+**Ba lỗi thật trên màn Tổng quan**
+
+1. **Câu trả lời cho "vì sao nên làm mục này" viết bằng tiếng Anh nội bộ kèm số gỡ lỗi.**
+   Nguyên văn hiện trên màn: `Trọng tài hệ thống (Arbitration Utility: 0.88): Duy trì nhịp học
+   thích ứng mở rộng độ bao phủ syllabus.` Đây là câu trả lời cho câu hỏi quan trọng nhất của
+   màn hình mà lại nói bằng tiếng của lập trình viên. Đã viết lại cả bốn lý do bằng tiếng Việt;
+   giá trị `adj*` vẫn được tính y như cũ và vẫn quyết định mục nào thắng.
+
+2. **Hai con số đếm ngược khác nhau trên cùng một màn.** Dải trên hiện "Còn 14 ngày", khối giữa
+   hiện "Còn 12 ngày". Nguyên nhân: `const daysLeft = 12; // Standard exam timeline benchmark`,
+   một hằng số viết tay đội lốt phép đo, đặt ngay cạnh một phép đếm thật. Nay suy từ đúng ngày
+   thi đã đặt, và **chưa đặt ngày thi thì hiện "Chưa đặt ngày thi" chứ không bịa số nào**.
+
+3. **Phần trăm hoàn thành tính trên ngân hàng của MÔN KHÁC.** Công thức cũ là
+   `Math.round((totalSolved / 60) * 100)`. Số **60** là số câu của **môn đã đóng** (ngân hàng cũ
+   chạy từ id 1 tới 60); môn đang mở có **292** câu. Nên con số này sai gấp gần năm lần, và nó
+   sẽ tiếp tục sai với mọi môn nạp thêm sau này. Đây là loại nguy hiểm hơn cả hằng số viết tay:
+   nó im lặng đúng cho đúng một môn.
+
+Sau khi sửa mẫu số thì hai con số vẫn lệch một điểm (1% so với 2%). Không phải lỗi phép tính:
+`getDashboardOverview` gọi là "hoàn thành" khi đếm câu **làm ĐÚNG**, còn khối kia đếm câu **đã
+TRẢ LỜI**. Hai đại lượng khác nhau mang cùng một cái tên, y hệt ca "độ phủ" ở màn Báo cáo. Đã
+sửa NHÃN cho khớp thứ nó đang đếm, không đụng phép tính nào của engine.
+
+**Hai phép kiểm mới AE10 và AE11**, đã thử phá và cả hai báo đỏ đúng lúc. Bộ kiểm 202 lên **204**.
+
+Ghi chú về cách thử phá: lần đầu tôi chèn thêm `const daysLeft = 12;` mà quên rằng nó tạo khai
+báo trùng, nên tsc hỏng và bộ tự kiểm chứng **không kịp chạy**, khiến phép kiểm trông như rỗng.
+Thử phá phải tạo ra một bản **biên dịch được** thì mới đo được đúng thứ mình muốn đo.
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, 204/204. Trên bản chạy thật sau khi tải lại
+trang: 0 chỗ còn `Arbitration`, `syllabus` hay "Trọng tài hệ thống"; chỉ còn **một** giá trị đếm
+ngược trên màn ("Còn 14 ngày"); 0 tràn ngang.
+
+---
+
 ### 29/07/2026 (lượt 10), bốn tab còn lại của màn Hỏi AI, và một lỗ hổng của chính bộ kiểm
 
 Làm cạn màn Hỏi AI trước khi rời. Soi bốn tab còn lại (Trí nhớ, Vùng điểm yếu, Hỏi đáp, Phân

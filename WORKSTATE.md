@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo, Kế hoạch, và hai lượt màn Hỏi AI).
+**Cập nhật lần cuối**: 29/07/2026, sau mười một lượt tái thiết kế giao diện theo Khan Academy (Luyện câu, Bàn học, Câu sai, Báo cáo, Kế hoạch, Hỏi AI, Tổng quan).
 
 ---
 
@@ -25,7 +25,30 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: bốn tab còn lại của màn Hỏi AI, và một lỗ hổng của chính bộ kiểm
+## Lượt mới nhất: màn Tổng quan, và hai chỗ tôi kết luận SAI ở lượt trước
+
+**Đính chính**: lượt 8 tôi ghi rằng bốn chuỗi `Trọng tài hệ thống (Arbitration Utility: 0.42)`
+nằm trong mã chết. **Cả hai vế đều sai**: `Dashboard.tsx` chính là màn Tổng quan, được App.tsx
+nhập ở dòng 12 (tôi grep `from "./Dashboard"` trong khi đường dẫn thật là
+`from "./components/Dashboard"`); và chuỗi ấy CÓ hiện ra màn hình, do `HomeHero.tsx` render chứ
+không phải `Dashboard.tsx`. Bài học: **grep không thấy không có nghĩa là không có.**
+
+Ba lỗi thật trên màn Tổng quan:
+
+1. **Lý do gợi ý viết bằng tiếng Anh nội bộ kèm số gỡ lỗi**: `Trọng tài hệ thống (Arbitration
+   Utility: 0.88): ... độ bao phủ syllabus.` Đã viết lại cả bốn lý do bằng tiếng Việt.
+2. **Hai con số đếm ngược khác nhau trên cùng màn**: 14 ngày so với 12 ngày, do
+   `const daysLeft = 12` viết cứng. Nay suy từ ngày thi đã đặt; chưa đặt thì hiện "Chưa đặt
+   ngày thi" chứ không bịa.
+3. **Phần trăm hoàn thành tính trên ngân hàng của MÔN KHÁC**: mẫu số **60** là số câu môn đã
+   đóng, môn đang mở có **292**. Sai gấp gần năm lần, và sẽ tiếp tục sai với mọi môn nạp sau.
+   Loại này nguy hiểm hơn hằng số viết tay: nó im lặng đúng cho đúng một môn.
+
+Hai phép kiểm mới AE10, AE11. Bộ kiểm 202 lên **204**.
+
+---
+
+## Lượt trước: bốn tab còn lại của màn Hỏi AI, và một lỗ hổng của chính bộ kiểm
 
 Làm cạn màn Hỏi AI trước khi rời. Tab **Trí nhớ** lộ ra ca nặng nhất của cả đợt: tiêu đề mục là
 **"Long-Term Student Evolution & Memory Engine"**, tức tên nội bộ của một engine in nguyên văn ở
@@ -597,7 +620,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **202**, chia 32 nhóm A đến AF, đạt toàn bộ |
+| Phép tự kiểm chứng | **204**, chia 32 nhóm A đến AF, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
