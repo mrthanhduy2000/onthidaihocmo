@@ -96,7 +96,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary/60 pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <Compass className="w-6 h-6 text-brand-info" />
+              <Compass className="w-6 h-6 text-brand-info shrink-0" />
               <h1 className="text-2xl font-display font-light text-text-primary tracking-tight">
                 {/* Trước 28/07/2026 là "Curriculum Intelligence & Learning Strategy". */}
                 Khung chương trình và chiến lược ôn tập
@@ -161,7 +161,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
         <div className="bg-gradient-to-r from-brand-info/10 via-bg-surface to-bg-surface border border-brand-info/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="text-xs font-bold text-text-primary flex items-center gap-2">
-              <Target className="w-4 h-4 text-brand-info" />
+              <Target className="w-4 h-4 text-brand-info shrink-0" />
               <span>Khuyến nghị chiến lược tiếp theo:</span>
             </div>
             <p className="text-xs text-text-muted leading-relaxed">
@@ -173,7 +173,7 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
             onClick={handleStartRecommendedPractice}
             className="px-5 py-2.5 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 self-start sm:self-auto cursor-pointer"
           >
-            <Play className="w-4 h-4 fill-current" />
+            <Play className="w-4 h-4 fill-current shrink-0" />
             {/* `.toUpperCase()` trên giá trị liệt kê của engine in ra "CHAPTER" / "MOCK" /
                 "INCORRECT" ngay trên nút bấm chính của màn. Dịch khi hiển thị. */}
             <span>Thực hiện nhiệm vụ ({NHAN_LOAI_DE[plan.recommendedExamType] ?? plan.recommendedExamType})</span>
@@ -243,7 +243,7 @@ Bản đồ tiến trình học phần
       <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between border-b border-border-primary/60 pb-3">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-brand-info" />
+            <Calendar className="w-4 h-4 text-brand-info shrink-0" />
             <h3 className="text-xs font-bold text-text-primary">
               Kế hoạch rèn luyện 7 ngày
             </h3>
@@ -280,7 +280,7 @@ Bản đồ tiến trình học phần
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-border-primary/60 pb-2">
             <span className="text-xs font-bold text-text-primary flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-brand-warning" />
+              <AlertTriangle className="w-4 h-4 text-brand-warning shrink-0" />
               Tồn đọng học tập ({plan.studyDebt.length})
             </span>
           </div>
@@ -326,7 +326,7 @@ Bản đồ tiến trình học phần
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
           <div className="flex items-center justify-between border-b border-border-primary/60 pb-2">
             <span className="text-xs font-bold text-text-primary flex items-center gap-2">
-              <Info className="w-4 h-4 text-brand-info" />
+              <Info className="w-4 h-4 text-brand-info shrink-0" />
               Giải trình quyết định chiến lược
             </span>
           </div>

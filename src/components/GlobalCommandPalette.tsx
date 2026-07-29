@@ -159,7 +159,7 @@ export default function GlobalCommandPalette({
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-bg-surface border border-border-primary group-hover:border-brand-info/40 rounded-lg text-text-muted group-hover:text-brand-info transition">
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-4 h-4 shrink-0" />
                     </div>
                     <div>
                       <span className="text-2xs tabular-nums text-text-muted block">{cmd.category}</span>

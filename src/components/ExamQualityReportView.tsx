@@ -20,7 +20,7 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
       <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-brand-info" />
+            <ShieldCheck className="w-5 h-5 text-brand-info shrink-0" />
             <h2 className="text-xl font-display font-semibold text-text-primary">
               Báo cáo Kiểm định Chất lượng Đề thi
             </h2>
@@ -72,13 +72,13 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
         {/* Academic Risks */}
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-text-primary border-b border-border-primary/60 pb-2">
-            <AlertTriangle className="w-4 h-4 text-brand-warning" />
+            <AlertTriangle className="w-4 h-4 text-brand-warning shrink-0" />
             <span>Cảnh báo rủi ro chất lượng ({report.potentialRisks.length})</span>
           </div>
 
           {report.potentialRisks.length === 0 ? (
             <div className="p-4 text-center text-xs text-brand-success flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Không phát hiện rủi ro học thuật lớn nào.</span>
             </div>
           ) : (
@@ -103,7 +103,7 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
         {/* Actionable Recommendations */}
         <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-text-primary border-b border-border-primary/60 pb-2">
-            <Award className="w-4 h-4 text-brand-info" />
+            <Award className="w-4 h-4 text-brand-info shrink-0" />
             <span>Khuyến nghị tối ưu đề thi</span>
           </div>
 
@@ -121,7 +121,7 @@ export default function ExamQualityReportView({ report, onBack }: ExamQualityRep
       {/* Distributions Breakdown Grid */}
       <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-4">
         <div className="text-xs font-semibold text-text-primary flex items-center gap-2 border-b border-border-primary/60 pb-2">
-          <BarChart2 className="w-4 h-4 text-brand-info" />
+          <BarChart2 className="w-4 h-4 text-brand-info shrink-0" />
           <span>Phân bổ Thang đo Bloom & Độ khó đề thi</span>
         </div>
 

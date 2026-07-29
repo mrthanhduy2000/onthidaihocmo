@@ -104,7 +104,7 @@ export default function LearningEvolutionView() {
           onClick={loadData}
           className="self-start shrink-0 flex items-center gap-2 px-4 h-10 text-sm font-bold border border-border-primary rounded bg-bg-card hover:bg-bg-surface transition cursor-pointer text-text-primary"
         >
-          <RefreshCw className="w-4 h-4 text-text-muted" />
+          <RefreshCw className="w-4 h-4 text-text-muted shrink-0" />
           <span className="whitespace-nowrap">Cập nhật tiến trình</span>
         </button>
       </div>
@@ -297,8 +297,8 @@ export default function LearningEvolutionView() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {p.isStableMastered && <ShieldCheck className="w-4 h-4 text-brand-success" />}
-                    {p.isRegressionDetected && <AlertTriangle className="w-4 h-4 text-brand-error" />}
+                    {p.isStableMastered && <ShieldCheck className="w-4 h-4 text-brand-success shrink-0" />}
+                    {p.isRegressionDetected && <AlertTriangle className="w-4 h-4 text-brand-error shrink-0" />}
                     <span className="font-bold text-sm">{p.currentMastery}%</span>
                   </div>
                 </button>
@@ -320,12 +320,12 @@ export default function LearningEvolutionView() {
                   <div className="flex items-center gap-2">
                     {currentSelectedProfile.isStableMastered && (
                       <span className="px-2.5 py-1 bg-brand-success-bg text-brand-success rounded text-xs font-semibold flex items-center gap-1">
-                        <ShieldCheck className="w-4 h-4" /> Stable Mastered
+                        <ShieldCheck className="w-4 h-4 shrink-0" /> Stable Mastered
                       </span>
                     )}
                     {currentSelectedProfile.isRegressionDetected && (
                       <span className="px-2.5 py-1 bg-brand-error-bg text-brand-error rounded text-xs font-semibold flex items-center gap-1">
-                        <AlertTriangle className="w-4 h-4" /> Regression Detected
+                        <AlertTriangle className="w-4 h-4 shrink-0" /> Regression Detected
                       </span>
                     )}
                   </div>
@@ -512,7 +512,7 @@ export default function LearningEvolutionView() {
             {insights.map((ins, idx) => (
               <div key={idx} className="p-4 bg-bg-surface border border-border-primary rounded-lg space-y-2 text-sm">
                 <div className="font-bold text-text-primary flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-brand-warning" />
+                  <Zap className="w-4 h-4 text-brand-warning shrink-0" />
                   <span>{ins.title}</span>
                 </div>
                 <p className="text-text-secondary">{ins.observation}</p>

@@ -45,7 +45,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary/60 pb-6">
         <div>
           <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info">
-            <Sliders className="w-4 h-4" />
+            <Sliders className="w-4 h-4 shrink-0" />
             Assessment Design Engine • Bàn thiết kế Đề thi
           </div>
           <h2 className="text-xl font-display font-light text-text-primary mt-1">
@@ -61,7 +61,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           onClick={handleLaunchExam}
           className="px-6 py-3 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center gap-2 shrink-0"
         >
-          <Play className="w-4 h-4 fill-current" />
+          <Play className="w-4 h-4 fill-current shrink-0" />
           <span>Khởi tạo & Bắt đầu bài thi ({spec.questionCount} câu)</span>
         </button>
       </div>
@@ -75,7 +75,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-brand-info">
-            <Brain className="w-4 h-4" /> Adaptive Exam
+            <Brain className="w-4 h-4 shrink-0" /> Adaptive Exam
           </span>
           <span className="text-2xs text-text-muted">Định hướng lỗ hổng kiến thức & trí nhớ</span>
         </button>
@@ -87,7 +87,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-text-primary">
-            <ShieldCheck className="w-4 h-4" /> Mock Exam
+            <ShieldCheck className="w-4 h-4 shrink-0" /> Mock Exam
           </span>
           <span className="text-2xs text-text-muted">Mô phỏng chuẩn cấu trúc kỳ thi thật</span>
         </button>
@@ -99,7 +99,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-brand-warning">
-            <RefreshCw className="w-4 h-4" /> Revision Exam
+            <RefreshCw className="w-4 h-4 shrink-0" /> Revision Exam
           </span>
           <span className="text-2xs text-text-muted">Ưu tiên câu từng sai & điểm chưa thông thạo</span>
         </button>
@@ -111,7 +111,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
           }`}
         >
           <span className="font-bold flex items-center gap-1.5 text-brand-success">
-            <Layers className="w-4 h-4" /> Chapter Focus
+            <Layers className="w-4 h-4 shrink-0" /> Chapter Focus
           </span>
           <span className="text-2xs text-text-muted">Chuyên sâu 100% vào 1 chương chọn lọc</span>
         </button>
@@ -137,7 +137,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
       <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-4 space-y-3">
         <div className="flex items-center justify-between border-b border-border-primary/40 pb-2">
           <div className="flex items-center gap-2 text-xs font-semibold text-text-primary">
-            <FileCheck className="w-4 h-4 text-brand-success" />
+            <FileCheck className="w-4 h-4 text-brand-success shrink-0" />
             <span>Báo cáo kiểm định đề thi</span>
             <span className={`px-2 py-0.5 rounded text-2xs tabular-nums font-bold ${
               reviewResult.passed ? "bg-brand-success-bg text-brand-success border border-brand-success/20" : "bg-brand-warning-bg text-brand-warning border border-brand-warning/20"
@@ -165,7 +165,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
               >
                 <div className="text-2xs tabular-nums text-text-muted">{key}</div>
                 <div className="text-xs font-bold mt-0.5 flex items-center justify-center gap-1">
-                  {isPass ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
+                  {isPass ? <CheckCircle2 className="w-4 h-4.5 shrink-0" /> : <AlertTriangle className="w-4 h-4.5 shrink-0" />}
                   <span>{check.status}</span>
                 </div>
               </div>

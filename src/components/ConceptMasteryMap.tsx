@@ -160,7 +160,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                           <div className="flex items-center gap-1.5">
                             {unmetPrereqs.length > 0 && (
                               <div className="p-1 rounded-md bg-brand-warning-bg text-brand-warning" title="Khái niệm tiên quyết chưa đạt chuẩn 60%">
-                                <AlertTriangle className="w-4 h-4" />
+                                <AlertTriangle className="w-4 h-4 shrink-0" />
                               </div>
                             )}
                             <span className={`text-2xs px-2 py-0.5 rounded-full font-medium font-sans ${
@@ -190,7 +190,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                             <span>{getMasteryLabel(score)}</span>
                             {node.review?.reviewPriority === "high" && (
                               <span className="text-brand-error flex items-center gap-1 font-medium">
-                                <Calendar className="w-3.5 h-3.5" /> Ôn tập ưu tiên
+                                <Calendar className="w-4 h-4.5 shrink-0" /> Ôn tập ưu tiên
                               </span>
                             )}
                           </div>
@@ -242,9 +242,9 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                             className="text-2xs text-text-muted hover:text-text-primary font-medium flex items-center gap-1.5 transition duration-150 cursor-pointer"
                           >
                             {isExpanded ? (
-                              <><span>Thu gọn</span><ChevronUp className="w-4 h-4" /></>
+                              <><span>Thu gọn</span><ChevronUp className="w-4 h-4 shrink-0" /></>
                             ) : (
-                              <><span>Chi tiết tri thức</span><ChevronDown className="w-4 h-4" /></>
+                              <><span>Chi tiết tri thức</span><ChevronDown className="w-4 h-4 shrink-0" /></>
                             )}
                           </button>
 
@@ -252,7 +252,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
                             onClick={() => handlePracticeConcept(node)}
                             className="bg-bg-surface hover:bg-border-primary/80 text-text-secondary hover:text-text-primary border border-border-primary/80 font-medium text-2xs px-3 py-1 rounded-lg transition duration-150 flex items-center gap-1 cursor-pointer"
                           >
-                            <Play className="w-2.5 h-2.5 text-text-muted" />
+                            <Play className="w-4 h-4.5 text-text-muted shrink-0" />
                             <span>Luyện tập</span>
                           </button>
                         </div>

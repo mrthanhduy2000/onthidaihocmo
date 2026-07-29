@@ -408,7 +408,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
             onClick={onNavigateHome}
             className="p-2 border border-border-primary bg-bg-card rounded-lg hover:bg-bg-surface text-text-secondary transition duration-150 cursor-pointer shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 shrink-0" />
           </button>
           <div className="min-w-0">
             <h1 className="text-md font-medium font-display text-text-primary truncate">
@@ -428,7 +428,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         <div className="flex items-center gap-2.5 shrink-0">
           {!exam.isSubmitted && (
             <div className="bg-bg-surface border border-border-primary/80 px-3 py-1.5 rounded-lg flex items-center gap-2">
-              <Clock className="w-4 h-4 text-text-muted" />
+              <Clock className="w-4 h-4 text-text-muted shrink-0" />
               <span className="tabular-nums font-medium text-text-primary text-xs">
                 {formatTimer()}
               </span>
@@ -437,7 +437,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 className="text-text-muted hover:text-text-primary transition-colors ml-1 cursor-pointer"
                 title={timerActive ? "Tạm dừng" : "Tiếp tục"}
               >
-                {timerActive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {timerActive ? <Pause className="w-4 h-4.5 shrink-0" /> : <Play className="w-4 h-4.5 shrink-0" />}
               </button>
             </div>
           )}
@@ -488,7 +488,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-sm text-brand-success">
-                <CheckCircle2 className="w-5 h-5" />
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
                 <span>Phiên học hoàn tất</span>
               </div>
               <h2 className="text-2xl font-bold text-text-primary font-sans">
@@ -516,7 +516,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                 }}
                 className="px-4 h-10 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-bold text-sm rounded transition flex items-center gap-2 cursor-pointer"
               >
-                <Play className="w-4 h-4 fill-current" />
+                <Play className="w-4 h-4 fill-current shrink-0" />
                 <span className="whitespace-nowrap">Làm thêm 10 câu mới</span>
               </button>
 
@@ -789,7 +789,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           font đơn cách là xếp thẳng cột nhiều ký tự.
                         */}
                         <span className={`h-8 rounded-full shrink-0 flex items-center justify-center font-bold text-xs transition ${oChuCai}`}>
-                          {reveal && isCorrect && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+                          {reveal && isCorrect && <Check className="w-4 h-4.5 shrink-0" strokeWidth={3} />}
                           {key.toUpperCase()}
                         </span>
                         {/*
@@ -923,7 +923,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         {aiExplanations[activeQuestion.id] ? (
                           <div className="animate-hien-len space-y-1.5">
                             <span className="text-text-muted text-sm flex items-center gap-1.5">
-                              <Sparkles className="w-4 h-4 text-brand-info" />
+                              <Sparkles className="w-4 h-4 text-brand-info shrink-0" />
                               Gia sư AI phân tích sâu
                             </span>
                             <div className="text-text-secondary leading-relaxed text-sm">
@@ -936,7 +936,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                             disabled={aiLoading[activeQuestion.id]}
                             className="text-[color:var(--nut-chinh)] text-sm font-bold flex items-center gap-1.5 cursor-pointer hover:underline disabled:opacity-50 disabled:cursor-default"
                           >
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="w-4 h-4 shrink-0" />
                             <span>{aiLoading[activeQuestion.id] ? "Đang phân tích" : "Nhờ gia sư AI phân tích sâu"}</span>
                           </button>
                         )}
@@ -948,7 +948,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                     {/* Thẻ báo, đẩy về phải cho sát nơi mắt sắp chạm tới thanh hành động */}
                     <div className="animate-hien-len ml-auto max-w-xs bg-bg-card border border-border-primary rounded shadow-lg p-5 flex items-start gap-3">
-                      {dung && <CheckCircle2 className="w-7 h-7 text-brand-success shrink-0" />}
+                      {dung && <CheckCircle2 className="w-6 h-6 text-brand-success shrink-0" />}
                       <div className="space-y-1">
                         <p className="text-xl font-bold text-text-primary leading-snug">
                           {dung ? "Chính xác!" : "Chưa chính xác."}
@@ -1102,7 +1102,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     disabled={currentIdx === 0}
                     className="flex items-center gap-1 px-3 h-10 text-sm font-bold text-text-secondary rounded hover:bg-bg-surface transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4 shrink-0" />
                     <span className="whitespace-nowrap">Câu trước</span>
                   </button>
                   <button
@@ -1111,7 +1111,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     className="flex items-center gap-1 px-4 h-10 text-sm font-bold border border-border-primary bg-bg-card hover:bg-bg-surface text-text-primary rounded transition disabled:opacity-25 disabled:pointer-events-none cursor-pointer"
                   >
                     <span className="whitespace-nowrap">Câu sau</span>
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 shrink-0" />
                   </button>
 
                   {/*
@@ -1131,7 +1131,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                       onClick={() => setShowSubmitModal(true)}
                       className="flex items-center gap-1.5 px-4 h-10 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white text-sm font-bold rounded transition cursor-pointer"
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="w-4 h-4 shrink-0" />
                       <span className="whitespace-nowrap">Nộp bài</span>
                     </button>
                   )}
@@ -1188,7 +1188,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     onClick={() => handleRequestAIExplanation(activeQuestion.id, explanationLevel)}
                     className="shrink-0 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white disabled:opacity-50 text-2xs font-medium px-4 py-2 rounded-lg transition duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4 shrink-0" />
                     <span>{aiExplanations[activeQuestion.id] ? "Làm mới bài giảng AI" : "Yêu cầu Trực tuyến"}</span>
                   </button>
                 </div>
@@ -1204,7 +1204,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
 
                 {aiError[activeQuestion.id] && (
                   <div className="border-t border-brand-error-border pt-3 text-xs text-brand-error flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-brand-error" />
+                    <AlertTriangle className="w-4 h-4 text-brand-error shrink-0" />
                     <span>{aiError[activeQuestion.id]}</span>
                   </div>
                 )}
@@ -1260,7 +1260,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                         {aiPipelineMetadata[activeQuestion.id].crossSubjectIntel && (
                           <div className="md:col-span-2 bg-brand-info-bg/5 border border-brand-info-border/20 p-3 rounded-lg space-y-1 mt-1">
                             <div className="flex items-center gap-1 text-2xs font-bold text-brand-info tabular-nums">
-                              <Brain className="w-4 h-4" />
+                              <Brain className="w-4 h-4 shrink-0" />
                               <span>Kết nối tư duy liên môn (Cross-Subject Intelligence)</span>
                             </div>
                             <p className="text-2xs text-text-primary font-medium">
@@ -1277,7 +1277,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     {/* The main AI Lecture body */}
                     <div className="bg-bg-card p-5 rounded-lg border border-border-primary/60 text-xs text-text-secondary leading-relaxed font-sans prose dark:prose-invert max-w-none">
                       <div className="flex items-center gap-1.5 mb-3 text-2xs tabular-nums text-brand-info font-bold">
-                        <Sparkles className="w-4 h-4" />
+                        <Sparkles className="w-4 h-4 shrink-0" />
                         <span>Bài giảng AI (Góc nhìn: {
                           explanationLevel === "simple" ? "Dễ hiểu" :
                           explanationLevel === "academic" ? "Chuẩn đại học" :
@@ -1578,7 +1578,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               <div className="bg-bg-card px-5 pt-5 pb-4">
                 <div className="sm:flex sm:items-start gap-3.5">
                   <div className="mx-auto shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-bg-surface text-text-secondary sm:mx-0">
-                    <HelpCircle className="w-4.5 h-4.5" />
+                    <HelpCircle className="w-4 h-4 shrink-0" />
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-3 sm:text-left space-y-1.5">
                     <h3 className="text-sm font-medium text-text-primary" id="modal-title">
@@ -1615,7 +1615,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
       {toastMsg && (
         <div className="fixed bottom-6 right-6 z-50 bg-bg-surface/90 backdrop-blur-md text-text-primary px-3.5 py-2.5 rounded-lg shadow-md border border-border-primary text-xs font-medium flex items-center gap-2 animate-fade-in-up duration-150">
           <div className="w-4 h-4 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center shrink-0">
-            <Check className="w-2.5 h-2.5" />
+            <Check className="w-4 h-4.5 shrink-0" />
           </div>
           <span>{toastMsg}</span>
         </div>

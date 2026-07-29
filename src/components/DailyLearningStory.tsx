@@ -17,7 +17,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
     <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-6 space-y-5 shadow-sm">
       <div className="flex items-center justify-between border-b border-border-primary/60 pb-3">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-brand-info" />
+          <Sparkles className="w-4 h-4 text-brand-info shrink-0" />
           <h3 className="text-sm font-semibold text-text-primary">Tiến trình học hôm nay</h3>
         </div>
         <span className="text-xs tabular-nums text-text-muted">Hành trình ôn tập</span>
@@ -27,7 +27,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-brand-success-bg text-brand-success flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-4 h-4" />
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
           </div>
           <div>
             <div className="text-lg font-bold tabular-nums text-text-primary">{story.solvedCountToday} câu</div>
@@ -37,7 +37,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
 
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-brand-warning-bg text-brand-warning flex items-center justify-center shrink-0">
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4 shrink-0" />
           </div>
           <div>
             <div className="text-lg font-bold tabular-nums text-text-primary">{story.misconceptionsFixedToday} lỗi</div>
@@ -47,7 +47,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
 
         <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
-            <Brain className="w-4 h-4" />
+            <Brain className="w-4 h-4 shrink-0" />
           </div>
           <div>
             <div className="text-lg font-bold tabular-nums text-text-primary">{story.conceptsRetainedToday} khái niệm</div>
@@ -69,7 +69,7 @@ export default function DailyLearningStory({ story, onActionNextStep }: DailyLea
             className="px-4 py-2 bg-nut-chinh text-white font-medium text-xs rounded-lg hover:bg-nut-chinh-re-chuot transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer"
           >
             <span>Thực hiện ngay ({story.remainingRecommendedTimeMinutes}p)</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 shrink-0" />
           </button>
         )}
       </div>

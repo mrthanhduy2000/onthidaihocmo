@@ -200,7 +200,7 @@ Sơ đồ khái niệm và kiến thức nền
                         ? "bg-brand-info-bg border-brand-info text-brand-info" 
                         : "bg-bg-surface border-border-primary text-text-muted"
                     }`}>
-                      {isUnlocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                      {isUnlocked ? <Unlock className="w-4 h-4 shrink-0" /> : <Lock className="w-4 h-4 shrink-0" />}
                     </div>
 
                     {/*
@@ -314,7 +314,7 @@ Sơ đồ khái niệm và kiến thức nền
         <div className="bg-bg-card border border-border-primary rounded-2xl overflow-hidden flex flex-col h-[600px]">
           <div className="p-4 bg-bg-surface border-b border-border-primary flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center font-bold">
-              <Bot className="w-5 h-5" />
+              <Bot className="w-5 h-5 shrink-0" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-text-primary">Trợ lý Hỏi đáp Học thuật AI</h3>
@@ -331,7 +331,7 @@ Sơ đồ khái niệm và kiến thức nền
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 ${
                   msg.sender === "user" ? "bg-nut-chinh text-white font-bold" : "bg-brand-info-bg text-brand-info font-bold"
                 }`}>
-                  {msg.sender === "user" ? "U" : <Bot className="w-4 h-4" />}
+                  {msg.sender === "user" ? "U" : <Bot className="w-4 h-4 shrink-0" />}
                 </div>
 
                 <div className={`max-w-[80%] rounded-2xl p-4 text-xs leading-relaxed ${
@@ -348,7 +348,7 @@ Sơ đồ khái niệm và kiến thức nền
             ))}
             {loadingChat && (
               <div className="flex items-center gap-2 text-xs text-text-muted italic">
-                <RefreshCw className="w-4 h-4 animate-spin text-brand-info" />
+                <RefreshCw className="w-4 h-4 animate-spin text-brand-info shrink-0" />
                 <span>Gia sư AI đang suy luận câu trả lời...</span>
               </div>
             )}
@@ -392,7 +392,7 @@ Sơ đồ khái niệm và kiến thức nền
                 disabled={loadingChat || !chatInput.trim()}
                 className="px-4 py-2 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot rounded-xl text-xs font-semibold transition disabled:opacity-50 cursor-pointer flex items-center gap-1"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 shrink-0" />
               </button>
             </div>
           </div>

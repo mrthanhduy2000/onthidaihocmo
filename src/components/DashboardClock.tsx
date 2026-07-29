@@ -37,7 +37,7 @@ export default function DashboardClock() {
   return (
     <div id="dashboard-clock" className="bg-bg-surface/40 hover:bg-bg-surface/70 border border-border-primary/60 rounded-xl px-3.5 py-2 flex items-center gap-3 select-none transition duration-150">
       <div className="p-1.5 bg-bg-card rounded-lg shrink-0 border border-border-primary/50 shadow-3xs">
-        <Clock className="w-4 h-4 text-brand-info animate-pulse" />
+        <Clock className="w-4 h-4 text-brand-info animate-pulse shrink-0" />
       </div>
       <div className="flex flex-col min-w-[130px]">
         <div className="flex items-baseline gap-1.5">

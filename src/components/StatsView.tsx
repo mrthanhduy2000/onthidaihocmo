@@ -569,7 +569,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
           {/* Search and filters */}
           <div className="flex flex-col sm:flex-row gap-2 shrink-0">
             <div className="relative">
-              <Search className="w-4 h-4 text-text-muted absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-text-muted absolute left-3 top-2.5 shrink-0" />
               <input 
                 type="text" 
                 placeholder="Tìm câu sai..."
@@ -622,7 +622,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
         {wrongQuestionIds.length === 0 ? (
           <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3">
             <div className="w-10 h-10 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center mx-auto transition-transform duration-200 hover:scale-105 shadow-2xs">
-              <Check className="w-5 h-5" />
+              <Check className="w-5 h-5 shrink-0" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
               <h4 className="text-xs font-semibold text-text-primary">Nhật ký sạch lỗi sai</h4>
@@ -634,7 +634,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
         ) : filteredWrongQuestions.length === 0 ? (
           <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3">
             <div className="w-10 h-10 bg-bg-surface text-text-muted rounded-full flex items-center justify-center mx-auto shadow-2xs">
-              <Search className="w-5 h-5" />
+              <Search className="w-5 h-5 shrink-0" />
             </div>
             <div className="space-y-1 max-w-sm mx-auto">
               <h4 className="text-xs font-semibold text-text-primary font-sans">Không tìm thấy kết quả</h4>
@@ -679,23 +679,36 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                         <span className="text-2xs text-text-muted tabular-nums">
                           Chương {q.chapterId} • #{q.id}
                         </span>
+                        {/*
+                          BỐN LỖI TRONG MỘT KHỐI HAI MƯƠI DÒNG, sửa cùng lượt 19.
+
+                          1. "BOOKMARKED" là chuỗi TIẾNG ANH lọt ra giao diện, và còn viết hoa
+                             toàn bộ. Đợt dọn chuỗi tiếng Anh trước đây ghi nhận "154 chỗ viết
+                             hoa xuống 0", nhưng cả ba nhãn này nằm trong nhánh CÓ ĐIỀU KIỆN
+                             (chỉ hiện khi câu được đánh dấu hoặc đã đổi trạng thái), nên lượt
+                             quét bằng mắt trên màn hình không gặp chúng.
+                          2. "ĐÃ HIỂU" và "CẦN ÔN LẠI" viết hoa toàn bộ. Tiếng Việt viết hoa
+                             toàn bộ vừa khó đọc vì mất dấu thanh phía trên, vừa đọc như quát.
+                          3. Biểu tượng 10px, nhỏ hơn cả chữ bên cạnh nó.
+                          4. `topic?.title.slice(0, 35)` cắt tên chuyên đề GIỮA TỪ rồi nối ba
+                             chấm, đúng thứ bất biến 4.9g cấm.
+                        */}
                         <span className="text-2xs font-medium text-text-secondary">
-                          {topic?.title.slice(0, 35)}...
+                          {topic?.title}
                         </span>
-                        {/* Bookmark and Status Indicators */}
                         {stats.bookmarks?.includes(q.id) && (
-                          <span className="bg-brand-warning-bg text-brand-warning text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 tabular-nums">
-                            <Star className="w-2.5 h-2.5 fill-current" /> BOOKMARKED
+                          <span className="bg-brand-warning-bg text-brand-warning text-2xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Star className="w-4 h-4 fill-current shrink-0" /> Đã đánh dấu
                           </span>
                         )}
                         {learningStatuses[q.id] === "learned" && (
-                          <span className="bg-brand-success-bg text-brand-success text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 tabular-nums">
-                            <Check className="w-2.5 h-2.5" /> ĐÃ HIỂU
+                          <span className="bg-brand-success-bg text-brand-success text-2xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Check className="w-4 h-4 shrink-0" /> Đã hiểu
                           </span>
                         )}
                         {learningStatuses[q.id] === "review" && (
-                          <span className="bg-brand-warning-bg text-brand-warning text-2xs font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 tabular-nums">
-                            <AlertTriangle className="w-2.5 h-2.5" /> CẦN ÔN LẠI
+                          <span className="bg-brand-warning-bg text-brand-warning text-2xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <AlertTriangle className="w-4 h-4 shrink-0" /> Cần ôn lại
                           </span>
                         )}
                       </div>
@@ -703,7 +716,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                     </div>
 
                     <div className="shrink-0 text-text-muted">
-                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      {isExpanded ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
                     </div>
                   </div>
 
@@ -732,7 +745,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                               onClick={() => handleToggleBookmark(q.id)}
                               className="bg-brand-warning-bg hover:opacity-95 text-brand-warning text-2xs font-semibold px-3 py-1.5 rounded-lg border border-brand-warning-border flex items-center gap-1 transition cursor-pointer"
                             >
-                              <Star className="w-4 h-4 fill-current" />
+                              <Star className="w-4 h-4 fill-current shrink-0" />
                               <span>Đã lưu ôn tập</span>
                             </button>
                           ) : (
@@ -740,7 +753,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                               onClick={() => handleToggleBookmark(q.id)}
                               className="bg-bg-surface hover:bg-border-primary text-text-secondary text-2xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
                             >
-                              <Star className="w-4 h-4" />
+                              <Star className="w-4 h-4 shrink-0" />
                               <span>Lưu để ôn sau</span>
                             </button>
                           )}
@@ -771,7 +784,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                 iconBadge = "bg-brand-error text-white";
                                 labelBadge = (
                                   <span className="ml-auto text-2xs font-medium bg-brand-error-bg text-brand-error px-2.5 py-0.5 rounded-full border border-brand-error-border flex items-center gap-1 shrink-0 tabular-nums">
-                                    <X className="w-3.5 h-3.5" /> BẠN ĐÃ CHỌN
+                                    <X className="w-4 h-4.5 shrink-0" /> BẠN ĐÃ CHỌN
                                   </span>
                                 );
                               } else if (isCorrectAnswer) {
@@ -779,7 +792,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                 iconBadge = "bg-brand-success text-white";
                                 labelBadge = (
                                   <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 tabular-nums">
-                                    <Check className="w-3.5 h-3.5" /> ĐÁP ÁN ĐÚNG
+                                    <Check className="w-4 h-4.5 shrink-0" /> ĐÁP ÁN ĐÚNG
                                   </span>
                                 );
                               }
@@ -789,7 +802,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                 iconBadge = "bg-brand-success text-white";
                                 labelBadge = (
                                   <span className="ml-auto text-2xs font-medium bg-brand-success-bg text-brand-success px-2.5 py-0.5 rounded-full border border-brand-success-border flex items-center gap-1 shrink-0 tabular-nums">
-                                    <Check className="w-3.5 h-3.5" /> CHỌN ĐÚNG
+                                    <Check className="w-4 h-4.5 shrink-0" /> CHỌN ĐÚNG
                                   </span>
                                 );
                               }
@@ -801,7 +814,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                   className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${cardStyle}`}
                                 >
                                   <span className={`w-5 h-5 rounded-md flex items-center justify-center font-bold tabular-nums text-xs shrink-0 ${iconBadge}`}>
-                                    {isUserSelected && userAnswer !== q.correctAnswer ? <X className="w-3.5 h-3.5" /> : (isCorrectAnswer ? <Check className="w-3.5 h-3.5" /> : key.toUpperCase())}
+                                    {isUserSelected && userAnswer !== q.correctAnswer ? <X className="w-4 h-4.5 shrink-0" /> : (isCorrectAnswer ? <Check className="w-4 h-4.5 shrink-0" /> : key.toUpperCase())}
                                   </span>
                                   <div className="flex-1 pr-2 leading-relaxed">{q.options[key]}</div>
                                   {labelBadge}
@@ -815,7 +828,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                       {userAnswer !== q.correctAnswer && (
                         <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
                           <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                            <AlertTriangle className="w-4 h-4 text-brand-error" /> Phân tích lỗi sai
+                            <AlertTriangle className="w-4 h-4 text-brand-error shrink-0" /> Phân tích lỗi sai
                           </h5>
                           
                           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
@@ -823,7 +836,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                             <div className="md:col-span-4 flex items-center justify-center gap-6 bg-bg-surface p-4 rounded-xl border border-border-primary">
                               <div className="flex flex-col items-center gap-1">
                                 <span className="text-2xs text-text-muted tabular-nums font-medium">Bạn chọn</span>
-                                <ArrowDown className="w-3.5 h-3.5 text-text-muted" />
+                                <ArrowDown className="w-4 h-4.5 text-text-muted shrink-0" />
                                 <span className="w-8 h-8 rounded-full bg-brand-error-bg text-brand-error flex items-center justify-center font-bold tabular-nums border border-brand-error-border">
                                   {userAnswer?.toUpperCase()}
                                 </span>
@@ -833,7 +846,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                               
                               <div className="flex flex-col items-center gap-1">
                                 <span className="text-2xs text-text-muted tabular-nums font-medium">Đúng là</span>
-                                <ArrowDown className="w-3.5 h-3.5 text-text-muted" />
+                                <ArrowDown className="w-4 h-4.5 text-text-muted shrink-0" />
                                 <span className="w-8 h-8 rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center font-bold tabular-nums border border-brand-success-border">
                                   {q.correctAnswer.toUpperCase()}
                                 </span>
@@ -869,7 +882,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                       {/* BLOCK 3: Knowledge Card (Kiến thức cần nhớ) */}
                       <div className="bg-brand-warning-bg/20 border border-brand-warning-border p-5 rounded-2xl space-y-3">
                         <h5 className="text-2xs font-bold text-brand-warning tabular-nums flex items-center gap-1.5">
-                          <Lightbulb className="w-4 h-4" /> Kiến thức cần nhớ (Trọng tâm lý thuyết)
+                          <Lightbulb className="w-4 h-4 shrink-0" /> Kiến thức cần nhớ (Trọng tâm lý thuyết)
                         </h5>
                         
                         <ul className="space-y-2 text-xs text-text-secondary pl-4 list-disc marker:text-brand-warning">
@@ -882,7 +895,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                       {/* BLOCK 4: Kiến thức gốc (Lời giải chi tiết & Slide gốc) */}
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                         <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                          <BookOpen className="w-4 h-4 text-brand-info" /> Tài liệu gốc & Lời giải chi tiết
+                          <BookOpen className="w-4 h-4 text-brand-info shrink-0" /> Tài liệu gốc & Lời giải chi tiết
                         </h5>
 
                         <div className="space-y-2 text-xs text-text-secondary leading-relaxed">
@@ -906,11 +919,11 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                       <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-brand-info" /> Ghi chú cá nhân (Tự động lưu)
+                            <Sparkles className="w-4 h-4 text-brand-info shrink-0" /> Ghi chú cá nhân (Tự động lưu)
                           </h5>
                           {noteFeedback[q.id] && (
                             <span className="text-2xs font-medium text-brand-success flex items-center gap-1 font-sans animate-pulse">
-                              <Check className="w-3.5 h-3.5" /> {noteFeedback[q.id]}
+                              <Check className="w-4 h-4.5 shrink-0" /> {noteFeedback[q.id]}
                             </span>
                           )}
                         </div>
@@ -929,7 +942,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                         return (
                           <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3.5">
                             <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                              <History className="w-4 h-4 text-brand-info" /> Lịch sử luyện tập & Timeline sai
+                              <History className="w-4 h-4 text-brand-info shrink-0" /> Lịch sử luyện tập & Timeline sai
                             </h5>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center text-xs">
@@ -963,7 +976,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                         return (
                           <div className="bg-bg-card border border-border-primary p-5 rounded-2xl space-y-3">
                             <h5 className="text-2xs font-bold text-text-muted tabular-nums flex items-center gap-1.5">
-                              <Layers className="w-4 h-4 text-brand-info" /> Các câu sai liên quan trong hệ thống
+                              <Layers className="w-4 h-4 text-brand-info shrink-0" /> Các câu sai liên quan trong hệ thống
                             </h5>
 
                             <div className="flex flex-col gap-2.5">
@@ -1008,7 +1021,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                   : "text-text-muted hover:text-text-primary border border-transparent"
                               }`}
                             >
-                              <Check className="w-3.5 h-3.5" />
+                              <Check className="w-4 h-4.5 shrink-0" />
                               <span>Đã hiểu</span>
                             </button>
 
@@ -1020,7 +1033,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                   : "text-text-muted hover:text-text-primary border border-transparent"
                               }`}
                             >
-                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <AlertTriangle className="w-4 h-4.5 shrink-0" />
                               <span>Cần ôn lại</span>
                             </button>
 
@@ -1032,7 +1045,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
                                   : "text-text-muted hover:text-text-primary border border-transparent"
                               }`}
                             >
-                              <HelpCircle className="w-3.5 h-3.5" />
+                              <HelpCircle className="w-4 h-4.5 shrink-0" />
                               <span>Chưa học</span>
                             </button>
                           </div>
@@ -1062,7 +1075,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
               <div className="bg-bg-card px-6 pt-6 pb-4">
                 <div className="sm:flex sm:items-start gap-4">
                   <div className="mx-auto shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-brand-error-bg text-brand-error sm:mx-0 sm:h-9 sm:w-9">
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-5 h-5 shrink-0" />
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left space-y-2">
                     <h3 className="text-base font-semibold text-text-primary font-display" id="modal-title">
@@ -1097,7 +1110,7 @@ Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
       {toastMsg && (
         <div className="fixed bottom-6 right-6 z-50 bg-bg-invert/95 backdrop-blur-md text-text-invert px-4 py-3 rounded-xl shadow-xl border border-border-primary text-xs font-medium flex items-center gap-2.5 animate-fade-in-up duration-200">
           <div className="w-4 h-4 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center shrink-0">
-            <Check className="w-3.5 h-3.5" />
+            <Check className="w-4 h-4.5 shrink-0" />
           </div>
           <span>{toastMsg}</span>
         </div>

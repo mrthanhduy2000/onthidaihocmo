@@ -59,6 +59,52 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 19), thang cỡ biểu tượng, và một lỗi chỉ trình duyệt mới thấy
+
+Phần còn lại của bản đo iconography ở lượt 18.
+
+| | Trước | Sau |
+|---|---|---|
+| Số cỡ biểu tượng khác nhau | **7** (8, 10, 12, 14, 16, 20, 24px) | **3** (16, 20, 24px) |
+| Chỗ dùng biểu tượng dưới 16px | **29** | **0** |
+| Biểu tượng bị bóp méo trên bản chạy thật | **1** | **0** |
+
+Dự án giữ ba cỡ chứ không một cỡ như Khan, vì có chip và hàng dày đặc mà trang Khan không có:
+16px trong dòng chữ, 20px trong nút và điều hướng, 24px khi đứng độc lập làm mốc thị giác.
+
+**Bốn lỗi trong một khối hai mươi dòng ở `StatsView`**, tất cả nằm trong nhánh CÓ ĐIỀU KIỆN nên
+mọi lượt quét bằng mắt trước đây đều không gặp:
+
+1. **"BOOKMARKED"** là chuỗi tiếng Anh lọt ra giao diện, viết hoa toàn bộ.
+2. **"ĐÃ HIỂU"**, **"CẦN ÔN LẠI"** viết hoa toàn bộ. Tiếng Việt viết hoa toàn bộ vừa khó đọc vì
+   mất dấu thanh phía trên, vừa đọc như quát.
+3. Biểu tượng 10px, nhỏ hơn cả chữ đứng cạnh.
+4. `topic?.title.slice(0, 35)` cắt tên chuyên đề **giữa từ** rồi nối ba chấm, đúng thứ bất biến
+   4.9g cấm.
+
+Đợt dọn chuỗi tiếng Anh trước đây từng ghi "154 chỗ viết hoa xuống 0", nhưng ba nhãn này chỉ
+hiện khi câu được đánh dấu hoặc đã đổi trạng thái. **Nhánh có điều kiện là chỗ trốn của lỗi
+giao diện**, giống hệt các nhánh trạng thái rỗng ở lượt 14 tới 17.
+
+**Một lỗi CHỈ TRÌNH DUYỆT MỚI THẤY.** Sau khi chuẩn hoá xong, đo lại trên bản chạy thật thì ra
+**113 biểu tượng 16x16 và 5 biểu tượng 13x16**, tức bị nén méo. Mã nguồn hoàn toàn không lộ
+điều này: cả 5 đều khai `className="w-4 h-4"` đúng chuẩn. Nguyên nhân là chúng nằm trong
+container `flex` mà thiếu `shrink-0`, nên khi chật chỗ thì bị co bề ngang.
+
+Ca cụ thể: biểu tượng ngọn lửa ở thanh đầu trang, cạnh chuỗi "1 ngày". Đã thêm `shrink-0` cho
+**225 biểu tượng** ở mọi cỡ chuẩn. Đo lại: **118 biểu tượng trên năm màn, tất cả đúng 16x16,
+không cái nào méo**, ở cả 1280px lẫn 375px.
+
+Đây là lần thứ ba trong dự án một lỗi giao diện chỉ lộ ra khi mở trình duyệt chứ không lộ khi
+đọc mã. Ghi lại vì nó củng cố nguyên tắc đã có: **áp khuôn xong phải mở màn hình ra nhìn.**
+
+**Bộ kiểm 212 lên 213**, `AG9` canh thang ba cỡ. Phép kiểm chỉ soi thẻ viết hoa (component biểu
+tượng), không đụng `span`/`div`, vì các chấm màu chú giải 10px là ô màu chứ không phải biểu
+tượng và cỡ ấy đúng cho chúng. Đã thử phá bằng một biểu tượng còn trong import, lần này bản phá
+biên dịch sạch và phép kiểm bắt ngay.
+
+---
+
 ### 29/07/2026 (lượt 18), iconography: 62 tiêu đề đeo biểu tượng, Khan có 0
 
 Mảng lớn thứ ba trong bản đánh giá ở lượt 17. Đo Khan trước khi sửa, và bản đo dứt khoát:

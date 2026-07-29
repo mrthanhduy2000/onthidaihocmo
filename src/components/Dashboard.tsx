@@ -94,7 +94,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
       <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center font-bold">
-            <Calendar className="w-5 h-5" />
+            <Calendar className="w-5 h-5 shrink-0" />
           </div>
           <div>
             <div className="text-2xs tabular-nums text-text-muted">1. Thời gian tới kỳ thi</div>
@@ -108,7 +108,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
 
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-success-bg text-brand-success flex items-center justify-center font-bold">
-            <Target className="w-5 h-5" />
+            <Target className="w-5 h-5 shrink-0" />
           </div>
           <div>
             <div className="text-2xs tabular-nums text-text-muted">2. Việc nên làm ngay</div>
@@ -122,7 +122,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
 
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-warning-bg text-brand-warning flex items-center justify-center font-bold">
-            <TrendingUp className="w-5 h-5" />
+            <TrendingUp className="w-5 h-5 shrink-0" />
           </div>
           <div>
             <div className="text-2xs tabular-nums text-text-muted">3. Tiến độ hiện tại</div>
@@ -148,7 +148,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
       >
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
-            <Shuffle className="w-5 h-5" />
+            <Shuffle className="w-5 h-5 shrink-0" />
           </div>
           <div>
             <h3 className="text-base font-medium text-text-primary">Giải đề ngẫu nhiên tổng hợp</h3>
@@ -159,7 +159,7 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
         </div>
         <span className="text-xs font-semibold text-brand-info flex items-center gap-1 shrink-0">
           Bắt đầu
-          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
         </span>
       </button>
 
@@ -186,7 +186,7 @@ Tùy chọn ôn tập thêm
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="px-3 py-1.5 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary text-text-muted hover:text-text-primary text-xs font-medium rounded-lg transition inline-flex items-center gap-1.5 cursor-pointer"
         >
-          {showAdvanced ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          {showAdvanced ? <EyeOff className="w-4 h-4 shrink-0" /> : <Eye className="w-4 h-4 shrink-0" />}
           <span>{showAdvanced ? "Ẩn phần mở rộng" : "Xem phần mở rộng"}</span>
         </button>
       </div>
@@ -215,7 +215,7 @@ Tùy chọn ôn tập thêm
                     <div className="text-2xs tabular-nums text-brand-info font-bold">Chương {ch.id}</div>
                     <div className="text-xs font-medium text-text-primary truncate max-w-[200px]">{ch.title}</div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted" />
+                  <ChevronRight className="w-4 h-4 text-text-muted shrink-0" />
                 </button>
               ))}
             </div>
@@ -225,7 +225,7 @@ Tùy chọn ôn tập thêm
           <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
             <div className="text-xs font-semibold text-text-primary flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-text-muted" />
+                <Clock className="w-4 h-4 text-text-muted shrink-0" />
                 Lịch sử làm bài
               </span>
               <button 

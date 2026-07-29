@@ -110,14 +110,14 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
 Tạo câu hỏi AI cho Chương {chapterId}
           </h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary cursor-pointer">
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 shrink-0" />
           </button>
         </div>
 
         {addedCount > 0 ? (
           <div className="space-y-4 py-4 text-center">
             <div className="w-12 h-12 mx-auto rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6" />
+              <CheckCircle2 className="w-6 h-6 shrink-0" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-text-primary">Đã thêm {addedCount} câu vào Chương {chapterId}</p>
@@ -221,7 +221,7 @@ Tạo câu hỏi AI cho Chương {chapterId}
                   "Đang tạo..."
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4 shrink-0" />
                     Tạo {genCount} câu
                   </>
                 )}

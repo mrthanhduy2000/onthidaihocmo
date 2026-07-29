@@ -174,7 +174,7 @@ export const LearningObservatoryView: React.FC = () => {
                 <span className="text-sm font-normal text-text-muted">/100</span>
               </div>
               <div className="text-2xs font-medium text-brand-success flex items-center justify-center sm:justify-end gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-4 h-4.5 shrink-0" />
                 {/* `health.status` là giá trị liệt kê của engine ("OPTIMAL" / "ATTENTION" /
                     "CRITICAL"), trước 28/07/2026 in thẳng ra màn hình. Dịch khi hiển thị. */}
                 <span>Trạng thái: {NHAN_TRANG_THAI[health.status] ?? health.status}</span>
@@ -237,7 +237,7 @@ export const LearningObservatoryView: React.FC = () => {
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
-          <Activity className="w-4 h-4" />
+          <Activity className="w-4 h-4 shrink-0" />
           <span>Bảng quan sát hệ thống</span>
         </button>
 
@@ -249,7 +249,7 @@ export const LearningObservatoryView: React.FC = () => {
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
-          <Brain className="w-4 h-4" />
+          <Brain className="w-4 h-4 shrink-0" />
           <span>Sức khỏe khái niệm và câu hỏi</span>
           {(deadConcepts.length > 0 || overusedConcepts.length > 0) && (
             <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-warning-bg text-brand-warning tabular-nums">
@@ -266,7 +266,7 @@ export const LearningObservatoryView: React.FC = () => {
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
-          <Compass className="w-4 h-4" />
+          <Compass className="w-4 h-4 shrink-0" />
           <span>Sư phạm, bậc Bloom và ma trận</span>
         </button>
 
@@ -278,7 +278,7 @@ export const LearningObservatoryView: React.FC = () => {
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-4 h-4 shrink-0" />
           <span>Khu vực tác giả và nợ học liệu</span>
           {techDebts.length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-info-bg text-brand-info tabular-nums">
@@ -295,7 +295,7 @@ export const LearningObservatoryView: React.FC = () => {
               : "border-transparent text-text-muted hover:text-text-primary hover:bg-bg-surface/50"
           }`}
         >
-          <TrendingUp className="w-4 h-4" />
+          <TrendingUp className="w-4 h-4 shrink-0" />
           <span>Tiến hóa & mức độ sẵn sàng phát hành</span>
         </button>
       </div>
@@ -307,14 +307,14 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-brand-info" />
+                <ShieldCheck className="w-5 h-5 text-brand-info shrink-0" />
                 <h3 className="text-sm font-bold text-text-primary">Công thức đánh giá sức khỏe hệ thống</h3>
               </div>
               <button 
                 onClick={() => toggleExplainability("health_formula")}
                 className="text-xs text-brand-info hover:underline flex items-center gap-1 cursor-pointer font-medium"
               >
-                <Info className="w-4 h-4" />
+                <Info className="w-4 h-4 shrink-0" />
                 <span>{expandedExplainabilityId === "health_formula" ? "Ẩn giải trình" : "Xem Giải trình Chi tiết"}</span>
               </button>
             </div>
@@ -352,14 +352,14 @@ export const LearningObservatoryView: React.FC = () => {
                 onClick={() => handleRunJob("DUPLICATE_SCAN")}
                 className="px-3 py-1.5 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-lg text-xs font-medium text-text-primary transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Search className="w-4 h-4 text-brand-info" />
+                <Search className="w-4 h-4 text-brand-info shrink-0" />
                 <span>Quét Trùng Lặp</span>
               </button>
               <button
                 onClick={() => handleRunJob("COVERAGE_CHECK")}
                 className="px-3 py-1.5 bg-bg-surface border border-border-primary hover:border-brand-info/40 rounded-lg text-xs font-medium text-text-primary transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Layers className="w-4 h-4 text-brand-warning" />
+                <Layers className="w-4 h-4 text-brand-warning shrink-0" />
                 <span>Quét Độ Phủ</span>
               </button>
             </div>
@@ -780,9 +780,9 @@ export const LearningObservatoryView: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">{gate.name}</span>
                     {gate.passed ? (
-                      <CheckCircle2 className="w-4 h-4 text-brand-success" />
+                      <CheckCircle2 className="w-4 h-4 text-brand-success shrink-0" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-brand-warning" />
+                      <XCircle className="w-4 h-4 text-brand-warning shrink-0" />
                     )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-text-muted tabular-nums">

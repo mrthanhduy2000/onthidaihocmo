@@ -90,14 +90,14 @@ export default function SessionRecoveryBanner({ session, onResume, onDiscard }: 
           onClick={onDiscard}
           className="px-4 h-9 bg-bg-card border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer flex items-center gap-1.5"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-4 h-4 shrink-0" />
           <span>Bỏ qua</span>
         </button>
         <button
           onClick={() => onResume(session)}
           className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer flex items-center gap-1.5"
         >
-          <Play className="w-4 h-4 fill-current" />
+          <Play className="w-4 h-4 fill-current shrink-0" />
           <span>Làm tiếp</span>
         </button>
       </div>

@@ -137,7 +137,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 cursor-pointer" onClick={handleNavigateHome}>
                 <div className="w-7 h-7 rounded-md bg-nav-chu/95 flex items-center justify-center text-nav-nen transition hover:bg-nav-chu">
-                  <GraduationCap className="w-4 h-4" />
+                  <GraduationCap className="w-4 h-4 shrink-0" />
                 </div>
                 {/* `whitespace-nowrap`: không có nó, khi hộp bị bó hẹp chữ này rơi xuống thành
                     một CỘT DỌC 5 dòng cao hơn cả thanh header. Hiện từ mốc `xl` trở lên vì
@@ -199,7 +199,7 @@ export default function App() {
                       : "text-nav-chu-mo hover:text-nav-chu hover:bg-nav-re-chuot font-medium"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 shrink-0" />
                   <span>{nhan}</span>
                 </button>
               );
@@ -220,7 +220,7 @@ export default function App() {
               className="px-2.5 h-9 bg-nav-re-chuot border border-nav-vach hover:bg-nav-dang-mo rounded-md text-xs tabular-nums text-nav-chu-mo hover:text-nav-chu flex items-center gap-1.5 transition cursor-pointer"
               title="Mở tìm nhanh (Ctrl + K)"
             >
-              <Command className="w-4 h-4" />
+              <Command className="w-4 h-4 shrink-0" />
               <span className="hidden lg:inline whitespace-nowrap">Tìm nhanh</span>
             </button>
 
@@ -229,7 +229,7 @@ export default function App() {
               className="w-9 h-9 bg-nav-re-chuot border border-nav-vach hover:bg-nav-dang-mo rounded-md text-nav-chu-mo hover:text-nav-chu transition cursor-pointer flex items-center justify-center"
               title="Cài đặt, giao diện và sao lưu"
             >
-              <SettingsIcon className="w-4 h-4" />
+              <SettingsIcon className="w-4 h-4 shrink-0" />
             </button>
 
             {(stats.studyStreak > 0 || stats.totalSolved > 0) && (
@@ -241,13 +241,13 @@ export default function App() {
                 <div className="hidden lg:flex items-center gap-3 text-xs text-nav-chu">
                   {stats.studyStreak > 0 && (
                     <div className="flex items-center gap-1.5 font-semibold" title="Chuỗi ngày học tập">
-                      <Flame className="w-4 h-4 fill-current" />
+                      <Flame className="w-4 h-4 fill-current shrink-0" />
                       <span className="tabular-nums">{stats.studyStreak} ngày</span>
                     </div>
                   )}
                   {stats.totalSolved > 0 && (
                     <div className="flex items-center gap-1.5 font-semibold" title="Tỷ lệ làm đúng">
-                      <Award className="w-4 h-4" />
+                      <Award className="w-4 h-4 shrink-0" />
                       <span className="tabular-nums">{Math.round((stats.totalCorrect / stats.totalSolved) * 100)}%</span>
                     </div>
                   )}

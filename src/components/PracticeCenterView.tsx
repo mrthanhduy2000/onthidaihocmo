@@ -119,7 +119,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
       {/* Header */}
       <div className="border-b border-border-primary pb-6 space-y-1">
         <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info">
-          <Brain className="w-4 h-4" />
+          <Brain className="w-4 h-4 shrink-0" />
           Trung tâm Rèn luyện
         </div>
         <h1 className="text-2xl font-display font-light text-text-primary">
@@ -147,7 +147,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center font-bold">
-                  <Brain className="w-5 h-5" />
+                  <Brain className="w-5 h-5 shrink-0" />
                 </div>
                 <span className="text-2xs tabular-nums font-medium px-2 py-0.5 rounded bg-brand-info-bg text-brand-info border border-brand-info/20">
                   Phổ biến nhất
@@ -166,7 +166,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
             <div className="mt-6 pt-4 border-t border-border-primary/60 flex items-center justify-between text-xs font-medium text-brand-info">
               <span>Bắt đầu ngay (15 câu)</span>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
             </div>
           </div>
 
@@ -178,7 +178,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="w-10 h-10 rounded-xl bg-nut-chinh text-white flex items-center justify-center font-bold">
-                  <Award className="w-5 h-5" />
+                  <Award className="w-5 h-5 shrink-0" />
                 </div>
                 <span className="text-2xs tabular-nums text-text-muted">
                   Phủ {chaptersWithQuestions}/{chapters.length} chương
@@ -217,7 +217,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
             <div className="mt-6 pt-4 border-t border-border-primary/60 flex items-center justify-between text-xs font-medium text-text-primary">
               <span>Vào thi thử ngay ({Math.min(mockCount, totalAvailable)} câu)</span>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform shrink-0" />
             </div>
           </div>
 
@@ -231,7 +231,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="w-10 h-10 rounded-xl bg-brand-warning-bg text-brand-warning flex items-center justify-center font-bold">
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-5 h-5 shrink-0" />
                 </div>
                 <span className="text-2xs tabular-nums px-2 py-0.5 rounded bg-brand-warning-bg text-brand-warning font-semibold">
                   {incorrectCount} câu sai
@@ -255,7 +255,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
               {incorrectCount > 0 ? (
                 <>
                   <span className="text-brand-warning">Ôn ngay {incorrectCount} câu</span>
-                  <ChevronRight className="w-4 h-4 text-brand-warning group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="w-4 h-4 text-brand-warning group-hover:translate-x-1 transition-transform shrink-0" />
                 </>
               ) : (
                 <span className="text-text-muted font-normal">Chưa có câu sai nào. Làm một bài ở trên để hệ thống ghi lại.</span>
@@ -269,7 +269,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
       <div className="bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
-            <Shuffle className="w-5 h-5" />
+            <Shuffle className="w-5 h-5 shrink-0" />
           </div>
           <div>
             <h3 className="text-base font-medium text-text-primary">Giải đề ngẫu nhiên tổng hợp</h3>
@@ -302,7 +302,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             disabled={totalAvailable === 0}
             className="bg-brand-info text-white text-xs font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            <Play className="w-4 h-4" />
+            <Play className="w-4 h-4 shrink-0" />
             <span>Bắt đầu</span>
           </button>
         </div>
@@ -319,7 +319,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
           <div className="lg:col-span-2 bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-semibold text-text-primary flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-brand-info" />
+                <BookOpen className="w-4 h-4 text-brand-info shrink-0" />
                 Giải đề theo chương (1 - {chapters.length})
               </span>
 
@@ -375,7 +375,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                           <span className="text-2xs tabular-nums text-brand-info font-semibold">Chương {ch.id}</span>
                           {isSuggested && !isEmpty && (
                             <span className="text-2xs tabular-nums px-1.5 py-0.5 rounded bg-brand-info-bg text-brand-info border border-brand-info/20 flex items-center gap-1">
-                              <Sparkles className="w-2.5 h-2.5" /> Nên làm tiếp
+                              <Sparkles className="w-4 h-4.5 shrink-0" /> Nên làm tiếp
                             </span>
                           )}
                           {accuracy !== null && (
@@ -403,7 +403,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                           title={`Dùng AI tạo câu hỏi cho Chương ${ch.id}`}
                           className="flex items-center gap-1 px-2 py-1 rounded-lg text-2xs font-medium border border-brand-info/30 text-brand-info hover:bg-brand-info-bg transition cursor-pointer"
                         >
-                          <Sparkles className="w-3.5 h-3.5" />
+                          <Sparkles className="w-4 h-4.5 shrink-0" />
                           <span className="hidden sm:inline">{isEmpty ? "Tạo bằng AI" : "Tạo thêm"}</span>
                         </button>
 
@@ -415,7 +415,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                             className="flex items-center gap-1 text-2xs tabular-nums text-brand-info cursor-pointer"
                           >
                             <span className="hidden sm:inline">Giải {willDo} câu</span>
-                            <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-brand-info group-hover:translate-x-0.5 transition-transform" />
+                            <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-brand-info group-hover:translate-x-0.5 transition-transform shrink-0" />
                           </button>
                         )}
                       </div>
@@ -431,7 +431,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             {/* Difficulty Cards */}
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
               <span className="text-xs font-semibold text-text-primary flex items-center gap-2">
-                <Layers className="w-4 h-4 text-brand-warning" />
+                <Layers className="w-4 h-4 text-brand-warning shrink-0" />
                 Lọc theo Mức độ
               </span>
 
@@ -452,7 +452,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-text-primary flex items-center gap-2">
-                  <Bookmark className="w-4 h-4 text-brand-success" />
+                  <Bookmark className="w-4 h-4 text-brand-success shrink-0" />
                   Câu hỏi đã đánh dấu
                 </span>
                 <span className="text-xs tabular-nums text-brand-success font-semibold">{bookmarkCount} câu</span>
@@ -468,7 +468,7 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
                 }`}
               >
                 <span>Ôn câu đã đánh dấu</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 shrink-0" />
               </button>
             </div>
           </div>

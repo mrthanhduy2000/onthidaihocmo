@@ -122,7 +122,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
             onClick={handleStartReviewAllWrong}
             className="flex items-center justify-center gap-2 px-4 h-10 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-bold text-sm rounded transition shrink-0 cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-4 h-4 shrink-0" />
             <span className="whitespace-nowrap">Ôn lại tất cả {wrongQuestionsList.length} câu</span>
           </button>
         )}
@@ -176,7 +176,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
           {/* Controls & Search */}
           <div className="flex flex-col sm:flex-row items-center gap-3 bg-bg-card border border-border-primary/80 rounded-xl p-3">
             <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-text-muted" />
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-text-muted shrink-0" />
               <input
                 type="text"
                 placeholder="Tìm kiếm theo từ khóa, khái niệm, bẫy sai lầm..."
@@ -187,7 +187,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="w-4 h-4 text-text-muted" />
+              <Filter className="w-4 h-4 text-text-muted shrink-0" />
               <select
                 value={selectedChapter}
                 onChange={(e) => setSelectedChapter(e.target.value === "all" ? "all" : Number(e.target.value))}
@@ -349,7 +349,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                         }}
                         className="px-3 py-1.5 bg-bg-surface hover:bg-bg-surface-hover text-text-primary border border-border-primary rounded-lg text-xs font-medium transition flex items-center gap-1.5"
                       >
-                        <RotateCcw className="w-4 h-4" />
+                        <RotateCcw className="w-4 h-4 shrink-0" />
                         <span>Ôn lại</span>
                       </button>
 
@@ -404,7 +404,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                       <div className="p-4 bg-bg-card border border-border-primary/80 rounded-xl space-y-2">
                         <div className="flex items-center justify-between text-xs">
                           <span className="font-semibold text-text-primary flex items-center gap-1.5">
-                            <Brain className="w-4 h-4 text-brand-info" />
+                            <Brain className="w-4 h-4 text-brand-info shrink-0" />
                             Lời giải chuẩn xác theo học liệu
                           </span>
                           <span className="text-2xs tabular-nums text-text-muted">
@@ -442,7 +442,7 @@ export default function ReviewNotebookView({ onStartExam }: ReviewNotebookProps)
                         </div>
 
                         <div className="text-2xs tabular-nums text-brand-info flex items-center gap-1">
-                          <Sparkles className="w-4 h-4" />
+                          <Sparkles className="w-4 h-4 shrink-0" />
                           <span>Dự báo sau khi ôn: độ ghi nhớ tăng từ 45% lên 88%</span>
                         </div>
                       </div>

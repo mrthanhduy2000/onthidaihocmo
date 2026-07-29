@@ -50,7 +50,7 @@ export default function AcademicQualityDashboard() {
       <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-6 h-6 text-brand-info" />
+            <ShieldCheck className="w-6 h-6 text-brand-info shrink-0" />
             <h1 className="text-2xl font-display font-light text-text-primary tracking-tight">
               Academic Quality Assurance & Validation System
             </h1>
@@ -64,7 +64,7 @@ export default function AcademicQualityDashboard() {
           onClick={() => setAuditData(evidenceCoverageAuditService.auditSubject())}
           className="px-4 py-2 bg-bg-surface hover:bg-bg-surface-hover border border-border-primary text-text-primary text-xs font-medium rounded-xl transition flex items-center gap-2 self-start md:self-auto cursor-pointer"
         >
-          <RefreshCw className="w-4 h-4 text-brand-info" />
+          <RefreshCw className="w-4 h-4 text-brand-info shrink-0" />
           <span>Tải lại kiểm định</span>
         </button>
       </div>
@@ -79,7 +79,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <BarChart2 className="w-4 h-4" />
+          <BarChart2 className="w-4 h-4 shrink-0" />
           <span>Sức khỏe Ngân hàng đề</span>
         </button>
 
@@ -91,7 +91,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <BookOpen className="w-4 h-4" />
+          <BookOpen className="w-4 h-4 shrink-0" />
           <span>Ma trận bao phủ</span>
         </button>
 
@@ -103,7 +103,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <ShieldCheck className="w-4 h-4" />
+          <ShieldCheck className="w-4 h-4 shrink-0" />
           <span>Kiểm định từng câu hỏi ({questionPool.length})</span>
         </button>
 
@@ -115,7 +115,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-4 h-4 shrink-0" />
           <span>Báo cáo đề thi</span>
         </button>
 
@@ -127,7 +127,7 @@ export default function AcademicQualityDashboard() {
               : "bg-bg-card text-text-muted hover:text-text-primary border border-border-primary"
           }`}
         >
-          <UserCheck className="w-4 h-4" />
+          <UserCheck className="w-4 h-4 shrink-0" />
           <span>Hàng chờ phê duyệt</span>
         </button>
       </div>
@@ -165,7 +165,7 @@ export default function AcademicQualityDashboard() {
           {healthOverview.missingConcepts.length > 0 && (
             <div className="bg-brand-warning-bg border border-brand-warning/30 rounded-2xl p-5 space-y-2">
               <div className="text-xs font-bold text-brand-warning flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4" />
+                <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>Khái niệm chưa được khai thác câu hỏi ({healthOverview.missingConcepts.length}):</span>
               </div>
               <div className="flex flex-wrap gap-2 text-xs">
@@ -252,7 +252,7 @@ export default function AcademicQualityDashboard() {
         <div className="space-y-4 fade-in-up">
           {/* Search bar */}
           <div className="relative">
-            <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-3 shrink-0" />
             <input
               type="text"
               value={searchQuery}
@@ -280,7 +280,7 @@ export default function AcademicQualityDashboard() {
         <div className="space-y-6 fade-in-up">
           {!generatedReport ? (
             <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-8 text-center space-y-4 max-w-xl mx-auto">
-              <FileText className="w-10 h-10 text-brand-info mx-auto" />
+              <FileText className="w-6 h-6 text-brand-info mx-auto shrink-0" />
               <div className="space-y-1">
                 <h3 className="text-base font-display font-medium text-text-primary">
                   Tạo báo cáo kiểm định đề thi
@@ -294,7 +294,7 @@ export default function AcademicQualityDashboard() {
                 onClick={handleGenerateExamReport}
                 className="px-6 py-3 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition inline-flex items-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 shrink-0" />
                 <span>Tạo báo cáo kiểm định đề thi ngay</span>
               </button>
             </div>

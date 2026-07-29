@@ -71,7 +71,7 @@ export default function QuickActionFAB({ onNavigate, onOpenUpload, onOpenSearch 
               >
                 <span>{act.label}</span>
                 <div className={`p-1.5 rounded-lg ${act.color}`}>
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 shrink-0" />
                 </div>
               </button>
             );
@@ -89,7 +89,7 @@ export default function QuickActionFAB({ onNavigate, onOpenUpload, onOpenSearch 
         }`}
         title="Mở thao tác nhanh"
       >
-        <Plus className="w-6 h-6 transition-transform" />
+        <Plus className="w-6 h-6 transition-transform shrink-0" />
       </button>
     </div>
   );

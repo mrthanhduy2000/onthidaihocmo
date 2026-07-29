@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười tám lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau mười chín lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,31 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: iconography, 62 tiêu đề đeo biểu tượng trong khi Khan có 0
+## Lượt mới nhất: thang cỡ biểu tượng, và một lỗi chỉ trình duyệt mới thấy
+
+| | Trước | Sau |
+|---|---|---|
+| Số cỡ biểu tượng | **7** (8/10/12/14/16/20/24px) | **3** (16/20/24px) |
+| Chỗ dùng dưới 16px | **29** | **0** |
+| Biểu tượng bị bóp méo trên bản chạy thật | **1** | **0** |
+
+**Bốn lỗi trong một khối 20 dòng ở `StatsView`**, đều nằm trong nhánh CÓ ĐIỀU KIỆN nên mọi lượt
+quét bằng mắt trước đây không gặp: "BOOKMARKED" tiếng Anh viết hoa, "ĐÃ HIỂU"/"CẦN ÔN LẠI" viết
+hoa toàn bộ, biểu tượng 10px, và `slice(0, 35)` cắt chữ giữa từ. **Nhánh có điều kiện là chỗ
+trốn của lỗi giao diện.**
+
+**Một lỗi CHỈ TRÌNH DUYỆT MỚI THẤY**: sau khi chuẩn hoá, đo lại ra 5 biểu tượng **13x16**, tức
+méo. Mã nguồn không lộ gì, cả 5 đều khai `w-4 h-4` đúng chuẩn; nguyên nhân là nằm trong `flex`
+mà thiếu `shrink-0`. Đã thêm `shrink-0` cho **225 biểu tượng**. Đo lại: 118 biểu tượng trên năm
+màn, tất cả đúng 16x16, ở cả 1280px lẫn 375px.
+
+Lần thứ ba một lỗi giao diện chỉ lộ khi mở trình duyệt. **Áp khuôn xong phải mở màn hình ra nhìn.**
+
+Bộ kiểm 212 lên **213**, `AG9`.
+
+---
+
+## Lượt trước: iconography, 62 tiêu đề đeo biểu tượng trong khi Khan có 0
 
 | Đo trên trang khoá học Khan | Giá trị |
 |---|---|
@@ -798,7 +822,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **212**, chia 33 nhóm A đến AG, đạt toàn bộ |
+| Phép tự kiểm chứng | **213**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

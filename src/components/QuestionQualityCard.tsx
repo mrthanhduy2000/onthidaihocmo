@@ -57,12 +57,12 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           {/* Quality Gate Badge */}
           {profile.gatePassed ? (
             <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-success bg-brand-success-bg border border-brand-success/30 px-2.5 py-1 rounded-full">
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>Gate PASSED</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-error bg-brand-error-bg border border-brand-error/30 px-2.5 py-1 rounded-full">
-              <XCircle className="w-4 h-4" />
+              <XCircle className="w-4 h-4 shrink-0" />
               <span>Gate FAILED ({profile.gateViolations.length})</span>
             </span>
           )}
@@ -101,7 +101,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
       {profile.gateViolations.length > 0 && (
         <div className="bg-brand-error-bg border border-brand-error/30 rounded-xl p-3 space-y-1 text-xs text-brand-error">
           <div className="font-bold flex items-center gap-1.5">
-            <AlertTriangle className="w-4 h-4" />
+            <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>Vi phạm tiêu chuẩn Quality Gate:</span>
           </div>
           <ul className="list-disc list-inside space-y-0.5 text-2xs pl-1">
@@ -131,7 +131,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           className="text-text-muted hover:text-text-primary text-xs font-medium inline-flex items-center gap-1 cursor-pointer"
         >
           <span>{isExpanded ? "Thu gọn chi tiết kiểm định" : "Xem chi tiết kiểm định & Lời giải"}</span>
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {isExpanded ? <ChevronUp className="w-4 h-4 shrink-0" /> : <ChevronDown className="w-4 h-4 shrink-0" />}
         </button>
       </div>
 
@@ -162,7 +162,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           <div className="bg-bg-surface border border-border-primary/60 rounded-xl p-3.5 space-y-2">
             <div className="font-semibold text-text-primary flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-brand-info" />
+                <BookOpen className="w-4 h-4 text-brand-info shrink-0" />
                 Kiểm định lời giải & Dẫn nguồn
               </span>
               <span className="text-2xs tabular-nums text-text-muted">
@@ -195,14 +195,14 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           <div className="bg-bg-surface border border-border-primary/80 rounded-xl p-3.5 space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-text-primary flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4 text-brand-info" />
+                <UserCheck className="w-4 h-4 text-brand-info shrink-0" />
                 Phê duyệt chất lượng
               </span>
               <button 
                 onClick={() => setShowNotesInput(!showNotesInput)}
                 className="text-2xs text-brand-info hover:underline flex items-center gap-1 cursor-pointer"
               >
-                <MessageSquare className="w-3.5 h-3.5" />
+                <MessageSquare className="w-4 h-4.5 shrink-0" />
                 <span>{showNotesInput ? "Ẩn ghi chú" : "Thêm ghi chú giảng viên"}</span>
               </button>
             </div>
@@ -221,7 +221,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
                 onClick={() => handleReviewAction("APPROVED")}
                 className="px-3.5 py-1.5 bg-brand-success text-white font-medium text-xs rounded-lg hover:opacity-90 transition flex items-center gap-1 cursor-pointer"
               >
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
                 <span>Phê duyệt</span>
               </button>
 
@@ -229,7 +229,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
                 onClick={() => handleReviewAction("NEEDS_REVISION")}
                 className="px-3.5 py-1.5 bg-brand-warning text-bg-app font-medium text-xs rounded-lg hover:opacity-90 transition flex items-center gap-1 cursor-pointer"
               >
-                <AlertTriangle className="w-4 h-4" />
+                <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>Yêu cầu chỉnh sửa</span>
               </button>
 
@@ -237,7 +237,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
                 onClick={() => handleReviewAction("REJECTED")}
                 className="px-3.5 py-1.5 bg-brand-error text-white font-medium text-xs rounded-lg hover:opacity-90 transition flex items-center gap-1 cursor-pointer"
               >
-                <XCircle className="w-4 h-4" />
+                <XCircle className="w-4 h-4 shrink-0" />
                 <span>Từ chối</span>
               </button>
             </div>

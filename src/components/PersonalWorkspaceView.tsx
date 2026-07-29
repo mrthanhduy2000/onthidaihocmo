@@ -281,7 +281,7 @@ Bàn học hôm nay
                 className="p-1.5 bg-bg-surface border border-border-primary hover:bg-bg-card rounded-lg text-text-muted hover:text-text-primary transition cursor-pointer"
                 title={isArchived ? "Mở lại môn học" : "Lưu trữ môn học"}
               >
-                <Archive className="w-4 h-4" />
+                <Archive className="w-4 h-4 shrink-0" />
               </button>
             </div>
             <p className="text-xs text-text-muted max-w-xl pt-1">
@@ -295,7 +295,7 @@ Bàn học hôm nay
               onClick={() => setShowSearchModal(true)}
               className="px-3.5 py-2 bg-bg-surface border border-border-primary/80 hover:border-brand-info/50 text-text-primary text-xs font-medium rounded-xl transition cursor-pointer flex items-center gap-2"
             >
-              <Search className="w-4 h-4 text-brand-info" />
+              <Search className="w-4 h-4 text-brand-info shrink-0" />
               <span>Tra cứu</span>
             </button>
 
@@ -303,7 +303,7 @@ Bàn học hôm nay
               onClick={() => setShowImportModal(true)}
               className="px-3.5 py-2 bg-bg-surface border border-border-primary/80 hover:border-brand-info/50 text-text-primary text-xs font-medium rounded-xl transition cursor-pointer flex items-center gap-2"
             >
-              <Upload className="w-4 h-4 text-brand-info" />
+              <Upload className="w-4 h-4 text-brand-info shrink-0" />
               <span>Thêm tài liệu</span>
             </button>
 
@@ -312,7 +312,7 @@ Bàn học hôm nay
               onClick={() => onStartExam("adaptive")}
               className="px-5 py-2.5 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot font-semibold text-xs rounded-xl transition cursor-pointer flex items-center gap-2 shadow-sm"
             >
-              <Play className="w-4 h-4 fill-current" />
+              <Play className="w-4 h-4 fill-current shrink-0" />
               <span>Bắt đầu ôn</span>
             </button>
           </div>
@@ -413,7 +413,7 @@ Bàn học hôm nay
                   : "bg-bg-surface hover:bg-bg-card text-text-muted hover:text-text-primary border border-border-primary/60"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{tab.label}</span>
               {tab.count !== undefined && (
                 <span className="px-1.5 py-0.2 text-2xs rounded-full tabular-nums bg-bg-card text-text-muted">
@@ -668,7 +668,7 @@ Tài liệu môn học
                 onClick={() => setShowImportModal(true)}
                 className="px-3.5 py-2 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition cursor-pointer flex items-center gap-1.5"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 shrink-0" />
                 <span>Thêm tài nguyên</span>
               </button>
             </div>
@@ -927,7 +927,7 @@ Báo cáo chất lượng học liệu
                 className="w-full bg-transparent text-xs font-medium text-text-primary focus:outline-none placeholder:text-text-muted"
               />
               <button onClick={() => setShowSearchModal(false)} className="text-text-muted hover:text-text-primary">
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 shrink-0" />
               </button>
             </div>
 
@@ -963,7 +963,7 @@ Báo cáo chất lượng học liệu
 Tạo câu hỏi bằng AI từ tài liệu
               </h3>
               <button onClick={closeImportModal} className="text-text-muted hover:text-text-primary cursor-pointer">
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 shrink-0" />
               </button>
             </div>
 
@@ -971,7 +971,7 @@ Tạo câu hỏi bằng AI từ tài liệu
               /* Trạng thái thành công */
               <div className="space-y-4 py-4 text-center">
                 <div className="w-12 h-12 mx-auto rounded-full bg-brand-success-bg text-brand-success flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6" />
+                  <CheckCircle2 className="w-6 h-6 shrink-0" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-text-primary">Đã tạo {successCount} câu hỏi mới</p>
@@ -1133,7 +1133,7 @@ Tạo câu hỏi bằng AI từ tài liệu
                         "Đang tạo..."
                       ) : materialText.trim() ? (
                         <>
-                          <Sparkles className="w-4 h-4" />
+                          <Sparkles className="w-4 h-4 shrink-0" />
                           Tạo {genCount} câu hỏi
                         </>
                       ) : (

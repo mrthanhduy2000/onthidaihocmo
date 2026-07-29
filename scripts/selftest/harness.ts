@@ -3118,6 +3118,37 @@ check("Tiêu đề mục không đeo biểu tượng trang trí",
     ? "0 tiêu đề đeo biểu tượng, khớp bản đo Khan (0 trên 102 tiêu đề)"
     : `${tieuDeCoIcon.length} file còn tiêu đề đeo biểu tượng: ${tieuDeCoIcon.slice(0, 5).join(", ")}`);
 
+// AG9. Biểu tượng chỉ dùng ba cỡ, và không cỡ nào nhỏ hơn 16px.
+//
+// Đo trên trang Khan: 596 trên 599 thẻ SVG đúng cỡ 24x24, tức MỘT cỡ duy nhất. Đo trên dự án
+// ngày 29/07/2026 trước khi sửa: **bảy cỡ** khác nhau (8, 10, 12, 14, 16, 20, 24px), trong đó
+// 29 chỗ dùng biểu tượng **dưới 16px**, có chỗ chỉ 8px.
+//
+// Biểu tượng 8px và 10px vừa không đọc được, vừa nhỏ hơn chính dòng chữ đứng cạnh, nên nó
+// không làm được việc duy nhất của một biểu tượng là làm mốc cho mắt bắt nhanh.
+//
+// Dự án giữ BA cỡ chứ không một cỡ như Khan, vì có chip và hàng dày đặc mà trang Khan không có:
+//   w-4 (16px)  mặc định, nằm trong dòng chữ
+//   w-5 (20px)  trong nút và thanh điều hướng
+//   w-6 (24px)  đứng độc lập làm mốc thị giác
+//
+// Phép kiểm chỉ soi thẻ VIẾT HOA (component biểu tượng), không đụng `span`/`div` vì các chấm
+// màu chú giải 10px là ô màu chứ không phải biểu tượng, và cỡ ấy đúng cho chúng.
+const CO_ICON_HOP_LE = new Set(["w-4", "w-5", "w-6"]);
+const coIconLa: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  for (const m of noiDung.matchAll(/<[A-Z][A-Za-z0-9]*\s+className="[^"]*?\b(w-\d+(?:\.\d+)?)\s+h-\d/g)) {
+    if (!CO_ICON_HOP_LE.has(m[1])) coIconLa.push(`${f}:${m[1]}`);
+  }
+}
+check("Biểu tượng chỉ dùng ba cỡ, không cỡ nào dưới 16px",
+  coIconLa.length === 0,
+  coIconLa.length === 0
+    ? "đúng ba cỡ 16/20/24px, không còn biểu tượng 8px hay 10px"
+    : `${coIconLa.length} chỗ lệch thang: ${[...new Set(coIconLa)].slice(0, 6).join(", ")}`);
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

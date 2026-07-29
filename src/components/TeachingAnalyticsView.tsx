@@ -35,7 +35,7 @@ export default function TeachingAnalyticsView() {
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">
             <span className="p-2 bg-brand-info-bg text-brand-info rounded-lg">
-              <BarChart3 className="w-5 h-5" />
+              <BarChart3 className="w-5 h-5 shrink-0" />
             </span>
             <h2 className="text-xl font-bold text-text-primary">
               Phân tích việc học và hiệu quả ôn tập
@@ -50,7 +50,7 @@ export default function TeachingAnalyticsView() {
           onClick={loadData}
           className="self-start md:self-auto flex items-center gap-2 px-3.5 py-2 text-sm font-medium border border-border-primary rounded-lg bg-bg-surface hover:bg-bg-hover transition cursor-pointer text-text-primary"
         >
-          <RefreshCw className="w-4 h-4 text-text-muted" />
+          <RefreshCw className="w-4 h-4 text-text-muted shrink-0" />
           <span>Làm mới dữ liệu</span>
         </button>
       </div>
@@ -62,7 +62,7 @@ export default function TeachingAnalyticsView() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Hiệu quả Giảng dạy</span>
             <span className="p-1.5 bg-brand-success-bg text-brand-success rounded-md">
-              <ShieldCheck className="w-4 h-4" />
+              <ShieldCheck className="w-4 h-4 shrink-0" />
             </span>
           </div>
           <div className="flex items-baseline gap-2">
@@ -89,7 +89,7 @@ export default function TeachingAnalyticsView() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Tốc độ Học tập</span>
             <span className="p-1.5 bg-brand-info-bg text-brand-info rounded-md">
-              <Zap className="w-4 h-4" />
+              <Zap className="w-4 h-4 shrink-0" />
             </span>
           </div>
           <div className="flex items-baseline gap-2">
@@ -104,7 +104,7 @@ export default function TeachingAnalyticsView() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Mệt mỏi Nhận thức</span>
             <span className="p-1.5 bg-brand-warning-bg text-brand-warning rounded-md">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 shrink-0" />
             </span>
           </div>
           <div className="flex items-baseline gap-2">
@@ -121,7 +121,7 @@ export default function TeachingAnalyticsView() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Phong cách Ưu tiên</span>
             <span className="p-1.5 bg-brand-info-bg text-brand-info rounded-md">
-              <Brain className="w-4 h-4" />
+              <Brain className="w-4 h-4 shrink-0" />
             </span>
           </div>
           <div className="text-lg font-bold text-text-primary truncate">

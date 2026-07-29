@@ -87,14 +87,14 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
         {/* Header */}
         <div className="px-6 py-4 border-b border-border-primary flex items-center justify-between bg-bg-surface">
           <div className="flex items-center gap-2">
-            <SettingsIcon className="w-4 h-4 text-brand-info" />
+            <SettingsIcon className="w-4 h-4 text-brand-info shrink-0" />
             <h3 className="text-xl font-bold text-text-primary font-sans">Cài đặt và dữ liệu học tập</h3>
           </div>
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-card transition cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 shrink-0" />
           </button>
         </div>
 
@@ -125,7 +125,7 @@ Giao diện
                       : "text-text-muted hover:text-text-primary border-transparent"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 shrink-0" />
                   <span>{nhan}</span>
                 </button>
               ))}
@@ -221,12 +221,12 @@ Sao lưu và khôi phục dữ liệu
                   onClick={handleExportJSON}
                   className="px-4 py-2 bg-nut-chinh text-white font-semibold text-xs rounded-xl hover:bg-nut-chinh-re-chuot transition cursor-pointer flex items-center gap-1.5"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4 shrink-0" />
                   <span>Xuất tệp sao lưu</span>
                 </button>
 
                 <label className="px-4 py-2 bg-bg-card border border-border-primary hover:border-brand-info/50 text-text-primary font-semibold text-xs rounded-xl transition cursor-pointer flex items-center gap-1.5">
-                  <Upload className="w-4 h-4 text-brand-info" />
+                  <Upload className="w-4 h-4 text-brand-info shrink-0" />
                   <span>Khôi phục từ JSON</span>
                   <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
                 </label>
@@ -234,7 +234,7 @@ Sao lưu và khôi phục dữ liệu
 
               {importStatus && (
                 <div className="p-2.5 bg-brand-success-bg border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>{importStatus}</span>
                 </div>
               )}
@@ -256,13 +256,13 @@ Làm mới tiến trình học
 
               {resetDone ? (
                 <div className="p-2.5 bg-brand-success-bg border border-brand-success/20 rounded-lg text-xs tabular-nums text-brand-success flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>Đã làm mới tiến trình. Số liệu đã về 0.</span>
                 </div>
               ) : confirmReset ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-brand-warning font-medium flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4" /> Chắc chắn xóa? Không thể hoàn tác.
+                    <AlertTriangle className="w-4 h-4 shrink-0" /> Chắc chắn xóa? Không thể hoàn tác.
                   </span>
                   <button
                     onClick={handleResetProgress}
@@ -282,7 +282,7 @@ Làm mới tiến trình học
                   onClick={() => setConfirmReset(true)}
                   className="px-4 py-2 bg-bg-card border border-brand-warning/40 text-brand-warning font-semibold text-xs rounded-xl hover:bg-brand-warning-bg transition cursor-pointer flex items-center gap-1.5"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <RotateCcw className="w-4 h-4 shrink-0" />
                   <span>Làm mới tiến trình môn này</span>
                 </button>
               )}

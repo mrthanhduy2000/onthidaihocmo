@@ -101,7 +101,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
         <div className="bg-brand-warning-bg/40 border border-brand-warning-border/40 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-brand-warning-bg text-brand-warning flex items-center justify-center shrink-0">
-              <Coffee className="w-5 h-5" />
+              <Coffee className="w-5 h-5 shrink-0" />
             </div>
             <div>
               <h3 className="text-xs font-semibold text-text-primary">Gợi ý nghỉ ngơi 5 phút</h3>
@@ -124,18 +124,18 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-info-bg text-brand-info border border-brand-info/20 text-xs font-semibold rounded-full">
-              <RhythmIcon className="w-4 h-4" />
+              <RhythmIcon className="w-4 h-4 shrink-0" />
               <span>{timeOfRhythm.label} • {timeOfRhythm.strategy}</span>
             </span>
 
             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-bg-surface text-text-muted border border-border-primary text-2xs tabular-nums rounded-full">
-              <Clock className="w-3.5 h-3.5 text-brand-info" />
+              <Clock className="w-4 h-4.5 text-brand-info shrink-0" />
               <span>{action.estimatedTimeMinutes} phút</span>
             </span>
           </div>
 
           <div className="flex items-center gap-1 text-xs text-text-muted tabular-nums">
-            <TrendingUp className="w-4 h-4 text-brand-success" />
+            <TrendingUp className="w-4 h-4 text-brand-success shrink-0" />
             <span>{action.expectedBenefit}</span>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
             </div>
             <div className="flex items-center justify-between text-2xs font-sans">
               <span className="text-text-muted tabular-nums flex items-center gap-1">
-                <ShieldCheck className="w-4 h-4 text-brand-success" />
+                <ShieldCheck className="w-4 h-4 text-brand-success shrink-0" />
                 <span>Độ tự tin: <strong className="text-text-primary font-medium">{confidenceText}</strong></span>
               </span>
             </div>
@@ -211,9 +211,9 @@ export default function HomeHero({ action, onExecutePrimary, onExecuteSecondary 
             onClick={() => onExecutePrimary(action.primaryAction)}
             className="w-full sm:w-auto px-7 py-3.5 bg-nut-chinh hover:bg-nut-chinh-re-chuot text-white font-semibold text-sm rounded-xl shadow-sm transition flex items-center justify-center gap-2 group cursor-pointer"
           >
-            <Play className="w-4 h-4 fill-current transition group-hover:scale-110" />
+            <Play className="w-4 h-4 fill-current transition group-hover:scale-110 shrink-0" />
             <span>{action.primaryAction.label}</span>
-            <ArrowRight className="w-4 h-4 transition group-hover:translate-x-1" />
+            <ArrowRight className="w-4 h-4 transition group-hover:translate-x-1 shrink-0" />
           </button>
 
           {action.secondaryAction && onExecuteSecondary && (

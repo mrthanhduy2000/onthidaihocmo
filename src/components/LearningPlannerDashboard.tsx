@@ -193,7 +193,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   : "bg-bg-surface hover:bg-bg-card text-text-muted hover:text-text-primary border border-border-primary/60"
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{tab.label}</span>
               {tab.count !== undefined && tab.count > 0 && (
                 <span className={`px-1.5 py-0.2 text-2xs rounded-full tabular-nums font-bold ${
@@ -423,7 +423,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           {/* Thẻ lý giải quyết định của AI */}
           <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl text-xs space-y-2 tabular-nums">
             <div className="flex items-center gap-2 text-text-muted">
-              <Info className="w-4 h-4 text-brand-info" />
+              <Info className="w-4 h-4 text-brand-info shrink-0" />
               <span className="font-semibold text-text-primary">Vì sao AI đề xuất như vậy</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-2xs text-text-muted">
@@ -743,7 +743,7 @@ Việc học nào đáng làm trước
 
                   {item.status === "resolved" && (
                     <span className="text-sm text-brand-success shrink-0 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
                       Đã xong
                     </span>
                   )}
@@ -848,7 +848,7 @@ Quản lý lịch sử & phiên làm bài
                 onClick={() => setShowClearHistoryConfirm(true)}
                 className="px-3 py-1.5 bg-brand-error-bg text-brand-error hover:bg-brand-error-bg text-xs font-semibold rounded-lg transition cursor-pointer flex items-center gap-1.5"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4 shrink-0" />
                 <span>Xóa toàn bộ lịch sử</span>
               </button>
             )}
@@ -856,7 +856,7 @@ Quản lý lịch sử & phiên làm bài
 
           {sessions.length === 0 ? (
             <div className="p-8 text-center text-xs text-text-muted space-y-2 tabular-nums">
-              <Info className="w-6 h-6 text-text-muted mx-auto" />
+              <Info className="w-6 h-6 text-text-muted mx-auto shrink-0" />
               <p>Chưa có phiên làm bài nào được lưu.</p>
             </div>
           ) : (
@@ -882,7 +882,7 @@ Quản lý lịch sử & phiên làm bài
                       onClick={() => handleDuplicateSession(sess.id)}
                       className="px-3 py-1.5 bg-bg-card border border-border-primary text-text-primary text-xs rounded-lg hover:bg-bg-surface transition cursor-pointer flex items-center gap-1"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      <Copy className="w-4 h-4.5 shrink-0" />
                       <span>Thi lại</span>
                     </button>
                     <button
