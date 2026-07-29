@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau tám lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo, Kế hoạch).
+**Cập nhật lần cuối**: 29/07/2026, sau chín lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo, Kế hoạch, Hỏi AI).
 
 ---
 
@@ -25,7 +25,25 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Kế hoạch, màn hình đang tự mâu thuẫn với chính nó
+## Lượt mới nhất: màn Hỏi AI, danh sách khái niệm dựng lại thành HÀNG thay vì THẺ
+
+Màn thứ sáu. Đo lại trực tiếp **trang khoá học** của Khan trước khi sửa.
+
+| Thành phần | Khan | Bản cũ của ta |
+|---|---|---|
+| Mỗi kỹ năng | một HÀNG cao 24px, chữ 14px/400 màu liên kết, **nền trong suốt, viền 0, bo góc 0** | thẻ nền xám có viền, bên trong còn một cái nút có viền riêng |
+| Tiêu đề nhóm bài | 24px đậm 700 | 13px, nhẹ hơn cả thẻ bên dưới nó |
+| Định nghĩa | không hiện | bị `line-clamp` cắt GIỮA TỪ ("...sản phẩm, dịch...") |
+
+Bốn tầng khung cho một danh sách khái niệm. Nay: cả hàng là chỗ bấm (chức năng giữ nguyên), bỏ
+cắt chữ, tên khái niệm đứng trước con số, tên chương lên 20px đậm.
+
+**Tiêu đề đôi, lần thứ BA trong đợt.** Vì lặp tới ba lần nên đã ghi hẳn thành bất biến
+**AGENTS.md 4.9f**: bốn khuôn trình bày rút ra từ cả đợt, kèm quy tắc không cắt chữ giữa từ.
+
+---
+
+## Lượt trước: màn Kế hoạch, màn hình đang tự mâu thuẫn với chính nó
 
 Màn thứ năm. Vấn đề nặng nhất không phải cách bày mà là **màn hình nói cùng lúc hai điều ngược
 nhau**, với hồ sơ mới trả lời 7 trên 292 câu:

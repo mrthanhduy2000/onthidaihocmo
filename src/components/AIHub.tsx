@@ -104,15 +104,19 @@ export default function AIHub({ onStartExam }: AIHubProps) {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8 fade-in-up">
       {/* AI Coach Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border-primary pb-6">
-        <div>
-          <div className="flex items-center gap-2 text-xs tabular-nums text-brand-info mb-1">
-            <Brain className="w-4 h-4" />
-            Trợ lý học tập • Lộ trình cá nhân
-          </div>
-          <h1 className="text-2xl font-display font-light text-text-primary">
+        {/*
+          Một tiêu đề, không phải hai. Đây là màn thứ BA gặp đúng lỗi này trong đợt (sau Báo cáo
+          và Kế hoạch): một dòng nhãn tô xanh dương nằm trên tiêu đề thật, nói lại chính việc mà
+          tiêu đề đã nói, và mang màu của liên kết nên mời bấm vào chỗ không bấm được.
+
+          Ghi lại thành khuôn để các màn còn lại khỏi lặp: **mỗi màn đúng một tiêu đề, một màu,
+          viết như câu tiếng Việt, kèm một dòng nói màn này làm được gì cho người học.**
+        */}
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-bold font-sans text-text-primary">
             Hỏi bài và nhận gợi ý ôn tập
           </h1>
-          <p className="text-text-muted text-xs font-sans mt-1">
+          <p className="text-base text-text-secondary font-sans max-w-[40rem]">
             Theo dõi phần đã nắm, phần còn yếu và gợi ý bước học tiếp theo.
           </p>
         </div>
@@ -202,9 +206,18 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                       nhường chỗ là tên chương (`min-w-0` cho phép nó co và cắt cụt gọn gàng).
                     */}
                     <div className="flex items-start justify-between gap-3">
+                      {/*
+                        Tên chương nâng từ 13px lên 20px đậm 700. Đo trên trang khoá học của
+                        Khan: tiêu đề một nhóm bài là **24px đậm 700**, còn từng bài bên dưới
+                        mới là 14px. Bản cũ đảo ngược quan hệ đó, tên chương chỉ 13px trong khi
+                        thẻ khái niệm bên dưới lại có nền và viền nên nặng hơn hẳn tên chương.
+
+                        Bỏ luôn dòng "Chương {ch.id}" phía trên, vì `ch.title` đã bắt đầu bằng
+                        đúng chuỗi "Chương N:" rồi. Cùng lỗi in trùng tiền tố đã sửa ở màn Câu
+                        sai ngày hôm nay.
+                      */}
                       <div className="min-w-0">
-                        <span className="text-2xs tabular-nums text-brand-info">Chương {ch.id}</span>
-                        <h4 className="text-sm font-semibold text-text-primary">{ch.title}</h4>
+                        <h4 className="text-xl font-bold text-text-primary font-sans leading-snug">{ch.title}</h4>
                       </div>
                       <span className={`text-2xs tabular-nums px-2 py-0.5 rounded border whitespace-nowrap shrink-0 ${
                         isUnlocked ? "bg-brand-success-bg text-brand-success border-brand-success/20" : "bg-bg-surface text-text-muted border-border-primary"
@@ -213,34 +226,60 @@ export default function AIHub({ onStartExam }: AIHubProps) {
                       </span>
                     </div>
 
-                    {/* Nodes inside Chapter */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+                    {/*
+                      KHÁI NIỆM DỰNG LẠI THÀNH HÀNG, KHÔNG CÒN LÀ THẺ.
+
+                      Đo trực tiếp trên trang khoá học của Khan Academy ngày 29/07/2026, mỗi kỹ
+                      năng của họ là một hàng: **cao đúng 24px, chữ 14px đậm 400 màu liên kết
+                      `#1865F2`, nền trong suốt, viền 0, bo góc 0, đệm 0**, kèm một biểu tượng
+                      nhỏ bên trái. Không thẻ, không nền xám, không nút riêng cho từng mục.
+
+                      Bản cũ ở đây là **thẻ trong thẻ trong thẻ**: thẻ bọc ngoài có viền và bo
+                      16px, bên trong là khối chương, bên trong nữa là lưới thẻ khái niệm nền
+                      xám có viền, và trong mỗi thẻ ấy lại còn một cái nút có viền riêng. Bốn
+                      tầng khung cho một danh sách khái niệm.
+
+                      Ba điều đổi:
+
+                      1. **Cả hàng là chỗ bấm**, thay cho một cái nút riêng nằm trong mỗi thẻ.
+                         Chức năng giữ nguyên: vẫn gọi đúng `aiService.generateExam` với đúng
+                         `chapterId` cũ. Vùng bấm rộng ra bằng cả hàng thay vì một cái nút nhỏ.
+                      2. **Bỏ `line-clamp-2`.** Định nghĩa khái niệm đang bị cắt giữa từ, cho ra
+                         "...sản phẩm, dịch..." và "...một xã hội lớn và phứ...". Một định nghĩa
+                         cụt giữa từ thì vừa không đọc được vừa không đáng tin. Nay để chữ tự
+                         xuống dòng trong một cột hẹp vừa tầm đọc.
+                      3. **Số phần trăm thôi đứng trước tên khái niệm.** Bản cũ đặt "45% nắm
+                         chắc" ở góc trên bên phải, tô đậm, tức mắt chạm con số trước khi chạm
+                         tên khái niệm. Nay tên khái niệm đứng đầu hàng, phần trăm lùi về sau
+                         dưới dạng chữ thường, đúng nguyên tắc đã áp cho các màn trước: nội
+                         dung là chủ thể, số liệu là chú thích.
+                    */}
+                    <div className="pt-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
                       {chNodes.map(node => {
                         const score = mastery[node.concept] || 0;
-                        const statusColor = score >= 90 ? "border-brand-success/60 text-brand-success" : score >= 60 ? "border-brand-info/60 text-brand-info" : "border-border-primary text-text-muted";
 
                         return (
-                          <div 
-                            key={node.id} 
-                            className="bg-bg-surface border border-border-primary hover:border-brand-info/50 rounded-xl p-3.5 transition space-y-2"
+                          <button
+                            key={node.id}
+                            onClick={() => {
+                              const exam = aiService.generateExam({ type: "chapter", chapterId: ch.id, count: 5 });
+                              onStartExam(exam);
+                            }}
+                            className="w-full text-left py-3 px-2 -mx-2 rounded-lg hover:bg-bg-surface transition cursor-pointer group flex items-start gap-3"
                           >
-                            <div className="flex items-center justify-end text-2xs">
-                              <span className={`tabular-nums font-bold ${statusColor}`}>{score}% nắm chắc</span>
-                            </div>
-                            <h5 className="text-xs font-semibold text-text-primary leading-snug">{node.concept}</h5>
-                            <div className="text-2xs text-text-muted line-clamp-2">{node.definition}</div>
-                            
-                            <button
-                              onClick={() => {
-                                const exam = aiService.generateExam({ type: "chapter", chapterId: ch.id, count: 5 });
-                                onStartExam(exam);
-                              }}
-                              className="w-full mt-2 py-1.5 px-2 bg-bg-card hover:bg-bg-surface border border-border-primary rounded-lg text-2xs font-medium text-text-primary transition flex items-center justify-center gap-1"
-                            >
-                              <Play className="w-3.5 h-3.5 fill-current text-brand-info" />
-                              <span>Ôn khái niệm này</span>
-                            </button>
-                          </div>
+                            <Play className="w-4 h-4 mt-1 shrink-0 fill-current text-[color:var(--nut-chinh)]" />
+                            <span className="min-w-0 space-y-1">
+                              <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+                                <span className="text-base font-medium text-[color:var(--nut-chinh)] group-hover:underline">
+                                  {node.concept}
+                                </span>
+                                <span className="text-sm text-text-muted">{score}% nắm chắc</span>
+                              </span>
+                              <span className="block text-sm text-text-secondary leading-relaxed max-w-[42rem]">
+                                {node.definition}
+                              </span>
+                            </span>
+                          </button>
                         );
                       })}
                     </div>

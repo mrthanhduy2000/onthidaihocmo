@@ -59,6 +59,48 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 9), màn Hỏi AI: danh sách khái niệm dựng lại thành HÀNG thay vì THẺ
+
+Màn thứ sáu. Lượt này đo lại trực tiếp **trang khoá học** của Khan trước khi sửa, vì đây là màn
+gần với trang khoá học của họ nhất.
+
+**Số đo trên trang khoá học Khan, lấy ngày 29/07/2026**
+
+| Thành phần | Số đo |
+|---|---|
+| Mỗi kỹ năng | một HÀNG cao **24px** |
+| Chữ | **14px, đậm 400**, màu liên kết `#1865F2` |
+| Nền, viền, bo góc, đệm | **trong suốt / 0 / 0 / 0** |
+| Tiêu đề nhóm bài | **24px đậm 700** màu chữ thường |
+
+**Bản cũ của ta là thẻ trong thẻ trong thẻ.** Thẻ bọc ngoài có viền bo 16px, bên trong là khối
+chương, bên trong nữa là lưới thẻ khái niệm nền xám có viền, và trong mỗi thẻ ấy lại còn một
+cái nút có viền riêng. Bốn tầng khung cho một danh sách khái niệm.
+
+**Bốn điều đổi:**
+
+1. **Cả hàng là chỗ bấm**, thay cho một cái nút nhỏ nằm trong mỗi thẻ. Chức năng giữ nguyên,
+   vẫn gọi đúng `aiService.generateExam` với đúng `chapterId` cũ; vùng bấm rộng ra bằng cả hàng.
+2. **Bỏ `line-clamp-2`.** Định nghĩa khái niệm đang bị cắt giữa từ, cho ra "...sản phẩm, dịch..."
+   và "...một xã hội lớn và phứ...". Một định nghĩa cụt giữa từ thì vừa không đọc được vừa
+   không đáng tin. Nay chữ tự xuống dòng trong một cột hẹp vừa tầm đọc.
+3. **Số phần trăm thôi đứng trước tên khái niệm.** Bản cũ đặt "45% nắm chắc" ở góc trên bên
+   phải và tô đậm, tức mắt chạm con số trước khi chạm tên khái niệm.
+4. **Tên chương từ 13px lên 20px đậm 700**, và bỏ dòng "Chương N" thừa phía trên vì `ch.title`
+   đã bắt đầu bằng đúng chuỗi ấy. Bản cũ đảo ngược quan hệ thứ bậc: tên chương 13px trong khi
+   thẻ khái niệm bên dưới có nền và viền nên nặng hơn hẳn.
+
+**Tiêu đề đôi, lần thứ BA trong đợt** (sau Báo cáo và Kế hoạch). Vì lặp tới ba lần nên lượt này
+ghi hẳn thành bất biến **AGENTS.md 4.9f**, gồm bốn khuôn trình bày rút ra từ cả đợt: một tiêu đề
+mỗi màn; số liệu viết thành câu chứ không đóng khung; danh sách nội dung là hàng chứ không phải
+thẻ; không tô màu báo động lên con số chưa chắc chắn và không dùng số âm cho tiến độ. Kèm quy
+tắc không cắt chữ giữa từ.
+
+**Kiểm chứng**: `npm run check` 201/201. Trên bản chạy thật ở 1280px và 375px: 0 tràn ngang, 0
+phần tử vượt khung, 0 chỗ rớt tương phản, 0 chỗ còn cắt chữ giữa từ.
+
+---
+
 ### 29/07/2026 (lượt 8), màn Kế hoạch: màn hình đang tự mâu thuẫn với chính nó
 
 Màn thứ năm. Vấn đề nặng nhất ở đây không phải cách bày mà là **màn hình nói cùng lúc hai điều

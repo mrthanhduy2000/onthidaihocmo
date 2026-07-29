@@ -422,6 +422,39 @@ theo màu ngữ nghĩa.** Đây cũng chính là cách Khan Academy làm, đo tr
 của họ. Kèm theo: **chỉ đáp án đúng được khoanh vòng**, phương án chọn sai chỉ đổi ô chữ cái và
 màu chữ, vì vòng khoanh là thứ chỉ chỗ cần nhìn chứ không phải thứ chấm điểm.
 
+### 4.9f. Bốn khuôn trình bày rút ra từ đợt tái thiết kế theo Khan Academy
+
+Đợt 29/07/2026 sửa cùng một lỗi ở nhiều màn khác nhau. Ghi lại thành khuôn để màn sau khỏi lặp,
+và để người sau khỏi phải đo lại từ đầu. Cả bốn đều đo trực tiếp trên `vi.khanacademy.org`.
+
+1. **Mỗi màn đúng MỘT tiêu đề.** Gặp ba lần (Báo cáo, Kế hoạch, Hỏi AI): một dòng nhãn nhỏ tô
+   xanh dương nằm ngay trên tiêu đề thật, nói lại chính việc tiêu đề đã nói. Ngoài chuyện thừa,
+   nó còn mang **màu của liên kết**, tức mời người ta bấm vào chỗ không bấm được. Khuôn đúng:
+   một `h1` một màu, viết như câu tiếng Việt (không viết hoa giữa câu), kèm một dòng nói màn
+   này làm được gì cho người học.
+
+2. **Số liệu viết thành câu, không đóng khung từng con số.** Gặp bốn lần (Bàn học, tổng kết sau
+   khi nộp, Báo cáo, Kế hoạch). Khan viết tiến độ thành câu ở cỡ chữ thường; khi mọi mẩu dữ
+   liệu đều được đóng khung thì không mẩu nào quan trọng hơn mẩu nào, và màn hình biến thành
+   bảng theo dõi thay vì chỗ để đọc. Cần ngăn cách thì dùng **vạch dọc mảnh bật từ mốc `sm`**,
+   không dùng viền hộp.
+
+3. **Danh sách nội dung là HÀNG, không phải THẺ.** Đo trên trang khoá học của Khan: mỗi kỹ năng
+   là một hàng cao 24px, chữ 14px đậm 400 màu liên kết, **nền trong suốt, viền 0, bo góc 0,
+   đệm 0**. Bản cũ của màn Hỏi AI là thẻ trong thẻ trong thẻ, mỗi thẻ khái niệm còn chứa một
+   cái nút riêng. Khuôn đúng: cả hàng là chỗ bấm, tên nội dung đứng đầu hàng, số liệu lùi về
+   sau dưới dạng chữ thường.
+
+4. **Không tô màu báo động lên con số chưa chắc chắn, và không dùng số âm cho tiến độ.** Màn Kế
+   hoạch từng hiện "Độ tin cậy: Cần thêm dữ liệu" ngay cạnh "Nguy cơ trượt mục tiêu" và "Còn
+   thiếu: -5.5" tô cam kèm chữ "khẩn cấp". Một dự báo tự khai là chưa đủ dữ liệu thì không được
+   đóng khung bằng màu cảnh báo. Và "-5.5" với "còn 5,5 điểm nữa" là cùng một sự thật, nhưng
+   một bên là điểm âm còn một bên là quãng đường.
+
+Kèm một quy tắc về chữ: **không cắt chữ giữa từ**. Định nghĩa khái niệm ở màn Hỏi AI từng bị
+`line-clamp` cắt thành "...sản phẩm, dịch..." và "...một xã hội lớn và phứ...". Một câu cụt
+giữa từ thì vừa không đọc được vừa không đáng tin.
+
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 
 `PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,
