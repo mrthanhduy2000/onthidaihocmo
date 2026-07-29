@@ -1,0 +1,125 @@
+{
+  "_doc": "Manifest cho bộ minh họa AI Learning OS. File gốc GPT Image ở ./source, bản đã nén dùng thật nằm ngay thư mục này. status=approved nghĩa là đã đối chiếu khớp với một vị trí thật trong mã nguồn, có thể ghép luôn. status=needs-review nghĩa là vị trí đề xuất ĐI NGƯỢC một quyết định thiết kế đã đo và chốt trước đó trong AGENTS.md/WORKSTATE.md — PHẢI hỏi lại Đàm trước khi ghép vào component, không tự quyết.",
+  "illustrations": [
+    {
+      "id": "IL-01",
+      "file": "il-01-home-hero.png",
+      "name": "Hero trang chủ",
+      "status": "needs-review",
+      "target": { "component": null, "line": null },
+      "conflict": "App không có màn marketing/landing nào. HomeHero.tsx (view 'home') là khối lý luận số liệu dày đặc (readiness, nhịp học, hành động kế tiếp), không có chỗ trống cho ảnh minh họa lối sống. Không có vị trí thật để ghép mà không thêm bố cục mới.",
+      "askDamAbout": "Có muốn thêm một khối hero trang trí mới vào Dashboard.tsx (view home) chỉ để chứa ảnh này không? Đây là thay đổi bố cục, không phải chỉ ghép ảnh vào chỗ có sẵn."
+    },
+    {
+      "id": "IL-02",
+      "file": "il-02-learning-path.png",
+      "name": "Bản đồ tri thức",
+      "status": "approved",
+      "target": {
+        "component": "src/components/ConceptMasteryMap.tsx",
+        "line": 112,
+        "trigger": "môn đang mở chưa có tài liệu nạp (nhánh EmptyState 'Thêm tài liệu để dựng bản đồ khái niệm')"
+      },
+      "conflict": null,
+      "placement": "phía trên tiêu đề EmptyState, cao ~120-140px, ảnh nhỏ hơn chữ"
+    },
+    {
+      "id": "IL-03",
+      "file": "il-03-empty-learning.png",
+      "name": "Bàn học trống chờ bắt đầu",
+      "status": "approved",
+      "target": {
+        "component": "src/components/Dashboard.tsx",
+        "line": 240,
+        "trigger": "recentAttempts.length === 0 (nhánh EmptyState 'Làm bài đầu tiên để có thống kê')"
+      },
+      "conflict": null,
+      "placement": "phía trên tiêu đề EmptyState, cao ~120-140px"
+    },
+    {
+      "id": "IL-04",
+      "file": "il-04-empty-search.png",
+      "name": "Không có kết quả tìm kiếm",
+      "status": "needs-review",
+      "target": {
+        "component": "src/components/GlobalCommandPalette.tsx",
+        "line": 147
+      },
+      "conflict": "Vị trí thật là MỘT DÒNG CHỮ nhỏ (p-6 text-center text-xs) trong hộp Cmd+K rộng khoảng 400px. Ảnh 900px sẽ làm vỡ hộp thoại, phải thu ảnh xuống rất nhỏ (dưới 60px) mới vừa, lúc đó chi tiết minh họa sẽ không còn nhìn ra.",
+      "askDamAbout": "Có chấp nhận một phiên bản thu rất nhỏ (dưới 60px) hay bỏ hẳn ảnh này?"
+    },
+    {
+      "id": "IL-05",
+      "file": "il-05-empty-progress.png",
+      "name": "Mốc đầu tiên của hành trình",
+      "status": "needs-review",
+      "target": {
+        "component": "src/components/LearningPlannerDashboard.tsx",
+        "line": 255,
+        "trigger": "chuaCoBaiLam === true (màn Kế hoạch chưa có bài làm nào)"
+      },
+      "conflict": "Chính đoạn mã tại dòng 247-254 ghi rõ: đã đo Khan Academy cho người chưa học gì và CHỦ ĐỘNG bỏ mọi hình ảnh, chỉ dùng chữ. Ghép ảnh này là đảo ngược một quyết định đã đo, không phải làm nốt việc còn thiếu.",
+      "askDamAbout": "Có muốn đảo quyết định cũ ở màn Kế hoạch không? Nếu có, cần ghi lại lý do mới vào WORKSTATE.md để người sau không tưởng đây là sơ suất."
+    },
+    {
+      "id": "IL-06",
+      "file": "il-06-loading.png",
+      "name": "Minh họa màn chờ tải",
+      "status": "needs-review",
+      "target": {
+        "component": "src/components/AuthScreens.tsx",
+        "line": null,
+        "trigger": "SplashScreen — đang tải dữ liệu học tập"
+      },
+      "conflict": "Đo được Khan Academy toàn site chỉ có ĐÚNG 1 phần tử animation, và đó là spinner — không có minh họa chờ nào. Dự án cũng đã có sẵn skeleton/thanh % đúng chỗ cho các lượt chờ khác.",
+      "askDamAbout": "Có muốn SplashScreen là ngoại lệ duy nhất dùng minh họa chờ, khác mọi màn chờ khác trong app không?"
+    },
+    {
+      "id": "IL-07",
+      "file": "il-07-success.png",
+      "name": "Hoàn thành bài học",
+      "status": "needs-review",
+      "target": {
+        "component": "src/components/PracticeView.tsx",
+        "line": null,
+        "trigger": "thẻ tổng kết sau khi nộp bài"
+      },
+      "conflict": "WORKSTATE.md đã ghi: dự án cân nhắc ăn mừng ở đúng chỗ này, đo được Khan không ăn mừng ở mức câu hỏi/bài, và CHỦ ĐỘNG quyết định không thêm. Ảnh này (dù không phải confetti) vẫn là thêm một thứ Khan không có ở khoảnh khắc đó.",
+      "askDamAbout": "Có muốn đảo quyết định cũ không? Nếu có, nên phân biệt rõ 'hoàn thành một câu' (không nên có) với 'hoàn thành một buổi ôn dài' (có thể hợp lý hơn) trước khi ghép."
+    },
+    {
+      "id": "IL-08",
+      "file": "il-08-error.png",
+      "name": "Lỗi có thể phục hồi",
+      "status": "needs-review",
+      "target": {
+        "component": "src/components/AIHub.tsx",
+        "line": null,
+        "trigger": "nhánh catch khi gọi AI thất bại"
+      },
+      "conflict": "Đây là lỗi nhỏ giữa màn (một khối chat), không phải trang lỗi toàn màn như 404 của Khan. Ảnh 900px có thể nặng hơn cả lỗi nó báo. Không phải xung đột với quyết định cũ (đây là khu vực chưa từng được đo/quyết định), chỉ là chưa chắc về tỷ lệ.",
+      "askDamAbout": "Có đồng ý dùng ảnh cỡ nhỏ (dưới 100px) cho đúng một khối chat lỗi, thay vì chiếm cả màn?"
+    },
+    {
+      "id": "IL-09",
+      "file": "il-09-section-artwork.png",
+      "name": "Artwork trang trí giữa các mục",
+      "status": "needs-review",
+      "target": { "component": null, "line": null },
+      "conflict": "Đi ngược trực tiếp việc đã làm ở vòng 18: đo được Khan có 102 tiêu đề mục, 0 tiêu đề có icon, và dự án đã GỠ 62 icon khỏi tiêu đề của chính mình vì lý do đó. Artwork lớn giữa mục còn nặng hơn icon đã gỡ.",
+      "askDamAbout": "Có chắc muốn đảo ngược đúng quyết định vừa mất một vòng làm việc để đạt được không?"
+    },
+    {
+      "id": "IL-10",
+      "file": "il-10-dialog.png",
+      "name": "Minh họa hộp thoại xác nhận",
+      "status": "needs-review",
+      "target": {
+        "component": "src/components/ProductSettingsModal.tsx / ChapterQuestionGeneratorModal.tsx",
+        "line": null
+      },
+      "conflict": "Không có bằng chứng đo được ủng hộ minh họa trong hộp thoại chức năng (cài đặt, xác nhận) trên Khan Academy.",
+      "askDamAbout": "Đàm có muốn minh họa hộp thoại nào cụ thể không, hay đây là ảnh dự phòng chưa cần dùng ngay?"
+    }
+  ]
+}

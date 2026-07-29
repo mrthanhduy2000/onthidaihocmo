@@ -59,6 +59,35 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/07/2026, đóng gói 10 ảnh minh họa GPT Image vào `src/assets/illustrations/`
+
+Không phải một vòng sửa mã. Đàm lập kế hoạch Illustration Master Plan (đo Khan Academy thật:
+marketing/404 có minh họa dạng hình khối phẳng kèm mascot, luồng học lõi thì 0 minh họa), rồi tự
+tạo 10 ảnh bằng GPT Image từ các prompt tự viết, khác với 4 ảnh khuyến nghị ban đầu trong kế
+hoạch. Nhiệm vụ ở đây chỉ là đóng gói cho phiên Claude Code sau dùng được, không ghép ảnh vào
+component nào cả.
+
+**Đã làm**: sao 10 ảnh gốc vào `source/` (giữ nguyên độ phân giải 1536×1024/1024×1024 để tái xuất
+sau này), nén bản dùng thật bằng `sips -Z 900` (giảm từ ~2,2MB xuống 100-400KB/ảnh, đủ nét ở cỡ
+hiển thị thật ~150-200px), viết `manifest.json` đối chiếu từng ảnh với đúng vị trí `EmptyState`
+trong mã nguồn.
+
+**Kết quả đối chiếu**: chỉ 2/10 ảnh (`IL-02` bản đồ tri thức, `IL-03` bàn học trống) khớp thẳng
+với một `EmptyState` có thật, gắn cờ `approved`. **8 ảnh còn lại gắn cờ `needs-review`** vì hoặc
+không có vị trí thật trong app (`IL-01` hero trang chủ — app này không có màn marketing/landing;
+`IL-09` artwork giữa mục — không có "mục" nào rảnh chỗ để chèn artwork lớn), hoặc đi ngược một
+quyết định thiết kế đã đo và chốt ở các vòng trước (`IL-05`, `IL-06`, `IL-07`, `IL-09` đối lập
+trực tiếp với các mục đã ghi trong AGENTS.md/WORKSTATE.md: màn Kế hoạch, màn chờ tải, thẻ tổng
+kết sau bài, tiêu đề mục đều đã đo Khan và chủ động bỏ minh họa). Mỗi ảnh `needs-review` có sẵn
+câu hỏi cụ thể ở field `askDamAbout` để phiên sau hỏi lại Đàm, không tự quyết dù ảnh đã có sẵn.
+
+**Còn nợ**: `EmptyState.tsx` chưa có prop nhận ảnh, cần thêm khi ghép hai ảnh `approved`. Ảnh vẫn
+khá nặng so với các icon SVG hiện có (100-400KB so với vài KB), nếu cần nhẹ hơn phải qua
+`pngquant`/tinypng vì `sips` không nén palette PNG sâu được. Xem chi tiết đầy đủ trong
+`src/assets/illustrations/README.md`.
+
+---
+
 ### 29/07/2026 (lượt 20), ĐÍNH CHÍNH một dòng sai trong chính bản đánh giá của tôi
 
 Lượt này chủ yếu là sửa lỗi của chính tôi, nên ghi kỹ.
