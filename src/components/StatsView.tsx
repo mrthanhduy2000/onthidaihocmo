@@ -184,7 +184,26 @@ export default function StatsView() {
     return "text-brand-error bg-brand-error-bg border border-brand-error-border";
   };
 
-  const getAccuracyBarColor = (pct: number) => {
+  /*
+    THANG MÀU CHỈ BẬT KHI ĐÃ ĐỦ BẰNG CHỨNG.
+
+    Bản cũ tô màu thuần theo phần trăm, nên một chương mới trả lời ĐÚNG HAI CÂU, đúng một sai
+    một, ra 50% và bị tô cam như một kết quả kém. Hai câu không đủ để kết luận gì về một chương,
+    và một tín hiệu sai còn tệ hơn không có tín hiệu: người học sẽ đi ôn lại chương mà họ chưa
+    thật sự yếu, tức mất thời gian ở đúng chỗ không cần.
+
+    Ngưỡng dùng lại **hằng số 6** vốn đã là "một cách co theo lượng bằng chứng duy nhất trong cả
+    dự án" (`w = 1 - e^(-n/6)` ở `db.recomputeStatistics`, `learnerModelService` và
+    `conceptMemoryService`). Không đặt thêm một con số mới, vì một hằng số viết tay ở tầng trình
+    bày rồi cũng trôi lệch khỏi phần còn lại.
+
+    Dưới ngưỡng thì thanh mang màu trung tính của nút chính, đúng như Khan: đo trên trang khoá
+    học của họ, thanh tiến độ cấp độ chỉ có MỘT màu, không có thang tốt xấu. Con số phần trăm
+    vẫn hiện đủ ngay cạnh, nên không mẩu thông tin nào mất đi.
+  */
+  const NGUONG_DU_BANG_CHUNG = 6;
+  const getAccuracyBarColor = (pct: number, soCauDaLam: number) => {
+    if (soCauDaLam < NGUONG_DU_BANG_CHUNG) return "bg-[color:var(--nut-chinh)]";
     if (pct >= 80) return "bg-brand-success";
     if (pct >= 60) return "bg-brand-info";
     if (pct >= 40) return "bg-brand-warning";
@@ -300,38 +319,46 @@ export default function StatsView() {
         */}
       </div>
 
-      {/* ACTIONABLE EXECUTIVE SUMMARY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-bg-card border border-brand-success/30 rounded-2xl p-5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-brand-success">
-            <CheckCircle2 className="w-4 h-4" />
-            1. Bạn tiến bộ gì?
-          </div>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Đã thạo <strong className="text-text-primary font-medium">{soKhaiNiemThao} khái niệm</strong> ở mức từ 70% trở lên. Đã chạm <strong className="text-text-primary font-medium">{idDaLam.size}/{questions.length} câu</strong> trong ngân hàng, tức {doBaoPhu}% độ phủ.
+      {/*
+        BA THẺ VIỀN MÀU ĐỔI THÀNH BA KHỐI CHỮ, ĐÚNG KHUÔN ĐÃ DÙNG NGAY BÊN DƯỚI.
+
+        Trước lượt này, màn Báo cáo dùng HAI khuôn khác nhau cho cùng một loại nội dung: ba thẻ
+        viền màu ngữ nghĩa ở đây, và ba khối chữ ngăn bằng vạch dọc ở phần "Tỷ lệ làm đúng /
+        Phần ngân hàng đã trả lời / Thời gian đã học" cách đó vài trăm điểm ảnh. Lượt 8 dựng
+        phần dưới theo khuôn 4.9g nhưng không chạm tới phần trên.
+
+        Ba lỗi khác trong ba thẻ này:
+
+        1. **Viền xanh lá quanh câu "Đã thạo 0 khái niệm".** Với hồ sơ mới, thẻ mang màu thành
+           công lại chứa đúng con số 0. Màu đang khen thứ chưa xảy ra.
+        2. **Đánh số "1. 2. 3."** là cách của người viết báo cáo. Người học không đọc bản trình
+           bày có mục lục, họ đọc một đoạn nói về mình.
+        3. **Ba câu hỏi tự đặt rồi tự trả lời** ("Bạn tiến bộ gì?" rồi trả lời ngay bên dưới)
+           chiếm gấp đôi chiều cao so với chỉ nói thẳng câu trả lời.
+      */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-0">
+        <div className="space-y-2 md:pr-6">
+          <h3 className="text-sm font-bold text-text-muted font-sans">Đã nắm được</h3>
+          <p className="text-base text-text-secondary font-sans leading-relaxed">
+            Thạo <strong className="text-text-primary">{soKhaiNiemThao} khái niệm</strong> ở mức từ 70% trở lên,
+            và đã chạm <strong className="text-text-primary">{idDaLam.size} trên {questions.length} câu</strong> trong ngân hàng.
           </p>
         </div>
 
-        <div className="bg-bg-card border border-brand-warning/30 rounded-2xl p-5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-semibold text-brand-warning">
-            <AlertTriangle className="w-4 h-4" />
-            2. Bạn vẫn yếu gì?
-          </div>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Còn <strong className="text-text-primary font-medium">{wrongQuestionIds.length} câu trong sổ tay câu sai</strong> chưa làm chủ triệt để bẫy sai lầm.
+        <div className="space-y-2 md:px-6 md:border-l md:border-border-primary">
+          <h3 className="text-sm font-bold text-text-muted font-sans">Còn yếu</h3>
+          <p className="text-base text-text-secondary font-sans leading-relaxed">
+            {wrongQuestionIds.length === 0
+              ? "Chưa có câu nào nằm trong sổ câu sai."
+              : <>Còn <strong className="text-text-primary">{wrongQuestionIds.length} câu</strong> trong sổ câu sai chưa làm lại.</>}
           </p>
         </div>
 
-        <div className="bg-bg-card border border-brand-info/30 rounded-2xl p-5 space-y-2 flex flex-col justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-semibold text-brand-info">
-              <Sparkles className="w-4 h-4" />
-              3. Bạn nên làm gì tiếp?
-            </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              {viecNenLamTiep}
-            </p>
-          </div>
+        <div className="space-y-2 md:pl-6 md:border-l md:border-border-primary">
+          <h3 className="text-sm font-bold text-text-muted font-sans">Nên làm tiếp</h3>
+          <p className="text-base text-text-secondary font-sans leading-relaxed">
+            {viecNenLamTiep}
+          </p>
         </div>
       </div>
 
@@ -343,7 +370,7 @@ export default function StatsView() {
               <Sparkles className="w-4 h-4 text-brand-info" />
               Nhật ký rèn luyện
             </h3>
-            <p className="text-xs text-text-muted">Theo dõi tần suất và mức độ đắc thụ theo ngày</p>
+            <p className="text-sm text-text-secondary">Số câu bạn trả lời mỗi ngày trong 30 ngày gần đây</p>
           </div>
 
           {/*
@@ -464,7 +491,13 @@ export default function StatsView() {
         <div className="space-y-3 md:pl-6 md:border-l md:border-border-primary">
           <h3 className="text-sm font-bold text-text-muted font-sans">Thời gian đã học</h3>
           <p className="text-xl font-bold text-text-primary font-sans leading-snug">
-            Bạn đã học tổng cộng {Math.round(stats.totalTimeSpent / 60)} phút.
+            {/*
+              "0 phút" đúng về toán nhưng vô nghĩa với người đọc: một lượt làm 40 giây vẫn là có
+              học. Làm tròn XUỐNG một đại lượng tích luỹ khiến công sức nhỏ biến mất hoàn toàn.
+            */}
+            {stats.totalTimeSpent < 60
+              ? "Bạn vừa bắt đầu, chưa tới một phút."
+              : `Bạn đã học tổng cộng ${Math.round(stats.totalTimeSpent / 60)} phút.`}
           </p>
           <p className="text-sm text-text-secondary font-sans">
             Chuỗi {stats.studyStreak} ngày liên tục, đã nộp {history.length} lượt.
@@ -476,38 +509,50 @@ export default function StatsView() {
       {/* Chapter-wise Accuracy Breakdown */}
       <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-6">
         <h3 className="text-lg font-medium font-display text-text-primary flex items-center gap-2">
-          <BarChart2 className="w-5 h-5 text-brand-info" /> Phân tích tỷ lệ chính xác theo từng Chương lý thuyết
+          <BarChart2 className="w-5 h-5 text-brand-info" /> Tỷ lệ làm đúng theo từng chương
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Bảy chương là một DANH SÁCH, nên là hàng chứ không phải lưới thẻ. Khuôn 4.9g mục 3,
+            đã áp cho bản đồ chương ở màn Chương trình lượt 12 nhưng chưa áp cho màn này. */}
+        <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
           {chapters.map((ch) => {
             const chData = stats.accuracyByChapter[ch.id] || { correct: 0, total: 0 };
             const accuracyPct = chData.total > 0 ? Math.round((chData.correct / chData.total) * 100) : 0;
             
+            /*
+              CHƯA LÀM CÂU NÀO KHÔNG PHẢI LÀ LÀM KÉM.
+
+              Bản cũ gọi `getAccuracyColor(accuracyPct)` với `accuracyPct = 0` cả khi chương chưa
+              có câu nào được trả lời, nên chip ghi "Chưa làm câu nào" lại mang **màu đỏ của mức
+              dưới 40%**. Chữ nói một đằng, màu nói một nẻo, và màu thắng vì mắt đọc màu trước.
+
+              Với hồ sơ mới, sáu trên bảy chương hiện ra như sáu kết quả kém. Đúng khuôn đã sửa
+              ở màn Câu sai lượt 6 và tab Phần cần sửa lượt 15.
+            */
+            const chuaLam = chData.total === 0;
             return (
-              <div key={ch.id} className="border border-border-primary p-4 rounded-xl hover:bg-bg-surface transition duration-200 flex flex-col justify-between gap-4 font-sans">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-2xs tabular-nums font-bold text-brand-info">Chương {ch.id}</span>
-                    <span className={`text-2xs tabular-nums font-bold px-2 py-0.5 rounded-full ${getAccuracyColor(accuracyPct)}`}>
-                      {chData.total > 0 ? `${accuracyPct}% chính xác` : "Chưa làm câu nào"}
-                    </span>
-                  </div>
-                  <h4 className="font-medium text-sm text-text-primary line-clamp-1">{ch.title}</h4>
+              <div key={ch.id} className="py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 font-sans">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-bold text-text-primary">{ch.title}</h4>
+                  <p className="text-sm text-text-secondary pt-0.5">
+                    {chuaLam
+                      ? "Chưa làm câu nào của chương này."
+                      : `Đúng ${chData.correct} trên ${chData.total} câu đã trả lời.`}
+                  </p>
                 </div>
 
-                <div className="space-y-1">
-                  <div className="w-full bg-bg-surface h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-300 ${getAccuracyBarColor(accuracyPct)}`}
-                      style={{ width: `${chData.total > 0 ? accuracyPct : 0}%` }}
-                    />
+                {/* Thang chỉ vẽ khi có gì để vẽ. Thang rỗng nhìn giống thang bằng 0. */}
+                {!chuaLam && (
+                  <div className="sm:w-64 sm:shrink-0 flex items-center gap-3">
+                    <div className="flex-1 bg-bg-surface h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${getAccuracyBarColor(accuracyPct, chData.total)}`}
+                        style={{ width: `${accuracyPct}%` }}
+                      />
+                    </div>
+                    <span className="text-sm tabular-nums text-text-primary font-medium w-10 text-right">{accuracyPct}%</span>
                   </div>
-                  <div className="text-2xs tabular-nums text-text-muted flex justify-between">
-                    <span>Đúng {chData.correct} / {chData.total} câu đã trả lời</span>
-                    <span>{chData.total > 0 ? `${accuracyPct}%` : "0%"}</span>
-                  </div>
-                </div>
+                )}
               </div>
             );
           })}

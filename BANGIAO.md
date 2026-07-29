@@ -59,6 +59,52 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 16), màn Báo cáo: hai khuôn trình bày trên cùng một màn
+
+Tiếp lượt rà hồ sơ mỏng (10 câu đã làm, 4 đúng).
+
+**Phát hiện gốc: màn Báo cáo dùng HAI khuôn khác nhau cho cùng một loại nội dung.** Ba thẻ viền
+màu ngữ nghĩa ở đầu màn, và ba khối chữ ngăn bằng vạch dọc cách đó vài trăm điểm ảnh. Lượt 8
+dựng phần dưới theo khuôn 4.9g nhưng không chạm tới phần trên, nên hai khuôn cùng tồn tại suốt
+tám lượt mà không ai thấy, vì mỗi lượt chỉ nhìn một khối.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Ba khối dẫn đầu màn | ba thẻ viền màu ngữ nghĩa, đánh số "1. 2. 3.", mỗi thẻ một câu hỏi tự đặt rồi tự trả lời | ba khối chữ ngăn vạch dọc, cùng khuôn với phần dưới |
+| Viền thẻ đầu | **xanh lá** quanh câu "Đã thạo **0** khái niệm" | không viền |
+| "Thời gian đã học" | "Bạn đã học tổng cộng **0 phút**" (thật ra 9 giây) | "Bạn vừa bắt đầu, chưa tới một phút." |
+| Bảy chương | lưới thẻ, tên bị `line-clamp-1` cắt | hàng, tên đầy đủ |
+| Chip chương chưa làm | "Chưa làm câu nào" mang **màu ĐỎ** của mức dưới 40% | bỏ chip, nói thành câu |
+| Thanh chương 2 câu (50%) | tô **CAM** như kết quả kém | màu trung tính |
+| "mức độ **đắc thụ** theo ngày" | từ Hán Việt hiếm | "Số câu bạn trả lời mỗi ngày trong 30 ngày gần đây" |
+| "theo từng **Chương lý thuyết**" | viết hoa giữa câu | "theo từng chương" |
+
+**Hai lỗi màu đáng nói riêng, vì cùng một họ nhưng ngược chiều nhau:**
+
+1. `getAccuracyColor(accuracyPct)` được gọi với `accuracyPct = 0` cả khi chương CHƯA có câu nào
+   được trả lời, nên chip ghi "Chưa làm câu nào" lại mang màu đỏ. **Chữ nói một đằng, màu nói
+   một nẻo, và màu thắng vì mắt đọc màu trước.** Với hồ sơ mỏng, sáu trên bảy chương hiện ra
+   như sáu kết quả kém.
+2. Thanh tô màu thuần theo phần trăm, nên chương mới trả lời đúng **hai câu** (một đúng một sai)
+   ra 50% và bị tô cam. Hai câu không đủ kết luận gì, và **một tín hiệu sai còn tệ hơn không có
+   tín hiệu**: người học sẽ đi ôn lại chương mà họ chưa thật sự yếu.
+
+**Ngưỡng chọn thế nào cho khỏi tùy tiện.** Đây là chỗ dễ bịa ra một con số mới. Dùng lại **hằng
+số 6** vốn đã được ghi trong WORKSTATE là "một cách co theo lượng bằng chứng duy nhất trong cả
+dự án" (`w = 1 - e^(-n/6)` ở `db.recomputeStatistics`, `learnerModelService`,
+`conceptMemoryService`). Dưới ngưỡng thì thanh mang một màu trung tính, đúng như Khan: thanh
+tiến độ cấp độ của họ chỉ có MỘT màu, không có thang tốt xấu. Con số phần trăm vẫn hiện đủ ngay
+cạnh nên không mẩu thông tin nào mất đi.
+
+**Bộ kiểm 209 lên 210**, `AG6` canh cả hai lỗi màu. Đã thử phá và bắt được.
+
+**Một chỗ KHÔNG làm được và lý do**: định đo lại thanh tiến độ Khan lần nữa để chốt màu, nhưng
+`vi.khanacademy.org` trả về trang "Client Challenge", tức bot-detection. **Không vượt qua nó.**
+Thay vào đó dùng bản đo đã lấy được trước đó trong cùng phiên (thanh cấp độ nền
+`rgba(33,36,44,0.08)` cao 8px bo 10px, một màu duy nhất), vốn đã đủ để ra quyết định.
+
+---
+
 ### 29/07/2026 (lượt 15), màn Kế hoạch: dự báo điểm cho người chưa trả lời câu nào
 
 Tiếp lượt rà bằng hồ sơ trắng. Màn Kế hoạch là **ca nặng nhất của cả đợt**: nó dựng nguyên một

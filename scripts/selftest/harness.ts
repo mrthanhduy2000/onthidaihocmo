@@ -3007,6 +3007,27 @@ check("Chương chưa học không đeo màu cảnh báo",
     && !/Lần sai: \{item\.wrongCount\}/.test(nguonKeHoach),
   "chỉ câu từng làm sai mới mang mức ưu tiên có màu, và thôi in dòng Lần sai 0");
 
+// AG6. Thang màu tốt xấu chỉ được bật khi đã đủ bằng chứng.
+//
+// Màn Báo cáo tô màu thanh tiến độ từng chương thuần theo phần trăm, nên một chương mới trả lời
+// ĐÚNG HAI CÂU (một đúng một sai) ra 50% và bị tô CAM như một kết quả kém. Hai câu không đủ kết
+// luận gì về một chương, và một tín hiệu sai còn tệ hơn không có tín hiệu: người học sẽ đi ôn
+// lại chương mà họ chưa thật sự yếu.
+//
+// Cùng khối đó còn gọi `getAccuracyColor(0)` cho chương CHƯA LÀM CÂU NÀO, nên chip ghi "Chưa
+// làm câu nào" lại mang màu đỏ của mức dưới 40%. Chữ nói một đằng, màu nói một nẻo, và màu
+// thắng vì mắt đọc màu trước.
+//
+// Ngưỡng dùng lại hằng số 6 vốn đã là cách co theo lượng bằng chứng duy nhất của cả dự án,
+// không đặt thêm một con số mới ở tầng trình bày.
+const nguonBaoCao = docNguon("src/components/StatsView.tsx");
+check("Thang màu tốt xấu chỉ bật khi đủ bằng chứng",
+  /NGUONG_DU_BANG_CHUNG\s*=\s*6/.test(nguonBaoCao)
+    && /getAccuracyBarColor\s*=\s*\(pct: number, soCauDaLam: number\)/.test(nguonBaoCao)
+    && /soCauDaLam < NGUONG_DU_BANG_CHUNG/.test(nguonBaoCao)
+    && !/getAccuracyColor\(accuracyPct\)/.test(nguonBaoCao),
+  "dưới 6 câu thì thanh mang màu trung tính, và chương chưa làm không còn bị tô màu kém");
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

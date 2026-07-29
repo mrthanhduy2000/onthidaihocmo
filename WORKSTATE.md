@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười lăm lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau mười sáu lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,34 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Kế hoạch, dự báo điểm cho người chưa trả lời câu nào
+## Lượt mới nhất: màn Báo cáo, hai khuôn trình bày trên cùng một màn
+
+**Phát hiện gốc**: màn này dùng HAI khuôn khác nhau cho cùng một loại nội dung. Ba thẻ viền màu
+ở đầu màn, ba khối chữ ngăn vạch dọc cách đó vài trăm điểm ảnh. Lượt 8 dựng phần dưới nhưng
+không chạm phần trên, nên hai khuôn cùng tồn tại suốt tám lượt vì mỗi lượt chỉ nhìn một khối.
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Ba khối dẫn đầu màn | ba thẻ viền màu, đánh số "1. 2. 3." | ba khối chữ ngăn vạch dọc |
+| Viền thẻ đầu | **xanh lá** quanh "Đã thạo **0** khái niệm" | không viền |
+| Thời gian đã học | "tổng cộng **0 phút**" (thật ra 9 giây) | "chưa tới một phút" |
+| Bảy chương | lưới thẻ, tên bị cắt | hàng, tên đầy đủ |
+| Chip chương chưa làm | "Chưa làm câu nào" mang **màu ĐỎ** | bỏ chip, nói thành câu |
+| Thanh chương 2 câu (50%) | tô **CAM** như kết quả kém | màu trung tính |
+
+Hai lỗi màu cùng họ nhưng ngược chiều: một bên tô đỏ cho chương chưa bắt đầu, một bên tô cam
+cho mẫu quá nhỏ. **Chữ nói một đằng màu nói một nẻo, và màu thắng vì mắt đọc màu trước.**
+
+Ngưỡng bằng chứng dùng lại **hằng số 6** đã có sẵn của dự án, không bịa số mới.
+
+Bộ kiểm 209 lên **210**, `AG6`, đã thử phá và bắt được.
+
+**Không làm được**: định đo lại Khan lần nữa nhưng gặp bot-detection ("Client Challenge").
+Không vượt qua, dùng bản đo đã lấy trước đó trong cùng phiên.
+
+---
+
+## Lượt trước: màn Kế hoạch, dự báo điểm cho người chưa trả lời câu nào
 
 Ca nặng nhất của cả đợt. Màn này dựng nguyên một kế hoạch chi tiết, có con số tới một chữ số
 thập phân, cho một người **chưa trả lời một câu**.
@@ -717,7 +744,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **209**, chia 33 nhóm A đến AG, đạt toàn bộ |
+| Phép tự kiểm chứng | **210**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 
