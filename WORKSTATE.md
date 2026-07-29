@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười sáu lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau mười bảy lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,38 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Báo cáo, hai khuôn trình bày trên cùng một màn
+## Lượt mới nhất: hệ thống trạng thái rỗng, dựng lại EmptyState từ đầu
+
+### Bản đánh giá khoảng cách còn lại, xếp theo tác động tới việc học
+
+| Mảng | Đo được | Mức |
+|---|---|---|
+| **Component Composition** | **32 nhánh rỗng** trên 15 file, `EmptyState` gọi đúng **1 chỗ** | **Lớn nhất** |
+| **Loading / Error State** | **0 skeleton**; nhánh `catch` của AIHub nói "đang xử lý" | Lớn |
+| **Iconography** | **74 icon**; `AlertTriangle` 26 lần, `Sparkles` 24 lần | Lớn, CHƯA làm |
+| Illustration | 2/30 file có SVG tự vẽ | Vừa, CHƯA làm |
+| Motion | 208/290 `all 0s`, **ngang Khan** (297/~300) | Nhỏ, đã sạch |
+
+Motion đo rồi kết luận **không cần đụng**. Ghi lại để lượt sau khỏi "thêm hoạt ảnh cho sinh động".
+
+### Đã làm lượt này
+
+`EmptyState` dựng lại tách **hai cấp**, và đó là mấu chốt để nó được dùng thật: bản cũ quá nặng
+cho chỗ nhỏ nên người ta thôi dùng và tự viết `italic` tại chỗ.
+
+- `EmptyState` cho cả màn: tiêu đề 20px/700 là **câu mệnh lệnh nói việc cần làm**, không khung.
+- `DongTrong` cho một dòng trong bảng: một câu chữ thường.
+
+Mười nhánh đã chuyển. Ba ca nói SAI đã sửa, nặng nhất là **nhánh `catch` của AIHub nói "Hệ
+thống đang xử lý"** khi lời gọi đã thất bại, và `ConceptMasteryMap` hứa "AI đang phân tích tài
+liệu" khi không có tiến trình nào chạy.
+
+Bộ kiểm 210 lên **211**, `AG7`. Bản đầu của nó **tự báo đỏ chính nó** vì quét cả chú thích đang
+trích lại câu cũ; đã sửa để bỏ chú thích trước khi quét.
+
+---
+
+## Lượt trước: màn Báo cáo, hai khuôn trình bày trên cùng một màn
 
 **Phát hiện gốc**: màn này dùng HAI khuôn khác nhau cho cùng một loại nội dung. Ba thẻ viền màu
 ở đầu màn, ba khối chữ ngăn vạch dọc cách đó vài trăm điểm ảnh. Lượt 8 dựng phần dưới nhưng
@@ -744,7 +775,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **210**, chia 33 nhóm A đến AG, đạt toàn bộ |
+| Phép tự kiểm chứng | **211**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

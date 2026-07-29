@@ -9,6 +9,7 @@ import {
   Sparkles, RefreshCw, Layers, Activity, Calendar, HelpCircle, ArrowUpRight, Zap
 } from "lucide-react";
 import { conceptMemoryService, ConceptMemoryProfile } from "../services/conceptMemoryService";
+import { DongTrong } from "./EmptyState";
 import { 
   studentEvolutionEngine, 
   EvolutionTimelineSnapshot, 
@@ -220,9 +221,10 @@ export default function LearningEvolutionView() {
           </h3>
 
           {snapshots.length === 0 ? (
-            <div className="py-8 text-center text-text-muted text-sm italic">
-              Chưa có dữ liệu tiến hóa. Hãy thực hiện câu hỏi bài tập để ghi nhận snapshot đầu tiên.
-            </div>
+            <DongTrong>
+              Chưa có mốc nào được ghi. Mỗi lượt bạn làm bài, hệ thống lưu lại một mốc để so sánh
+              trí nhớ theo thời gian.
+            </DongTrong>
           ) : (
             <div className="space-y-3">
               {snapshots.map((snap) => (
@@ -281,7 +283,7 @@ export default function LearningEvolutionView() {
           <div className="bg-bg-card border border-border-primary rounded-xl p-4 shadow-sm space-y-2">
             <h3 className="text-sm font-semibold text-text-muted px-2 mb-2">Danh sách Khái niệm</h3>
             {profileList.length === 0 ? (
-              <p className="text-sm text-text-muted p-2 italic">Chưa có khái niệm trong bộ nhớ.</p>
+              <DongTrong>Chưa có khái niệm nào được theo dõi. Làm bài xong là các khái niệm bạn đã chạm sẽ hiện ở đây.</DongTrong>
             ) : (
               profileList.map((p) => (
                 <button
@@ -311,7 +313,7 @@ export default function LearningEvolutionView() {
           {/* Detailed Concept Profile */}
           <div className="lg:col-span-2 bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-6">
             {!currentSelectedProfile ? (
-              <p className="text-sm text-text-muted italic">Chọn một khái niệm để xem bản sao số chi tiết.</p>
+              <DongTrong>Chọn một khái niệm bên trái để xem chi tiết trí nhớ của khái niệm đó.</DongTrong>
             ) : (
               <>
                 <div className="flex items-center justify-between border-b border-border-primary pb-4">
@@ -374,7 +376,7 @@ export default function LearningEvolutionView() {
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-text-primary">Bộ nhớ giảng dạy</h4>
                   {currentSelectedProfile.explanationsHistory.length === 0 ? (
-                    <p className="text-xs text-text-muted italic">Chưa có lịch sử diễn giải cho khái niệm này.</p>
+                    <DongTrong>Chưa có lần giải thích nào cho khái niệm này.</DongTrong>
                   ) : (
                     <div className="space-y-2">
                       {currentSelectedProfile.explanationsHistory.map((h, i) => (
@@ -457,7 +459,7 @@ export default function LearningEvolutionView() {
 
           <div className="space-y-3">
             {journey.length === 0 ? (
-              <p className="text-sm text-text-muted italic">Chưa có đủ tương tác để tạo nhật ký hành trình.</p>
+              <DongTrong>Chưa đủ dữ liệu để dựng nhật ký hành trình. Cần thêm vài lượt làm bài.</DongTrong>
             ) : (
               journey.map((item, idx) => (
                 <div key={idx} className="p-4 bg-bg-surface border border-border-primary rounded-lg space-y-2 text-sm">
@@ -489,7 +491,7 @@ export default function LearningEvolutionView() {
 
           <div className="space-y-3">
             {milestones.length === 0 ? (
-              <p className="text-sm text-text-muted italic">Chưa phát hiện cột mốc mới.</p>
+              <DongTrong>Chưa có cột mốc nào. Mốc được ghi khi một khái niệm chuyển sang mức thạo hơn.</DongTrong>
             ) : (
               milestones.map((ms) => (
                 <div key={ms.id} className="p-4 bg-bg-surface border border-border-primary rounded-lg space-y-1 text-sm">
@@ -541,7 +543,7 @@ export default function LearningEvolutionView() {
 
           <div className="space-y-3">
             {auditLog.length === 0 ? (
-              <p className="text-sm text-text-muted italic">Chưa có bản ghi kiểm toán.</p>
+              <DongTrong>Chưa có bản ghi nào.</DongTrong>
             ) : (
               auditLog.map((entry) => (
                 <div key={entry.id} className="p-4 bg-bg-surface border border-border-primary rounded-lg space-y-2 text-sm">

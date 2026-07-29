@@ -3028,6 +3028,64 @@ check("Thang màu tốt xấu chỉ bật khi đủ bằng chứng",
     && !/getAccuracyColor\(accuracyPct\)/.test(nguonBaoCao),
   "dưới 6 câu thì thanh mang màu trung tính, và chương chưa làm không còn bị tô màu kém");
 
+// AG7. Trạng thái rỗng không được viết bằng chữ nghiêng, và không được hứa việc không chạy.
+//
+// Đo trên mã nguồn ngày 29/07/2026: 32 nhánh `length === 0` rải trên 15 file, mà component
+// dùng chung `EmptyState` chỉ được gọi ĐÚNG MỘT chỗ. Chín file tự viết
+// `<p className="... italic">Chưa có...</p>` tại chỗ.
+//
+// Hai lý do bỏ chữ nghiêng: tiếng Việt có dấu thì nghiêng rất khó đọc, và Khan không dùng chữ
+// nghiêng ở đâu trong giao diện của họ.
+//
+// Nguyên nhân gốc khiến người ta thôi dùng component chung: nó quá nặng cho chỗ nhỏ (thẻ bo
+// 16px, viền, icon lucide trong ô tròn 48px). Nên bản dựng lại tách hai cấp, `EmptyState` cho
+// cả một màn và `DongTrong` cho một dòng trong bảng.
+//
+// Phép kiểm bắt chuỗi "Chưa/Không có..." nằm cùng phần tử với lớp `italic`, chứ không cấm
+// `italic` nói chung: chữ nghiêng vẫn hợp lệ cho trích dẫn và mẹo ghi nhớ.
+const fileNghiengRong: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx") || f === "EmptyState.tsx") continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  for (const m of noiDung.matchAll(/className="[^"]*\bitalic\b[^"]*"\s*>\s*([^<]{0,80})/g)) {
+    if (/^(Chưa|Không có|Chua|Khong co)/.test(m[1].trim())) fileNghiengRong.push(f);
+  }
+}
+/*
+  Và không màn nào được mô tả một tiến trình nền không hề tồn tại.
+
+  Hai ca đã bắt được:
+
+    ConceptMasteryMap  "AI đang phân tích tài liệu để tự động thiết lập bản đồ thông thạo" khi
+                       đồ thị rỗng. Không có tiến trình nào chạy; nó rỗng vì môn chưa có tài
+                       liệu và sẽ rỗng mãi cho tới khi người học tự thêm vào.
+    AIHub              nhánh `catch`, tức lời gọi AI ĐÃ THẤT BẠI, lại trả về câu "Hệ thống đang
+                       xử lý câu hỏi". Trạng thái lỗi đội lốt trạng thái chờ, nên người học ngồi
+                       chờ một câu trả lời không bao giờ tới.
+
+  Loại sai này tệ hơn cả lời khen nhầm: nó khiến người học KHÔNG làm việc cần làm, vì tưởng hệ
+  thống đang làm hộ.
+
+  PHẢI BỎ CHÚ THÍCH TRƯỚC KHI QUÉT. Bản đầu của phép kiểm này quét cả file nên báo đỏ ngay
+  chính đoạn chú thích đang trích lại câu cũ để giải thích vì sao nó sai. Một phép kiểm bắt lỗi
+  trong lời giải thích về lỗi thì sẽ bị người sau tắt đi.
+*/
+const huaGia: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  const maSach = noiDung
+    .replace(/\/\*[\s\S]*?\*\//g, "")       // chú thích khối
+    .replace(/^\s*\/\/.*$/gm, "")           // chú thích dòng
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, "");  // chú thích JSX
+  if (/AI đang phân tích|đang tự động thiết lập|hệ thống đang xử lý/i.test(maSach)) huaGia.push(f);
+}
+check("Trạng thái rỗng không dùng chữ nghiêng và không hứa việc không chạy",
+  fileNghiengRong.length === 0 && huaGia.length === 0,
+  fileNghiengRong.length === 0 && huaGia.length === 0
+    ? "mọi nhánh rỗng nói bằng chữ thường, và không nhánh nào mô tả một tiến trình nền không tồn tại"
+    : `${[...new Set(fileNghiengRong)].join(", ")}${huaGia.length ? ` | hứa giả: ${huaGia.join(", ")}` : ""}`);
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

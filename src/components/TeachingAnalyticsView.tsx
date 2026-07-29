@@ -9,6 +9,7 @@ import {
   CheckCircle2, Clock, Zap, BookOpen, Layers, Award, Target, RefreshCw
 } from "lucide-react";
 import { teachingAnalytics, TeachingAnalyticsReport } from "../services/teachingAnalytics";
+import { DongTrong } from "./EmptyState";
 import { studentModelService } from "../services/learnerModel";
 
 export default function TeachingAnalyticsView() {
@@ -329,7 +330,7 @@ export default function TeachingAnalyticsView() {
 
             <div className="space-y-3">
               {report.hardestConcepts.length === 0 ? (
-                <p className="text-sm text-text-muted italic">Chưa có đủ dữ liệu bài tập.</p>
+                <DongTrong>Chưa có đủ dữ liệu bài tập để phân tích. Làm thêm vài lượt là khối này có nội dung.</DongTrong>
               ) : (
                 report.hardestConcepts.map((item, idx) => (
                   <div key={idx} className="p-3 bg-bg-surface border border-border-primary rounded-lg flex items-center justify-between">
@@ -355,7 +356,7 @@ export default function TeachingAnalyticsView() {
 
             <div className="space-y-3">
               {report.mostFrequentMisconceptions.length === 0 ? (
-                <p className="text-sm text-text-muted italic">Chưa ghi nhận hiểu sai nghiêm trọng.</p>
+                <DongTrong>Chưa ghi nhận chỗ hiểu sai nào. Những khái niệm bạn hay nhầm sẽ hiện ở đây.</DongTrong>
               ) : (
                 report.mostFrequentMisconceptions.map((item, idx) => (
                   <div key={idx} className="p-3 bg-bg-surface border border-border-primary rounded-lg flex items-center justify-between gap-3">
@@ -381,7 +382,7 @@ export default function TeachingAnalyticsView() {
 
           <div className="space-y-3">
             {report.auditTrail.length === 0 ? (
-              <p className="text-sm text-text-muted italic">Chưa có nhật ký kiểm toán mới.</p>
+              <DongTrong>Chưa có mục nào trong nhật ký.</DongTrong>
             ) : (
               report.auditTrail.map((entry) => (
                 <div key={entry.id} className="p-4 bg-bg-surface border border-border-primary rounded-lg space-y-2 text-sm">

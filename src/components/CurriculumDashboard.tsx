@@ -15,6 +15,8 @@ import {
   CurriculumStage 
 } from "../services/curriculumIntelligenceEngine";
 import { aiService } from "../services/ai";
+import { dbService } from "../services/db";
+import { DongTrong } from "./EmptyState";
 import { ExamAttempt } from "../types";
 
 interface CurriculumDashboardProps {
@@ -289,10 +291,22 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
           </div>
 
           {plan.studyDebt.length === 0 ? (
-            <div className="p-4 text-center text-xs text-brand-success flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Không có tồn đọng học tập. Tiến trình hoàn hảo!</span>
-            </div>
+            /*
+              "Tiến trình hoàn hảo!" là lời khen dành cho người đã học xong, nhưng nó cũng hiện
+              ra với người CHƯA LÀM CÂU NÀO, vì cả hai trường hợp đều cho danh sách rỗng. Cùng
+              lỗi với "Sổ câu sai đang sạch" đã sửa ở màn Bàn học lượt 14.
+
+              Dùng lại đúng cờ mà màn Bàn học và màn Kế hoạch đang dùng (`totalSolved > 0`) chứ
+              không nghĩ ra một cách kiểm tra riêng cho màn này. Bản đầu tôi viết
+              `plan.completedChapters`, một trường KHÔNG tồn tại trên `CurriculumPlan`, và tsc
+              không bắt được vì chỗ đó nằm trong nhánh JSX. Lần thứ hai mắc đúng lỗi đoán tên
+              API trong đợt này, xem thêm ca `dbService.getExamGoal().targetDate` ở lượt 12.
+            */
+            <DongTrong>
+              {dbService.getStatistics().totalSolved > 0
+                ? "Không còn phần nào tồn đọng. Bạn đã dọn hết những chỗ từng bỏ dở."
+                : "Chưa có phần nào tồn đọng, vì bạn chưa làm câu nào. Những chỗ bỏ dở sẽ được liệt kê ở đây."}
+            </DongTrong>
           ) : (
             <div className="space-y-2.5">
               {plan.studyDebt.map((debt, idx) => (

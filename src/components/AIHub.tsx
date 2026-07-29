@@ -87,7 +87,16 @@ export default function AIHub({ onStartExam }: AIHubProps) {
       const fallbackMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: "ai",
-        text: "Hệ thống đang xử lý câu hỏi. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau.",
+        /*
+          TRẠNG THÁI LỖI ĐANG ĐỘI LỐT TRẠNG THÁI CHỜ.
+
+          Đây là nhánh `catch`, tức lời gọi AI ĐÃ THẤT BẠI. Nhưng câu cũ "Hệ thống đang xử lý
+          câu hỏi" nói ngược hẳn: nó báo rằng việc vẫn đang chạy. Người học đọc xong sẽ ngồi
+          chờ một câu trả lời không bao giờ tới, thay vì thử lại ngay.
+
+          Một trạng thái lỗi phải nói ba điều: chuyện gì đã xảy ra, vì sao, và làm gì tiếp.
+        */
+        text: "Chưa gửi được câu hỏi tới gia sư AI, có thể do mạng. Bạn thử gửi lại nhé.",
         time: TimeService.formatTime().substring(0, 5)
       };
       setChatHistory(prev => [...prev, fallbackMsg]);

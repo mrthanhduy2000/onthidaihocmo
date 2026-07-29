@@ -242,10 +242,9 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
             </div>
 
             {recentAttempts.length === 0 ? (
-              <EmptyState 
-                type="no-data" 
-                title="Chưa có bài thi" 
-                description="Hoàn thành bài đầu tiên để xem thống kê." 
+              <EmptyState
+                title="Làm bài đầu tiên để có thống kê"
+                description="Mỗi lượt bạn nộp sẽ hiện ở đây kèm điểm và ngày làm, để nhìn lại nhịp học theo thời gian."
               />
             ) : (
               <div className="space-y-2">

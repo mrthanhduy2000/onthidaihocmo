@@ -8,6 +8,7 @@ import {
   Award, Brain, AlertTriangle, ChevronDown, ChevronUp, 
   Play, BookOpen, RefreshCw, Calendar, Sparkles, HelpCircle 
 } from "lucide-react";
+import EmptyState from "./EmptyState";
 import { kbService, KnowledgeNode } from "../services/kbService";
 import { dbService, questions } from "../services/db";
 import { ExamAttempt } from "../types";
@@ -101,9 +102,21 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
       </div>
 
       {graph.length === 0 ? (
-        <div className="text-center py-8 text-xs text-text-muted font-sans">
-          Chưa có cơ sở tri thức cho học phần này. AI đang phân tích tài liệu để tự động thiết lập bản đồ thông thạo.
-        </div>
+        /*
+          BẢN CŨ HỨA MỘT VIỆC KHÔNG HỀ ĐANG DIỄN RA.
+
+          "AI đang phân tích tài liệu để tự động thiết lập bản đồ thông thạo" đọc như có một
+          tiến trình đang chạy nền, nên người học sẽ ngồi chờ. Không có tiến trình nào cả: đồ
+          thị rỗng vì môn này chưa có tài liệu nào được nạp, và nó sẽ rỗng mãi cho tới khi
+          chính người học thêm tài liệu vào.
+
+          Đây là loại sai tệ hơn cả nói lời khen nhầm: nó khiến người học KHÔNG làm việc cần
+          làm, vì tưởng hệ thống đang làm hộ.
+        */
+        <EmptyState
+          title="Thêm tài liệu để dựng bản đồ khái niệm"
+          description="Bản đồ này dựng từ giáo trình và tài liệu của môn. Môn đang mở chưa có tài liệu nào, nên chưa có khái niệm để vẽ."
+        />
       ) : (
         <div className="space-y-8">
           {Object.entries(chaptersMap).sort(([a], [b]) => parseInt(a) - parseInt(b)).map(([chIdStr, nodes]) => {

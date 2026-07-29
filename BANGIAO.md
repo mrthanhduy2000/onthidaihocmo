@@ -59,6 +59,66 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 17), hệ thống trạng thái rỗng, dựng lại `EmptyState` từ đầu
+
+**Bản đánh giá toàn bộ khoảng cách còn lại**, đo trên mã nguồn cùng ngày, xếp theo tác động tới
+việc học chứ không theo mức dễ sửa:
+
+| Mảng | Đo được | Mức |
+|---|---|---|
+| **Component Composition** | **32 nhánh `length === 0`** trên 15 file, mỗi nơi một kiểu; `EmptyState.tsx` được gọi đúng **1 chỗ**; 9 file dùng chữ nghiêng, 3 file dùng viền đứt | **Lớn nhất** |
+| **Loading / Error State** | **0 skeleton**, 3 spinner. Nhánh `catch` của AIHub nói "đang xử lý" | Lớn |
+| **Iconography** | **74 icon khác nhau**; `AlertTriangle` **26 lần**, `Sparkles` **24 lần** | Lớn |
+| Illustration | 2 trên 30 file có SVG tự vẽ | Vừa |
+| **Motion** | 208/290 phần tử `transition: all 0s`, tỷ lệ **ngang Khan** (297/~300) | Nhỏ, đã sạch |
+
+Motion được đo rồi kết luận **không cần đụng**: bản đo Khan ở lượt 14 cho thấy không chuyển động
+là mặc định của họ, và tỷ lệ của ta đã tương đương. Ghi lại để lượt sau khỏi "thêm hoạt ảnh cho
+sinh động".
+
+**Vì sao phải dựng lại `EmptyState` chứ không vá.** Con số 32 nhánh trên 15 file mà chỉ 1 chỗ
+gọi component chung nói lên nguyên nhân gốc: **component chung quá nặng cho chỗ nhỏ**, nên
+người ta thôi dùng và tự viết một dòng `italic` tại chỗ. Bản cũ là thẻ bo 16px có viền, icon
+lucide 24px trong ô bo tròn 48px, tiêu đề 16px, mô tả 12px, đúng mẫu đã bị loại ở mọi nơi khác.
+
+Bản mới tách **hai cấp**, và đó là điểm mấu chốt để nó được dùng thật:
+
+- `EmptyState` cho cả một màn: tiêu đề 20px/700 là **câu mệnh lệnh nói việc cần làm**, mô tả
+  14px/400, nút tuỳ chọn, **không khung không viền không bóng không icon tròn**, đúng bản đo
+  Khan ở lượt 14.
+- `DongTrong` cho một dòng trong bảng: chỉ một câu chữ thường.
+
+Điểm quan trọng nhất là tiêu đề. Khan không mô tả tình trạng ("Chưa có dữ liệu"), họ nói việc
+cần làm ("Bắt đầu tăng cấp độ tích lũy kỹ năng..."). **Màn rỗng là lúc người học cần chỉ dẫn
+nhất, mà mô tả tình trạng thì không chỉ dẫn gì cả.**
+
+**Mười nhánh đã chuyển**, và ba ca nói SAI đã sửa:
+
+1. `ConceptMasteryMap`: "AI đang phân tích tài liệu để tự động thiết lập bản đồ thông thạo" khi
+   đồ thị rỗng. **Không có tiến trình nào chạy.** Đồ thị rỗng vì môn chưa có tài liệu và sẽ rỗng
+   mãi cho tới khi chính người học thêm vào. Loại sai này tệ hơn lời khen nhầm: nó khiến người
+   học **không làm** việc cần làm, vì tưởng hệ thống đang làm hộ.
+2. `AIHub` dòng 90: nhánh **`catch`**, tức lời gọi AI ĐÃ THẤT BẠI, lại trả về "Hệ thống đang xử
+   lý câu hỏi". **Trạng thái lỗi đội lốt trạng thái chờ.** Người học ngồi chờ một câu trả lời
+   không bao giờ tới thay vì thử lại ngay.
+3. `CurriculumDashboard`: "Không có tồn đọng học tập. Tiến trình hoàn hảo!" hiện cả với người
+   chưa làm câu nào. Cùng lỗi "Sổ câu sai đang sạch" đã sửa ở lượt 14.
+
+**Một lỗi của chính tôi, giữ lại để khỏi lặp.** Sửa ca 3 tôi viết `plan.completedChapters`, một
+trường **không tồn tại** trên `CurriculumPlan`, và tsc không bắt vì nó nằm trong nhánh JSX. Đây
+là **lần thứ hai trong đợt** tôi đoán tên API thay vì đọc (lần đầu:
+`dbService.getExamGoal().targetDate` ở lượt 12). Đã đổi sang đúng cờ mà hai màn khác đang dùng,
+`dbService.getStatistics().totalSolved > 0`.
+
+**Bộ kiểm 210 lên 211**, `AG7` canh cả hai vế: chữ nghiêng ở nhánh rỗng, và chuỗi hứa một tiến
+trình nền không tồn tại.
+
+**Bản đầu của AG7 tự báo đỏ chính nó.** Nó quét cả file nên bắt luôn đoạn chú thích đang trích
+lại câu cũ để giải thích vì sao câu ấy sai. Đã sửa để bỏ chú thích trước khi quét, đúng cách
+`AC2` làm. **Một phép kiểm bắt lỗi trong lời giải thích về lỗi thì sẽ bị người sau tắt đi.**
+
+---
+
 ### 29/07/2026 (lượt 16), màn Báo cáo: hai khuôn trình bày trên cùng một màn
 
 Tiếp lượt rà hồ sơ mỏng (10 câu đã làm, 4 đúng).
