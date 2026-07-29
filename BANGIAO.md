@@ -59,6 +59,48 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 20), ĐÍNH CHÍNH một dòng sai trong chính bản đánh giá của tôi
+
+Lượt này chủ yếu là sửa lỗi của chính tôi, nên ghi kỹ.
+
+**Bản đánh giá ở lượt 17 xếp "Loading State" vào mức Lớn với lý do "0 skeleton, 3 spinner".
+Cả hai con số đều sai lệch, và kết luận rút ra từ chúng cũng sai.**
+
+Tôi đo bằng `grep -c "skeleton\|Skeleton\|isLoading\|loading"`. Cách đo ấy trượt hết những
+chỗ đặt tên khác:
+
+| Chỗ chờ thật | Tên biến | Cách trình bày | Grep của tôi |
+|---|---|---|---|
+| `PracticeView`, chờ gia sư AI giảng | `aiLoading` | **skeleton ba thanh** `animate-pulse` | trượt |
+| `ChapterQuestionGeneratorModal`, AI soạn câu hỏi | `isBusy` | **thanh tiến độ có %** kèm tên lượt đang chạy | trượt |
+| `PersonalWorkspaceView`, nhập tài liệu | `isImporting` | thanh tiến độ có % | trượt |
+| `AIHub`, chờ trả lời | `loadingChat` | vòng xoay | bắt được |
+| `AuthScreens`, gửi mã | `loading` | vòng xoay | bắt được |
+
+Tức ứng dụng **đã có đủ ba loại trạng thái chờ, mỗi loại đúng chỗ của nó**: skeleton cho nội
+dung sắp hiện ngay tại chỗ, thanh phần trăm cho việc dài biết trước tiến độ, vòng xoay cho việc
+ngắn không biết trước bao lâu. Đó là phân loại đúng chứ không phải sự hỗn loạn.
+
+Và riêng con số "0 skeleton" thì vừa sai vừa **không phải điều đáng mong muốn**: bản đo Khan ở
+lượt 14 cho thấy chính họ cũng không dùng skeleton, chỉ dùng một SVG xoay 1.1s linear ở ba cỡ
+24/48/96.
+
+**Đây là lần thứ hai trong đợt tôi kết luận từ grep thay vì đọc**, sau ca `Dashboard.tsx` ở
+lượt 12 (grep `from "./Dashboard"` trong khi đường dẫn thật là `from "./components/Dashboard"`).
+Bài học cũ được ghi là "grep không thấy không có nghĩa là không có"; nay bổ sung vế thứ hai:
+**đếm bằng grep một khái niệm (như "trạng thái chờ") mà không biết trước dự án đặt tên nó là
+gì thì con số thu được vô nghĩa.** Muốn đếm khái niệm thì phải bắt đầu từ chỗ khái niệm ấy
+buộc phải xuất hiện, ở đây là mọi hàm có `await`.
+
+Đã sửa hai dòng bảng trong `BANGIAO.md` và `WORKSTATE.md` chứ không lặng lẽ bỏ qua, vì AI sau
+đọc bản đánh giá ấy sẽ đi xây skeleton cho những chỗ đã có sẵn.
+
+**Việc thật đã làm lượt này** (nhỏ, sau khi bản đánh giá được sửa lại cho đúng): trạng thái chờ
+của `AIHub` bỏ **chữ nghiêng**, bỏ chữ "suy luận" vốn là từ của người làm hệ thống, và đổi
+`RefreshCw` (biểu tượng của việc tải lại) sang `Loader2` cho khớp với màn đăng nhập.
+
+---
+
 ### 29/07/2026 (lượt 19), thang cỡ biểu tượng, và một lỗi chỉ trình duyệt mới thấy
 
 Phần còn lại của bản đo iconography ở lượt 18.
@@ -158,7 +200,7 @@ việc học chứ không theo mức dễ sửa:
 | Mảng | Đo được | Mức |
 |---|---|---|
 | **Component Composition** | **32 nhánh `length === 0`** trên 15 file, mỗi nơi một kiểu; `EmptyState.tsx` được gọi đúng **1 chỗ**; 9 file dùng chữ nghiêng, 3 file dùng viền đứt | **Lớn nhất** |
-| **Loading / Error State** | **0 skeleton**, 3 spinner. Nhánh `catch` của AIHub nói "đang xử lý" | Lớn |
+| ~~Loading State~~ | ~~**0 skeleton**~~ **SỐ ĐO SAI, xem đính chính ở lượt 20** | ~~Lớn~~ Nhỏ |
 | **Iconography** | **74 icon khác nhau**; `AlertTriangle` **26 lần**, `Sparkles` **24 lần** | Lớn |
 | Illustration | 2 trên 30 file có SVG tự vẽ | Vừa |
 | **Motion** | 208/290 phần tử `transition: all 0s`, tỷ lệ **ngang Khan** (297/~300) | Nhỏ, đã sạch |

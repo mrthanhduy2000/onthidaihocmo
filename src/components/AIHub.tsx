@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send, Bot, RefreshCw, Play, Lock, Unlock } from "lucide-react";
+import { Send, Bot, RefreshCw, Play, Lock, Unlock, Loader2 } from "lucide-react";
 import { dbService, chapters } from "../services/db";
 import { aiService } from "../services/ai";
 import { kbService, KnowledgeNode } from "../services/kbService";
@@ -347,9 +347,19 @@ Sơ đồ khái niệm và kiến thức nền
               </div>
             ))}
             {loadingChat && (
-              <div className="flex items-center gap-2 text-xs text-text-muted italic">
-                <RefreshCw className="w-4 h-4 animate-spin text-brand-info shrink-0" />
-                <span>Gia sư AI đang suy luận câu trả lời...</span>
+              /*
+                Chờ NGẮN mà không biết trước bao lâu thì dùng vòng xoay, đúng như Khan: đo trên
+                trang bài tập của họ, trạng thái chờ là một SVG xoay 1.1s linear, không phải
+                khối xám nhấp nháy.
+
+                Hai chỗ sửa: bỏ chữ nghiêng (tiếng Việt có dấu thì nghiêng rất khó đọc, và Khan
+                không dùng nghiêng ở đâu cả), và bỏ chữ "suy luận" vốn là từ của người làm hệ
+                thống. Dùng `Loader2` cho khớp với màn đăng nhập, thay vì `RefreshCw` là biểu
+                tượng của việc "tải lại".
+              */
+              <div className="flex items-center gap-2 text-sm text-text-secondary">
+                <Loader2 className="w-4 h-4 animate-spin text-brand-info shrink-0" />
+                <span>Gia sư AI đang trả lời...</span>
               </div>
             )}
             <div ref={chatEndRef} />

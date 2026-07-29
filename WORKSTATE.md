@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười chín lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau hai mươi lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,31 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: thang cỡ biểu tượng, và một lỗi chỉ trình duyệt mới thấy
+## Lượt mới nhất: ĐÍNH CHÍNH một dòng sai trong chính bản đánh giá
+
+Bản đánh giá ở lượt 17 xếp "Loading State" mức **Lớn** với lý do "0 skeleton". **Sai.**
+
+Tôi đo bằng `grep "skeleton|isLoading|loading"`, nên trượt hết những chỗ đặt tên khác:
+
+| Chỗ chờ thật | Tên biến | Cách trình bày |
+|---|---|---|
+| `PracticeView` chờ gia sư AI | `aiLoading` | **skeleton ba thanh** |
+| `ChapterQuestionGeneratorModal` | `isBusy` | **thanh tiến độ có %** |
+| `PersonalWorkspaceView` nhập tài liệu | `isImporting` | thanh tiến độ có % |
+
+Ứng dụng **đã có đủ ba loại trạng thái chờ, mỗi loại đúng chỗ**. Và "0 skeleton" còn không phải
+điều đáng mong muốn: Khan cũng không dùng skeleton.
+
+**Lần thứ hai trong đợt kết luận từ grep thay vì đọc.** Bài học bổ sung: *đếm bằng grep một
+khái niệm mà không biết trước dự án đặt tên nó là gì thì con số thu được vô nghĩa.* Muốn đếm
+khái niệm thì bắt đầu từ chỗ nó buộc phải xuất hiện, ở đây là mọi hàm có `await`.
+
+Đã sửa hai dòng bảng trong cả hai file, vì AI sau đọc bản đánh giá ấy sẽ đi xây skeleton cho
+những chỗ đã có sẵn.
+
+---
+
+## Lượt trước: thang cỡ biểu tượng, và một lỗi chỉ trình duyệt mới thấy
 
 | | Trước | Sau |
 |---|---|---|
@@ -79,7 +103,7 @@ import, nên **tsc đỏ và chặng tự kiểm chứng không bao giờ chạy
 | Mảng | Đo được | Mức |
 |---|---|---|
 | **Component Composition** | **32 nhánh rỗng** trên 15 file, `EmptyState` gọi đúng **1 chỗ** | **Lớn nhất** |
-| **Loading / Error State** | **0 skeleton**; nhánh `catch` của AIHub nói "đang xử lý" | Lớn |
+| ~~Loading State~~ | ~~**0 skeleton**~~ **SỐ ĐO SAI, xem đính chính ở lượt 20** | ~~Lớn~~ Nhỏ |
 | **Iconography** | **74 icon**; `AlertTriangle` 26 lần, `Sparkles` 24 lần | Lớn, CHƯA làm |
 | Illustration | 2/30 file có SVG tự vẽ | Vừa, CHƯA làm |
 | Motion | 208/290 `all 0s`, **ngang Khan** (297/~300) | Nhỏ, đã sạch |
