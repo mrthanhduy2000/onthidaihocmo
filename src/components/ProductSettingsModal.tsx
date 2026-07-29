@@ -105,7 +105,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
         <div className="px-6 py-4 border-b border-border-primary flex items-center justify-between bg-bg-surface">
           <div className="flex items-center gap-2">
             <SettingsIcon className="w-4 h-4 text-brand-info" />
-            <h3 className="text-sm font-semibold text-text-primary">Cài đặt và dữ liệu học tập</h3>
+            <h3 className="text-xl font-bold text-text-primary font-sans">Cài đặt và dữ liệu học tập</h3>
           </div>
           <button
             onClick={onClose}
@@ -123,7 +123,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               đắt nhất của màn hình cho một hành động vài tháng mới làm một lần, và trên khung
               375px chúng bị đẩy tràn ra ngoài. Đây mới là chỗ đúng của chúng. */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold text-text-primary flex items-center gap-2">
+            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
               <Sun className="w-4 h-4 text-brand-info" />
               Giao diện
             </h4>
@@ -152,14 +152,14 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 1: Study Goal & Exam Config */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
+            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
               <Target className="w-4 h-4 text-brand-info" />
-              Thiết lập Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
+              Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-bg-surface p-4 border border-border-primary/80 rounded-xl">
               <div>
-                <label className="text-2xs text-text-muted block mb-1">Điểm mong muốn</label>
+                <label className="text-sm text-text-secondary block mb-1">Điểm mong muốn</label>
                 <select
                   value={goal.targetScore}
                   onChange={(e) => handleGoalUpdate("targetScore", Number(e.target.value))}
@@ -172,7 +172,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </div>
 
               <div>
-                <label className="text-2xs text-text-muted block mb-1">Ngày thi chính thức</label>
+                <label className="text-sm text-text-secondary block mb-1">Ngày thi chính thức</label>
                 <input
                   type="date"
                   value={goal.examDate}
@@ -182,7 +182,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               </div>
 
               <div>
-                <label className="text-2xs text-text-muted block mb-1">Phút học mỗi ngày</label>
+                <label className="text-sm text-text-secondary block mb-1">Phút học mỗi ngày</label>
                 <select
                   value={goal.dailyStudyMinutes}
                   onChange={(e) => handleGoalUpdate("dailyStudyMinutes", Number(e.target.value))}
@@ -198,7 +198,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 2: Product Preferences */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
+            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-info" />
               Tùy chọn trải nghiệm
             </h4>
@@ -227,7 +227,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 3: Backup & Restore */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
+            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
               <Download className="w-4 h-4 text-brand-info" />
               Sao lưu và khôi phục dữ liệu
             </h4>
@@ -264,7 +264,7 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 4: Làm mới tiến trình học */}
           <div className="space-y-3">
-            <h4 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
+            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
               <RotateCcw className="w-4 h-4 text-brand-warning" />
               Làm mới tiến trình học
             </h4>

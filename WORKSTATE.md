@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười hai lượt tái thiết kế giao diện theo Khan Academy (Luyện câu, Bàn học, Câu sai, Báo cáo, Kế hoạch, Hỏi AI, Tổng quan, Chương trình).
+**Cập nhật lần cuối**: 29/07/2026, sau mười ba lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt.
 
 ---
 
@@ -25,7 +25,30 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Chương trình, bản đồ chương dựng lại thành hàng
+## Lượt mới nhất: hai màn cuối, Công cụ hệ thống và hộp thoại Cài đặt
+
+Hết danh sách màn. **Tám màn cùng hộp thoại Cài đặt đã rà xong.**
+
+Màn Công cụ hệ thống: một cặp ngoặc rỗng "()" hiện ngay cạnh tiêu đề (vẽ `{courseCode}
+({courseName})` mà môn đang mở không có cả hai trường); câu dẫn mô tả chính hệ thống thay vì nói
+người dùng thấy gì; chín nhãn viết hoa giữa câu kiểu tiếng Anh.
+
+Hộp thoại Cài đặt: bỏ viết hoa giữa câu, nâng tiêu đề hộp thoại 15px lên 20px, tiêu đề mục 13px
+lên 16px, nhãn ô nhập 12px lên 15px.
+
+**Một chỗ tôi sửa quá tay rồi tự hoàn nguyên.** Luật "cùng một đại lượng thì cùng một thang đo"
+rút ra ở lượt trước, tôi áp tiếp cho điểm sức khỏe hệ thống (`91/100` sang `91%`). Soi lại thì
+sai: ngay bên dưới là công thức kết thúc bằng "= 91/100", nên đổi đầu trang mà để công thức
+nguyên là chính màn này tự mâu thuẫn. Mức sẵn sàng là đại lượng DÙNG CHUNG nhiều màn nên phải
+cùng thang; điểm sức khỏe là chỉ số nội bộ chỉ có ở màn này và có công thức đi kèm. **Nhất quán
+TRONG màn quan trọng hơn nhất quán với màn khác khi đại lượng vốn không dùng chung.**
+
+Bài học: một khuôn rút ra từ vài ca đúng vẫn có thể sai ở ca thứ n. Áp khuôn xong phải mở màn
+hình ra nhìn.
+
+---
+
+## Lượt trước: màn Chương trình, bản đồ chương dựng lại thành hàng
 
 Màn thứ tám. Áp lại đúng ba khuôn đã ghi ở AGENTS.md 4.9f, không phải nghĩ mới.
 

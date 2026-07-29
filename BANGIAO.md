@@ -59,6 +59,45 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 13), hai màn cuối: Công cụ hệ thống và hộp thoại Cài đặt
+
+Hết danh sách màn. Cả hai đều là màn công cụ nên ưu tiên khác các màn học: không có chuyện tâm
+lý học tập ở đây, chỉ còn quy tắc ngôn ngữ và độ rõ.
+
+**Màn Công cụ hệ thống**
+
+1. **Một cặp ngoặc rỗng "()" hiện ngay cạnh tiêu đề trang.** Dòng đó vẽ
+   `{courseCode} ({courseName})` mà môn đang mở không có cả hai trường, nên ra đúng hai ký tự.
+   Người dùng nhìn vào chỉ biết là có gì đó hỏng. Nay thiếu thì không vẽ gì cả.
+2. **Câu dẫn mô tả chính hệ thống**: "Hệ thống Giám sát & Tự Tiến hóa chất lượng học thuật. Tự
+   động kiểm toán độ phủ khái niệm, chỉ số lão hóa câu hỏi..." Vừa viết hoa giữa câu kiểu tiếng
+   Anh, vừa liệt kê cơ chế thay vì nói người dùng nhìn thấy gì.
+3. **Chín nhãn viết hoa giữa câu**: "Chất lượng Nội dung", "Độ phủ Khái niệm", "Nợ Kỹ thuật Học
+   thuật", "Sẵn sàng Phát hành", "Cân bằng Bloom", "Sức khỏe Khái niệm & Câu hỏi"...
+
+**Hộp thoại Cài đặt**: bỏ viết hoa giữa câu ("Thiết lập **M**ục tiêu"), nâng tiêu đề hộp thoại
+từ 15px lên 20px và tiêu đề mục từ 13px lên 16px, nhãn ô nhập từ 12px lên 15px. Hộp thoại vốn
+là chỗ chữ nhỏ nhất toàn sản phẩm dù nội dung là các trường phải đọc kỹ.
+
+**MỘT CHỖ TÔI SỬA QUÁ TAY RỒI TỰ HOÀN NGUYÊN.** Ở lượt trước tôi đặt ra luật "cùng một đại
+lượng thì cùng một thang đo" và đã đổi mức sẵn sàng từ `21/100` sang `21%`. Sang màn này tôi áp
+tiếp luật ấy cho điểm sức khỏe hệ thống, đổi `91/100` thành `91%`. Soi lại trên bản chạy thật
+thì thấy sai: **ngay bên dưới là công thức giải thích kết thúc bằng "= 91/100"**. Đổi đầu trang
+mà để công thức nguyên thì chính màn này tự mâu thuẫn, đúng loại lỗi tôi đang đi dọn.
+
+Khác biệt thật giữa hai ca, đã ghi vào mã: mức sẵn sàng là **đại lượng dùng chung ở nhiều màn**
+nên phải cùng một thang; còn điểm sức khỏe là **chỉ số tổng hợp nội bộ chỉ xuất hiện ở màn này
+và có công thức đi kèm**. Nhất quán TRONG màn quan trọng hơn nhất quán với màn khác khi đại
+lượng vốn không dùng chung. Đã hoàn nguyên.
+
+Bài học: một khuôn rút ra từ vài ca đúng vẫn có thể sai ở ca thứ n. Áp khuôn xong phải mở màn
+hình ra nhìn, đừng tin là cứ áp đều thì đúng đều.
+
+**Kiểm chứng**: `npm run check` 204/204. Trên bản chạy thật: 0 cặp ngoặc rỗng, 0 nhãn viết hoa
+giữa câu trong danh sách trên, 0 tràn ngang.
+
+---
+
 ### 29/07/2026 (lượt 12), màn Chương trình: bản đồ chương dựng lại thành hàng
 
 Màn thứ tám. Áp lại đúng ba khuôn đã ghi ở AGENTS.md 4.9f, không phải nghĩ mới.

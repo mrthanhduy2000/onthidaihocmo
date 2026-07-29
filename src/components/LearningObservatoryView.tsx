@@ -156,9 +156,17 @@ export const LearningObservatoryView: React.FC = () => {
                     ước viết mã của dự án cấm. */}
                 Chất lượng học liệu
               </span>
-              <span className="text-xs text-text-muted tabular-nums">
-                {completeness.courseCode} ({completeness.courseName})
-              </span>
+              {/*
+                Đo trên bản chạy thật ngày 29/07/2026: dòng này hiện ra đúng hai ký tự **"()"**,
+                vì môn đang mở không có `courseCode` lẫn `courseName`. Một cặp ngoặc rỗng nằm
+                ngay cạnh tiêu đề trang là thứ báo cho người dùng biết có gì đó hỏng, dù thực ra
+                chỉ là thiếu dữ liệu. Nay thiếu thì không vẽ gì cả.
+              */}
+              {(completeness.courseCode || completeness.courseName) && (
+                <span className="text-xs text-text-muted tabular-nums">
+                  {[completeness.courseCode, completeness.courseName].filter(Boolean).join(" · ")}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary flex items-center gap-3">
               <Activity className="w-7 h-7 text-brand-info" />
@@ -167,8 +175,19 @@ export const LearningObservatoryView: React.FC = () => {
                   phẩm mà mọi màn khác đều thuần tiếng Việt. */}
               <span>Giám sát và tự cải thiện chất lượng học liệu</span>
             </h1>
-            <p className="text-sm text-text-muted max-w-3xl leading-relaxed">
-              Hệ thống Giám sát & Tự Tiến hóa chất lượng học thuật. Tự động kiểm toán độ phủ khái niệm, chỉ số lão hóa câu hỏi, hiệu quả phương án nhiễu, độ lệch khó thực tế và mức độ sẵn sàng phát hành.
+            {/*
+              Bản cũ: "Hệ thống Giám sát & Tự Tiến hóa chất lượng học thuật. Tự động kiểm toán
+              độ phủ khái niệm, chỉ số lão hóa câu hỏi, hiệu quả phương án nhiễu, độ lệch khó
+              thực tế và mức độ sẵn sàng phát hành."
+
+              Hai lỗi quen thuộc trong một câu: viết hoa giữa câu kiểu tiếng Anh ("Giám sát &
+              Tự Tiến hóa"), và cả câu liệt kê những gì HỆ THỐNG làm thay vì nói người dùng
+              nhìn thấy gì ở đây. Đây là màn công cụ nên người đọc là chủ dự án, nhưng nguyên
+              tắc không đổi: nói kết quả, đừng khoe cơ chế.
+            */}
+            <p className="text-base text-text-secondary max-w-[46rem] leading-relaxed font-sans">
+              Ngân hàng câu hỏi có chỗ nào hổng, câu nào cũ, phương án nhiễu nào không còn đánh
+              lừa được ai, và đã đủ tốt để dùng thi thật chưa.
             </p>
           </div>
 
@@ -177,6 +196,17 @@ export const LearningObservatoryView: React.FC = () => {
               <div className="text-xs text-text-muted font-medium">Điểm sức khỏe hệ thống</div>
               <div className="text-3xl font-black tabular-nums tracking-tight text-brand-info flex items-center justify-center sm:justify-end gap-1.5">
                 <span>{health.systemHealthScore}</span>
+                {/* Giữ thang /100 ở đây, KHÁC với mức sẵn sàng ở màn Chương trình.
+
+                    Ban đầu tôi đổi luôn chỗ này sang phần trăm cho khớp các màn khác, rồi soi
+                    lại trên bản chạy thật thì thấy sai: ngay bên dưới là công thức giải thích
+                    kết thúc bằng "= 91/100". Đổi đầu trang sang % mà để công thức nguyên thì
+                    chính màn này tự mâu thuẫn.
+
+                    Khác biệt thật giữa hai ca: mức sẵn sàng là ĐẠI LƯỢNG DÙNG CHUNG ở nhiều
+                    màn nên phải cùng một thang; còn điểm sức khỏe là chỉ số tổng hợp nội bộ
+                    chỉ xuất hiện ở màn này và có công thức đi kèm. Nhất quán trong màn quan
+                    trọng hơn nhất quán với màn khác khi đại lượng vốn không dùng chung. */}
                 <span className="text-sm font-normal text-text-muted">/100</span>
               </div>
               <div className="text-2xs font-medium text-brand-success flex items-center justify-center sm:justify-end gap-1">
@@ -201,32 +231,32 @@ export const LearningObservatoryView: React.FC = () => {
         {/* High-Level Metrics Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-6 border-t border-border-primary/60">
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-2xs text-text-muted font-medium">Chất lượng Nội dung</div>
+            <div className="text-2xs text-text-muted font-medium">Chất lượng nội dung</div>
             <div className="text-lg font-bold tabular-nums text-text-primary mt-0.5">{health.contentQualityScore}%</div>
             <div className="text-2xs text-text-muted">Cổng chất lượng đã đạt</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-2xs text-text-muted font-medium">Độ phủ Khái niệm</div>
+            <div className="text-2xs text-text-muted font-medium">Độ phủ khái niệm</div>
             <div className="text-lg font-bold tabular-nums text-text-primary mt-0.5">{health.coverageScore}%</div>
             <div className="text-2xs text-text-muted">{deadConcepts.length} khái niệm chưa có câu hỏi</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-2xs text-text-muted font-medium">Hiệu quả Phương án nhiễu</div>
+            <div className="text-2xs text-text-muted font-medium">Hiệu quả phương án nhiễu</div>
             <div className="text-lg font-bold tabular-nums text-text-primary mt-0.5">{health.distractorHealthScore}%</div>
             <div className="text-2xs text-text-muted">Hiệu quả phương án nhiễu</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-2xs text-text-muted font-medium">Cân bằng Bloom</div>
+            <div className="text-2xs text-text-muted font-medium">Cân bằng bậc Bloom</div>
             <div className="text-lg font-bold tabular-nums text-text-primary mt-0.5">{health.bloomBalanceScore}%</div>
             <div className="text-2xs text-text-muted">{bloomHealth.lowerOrderOverload ? "Cần tăng Vận dụng" : "Cân bằng tốt"}</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-2xs text-text-muted font-medium">Nợ Kỹ thuật Học thuật</div>
+            <div className="text-2xs text-text-muted font-medium">Nợ học liệu</div>
             <div className="text-lg font-bold tabular-nums text-brand-warning mt-0.5">{techDebts.length} Mục</div>
             <div className="text-2xs text-text-muted">Cần hoàn thiện</div>
           </div>
           <div className="bg-bg-surface/60 p-3 rounded-lg border border-border-primary/60">
-            <div className="text-2xs text-text-muted font-medium">Sẵn sàng Phát hành</div>
+            <div className="text-2xs text-text-muted font-medium">Sẵn sàng phát hành</div>
             <div className="text-lg font-bold tabular-nums text-brand-info mt-0.5">{readiness.overallReadinessScore}%</div>
             <div className="text-2xs text-text-muted">{readiness.isReady ? "Sẵn sàng thi" : "Đang kiểm duyệt"}</div>
           </div>
@@ -256,7 +286,7 @@ export const LearningObservatoryView: React.FC = () => {
           }`}
         >
           <Brain className="w-4 h-4" />
-          <span>Sức khỏe Khái niệm & Câu hỏi</span>
+          <span>Sức khỏe khái niệm và câu hỏi</span>
           {(deadConcepts.length > 0 || overusedConcepts.length > 0) && (
             <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-warning-bg text-brand-warning tabular-nums">
               {deadConcepts.length + overusedConcepts.length}
@@ -273,7 +303,7 @@ export const LearningObservatoryView: React.FC = () => {
           }`}
         >
           <Compass className="w-4 h-4" />
-          <span>Sư phạm, Bloom & Ma trận</span>
+          <span>Sư phạm, bậc Bloom và ma trận</span>
         </button>
 
         <button
@@ -285,7 +315,7 @@ export const LearningObservatoryView: React.FC = () => {
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Khu vực Tác giả & Nợ Kỹ thuật</span>
+          <span>Khu vực tác giả và nợ học liệu</span>
           {techDebts.length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-2xs bg-brand-info-bg text-brand-info tabular-nums">
               {techDebts.length}
@@ -333,10 +363,10 @@ export const LearningObservatoryView: React.FC = () => {
               <div className="p-4 bg-bg-surface/60 rounded-lg border border-border-primary/80 space-y-2 text-xs text-text-muted leading-relaxed fade-in">
                 <p><strong>Giải trình Toán học Deterministic:</strong> Mọi chỉ số được tính toán 100% bằng thuật toán phân tích dữ liệu lịch sử và ma trận kiểm định, không phụ thuộc vào dự đoán AI ngẫu nhiên.</p>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li><strong>Chất lượng Nội dung (25%):</strong> Tỷ lệ câu hỏi vượt qua các Quality Gates kiểm định.</li>
-                  <li><strong>Độ phủ Khái niệm (20%):</strong> Tỷ lệ khái niệm trong Khung CTĐT có ít nhất 2 câu hỏi mẫu.</li>
-                  <li><strong>Hiệu quả Phương án nhiễu (15%):</strong> Tỷ lệ các lựa chọn nhiễu có tỷ lệ sinh viên chọn từ 5% - 40%.</li>
-                  <li><strong>Cân bằng Bloom (15%):</strong> Mức độ tuân thủ ma trận phân bổ bậc nhận thức sư phạm.</li>
+                  <li><strong>Chất lượng nội dung (25%):</strong> Tỷ lệ câu hỏi vượt qua các Quality Gates kiểm định.</li>
+                  <li><strong>Độ phủ khái niệm (20%):</strong> Tỷ lệ khái niệm trong Khung CTĐT có ít nhất 2 câu hỏi mẫu.</li>
+                  <li><strong>Hiệu quả phương án nhiễu (15%):</strong> Tỷ lệ các lựa chọn nhiễu có tỷ lệ sinh viên chọn từ 5% - 40%.</li>
+                  <li><strong>Cân bằng bậc Bloom (15%):</strong> Mức độ tuân thủ ma trận phân bổ bậc nhận thức sư phạm.</li>
                   <li><strong>Độ lệch Khó thực tế (15%):</strong> Khoảng cách giữa độ khó thiết kế và tỷ lệ làm sai thực tế.</li>
                   <li><strong>Nợ Kỹ thuật (10%):</strong> Mức độ hoàn thiện bằng chứng giáo trình và giải thích chi tiết.</li>
                 </ul>
