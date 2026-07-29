@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau chín lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo, Kế hoạch, Hỏi AI).
+**Cập nhật lần cuối**: 29/07/2026, sau mười lượt tái thiết kế giao diện theo Khan Academy (bốn lượt màn Luyện câu, rồi Bàn học, Câu sai, Báo cáo, Kế hoạch, và hai lượt màn Hỏi AI).
 
 ---
 
@@ -25,7 +25,29 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: màn Hỏi AI, danh sách khái niệm dựng lại thành HÀNG thay vì THẺ
+## Lượt mới nhất: bốn tab còn lại của màn Hỏi AI, và một lỗ hổng của chính bộ kiểm
+
+Làm cạn màn Hỏi AI trước khi rời. Tab **Trí nhớ** lộ ra ca nặng nhất của cả đợt: tiêu đề mục là
+**"Long-Term Student Evolution & Memory Engine"**, tức tên nội bộ của một engine in nguyên văn ở
+20px đậm 700. Kèm "Bản sao số", ô "Khái niệm **Stable**", đơn vị đếm **"Milestones"**, và mỗi
+mục lịch sử đeo huy hiệu **"STUDIED"** in hoa. Đã dịch hết sang tiếng Việt.
+
+**PHÁT HIỆN QUAN TRỌNG NHẤT: bộ kiểm đang có một lỗ hổng cả họ.** Nhóm AF đối chiếu mọi lớp
+`*-brand-*` với token, nên bắt được tên màu KHÔNG CÓ định nghĩa. Nhưng nó mù với chỗ **không
+thèm dùng tên màu của dự án**: viết thẳng `text-emerald-600`, `bg-red-500/10` thì Tailwind sinh
+lớp bình thường và mọi phép kiểm đều xanh. Đếm được **72 chỗ** trên 5 file.
+
+Hai hậu quả thật: chế độ tối mất bảo đảm (các sắc độ nguyên bản không có bản cho nền tối), và
+ngưỡng tương phản 4,5:1 không ai đo. Đã đổi hết 72 chỗ sang token, thêm phép kiểm **AF3b** quét
+cả 22 họ màu của Tailwind. Bộ kiểm 201 lên **202**.
+
+Lần thứ ba trong hai ngày bắt được cùng một khuôn: `brand-danger` chưa từng định nghĩa,
+`animate-fade-in-up` chưa từng có token, nay là màu đi vòng qua bộ token. **Điểm chung: lách qua
+hệ thống mà không có gì kêu lên.**
+
+---
+
+## Lượt trước: màn Hỏi AI, danh sách khái niệm dựng lại thành HÀNG thay vì THẺ
 
 Màn thứ sáu. Đo lại trực tiếp **trang khoá học** của Khan trước khi sửa.
 
@@ -575,7 +597,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **201**, chia 32 nhóm A đến AF, đạt toàn bộ |
+| Phép tự kiểm chứng | **202**, chia 32 nhóm A đến AF, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

@@ -59,6 +59,52 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 10), bốn tab còn lại của màn Hỏi AI, và một lỗ hổng của chính bộ kiểm
+
+Làm cạn màn Hỏi AI trước khi rời. Soi bốn tab còn lại (Trí nhớ, Vùng điểm yếu, Hỏi đáp, Phân
+tích) thì tab **Trí nhớ** lộ ra ca nặng nhất của cả đợt.
+
+**Tên engine tiếng Anh đang làm TIÊU ĐỀ cho người học đọc.** Tiêu đề mục là
+**"Long-Term Student Evolution & Memory Engine"**, in nguyên văn ở 20px đậm 700. Người học mở
+tab "Trí nhớ" ra và thứ đầu tiên đọc được là tên một lớp phần mềm. Kèm theo: "Bản sao số" (dịch
+thẳng từ digital twin), một ô ghi "Khái niệm **Stable**", một ô đếm đơn vị **"Milestones"**, và
+mỗi mục lịch sử đeo một huy hiệu **"STUDIED"** in hoa.
+
+Cùng họ với bốn chặng "Weak / Learning / Recovered / Mastered" đã sửa ở màn Câu sai, nhưng nặng
+hơn vì nằm ở tiêu đề. Đã dịch hết, và bảng dịch mã sự kiện có `?? snap.eventType` làm lối thoát
+để engine thêm mã mới thì màn hình hiện mã đó chứ không hiện rỗng.
+
+**Viết hoa giữa câu kiểu tiếng Anh**: "Đắc thụ Ổn định", "Cảnh báo Giảm sút", "Đang Phát triển",
+"Cột mốc Đạt được", "Cập nhật Tiến trình", "Tiến trình Biến đổi Tinh thông qua Tương tác",
+"Nhật ký Hành trình". Tiếng Việt không viết hoa giữa câu.
+
+**PHÁT HIỆN QUAN TRỌNG NHẤT CỦA LƯỢT: bộ kiểm đang có một lỗ hổng cả họ.**
+
+Nhóm **AF** đối chiếu mọi lớp `*-brand-*` với token trong `index.css`, nên bắt được chỗ dùng tên
+màu KHÔNG CÓ định nghĩa. Nhưng nó hoàn toàn mù với chỗ **không thèm dùng tên màu của dự án**:
+viết thẳng `text-emerald-600`, `bg-red-500/10`, `text-indigo-600` thì Tailwind sinh lớp bình
+thường, màu hiện ra bình thường, và mọi phép kiểm đều xanh.
+
+Đếm được **72 chỗ** như vậy trên 5 file. Hai hậu quả thật:
+
+1. **Chế độ tối mất bảo đảm.** Các sắc độ nguyên bản không có bản cho nền tối nên giữ nguyên
+   màu sáng khi người dùng bật chế độ tối.
+2. **Ngưỡng tương phản 4,5:1 không ai đo.** Ràng buộc ở AF3 chỉ áp cho bốn màu ngữ nghĩa.
+
+Đã đổi hết 72 chỗ sang token, và thêm phép kiểm **AF3b** quét cả 22 họ màu của Tailwind trong
+`src/components`. Đã thử phá bằng cách trả một chỗ về `text-emerald-600`, phép kiểm báo đỏ đúng
+file và đúng số lượng.
+
+Đây là lần thứ ba trong hai ngày bắt được cùng một khuôn: `brand-danger` chưa từng được định
+nghĩa, `animate-fade-in-up` chưa từng có token, và nay là màu đi vòng qua bộ token. **Điểm chung:
+lách qua hệ thống mà không có gì kêu lên.**
+
+**Kiểm chứng**: `npm run check` đạt cả 6 chặng, **202/202**. Trên bản chạy thật sau khi tải lại
+trang: 0 chỗ còn tên engine tiếng Anh, 0 chỗ còn "Khái niệm Stable", 0 chỗ còn "Milestones",
+0 tràn ngang.
+
+---
+
 ### 29/07/2026 (lượt 9), màn Hỏi AI: danh sách khái niệm dựng lại thành HÀNG thay vì THẺ
 
 Màn thứ sáu. Lượt này đo lại trực tiếp **trang khoá học** của Khan trước khi sửa, vì đây là màn

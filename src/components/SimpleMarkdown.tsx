@@ -15,28 +15,28 @@ export default function SimpleMarkdown({ text, content }: SimpleMarkdownProps) {
   if (!markdownText) return null;
   const lines = markdownText.split("\n");
   return (
-    <div className="space-y-2 text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed">
+    <div className="space-y-2 text-text-secondary text-sm leading-relaxed">
       {lines.map((line, idx) => {
         let processed = line;
         
         // Headers
         if (processed.startsWith("### ")) {
           return (
-            <h4 key={idx} className="font-medium text-zinc-900 dark:text-zinc-100 text-sm mt-4 mb-2">
+            <h4 key={idx} className="font-medium text-text-primary text-sm mt-4 mb-2">
               {processed.replace("### ", "")}
             </h4>
           );
         }
         if (processed.startsWith("## ")) {
           return (
-            <h3 key={idx} className="font-medium text-zinc-900 dark:text-zinc-100 text-base mt-5 mb-2">
+            <h3 key={idx} className="font-medium text-text-primary text-base mt-5 mb-2">
               {processed.replace("## ", "")}
             </h3>
           );
         }
         if (processed.startsWith("# ")) {
           return (
-            <h2 key={idx} className="font-medium text-zinc-900 dark:text-zinc-100 text-lg mt-6 mb-3">
+            <h2 key={idx} className="font-medium text-text-primary text-lg mt-6 mb-3">
               {processed.replace("# ", "")}
             </h2>
           );
@@ -67,7 +67,7 @@ export default function SimpleMarkdown({ text, content }: SimpleMarkdownProps) {
             parts.push(processed.substring(lastIndex, match.index));
           }
           parts.push(
-            <strong key={match.index} className="font-semibold text-zinc-900 dark:text-zinc-100">
+            <strong key={match.index} className="font-semibold text-text-primary">
               {match[1]}
             </strong>
           );
@@ -82,7 +82,7 @@ export default function SimpleMarkdown({ text, content }: SimpleMarkdownProps) {
         if (listPrefix !== "" || isBullet) {
           return (
             <div key={idx} className="flex gap-2 pl-4">
-              <span className="text-zinc-400 font-medium tabular-nums">{listPrefix || "•"}</span>
+              <span className="text-text-muted font-medium tabular-nums">{listPrefix || "•"}</span>
               <span className="flex-1">{content}</span>
             </div>
           );

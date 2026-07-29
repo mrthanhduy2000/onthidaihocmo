@@ -2753,6 +2753,39 @@ check("Bốn màu ngữ nghĩa đọc được trên nền cùng tông của ch�
     ? `đạt chuẩn WCAG AA: ${capDat.join(", ")}`
     : `chưa đạt 4,5:1: ${capHong.join(", ")}`);
 
+// AF3b. Không component nào được đi vòng qua bộ token bằng bảng màu thô của Tailwind.
+//
+// VÌ SAO CÓ PHÉP KIỂM NÀY. Phép kiểm AF1 đối chiếu mọi lớp `*-brand-*` với token trong
+// `index.css`, nên nó bắt được chỗ dùng tên màu KHÔNG CÓ định nghĩa. Nhưng nó hoàn toàn mù với
+// chỗ **không thèm dùng tên màu của dự án**: viết thẳng `text-emerald-600`, `bg-red-500/10`,
+// `text-indigo-600` thì Tailwind sinh lớp bình thường, màu hiện ra bình thường, và mọi phép
+// kiểm đều xanh.
+//
+// Ngày 29/07/2026 mở tab "Trí nhớ" của màn Hỏi AI thì đếm được **40 chỗ** như vậy chỉ trong
+// một file, cộng 32 chỗ nữa ở hai file khác. Hai hậu quả:
+//
+//   1. Chế độ tối mất bảo đảm: các sắc độ nguyên bản không có bản cho nền tối, nên chúng giữ
+//      nguyên màu sáng khi người dùng bật chế độ tối.
+//   2. Ràng buộc tương phản 4,5:1 ở AF3 chỉ áp cho bốn màu ngữ nghĩa, nên mọi màu đi đường
+//      vòng đều không ai đo.
+//
+// Đây đúng họ lỗi "lách qua hệ thống mà không ai biết", cùng khuôn với `brand-danger` chưa
+// từng được định nghĩa và với `animate-fade-in-up` chưa từng có token.
+const bangMauTho = /\b(?:hover:|focus:|active:|group-hover:|dark:|sm:|md:|lg:|xl:)*(?:text|bg|border|ring|from|via|to|fill|stroke|divide)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00)\b/g;
+const fileDungMauTho: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  // `zinc` trong quy tắc thanh cuộn của index.css không tính; ở đây chỉ quét components.
+  const hit = noiDung.match(bangMauTho);
+  if (hit && hit.length) fileDungMauTho.push(`${f} (${hit.length})`);
+}
+check("Không component nào dùng bảng màu thô thay cho token",
+  fileDungMauTho.length === 0,
+  fileDungMauTho.length === 0
+    ? "mọi màu trong components đều đi qua bộ token ngữ nghĩa, nên chế độ tối và ngưỡng tương phản đều được canh"
+    : `${fileDungMauTho.length} file đi vòng qua bộ token: ${fileDungMauTho.slice(0, 5).join(", ")}`);
+
 // AF4. Không được vừa TÔ NỀN vừa TÔ CHỮ bằng cùng một màu ngữ nghĩa trên hàng đáp án.
 //
 // Lịch sử của phép kiểm này đáng đọc, vì bản đầu của nó cấm nhầm thứ.

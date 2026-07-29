@@ -580,7 +580,7 @@ export default function StatsView() {
         )}
 
         {wrongQuestionIds.length === 0 ? (
-          <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3 bg-zinc-50/[0.02]">
+          <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3">
             <div className="w-10 h-10 bg-brand-success-bg text-brand-success rounded-full flex items-center justify-center mx-auto transition-transform duration-200 hover:scale-105 shadow-2xs">
               <Check className="w-5 h-5" />
             </div>
@@ -592,7 +592,7 @@ export default function StatsView() {
             </div>
           </div>
         ) : filteredWrongQuestions.length === 0 ? (
-          <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3 bg-zinc-50/[0.02]">
+          <div className="border border-dashed border-border-primary rounded-xl py-12 px-6 text-center space-y-3">
             <div className="w-10 h-10 bg-bg-surface text-text-muted rounded-full flex items-center justify-center mx-auto shadow-2xs">
               <Search className="w-5 h-5" />
             </div>

@@ -717,7 +717,7 @@ export const LearningObservatoryView: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-text-primary">{rec.title}</span>
                     <span className={`text-2xs tabular-nums px-2 py-0.5 rounded font-bold ${
-                      rec.priority === "URGENT" ? "bg-red-500/10 text-red-500" : "bg-brand-warning-bg text-brand-warning"
+                      rec.priority === "URGENT" ? "bg-brand-error-bg text-brand-error" : "bg-brand-warning-bg text-brand-warning"
                     }`}>
                       {rec.priority}
                     </span>

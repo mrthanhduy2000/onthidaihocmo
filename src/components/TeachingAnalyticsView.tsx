@@ -36,7 +36,7 @@ export default function TeachingAnalyticsView() {
       <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="p-2 bg-indigo-500/10 text-indigo-600 rounded-lg">
+            <span className="p-2 bg-brand-info-bg text-brand-info rounded-lg">
               <BarChart3 className="w-5 h-5" />
             </span>
             <h2 className="text-xl font-bold text-text-primary">
@@ -63,7 +63,7 @@ export default function TeachingAnalyticsView() {
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Hiệu quả Giảng dạy</span>
-            <span className="p-1.5 bg-emerald-500/10 text-emerald-600 rounded-md">
+            <span className="p-1.5 bg-brand-success-bg text-brand-success rounded-md">
               <ShieldCheck className="w-4 h-4" />
             </span>
           </div>
@@ -71,7 +71,7 @@ export default function TeachingAnalyticsView() {
             {report.totalInteractions > 0 ? (
               <>
                 <span className="text-2xl font-bold text-text-primary">{report.overallTeachingEffectiveness}%</span>
-                <span className="text-xs font-medium text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                <span className="text-xs font-medium text-brand-success bg-brand-success-bg px-1.5 py-0.5 rounded">
                   +{report.averageMasteryGrowth} điểm/câu
                 </span>
               </>
@@ -90,7 +90,7 @@ export default function TeachingAnalyticsView() {
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Tốc độ Học tập</span>
-            <span className="p-1.5 bg-blue-500/10 text-blue-600 rounded-md">
+            <span className="p-1.5 bg-brand-info-bg text-brand-info rounded-md">
               <Zap className="w-4 h-4" />
             </span>
           </div>
@@ -105,13 +105,13 @@ export default function TeachingAnalyticsView() {
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Mệt mỏi Nhận thức</span>
-            <span className="p-1.5 bg-amber-500/10 text-amber-600 rounded-md">
+            <span className="p-1.5 bg-brand-warning-bg text-brand-warning rounded-md">
               <Clock className="w-4 h-4" />
             </span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-text-primary">{mem.questionFatigue}/100</span>
-            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${mem.questionFatigue > 60 ? "bg-red-500/10 text-red-600" : "bg-emerald-500/10 text-emerald-600"}`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${mem.questionFatigue > 60 ? "bg-brand-error-bg text-brand-error" : "bg-brand-success-bg text-brand-success"}`}>
               {mem.questionFatigue > 60 ? "Cần nghỉ" : "Bình thường"}
             </span>
           </div>
@@ -122,7 +122,7 @@ export default function TeachingAnalyticsView() {
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-text-muted">Phong cách Ưu tiên</span>
-            <span className="p-1.5 bg-purple-500/10 text-purple-600 rounded-md">
+            <span className="p-1.5 bg-brand-info-bg text-brand-info rounded-md">
               <Brain className="w-4 h-4" />
             </span>
           </div>
@@ -186,14 +186,14 @@ export default function TeachingAnalyticsView() {
           {/* Current Adaptive Policy Panel */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-              <Target className="w-5 h-5 text-indigo-500" />
+              <Target className="w-5 h-5 text-brand-info" />
               <span>Chính sách giảng dạy tự động</span>
             </h3>
 
             <div className="space-y-3 divide-y divide-border-primary text-sm">
               <div className="pt-2 flex justify-between items-center">
                 <span className="text-text-secondary">Phương pháp giảng dạy:</span>
-                <span className="font-semibold text-text-primary px-2.5 py-1 bg-indigo-500/10 text-indigo-600 rounded">
+                <span className="font-semibold text-text-primary px-2.5 py-1 bg-brand-info-bg text-brand-info rounded">
                   {mem.preferredTeachingStyle}
                 </span>
               </div>
@@ -233,7 +233,7 @@ export default function TeachingAnalyticsView() {
           {/* Quick Performance Trends */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              <TrendingUp className="w-5 h-5 text-brand-success" />
               <span>Chỉ số Học thuật Chi tiết</span>
             </h3>
 
@@ -244,7 +244,7 @@ export default function TeachingAnalyticsView() {
                   <span className="font-semibold text-text-primary">{Math.round(report.averageConfidence * 100)}%</span>
                 </div>
                 <div className="w-full h-2 bg-bg-surface rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${report.averageConfidence * 100}%` }} />
+                  <div className="h-full bg-brand-success rounded-full" style={{ width: `${report.averageConfidence * 100}%` }} />
                 </div>
               </div>
 
@@ -254,7 +254,7 @@ export default function TeachingAnalyticsView() {
                   <span className="font-semibold text-text-primary">{report.averageGuessingRate}%</span>
                 </div>
                 <div className="w-full h-2 bg-bg-surface rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, report.averageGuessingRate)}%` }} />
+                  <div className="h-full bg-brand-warning rounded-full" style={{ width: `${Math.min(100, report.averageGuessingRate)}%` }} />
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ export default function TeachingAnalyticsView() {
                 <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
                   <span>Phương pháp hiệu quả nhất</span>
                 </div>
-                <div className={`text-sm font-bold ${report.mostEffectiveTeachingStyle === "Chưa đủ dữ liệu" ? "text-text-muted" : "text-emerald-600"}`}>
+                <div className={`text-sm font-bold ${report.mostEffectiveTeachingStyle === "Chưa đủ dữ liệu" ? "text-text-muted" : "text-brand-success"}`}>
                   {report.mostEffectiveTeachingStyle}
                 </div>
                 <p className="text-xs text-text-secondary">
@@ -280,7 +280,7 @@ export default function TeachingAnalyticsView() {
       {activeSubTab === "strategies" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <Layers className="w-5 h-5 text-indigo-500" />
+            <Layers className="w-5 h-5 text-brand-info" />
             <span>So sánh Hiệu quả các Phương pháp Giảng dạy</span>
           </h3>
 
@@ -302,7 +302,7 @@ export default function TeachingAnalyticsView() {
                     <td className="py-3 px-3 font-semibold text-text-primary">{st.strategyName}</td>
                     <td className="py-3 px-3 text-text-secondary">{st.totalInteractions}</td>
                     <td className="py-3 px-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${st.successRate >= 0.7 ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${st.successRate >= 0.7 ? "bg-brand-success-bg text-brand-success" : "bg-brand-warning-bg text-brand-warning"}`}>
                         {Math.round(st.successRate * 100)}%
                       </span>
                     </td>
@@ -323,7 +323,7 @@ export default function TeachingAnalyticsView() {
           {/* Hardest Concepts */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              <AlertTriangle className="w-5 h-5 text-brand-warning" />
               <span>Khái niệm Thách thức Nhất</span>
             </h3>
 
@@ -337,7 +337,7 @@ export default function TeachingAnalyticsView() {
                       <div className="text-sm font-semibold text-text-primary">{item.conceptName}</div>
                       <div className="text-xs text-text-muted">{item.totalAttempts} lần làm bài</div>
                     </div>
-                    <span className="px-2.5 py-1 bg-red-500/10 text-red-600 rounded text-xs font-semibold">
+                    <span className="px-2.5 py-1 bg-brand-error-bg text-brand-error rounded text-xs font-semibold">
                       Tỷ lệ sai: {item.failureRate}%
                     </span>
                   </div>
@@ -349,7 +349,7 @@ export default function TeachingAnalyticsView() {
           {/* Frequent Misconceptions */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-500" />
+              <Brain className="w-5 h-5 text-brand-info" />
               <span>Bẫy Hiểu sai Phổ biến</span>
             </h3>
 
@@ -360,7 +360,7 @@ export default function TeachingAnalyticsView() {
                 report.mostFrequentMisconceptions.map((item, idx) => (
                   <div key={idx} className="p-3 bg-bg-surface border border-border-primary rounded-lg flex items-center justify-between gap-3">
                     <div className="text-sm text-text-primary font-medium">{item.misconception}</div>
-                    <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 rounded text-xs font-semibold shrink-0">
+                    <span className="px-2 py-0.5 bg-brand-info-bg text-brand-info rounded text-xs font-semibold shrink-0">
                       {item.count} lần
                     </span>
                   </div>
@@ -375,7 +375,7 @@ export default function TeachingAnalyticsView() {
       {activeSubTab === "audit" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            <ShieldCheck className="w-5 h-5 text-brand-success" />
             <span>Nhật ký kiểm toán quyết định chính sách</span>
           </h3>
 
