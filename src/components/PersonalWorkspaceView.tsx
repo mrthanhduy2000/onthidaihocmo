@@ -27,12 +27,10 @@ import {
   HelpCircle,
   BookOpen,
   ArrowRight,
-  ChevronRight,
   ShieldCheck,
   Check,
   Share2,
   ListFilter,
-  Shuffle,
   X
 } from "lucide-react";
 import { dbService, chapters, questions, topicMap } from "../services/db";
@@ -459,121 +457,181 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
       {/* TAB 1: DESKTOP & TODAY */}
       {activeTab === "workspace" && (
         <div className="space-y-6">
-          {/* Today's Checklist Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            {/*
-              MỘT việc chính, hai việc phụ.
+          {/*
+            VIỆC NÊN LÀM TIẾP THEO, DỰNG LẠI TỪ ĐẦU THEO BẢN ĐO TRÊN KHAN ACADEMY.
 
-              Bản cũ dựng ba thẻ "Nhiệm vụ 1, 2, 3" hoàn toàn ngang hàng nhau: cùng khung, cùng
-              cỡ chữ, cùng một kiểu nút xám. Người học phải tự đọc hết cả ba rồi tự xếp hạng, tức
-              là bị đẩy lại đúng phần việc mà một gia sư phải làm thay. Nay việc nên làm trước
-              mang nút đặc, hai việc còn lại lùi về nền.
+            Đo ngày 29/07/2026 trên trang khoá học Khan, khối "việc tiếp theo" của một người
+            CHƯA HỌC GÌ:
 
-              Thẻ câu sai còn một lỗi trạng thái rỗng: khi sổ câu sai trống, bản cũ vẫn hiện
-              "Sửa 0 câu trong Sổ câu sai" kèm một nút bấm được, tức mời người học đi làm một
-              việc không tồn tại.
-            */}
-            <div className={`rounded-2xl p-5 space-y-3 shadow-sm border ${coCauSai ? "bg-bg-card border-border-primary" : "bg-bg-card border-border-primary"}`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-muted">Nên làm trước</span>
-                <CheckCircle2 className="w-4 h-4 text-brand-success" />
-              </div>
-              <h4 className="text-sm font-semibold text-text-primary">Ôn 15 câu theo điểm yếu</h4>
-              <p className="text-xs text-text-muted">Tập trung vào phần dễ quên và các câu từng làm sai.</p>
+              khung bao      nền trong suốt, viền 0, bo góc 0, không đổ bóng, padding 0
+              tiêu đề        20px/700, và là một CÂU MỆNH LỆNH: "Bắt đầu tăng cấp độ tích lũy..."
+              mô tả          14px/400, cùng màu chữ chính
+              số 0           28px/700, ĐÚNG màu chữ thường, không làm mờ, không tô cảnh báo
+              nút            156x32px, nền #1865F2, chữ 14px/400 trắng, bo 4px
+              số nút         ĐÚNG MỘT
+
+            Bản cũ ở đây dựng BA THẺ ngang hàng, dù chú thích của chính nó tự nhận là "một việc
+            chính, hai việc phụ". Ba khung giống nhau, ba tiêu đề 14px giống nhau, ba nút cùng
+            chiều rộng. Người học vẫn phải tự xếp hạng, tức vẫn bị đẩy lại phần việc mà một gia
+            sư phải làm thay. Nay: việc chính là một khối mở không khung, hai việc còn lại là
+            HÀNG ngăn bằng đường kẻ, đúng khuôn AGENTS.md 4.9f.
+
+            BA LỖI NỘI DUNG ĐÃ SỬA CÙNG LÚC, không lỗi nào là chuyện thẩm mỹ:
+
+            1. "Ôn 15 câu theo điểm yếu" HỨA SAI. Nút gọi `onStartExam("adaptive")` không kèm
+               tham số, nên App.tsx dòng 309 sinh `count: 10`. Mở bản chạy thật bấm thử thì đầu
+               phiên ghi "Phiên ôn luyện: 10 câu hỏi lý thuyết". Lệch 50%. Cùng họ với
+               `daysLeft = 12` đã gỡ ở lượt trước: một con số viết tay trong nhãn, đứng cạnh một
+               con số thật do engine sinh, và không có gì bắt chúng phải khớp nhau. Sửa bằng cách
+               BỎ con số khỏi nhãn chứ không viết lại thành 10: nhãn không phải nơi giữ nguồn sự
+               thật, và phiên bài đã tự nói đúng số câu ngay khi mở.
+
+            2. DẤU TÍCH XANH GẮN CỨNG trên thẻ việc chính. `CheckCircle2` màu brand-success,
+               không phụ thuộc trạng thái nào, tức thuần trang trí. Nhưng nó là biểu tượng "đã
+               xong", nên với người vừa mở ứng dụng lần đầu, màn hình báo việc đầu tiên của họ
+               đã hoàn thành. Đã gỡ.
+
+            3. "Sổ câu sai đang sạch" KHEN THỨ CHƯA XẢY RA. Sổ trống vì chưa làm câu nào, không
+               phải vì làm đúng hết. Khen sai người thì lời khen thật sau này mất giá, đó là cái
+               giá thật chứ không phải chuyện chữ nghĩa. Nay tách đôi bằng cờ `daCoBaiLam` vốn
+               đã có sẵn: chưa làm bài thì nói trung tính và KHÔNG có tích xanh; làm rồi mà sổ
+               sạch thì mới khen, lúc đó lời khen đúng.
+          */}
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-text-muted">Nên làm trước</span>
+            <h3 className="text-xl font-bold text-text-primary font-sans">
+              {daCoBaiLam ? "Ôn theo điểm yếu" : "Bắt đầu bằng một lượt ôn ngắn"}
+            </h3>
+            <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem] pt-0.5">
+              {daCoBaiLam
+                ? "Tập trung vào phần dễ quên và các câu từng làm sai."
+                : "Hệ thống chưa biết bạn yếu ở đâu. Làm xong lượt đầu là nó có căn cứ để chọn câu cho bạn."}
+            </p>
+            <div className="pt-3">
               <button
                 onClick={() => onStartExam("adaptive")}
-                className="w-full py-2 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-xs rounded-lg transition font-semibold cursor-pointer"
+                className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
               >
-                Ôn ngay
+                {daCoBaiLam ? "Ôn ngay" : "Bắt đầu"}
               </button>
             </div>
+          </div>
 
-            <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-muted">Sổ câu sai</span>
-                {coCauSai
-                  ? <AlertTriangle className="w-4 h-4 text-brand-warning" />
-                  : <CheckCircle2 className="w-4 h-4 text-brand-success" />}
+          {/* Hai việc còn lại: HÀNG chứ không phải thẻ. Cùng khuôn với mọi danh sách khác. */}
+          <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+            <div className="py-4 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-base font-bold text-text-primary font-sans">
+                    {coCauSai
+                      ? `Sửa ${prediction.metricsBreakdown.studyDebtCount} câu đang nợ`
+                      : daCoBaiLam
+                        ? "Sổ câu sai đang sạch"
+                        : "Chưa có câu sai nào"}
+                  </h4>
+                  {/* Chỉ tô tín hiệu khi tín hiệu có nghĩa. Chưa làm bài thì không có gì để mừng. */}
+                  {coCauSai && <AlertTriangle className="w-4 h-4 text-brand-warning shrink-0" />}
+                  {!coCauSai && daCoBaiLam && <CheckCircle2 className="w-4 h-4 text-brand-success shrink-0" />}
+                </div>
+                <p className="text-sm text-text-secondary leading-relaxed pt-0.5">
+                  {coCauSai
+                    ? "Hiểu lại lỗi cũ trước khi học thêm phần mới."
+                    : daCoBaiLam
+                      ? "Chưa có câu nào cần sửa lại. Làm thêm bài để hệ thống tìm điểm yếu."
+                      : "Sổ này tự ghi lại những câu bạn làm sai, để ôn lại đúng chỗ hay quên."}
+                </p>
               </div>
-              <h4 className="text-sm font-semibold text-text-primary">
-                {coCauSai
-                  ? `Sửa ${prediction.metricsBreakdown.studyDebtCount} câu đang nợ`
-                  : "Sổ câu sai đang sạch"}
-              </h4>
-              <p className="text-xs text-text-muted">
-                {coCauSai
-                  ? "Hiểu lại lỗi cũ trước khi học thêm phần mới."
-                  : "Chưa có câu nào cần sửa lại. Làm thêm bài để hệ thống tìm điểm yếu."}
-              </p>
               {coCauSai && (
                 <button
                   onClick={() => onNavigateView("review")}
-                  className="w-full py-2 bg-bg-surface border border-border-primary hover:border-brand-warning/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
+                  className="shrink-0 px-4 h-9 bg-bg-surface border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer"
                 >
                   Mở câu sai
                 </button>
               )}
             </div>
 
-            <div className="bg-bg-card border border-border-primary rounded-2xl p-5 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-muted">Tự kiểm tra</span>
-                <Clock className="w-4 h-4 text-brand-info" />
+            <div className="py-4 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h4 className="text-base font-bold text-text-primary font-sans">Làm một bài thi thử ngắn</h4>
+                <p className="text-sm text-text-secondary leading-relaxed pt-0.5">
+                  Tự kiểm tra mức sẵn sàng trước kỳ thi.
+                </p>
               </div>
-              <h4 className="text-sm font-semibold text-text-primary">Làm một bài thi thử ngắn</h4>
-              <p className="text-xs text-text-muted">Tự kiểm tra mức sẵn sàng trước kỳ thi.</p>
               <button
                 onClick={() => onStartExam("ai-smart")}
-                className="w-full py-2 bg-bg-surface border border-border-primary hover:border-brand-info/40 text-text-primary text-xs rounded-lg transition font-medium cursor-pointer"
+                className="shrink-0 px-4 h-9 bg-bg-surface border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer"
               >
                 Thi thử
               </button>
             </div>
 
-          </div>
+            {/*
+              Hành động phụ THỨ BA, nên nằm cùng danh sách với hai cái trên.
 
-          {/* Giải đề ngẫu nhiên tổng hợp (ôn tập thông minh để nhớ lâu) */}
-          <button
-            onClick={() => onStartExam("random", aiService.generateExam({ type: "random", count: 20 }))}
-            className="w-full bg-gradient-to-r from-brand-info/10 to-bg-card border border-brand-info/30 hover:border-brand-info rounded-2xl p-5 flex items-center justify-between gap-4 transition cursor-pointer text-left group shadow-sm"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-info-bg text-brand-info flex items-center justify-center shrink-0">
-                <Shuffle className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-text-primary">Giải đề ngẫu nhiên tổng hợp</h4>
-                <p className="text-xs text-text-muted mt-1 leading-relaxed">
-                  20 câu trải rộng mọi chương, ưu tiên ôn lại câu từng sai để nhớ lâu hơn (lặp lại giãn cách + xen kẽ chương).
+              Bản cũ để riêng nó thành một thẻ nền chuyển sắc, viền xanh, bo 16px, có đổ bóng và
+              một ô biểu tượng 40px, tức nặng hơn hẳn hai hành động cùng hạng ngay bên trên và
+              nặng ngang khối việc chính. Sức nặng thị giác đang nói sai thứ tự ưu tiên.
+
+              Câu mô tả cũng bỏ phần "(lặp lại giãn cách + xen kẽ chương)". Đó là tên hai kỹ
+              thuật trong khoa học nhận thức, đúng về chuyên môn nhưng là ngôn ngữ của người làm
+              hệ thống. Vế trước câu đã nói đủ ích lợi cho người học: trải rộng mọi chương và ưu
+              tiên câu từng sai.
+            */}
+            <div className="py-4 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h4 className="text-base font-bold text-text-primary font-sans">Giải đề ngẫu nhiên tổng hợp</h4>
+                <p className="text-sm text-text-secondary leading-relaxed pt-0.5">
+                  20 câu trải rộng mọi chương, ưu tiên ôn lại câu từng sai để nhớ lâu hơn.
                 </p>
               </div>
+              <button
+                onClick={() => onStartExam("random", aiService.generateExam({ type: "random", count: 20 }))}
+                className="shrink-0 px-4 h-9 bg-bg-surface border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer"
+              >
+                Bắt đầu
+              </button>
             </div>
-            <span className="text-xs font-semibold text-brand-info flex items-center gap-1 shrink-0">
-              Bắt đầu
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </button>
+          </div>
 
-          {/* Resource Relation Graph Preview */}
-          <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-info" />
-              Liên kết kiến thức đang học
-            </h3>
+          {/*
+            NĂM MẨU TIN VỀ MỘT KHÁI NIỆM, KHÔNG PHẢI NĂM MỤC NGANG HÀNG.
+
+            Bản cũ dựng chúng thành lưới `sm:grid-cols-5`, tức năm thẻ ngang hàng nhau, mỗi thẻ
+            có nền riêng, viền riêng, bo góc riêng. Nhưng năm mẩu ấy là **thuộc tính của cùng
+            một khái niệm** (nó tên gì, thuộc chuyên đề nào, lấy từ nguồn nào, có bao nhiêu câu,
+            đang nợ mấy câu). Lưới ngang hàng là sai cấu trúc ngay từ gốc, và cái giá phải trả
+            đo được trên bản chạy thật ở bề rộng 691px: mỗi cột còn khoảng 180px, nên tên tài
+            liệu "Giáo trình Lê Phúc Loan & Nguyễn Thị Bích Trâm (2022), Đề thi mẫu (Câu 17)"
+            vỡ xuống BẢY DÒNG, mỗi dòng hai ba chữ. Không ai đọc kiểu đó.
+
+            Đúng cấu trúc là danh sách định nghĩa: nhãn rồi giá trị, xếp dọc. Dùng luôn thẻ
+            `dl/dt/dd` cho đúng ngữ nghĩa, nên trình đọc màn hình cũng đọc ra được quan hệ
+            nhãn với giá trị thay vì đọc thành năm khối chữ rời.
+
+            Đồng thời gỡ BA TẦNG HỘP LỒNG NHAU cho năm mẩu chữ (khối ngoài bo 16px có bóng, khối
+            trong nền xám có viền, rồi năm thẻ mỗi thẻ một viền), đúng khuôn "hộp trong hộp
+            trong hộp" đã gỡ ở màn Luyện câu.
+
+            Và bỏ dòng "Đếm thật từ đồ thị tri thức và ngân hàng câu hỏi". Đó là câu hệ thống tự
+            trấn an về cách nó lấy số, không phải điều người học cần đọc. Cùng loại với "Hệ
+            thống Giám sát & Tự Tiến hóa..." đã gỡ ở màn Công cụ.
+          */}
+          <div className="pt-2 space-y-4">
+            <h3 className="text-xl font-bold text-text-primary font-sans">Liên kết kiến thức đang học</h3>
 
             <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-              <span className="text-xs text-text-muted shrink-0">Chọn khái niệm:</span>
+              <span className="text-sm text-text-muted shrink-0">Chọn khái niệm:</span>
               {doThiKhaiNiem.length === 0 ? (
-                <span className="text-xs text-text-muted">Môn này chưa có khái niệm nào để liên kết.</span>
+                <span className="text-sm text-text-muted">Môn này chưa có khái niệm nào để liên kết.</span>
               ) : doThiKhaiNiem.map(nut => (
                 <button
                   key={nut.id}
                   onClick={() => setSelectedConceptForGraph(nut.concept)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3 h-8 rounded text-sm transition cursor-pointer whitespace-nowrap shrink-0 ${
                     nutDangChon?.concept === nut.concept
-                      ? "bg-nut-chinh text-white font-semibold"
-                      : "bg-bg-surface text-text-muted hover:text-text-primary border border-border-primary/60"
+                      ? "bg-nut-chinh text-white"
+                      : "bg-bg-surface text-text-secondary hover:text-text-primary border border-border-primary"
                   }`}
                 >
                   {nut.concept}
@@ -581,42 +639,42 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               ))}
             </div>
 
-            <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-3">
-              <div className="flex items-center justify-between text-xs tabular-nums text-brand-info">
-                <span>Nguồn học liên quan tới: <strong>{nutDangChon?.concept || "chưa có khái niệm"}</strong></span>
-                <span className="text-text-muted font-normal">Đếm thật từ đồ thị tri thức và ngân hàng câu hỏi</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-center text-xs tabular-nums">
-                <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-2xs text-text-muted block">Khái niệm</span>
-                  <span className="font-semibold text-text-primary">{nutDangChon?.concept || "—"}</span>
+            <dl className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70 text-sm">
+              {[
+                {
+                  nhan: "Khái niệm",
+                  tri: nutDangChon?.concept || "—",
+                },
+                {
+                  // `node.topic` giữ MÃ chuyên đề (ví dụ CB_T1.1), tra sang tên cho người đọc.
+                  nhan: "Chuyên đề",
+                  tri: nutDangChon ? (topicMap.get(nutDangChon.topic)?.title || nutDangChon.topic) : "—",
+                },
+                {
+                  nhan: "Nguồn tài liệu",
+                  tri: nutDangChon
+                    ? `${nutDangChon.source || "Chưa ghi nguồn"}${nutDangChon.page ? ` (${nutDangChon.page})` : ""}`
+                    : "—",
+                },
+                {
+                  nhan: "Câu hỏi trong ngân hàng",
+                  tri: `${soLieuKhaiNiem.soCau} câu`,
+                },
+                {
+                  nhan: "Đang nợ trong sổ câu sai",
+                  tri: `${soLieuKhaiNiem.soCauSai} câu`,
+                  // Chỉ tô cảnh báo khi thật sự có nợ. Số 0 là số bình thường, không phải tin xấu.
+                  toCanhBao: soLieuKhaiNiem.soCauSai > 0,
+                },
+              ].map(muc => (
+                <div key={muc.nhan} className="py-3 flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
+                  <dt className="text-text-muted sm:w-56 sm:shrink-0">{muc.nhan}</dt>
+                  <dd className={`font-medium ${muc.toCanhBao ? "text-brand-warning" : "text-text-primary"}`}>
+                    {muc.tri}
+                  </dd>
                 </div>
-                <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-2xs text-text-muted block">Chuyên đề</span>
-                  {/* `node.topic` giữ MÃ chuyên đề (ví dụ CB_T1.1), tra sang tên cho người đọc. */}
-                  <span className="font-semibold text-brand-info">
-                    {nutDangChon ? (topicMap.get(nutDangChon.topic)?.title || nutDangChon.topic) : "—"}
-                  </span>
-                </div>
-                <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-2xs text-text-muted block">Nguồn tài liệu</span>
-                  <span className="font-semibold text-brand-info">
-                    {nutDangChon ? `${nutDangChon.source || "Chưa ghi nguồn"}${nutDangChon.page ? ` (${nutDangChon.page})` : ""}` : "—"}
-                  </span>
-                </div>
-                <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-2xs text-text-muted block">Câu hỏi tương ứng</span>
-                  <span className="font-semibold text-text-primary">{soLieuKhaiNiem.soCau} câu trong Ngân hàng</span>
-                </div>
-                <div className="p-3 bg-bg-card border border-border-primary rounded-lg space-y-1">
-                  <span className="text-2xs text-text-muted block">Sổ tay Câu sai</span>
-                  <span className={`font-semibold ${soLieuKhaiNiem.soCauSai > 0 ? "text-brand-warning" : "text-text-muted"}`}>
-                    {soLieuKhaiNiem.soCauSai} câu cần sửa
-                  </span>
-                </div>
-              </div>
-            </div>
+              ))}
+            </dl>
           </div>
         </div>
       )}

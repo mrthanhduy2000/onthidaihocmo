@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười ba lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt.
+**Cập nhật lần cuối**: 29/07/2026, sau mười bốn lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và bắt đầu lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,35 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: hai màn cuối, Công cụ hệ thống và hộp thoại Cài đặt
+## Lượt mới nhất: màn Bàn học nhìn bằng con mắt người CHƯA bắt đầu
+
+**Mở ra một lượt rà hoàn toàn mới.** Mười ba lượt trước đều dùng hồ sơ đã có dữ liệu, nên chưa
+lượt nào từng thấy nhánh trạng thái rỗng, mà đó lại là màn hình người học gặp ở giây đầu tiên.
+
+**Công cụ để lại**: rà trạng thái rỗng bằng cách mở `http://127.0.0.1:3000` thay vì
+`http://localhost:3000`. Khác origin nên `localStorage` tách biệt, hồ sơ thật vẫn nguyên.
+**Đừng xóa `localStorage`.**
+
+| Khu vực | Trước | Sau |
+|---|---|---|
+| Việc cần làm | **ba thẻ ngang hàng** | một việc chính 20px + ba hàng |
+| Banner phiên dở dang | bo 16px, viền bốn cạnh, có bóng, tiêu đề **13px** | vạch trái 6px, bo 4px, không bóng, 16px/700 |
+| Liên kết kiến thức | **lưới 5 thẻ**, ba tầng hộp lồng | danh sách định nghĩa `dl/dt/dd` |
+| Tên tài liệu | vỡ **7 dòng** | **1 dòng** |
+
+Bốn lỗi nội dung: nhãn "Ôn **15** câu" trong khi engine sinh **10** câu; dấu tích xanh gắn cứng
+báo "đã xong" cho người vừa mở app; "Sổ câu sai đang sạch" khen thứ chưa xảy ra; và
+`{session.examType}` in nguyên văn **"adaptive"** vào giữa câu tiếng Việt.
+
+**Đo Khan xong rồi quyết định KHÔNG thêm celebration animation**: chỉ thị cho phép, nhưng bản
+đo nói Khan có **đúng 1 phần tử** mang `animation` khi trả lời đúng, và đó là spinner. Khan
+không ăn mừng ở mức câu hỏi. Thêm confetti là đi ngược sản phẩm thật.
+
+Bộ kiểm 204 lên **207**, nhóm mới **AG**, cả ba đã thử phá và đều bắt được.
+
+---
+
+## Lượt trước: hai màn cuối, Công cụ hệ thống và hộp thoại Cài đặt
 
 Hết danh sách màn. **Tám màn cùng hộp thoại Cài đặt đã rà xong.**
 
@@ -660,7 +688,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **204**, chia 32 nhóm A đến AF, đạt toàn bộ |
+| Phép tự kiểm chứng | **207**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

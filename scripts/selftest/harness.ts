@@ -2911,6 +2911,64 @@ check("Không lớp hoạt ảnh nào bị dùng mà thiếu token",
     ? `${hoatAnhDangDung.size} hoạt ảnh đang dùng, tất cả đều có token trong index.css`
     : `${hoatAnhMoCoi.length} lớp KHÔNG chạy được: ${hoatAnhMoCoi.map(t => `${t} (${hoatAnhDangDung.get(t)!.slice(0, 3).join(", ")})`).join(" | ")}`);
 
+g("AG. Màn hình nói đúng với người CHƯA bắt đầu");
+
+// Cả nhóm này sinh ra từ một lượt rà riêng: mở ứng dụng bằng một hồ sơ TRỐNG HOÀN TOÀN, tức
+// đúng thứ người học thấy ở giây đầu tiên. Cách làm không phá dữ liệu: mở qua `127.0.0.1` thay
+// vì `localhost`, hai origin khác nhau nên kho lưu tách biệt.
+//
+// Ba lỗi tìm được đều thuộc một họ: **màn hình nói chuyện với người mới như thể họ đã học rồi.**
+
+// AG1. Nhãn nút không được tự khai một số câu khác với số câu thật sẽ sinh ra.
+//
+// Thẻ việc chính ghi "Ôn 15 câu theo điểm yếu", nhưng nút gọi `onStartExam("adaptive")` không
+// kèm tham số nên App.tsx sinh `count: 10`. Bấm thử trên bản chạy thật thì đầu phiên ghi
+// "Phiên ôn luyện: 10 câu hỏi lý thuyết". Lệch 50%.
+//
+// Cùng họ với `daysLeft = 12`: một con số viết tay trong nhãn, đứng cạnh một con số thật do
+// engine sinh, và không có gì bắt chúng khớp nhau. Cách sửa đúng là BỎ số khỏi nhãn chứ không
+// viết lại thành 10, vì nhãn không phải nơi giữ nguồn sự thật; sửa thành 10 chỉ dời quả bom
+// sang lần đổi `count` tiếp theo.
+const nguonBanHocAG = docNguon("src/components/PersonalWorkspaceView.tsx");
+const nhanBiaSoCau = (nguonBanHocAG.match(/(?:Ôn|Làm|Luyện)\s+\d+\s+câu/g) || []);
+check("Nhãn việc cần làm không tự khai số câu",
+  nhanBiaSoCau.length === 0,
+  nhanBiaSoCau.length === 0
+    ? "không nhãn nào hứa một số câu mà tầng gọi không bảo đảm"
+    : `${nhanBiaSoCau.length} nhãn hứa số câu viết cứng: ${nhanBiaSoCau.join(", ")}`);
+
+// AG2. Lời khen phải nằm sau điều kiện ĐÃ CÓ BÀI LÀM.
+//
+// "Sổ câu sai đang sạch" hiện ra với người chưa làm câu nào. Sổ trống vì chưa bắt đầu, không
+// phải vì làm đúng hết. Cái giá không nằm ở chữ nghĩa mà ở chỗ khác: khen sai người thì lời
+// khen THẬT sau này mất giá, và một ứng dụng học tập sống bằng chính độ tin của những lời ấy.
+//
+// Phép kiểm canh quan hệ, không canh chuỗi: chuỗi khen phải xuất hiện trong cùng một biểu thức
+// điều kiện với cờ `daCoBaiLam`.
+const khoiKhen = nguonBanHocAG.match(/daCoBaiLam[\s\S]{0,400}?đang sạch/);
+check("Lời khen sổ câu sai chỉ hiện khi đã có bài làm",
+  /đang sạch/.test(nguonBanHocAG) ? khoiKhen !== null : true,
+  khoiKhen !== null
+    ? "chuỗi khen nằm sau cờ daCoBaiLam, người chưa làm bài đọc câu trung tính"
+    : "chuỗi khen KHÔNG gắn với cờ daCoBaiLam, người chưa bắt đầu sẽ bị khen nhầm");
+
+// AG3. Không in mã chế độ bài thi thô ra giao diện.
+//
+// Bản cũ của banner phiên dở dang render thẳng `{session.examType}` vào giữa câu tiếng Việt và
+// còn tô đậm, nên người học đọc được nguyên văn "Hệ thống đã lưu trạng thái bài thi **adaptive**
+// của bạn". Cùng họ với "Long-Term Student Evolution & Memory Engine" đã dịch ở màn Trí nhớ.
+//
+// types.ts khai 10 mã nhưng các nơi gọi còn dùng thêm "mock-exam", "daily-adaptive",
+// "retention-revision"... nên bản đồ dịch KHÔNG thể đầy đủ. Vì vậy phép kiểm đòi hai điều: có
+// bản đồ dịch, và không render thẳng `examType`. Mã lạ thì bỏ mệnh đề chứ không in mã ra.
+const nguonBanner = docNguon("src/components/SessionRecoveryBanner.tsx");
+const renderThoExamType = /\{\s*session\.examType\s*\}/.test(nguonBanner);
+check("Banner phiên dở dang không in mã chế độ ra màn hình",
+  !renderThoExamType && /TEN_KIEU_BAI/.test(nguonBanner),
+  !renderThoExamType
+    ? "mã chế độ được tra sang tên tiếng Việt, mã lạ thì bỏ hẳn mệnh đề thay vì in ra"
+    : "còn render thẳng session.examType vào câu tiếng Việt");
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

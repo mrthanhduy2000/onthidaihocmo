@@ -422,7 +422,11 @@ theo màu ngữ nghĩa.** Đây cũng chính là cách Khan Academy làm, đo tr
 của họ. Kèm theo: **chỉ đáp án đúng được khoanh vòng**, phương án chọn sai chỉ đổi ô chữ cái và
 màu chữ, vì vòng khoanh là thứ chỉ chỗ cần nhìn chứ không phải thứ chấm điểm.
 
-### 4.9f. Bốn khuôn trình bày rút ra từ đợt tái thiết kế theo Khan Academy
+### 4.9g. Bốn khuôn trình bày rút ra từ đợt tái thiết kế theo Khan Academy
+
+> Mục này từng bị đánh nhầm số **4.9f**, trùng với mục nói về chỉ số người học ở trên. Đã đổi
+> thành 4.9g ngày 29/07/2026. Nếu thấy tài liệu cũ trỏ tới "4.9f, bốn khuôn trình bày" thì đó
+> chính là mục này.
 
 Đợt 29/07/2026 sửa cùng một lỗi ở nhiều màn khác nhau. Ghi lại thành khuôn để màn sau khỏi lặp,
 và để người sau khỏi phải đo lại từ đầu. Cả bốn đều đo trực tiếp trên `vi.khanacademy.org`.
@@ -454,6 +458,42 @@ và để người sau khỏi phải đo lại từ đầu. Cả bốn đều đ
 Kèm một quy tắc về chữ: **không cắt chữ giữa từ**. Định nghĩa khái niệm ở màn Hỏi AI từng bị
 `line-clamp` cắt thành "...sản phẩm, dịch..." và "...một xã hội lớn và phứ...". Một câu cụt
 giữa từ thì vừa không đọc được vừa không đáng tin.
+
+### 4.9h. Màn hình phải nói đúng với người CHƯA bắt đầu
+
+Rút ra ngày 29/07/2026 từ một lượt rà riêng: mở ứng dụng bằng **hồ sơ trống hoàn toàn**, tức
+đúng thứ người học thấy ở giây đầu tiên. Mười ba lượt trước đều rà bằng hồ sơ đã có dữ liệu nên
+không lượt nào chạm tới các nhánh này.
+
+**Cách rà mà không phá dữ liệu người dùng**: mở app qua `http://127.0.0.1:3000` thay vì
+`http://localhost:3000`. Trình duyệt coi đây là hai origin khác nhau nên kho `localStorage`
+tách biệt, hồ sơ thật vẫn nguyên. Đừng xóa `localStorage` để xem trạng thái rỗng.
+
+Ba quy tắc, cả ba đều có phép kiểm nhóm **AG** canh:
+
+1. **Không khen thứ chưa xảy ra.** "Sổ câu sai đang sạch" và "Tiến trình hoàn hảo!" hiện ra với
+   người chưa làm câu nào. Sổ trống vì chưa bắt đầu, không phải vì làm đúng hết. Cái giá không
+   nằm ở chữ nghĩa: khen sai người thì lời khen **thật** sau này mất giá, mà một ứng dụng học
+   tập sống bằng chính độ tin của những lời ấy. Mọi lời khen phải nằm sau cờ kiểu `daCoBaiLam`.
+
+2. **Không hứa việc hệ thống không làm.** Bản đồ thông thạo từng hiện "AI đang phân tích tài
+   liệu để tự động thiết lập bản đồ thông thạo" khi đồ thị rỗng, trong khi không có tiến trình
+   nào đang chạy. Người học sẽ ngồi chờ một việc không tồn tại.
+
+3. **Trạng thái rỗng phải nói việc cần làm, không mô tả tình trạng.** Đo trên Khan: khi người
+   học chưa có gì, tiêu đề khối là một **câu mệnh lệnh** 20px/700 ("Bắt đầu tăng cấp độ tích
+   lũy kỹ năng..."), mô tả 14px/400, và con số 0 hiện ở **đúng màu chữ thường** 28px/700, không
+   làm mờ, không tô cảnh báo, không thay bằng dấu gạch. Không hộp viền đứt, không icon tròn.
+
+Kèm hai quy tắc chung phát hiện cùng lượt:
+
+- **Nhãn không được tự khai một con số mà tầng gọi không bảo đảm.** Thẻ ghi "Ôn 15 câu theo
+  điểm yếu" trong khi nơi gọi sinh `count: 10`. Cách sửa đúng là **bỏ số khỏi nhãn**, không
+  phải viết lại thành 10: nhãn không phải nơi giữ nguồn sự thật, sửa thành 10 chỉ dời quả bom
+  sang lần đổi `count` sau.
+- **Không render thẳng mã nội bộ ra câu tiếng Việt.** `{session.examType}` từng in nguyên văn
+  "adaptive" vào giữa câu và còn tô đậm. Phải tra qua bản đồ tên tiếng Việt, và **mã lạ thì bỏ
+  hẳn mệnh đề** chứ không in mã ra, vì bản đồ không bao giờ phủ hết mã đang được dùng.
 
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 

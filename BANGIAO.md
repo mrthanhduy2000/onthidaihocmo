@@ -59,6 +59,100 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 14), màn Bàn học nhìn bằng con mắt người CHƯA bắt đầu
+
+**Vì sao lượt này khác mười ba lượt trước.** Cả mười ba lượt đều rà bằng hồ sơ đã có dữ liệu,
+nên **không lượt nào từng thấy nhánh trạng thái rỗng**. Mà đó lại đúng là màn hình người học
+gặp ở giây đầu tiên. Lượt này mở app bằng một hồ sơ trắng hoàn toàn.
+
+**Cách rà mà không đụng dữ liệu của Đàm**: mở qua `http://127.0.0.1:3000` thay vì
+`http://localhost:3000`. Hai origin khác nhau nên `localStorage` tách biệt. Ghi lại vì đây là
+cách rẻ và an toàn, đừng ai xóa `localStorage` để xem trạng thái rỗng nữa.
+
+**Đo trên Khan trước khi sửa, và ba kết quả đều ngược với giả định mặc định:**
+
+| Đo được | Giá trị thật |
+|---|---|
+| Hoạt ảnh khi trả lời **đúng** | **đúng 1 phần tử** có `animation`, và đó là spinner 24px. Không confetti, không celebration |
+| Trạng thái chờ | spinner SVG xoay `1.1s linear`, ba cỡ **24/48/96**. Không có shimmer skeleton nào |
+| Thời lượng chuyển | 125ms tương tác, 250ms biến hình, 600ms thanh tiến độ, và **`all 0s` ở 297 phần tử** |
+| Khối "việc tiếp theo" | khung **trong suốt, viền 0, bo 0, bóng none**, tiêu đề 20px/700 là câu MỆNH LỆNH, đúng MỘT nút 156x32 bo 4px |
+| Banner thông báo | nền `rgb(237,243,254)`, **viền TRÁI 6px**, các cạnh kia 0, bo **4px**, bóng **none**, chữ 14px/400 |
+| Trạng thái rỗng | con số 0 hiện ở **đúng màu chữ thường** 28px/700, không làm mờ, không tô cảnh báo, không hộp viền đứt |
+
+Con số **297 phần tử `all 0s`** là phát hiện đáng giá nhất: trên Khan, **không chuyển động là
+mặc định**, motion là ngoại lệ có chủ đích. Đo lại app ta thì ra 208 trên 290, tức tỷ lệ tương
+đương, nên phần motion nền đã sạch từ lượt trước và **không cần đụng thêm**.
+
+**Quyết định KHÔNG làm, có lý do**: chỉ thị cho phép chủ động bổ sung celebration animation.
+Nhưng chỉ thị cũng bắt "mọi quyết định phải dựa trên sản phẩm thật, không suy đoán", và sản
+phẩm thật nói rõ: Khan **không ăn mừng ở mức câu hỏi**. Trả lời đúng chỉ đổi trạng thái tĩnh.
+Thêm confetti là đi ngược bản đo. Ghi lại để lượt sau khỏi làm.
+
+**Bốn khu vực đã dựng lại trên màn Bàn học:**
+
+| Khu vực | Trước | Sau |
+|---|---|---|
+| Việc cần làm | **ba thẻ ngang hàng** cùng khung, cùng cỡ chữ, cùng nút | một việc chính (20px + nút đặc) và ba hàng ngăn bằng đường kẻ |
+| Banner phiên dở dang | bo 16px, viền bốn cạnh, có bóng, tiêu đề **13px** | vạch trái 6px, bo 4px, không bóng, tiêu đề 16px/700 |
+| Liên kết kiến thức | **lưới 5 thẻ**, ba tầng hộp lồng nhau | danh sách định nghĩa `dl/dt/dd`, một tầng |
+| Giải đề ngẫu nhiên | thẻ nền chuyển sắc, viền xanh, ô biểu tượng 40px | hàng thứ ba trong cùng danh sách |
+
+**Bốn lỗi nội dung, không lỗi nào là chuyện thẩm mỹ:**
+
+1. **"Ôn 15 câu theo điểm yếu" hứa sai 50%.** Nút gọi `onStartExam("adaptive")` không kèm tham
+   số nên `App.tsx` dòng 309 sinh `count: 10`. Bấm thử trên bản chạy thật thì đầu phiên ghi
+   "Phiên ôn luyện: **10** câu hỏi lý thuyết". Cùng họ với `daysLeft = 12` đã gỡ lượt trước.
+   **Sửa bằng cách bỏ số khỏi nhãn, không viết lại thành 10**: nhãn không phải nơi giữ nguồn sự
+   thật, sửa thành 10 chỉ dời quả bom sang lần đổi `count` sau.
+2. **Dấu tích xanh gắn cứng** trên thẻ việc chính, không phụ thuộc trạng thái nào, tức thuần
+   trang trí. Nhưng nó là biểu tượng "đã xong", nên người vừa mở app lần đầu thấy màn hình báo
+   việc đầu tiên của họ đã hoàn thành.
+3. **"Sổ câu sai đang sạch" khen thứ chưa xảy ra.** Sổ trống vì chưa bắt đầu. Nay tách đôi bằng
+   cờ `daCoBaiLam` vốn đã có sẵn ở dòng 272 mà chưa ai dùng cho nhánh này.
+4. **`{session.examType}` in nguyên văn "adaptive"** vào giữa câu tiếng Việt, lại còn tô đậm.
+   Cùng họ với "Long-Term Student Evolution & Memory Engine". Nay tra qua bản đồ 18 mã sang
+   tiếng Việt, và **mã lạ thì bỏ hẳn mệnh đề** chứ không in mã ra, vì `types.ts` khai 10 mã
+   nhưng các nơi gọi còn dùng thêm `mock-exam`, `daily-adaptive`, `retention-revision`...
+
+**Hai câu văn giọng kỹ sư đã gỡ**: "Đếm thật từ đồ thị tri thức và ngân hàng câu hỏi" (hệ thống
+tự trấn an về cách nó lấy số) và "(lặp lại giãn cách + xen kẽ chương)" (tên hai kỹ thuật nhận
+thức, đúng chuyên môn nhưng là ngôn ngữ người làm hệ thống).
+
+**Số đo trước và sau, lấy từ bản chạy thật ở 691px:**
+
+| Hạng mục | Trước | Sau |
+|---|---|---|
+| Tên tài liệu trong khối liên kết | vỡ **7 dòng**, mỗi dòng hai ba chữ | **1 dòng** |
+| Thang tiêu đề trên màn | 13/15/16/20/28, có tiêu đề mục **13px/400** nhẹ hơn nội dung | 16/20/28, mỗi cỡ đúng một vai |
+| Nền chuyển sắc | 1 | **0** |
+| Tràn ngang ở 375px | không | không |
+
+**Một lỗi tài liệu sửa kèm**: AGENTS.md có **hai mục cùng đánh số 4.9f**, một nói về chỉ số
+người học, một là bốn khuôn trình bày tôi thêm ở lượt trước mà không kiểm số đã dùng. Đã đổi
+mục sau thành **4.9g** và để lại dòng trỏ đường cho tài liệu cũ. Thêm mục mới **4.9h** cho ba
+quy tắc trạng thái rỗng.
+
+**Bộ kiểm 204 lên 207**, nhóm mới **AG**. Cả ba đều đã thử phá và đều bắt được:
+`AG1` nhãn tự khai số câu, `AG2` lời khen không gắn cờ `daCoBaiLam`, `AG3` render thẳng
+`examType`. `AG2` cố ý canh **quan hệ** chứ không canh chuỗi: chuỗi khen phải nằm trong cùng
+biểu thức điều kiện với cờ.
+
+**Còn nợ, đã thấy nhưng chưa sửa:**
+
+- **Cùng một chế độ mang hai tên trên cùng màn**: banner gọi `adaptive` là "ôn theo điểm yếu",
+  còn khối việc chính ở trạng thái chưa làm bài gọi là "một lượt ôn ngắn". Không sai nhưng
+  chưa nhất quán.
+- **Dải tab cuộn ngang cắt cụt chữ ở mép phải** ("Mô..." của "Môn học") mà không có tín hiệu
+  nào cho biết cuộn được. Vấn đề về khả năng khám phá, cần một lượt riêng.
+- Các nhánh rỗng ở **14 file khác** vẫn chưa rà: `EmptyState.tsx` chỉ được dùng đúng **1 chỗ**
+  trong khi có **30 nhánh `length === 0`** rải trên 15 file, mỗi nhánh tự viết một kiểu (chữ
+  nghiêng, viền đứt, icon tròn, hoặc chỉ một dòng chữ). Đáng làm thành một lượt riêng, và đã
+  thấy sẵn hai ca nặng: `CurriculumDashboard` khen "Tiến trình hoàn hảo!" và `ConceptMasteryMap`
+  hứa "AI đang phân tích tài liệu" khi không có tiến trình nào chạy.
+
+---
+
 ### 29/07/2026 (lượt 13), hai màn cuối: Công cụ hệ thống và hộp thoại Cài đặt
 
 Hết danh sách màn. Cả hai đều là màn công cụ nên ưu tiên khác các màn học: không có chuyện tâm
