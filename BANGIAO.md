@@ -59,6 +59,51 @@ sao, và còn nợ gì.
 
 ---
 
+### 29/07/2026 (lượt 18), iconography: 62 tiêu đề đeo biểu tượng, Khan có 0
+
+Mảng lớn thứ ba trong bản đánh giá ở lượt 17. Đo Khan trước khi sửa, và bản đo dứt khoát:
+
+| Đo trên trang khoá học Khan | Giá trị |
+|---|---|
+| Tiêu đề `h1..h4` trên trang | **102** |
+| Tiêu đề có biểu tượng | **0** |
+| Thẻ SVG cả trang | 599, trong đó **596 cái đúng cỡ 24x24** |
+
+Tức Khan dùng **một cỡ biểu tượng duy nhất**, và **không gắn biểu tượng vào tiêu đề nào**.
+
+Đo lại dự án cùng ngày: **62 tiêu đề đeo biểu tượng trên 16 file**. Nặng nhất là
+`LearningObservatoryView` với 13, `PersonalWorkspaceView` 9, `LearningPlannerDashboard` 7.
+Và `Sparkles` được dùng làm **biểu tượng mặc định cho tiêu đề mục** ở 24 chỗ, gần như luôn
+cùng một dạng `<h3 className="... flex items-center gap-2"><Sparkles className="w-4 h-4
+text-brand-info" />`.
+
+**Vì sao đây là lỗi Component Composition chứ không phải thẩm mỹ.** Khi MỌI tiêu đề đều đeo
+biểu tượng, và phần lớn đeo CÙNG MỘT hình, thì biểu tượng thôi mang thông tin. Nó chỉ còn lấy
+đi chỗ và sự chú ý của chính chữ tiêu đề, thứ duy nhất thật sự phân biệt các mục với nhau.
+`AlertTriangle` xuất hiện **26 lần** trên một ứng dụng học tập cũng cùng một họ: biểu tượng
+mang nghĩa mạnh nhất mà dùng 26 lần thì thành hoa văn.
+
+Đã gỡ **62 biểu tượng khỏi tiêu đề** và dọn theo **151 import lucide không còn ai dùng** trên
+23 file. Biểu tượng MANG NGHĨA vẫn giữ nguyên: trong nút, trong điều hướng, và các biểu tượng
+trạng thái có điều kiện như `CheckCircle2` khi sổ câu sai sạch.
+
+**Bộ kiểm 211 lên 212**, `AG8`.
+
+**Một sự cố của chính tôi khi thử phá, đáng đọc kỹ vì đã lặp lần thứ hai.** Bản thử phá đầu
+tiên chèn `<Award />` vào một tiêu đề, nhưng `Award` vừa bị gỡ khỏi import ở chính lượt này,
+nên **tsc đỏ và chặng tự kiểm chứng KHÔNG BAO GIỜ CHẠY**. Lệnh `grep` của tôi chỉ bắt dòng
+`Tổng:` nên không thấy gì, và tôi suýt kết luận rằng phép kiểm rỗng.
+
+Đây đúng bài học đã ghi từ lượt 12: **thử phá phải tạo ra một bản build biên dịch được**. Một
+bản phá không biên dịch được làm phép kiểm trông như rỗng trong khi thật ra nó chưa từng được
+gọi, và kết luận sai đó nguy hiểm hơn cả việc không thử phá. Làm lại bằng `Star` (còn trong
+import) thì phép kiểm bắt ngay.
+
+Script dọn import cũng gỡ nhầm `Settings as SettingsIcon` ở hai file, vì nó so tên
+`Settings as SettingsIcon` thay vì bí danh `SettingsIcon`. tsc bắt được ngay, đã phục hồi.
+
+---
+
 ### 29/07/2026 (lượt 17), hệ thống trạng thái rỗng, dựng lại `EmptyState` từ đầu
 
 **Bản đánh giá toàn bộ khoảng cách còn lại**, đo trên mã nguồn cùng ngày, xếp theo tác động tới

@@ -3086,6 +3086,38 @@ check("Trạng thái rỗng không dùng chữ nghiêng và không hứa việc 
     ? "mọi nhánh rỗng nói bằng chữ thường, và không nhánh nào mô tả một tiến trình nền không tồn tại"
     : `${[...new Set(fileNghiengRong)].join(", ")}${huaGia.length ? ` | hứa giả: ${huaGia.join(", ")}` : ""}`);
 
+// AG8. Tiêu đề mục không đeo biểu tượng trang trí.
+//
+// Đo trực tiếp trên trang khoá học Khan ngày 29/07/2026:
+//
+//   102  tiêu đề h1..h4 trên trang
+//     0  tiêu đề có biểu tượng
+//   596  trên 599 thẻ SVG của cả trang đều đúng cỡ 24x24
+//
+// Tức Khan dùng MỘT cỡ biểu tượng duy nhất, và không gắn biểu tượng nào vào tiêu đề.
+//
+// Đo lại trên dự án cùng ngày: **62 tiêu đề đeo biểu tượng** trên 16 file, và `Sparkles` được
+// dùng làm biểu tượng mặc định cho tiêu đề mục ở 24 chỗ, gần như luôn cùng một dạng
+// `<h3 className="... flex items-center gap-2"><Sparkles className="w-4 h-4 text-brand-info" />`.
+//
+// Vì sao đây là lỗi Component Composition chứ không phải chuyện thẩm mỹ: khi MỌI tiêu đề đều
+// đeo biểu tượng, và phần lớn đeo CÙNG MỘT hình, thì biểu tượng thôi mang thông tin. Nó chỉ
+// còn lấy đi chỗ và sự chú ý của chính chữ tiêu đề, thứ duy nhất thật sự phân biệt các mục.
+// `AlertTriangle` xuất hiện 26 lần trên một ứng dụng học tập cũng cùng một họ: biểu tượng mang
+// nghĩa mạnh nhất mà dùng 26 lần thì thành hoa văn.
+const tieuDeCoIcon: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const noiDung = readFileSync(path.join(process.cwd(), "src/components", f), "utf8");
+  const hit = noiDung.match(/<h[1-4][^>]*>\s*(?:\{[^}]*\}\s*)?<[A-Z][A-Za-z0-9]*\s+className="[^"]*\bw-\d/g);
+  if (hit && hit.length) tieuDeCoIcon.push(`${f} (${hit.length})`);
+}
+check("Tiêu đề mục không đeo biểu tượng trang trí",
+  tieuDeCoIcon.length === 0,
+  tieuDeCoIcon.length === 0
+    ? "0 tiêu đề đeo biểu tượng, khớp bản đo Khan (0 trên 102 tiêu đề)"
+    : `${tieuDeCoIcon.length} file còn tiêu đề đeo biểu tượng: ${tieuDeCoIcon.slice(0, 5).join(", ")}`);
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

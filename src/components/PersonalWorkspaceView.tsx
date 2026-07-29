@@ -4,35 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  FolderKanban, 
-  Play, 
-  RotateCcw, 
-  Target, 
-  Brain, 
-  Clock, 
-  Upload, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Search, 
-  Plus, 
-  FileText, 
-  Layers, 
-  Sparkles, 
-  Archive, 
-  TrendingUp, 
-  Info, 
-  GitCommit, 
-  Sliders, 
-  HelpCircle,
-  BookOpen,
-  ArrowRight,
-  ShieldCheck,
-  Check,
-  Share2,
-  ListFilter,
-  X
-} from "lucide-react";
+import { FolderKanban, Play, Clock, Upload, CheckCircle2, AlertTriangle, Search, Plus, Layers, Sparkles, Archive, GitCommit, BookOpen, ShieldCheck, X } from "lucide-react";
 import { dbService, chapters, questions, topicMap } from "../services/db";
 import { kbService } from "../services/kbService";
 import { aiService } from "../services/ai";
@@ -293,9 +265,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
               học phải tự hỏi chúng có khác nhau không. Nay giữ MỘT bộ chọn ở thanh đầu trang,
               còn ở đây tên môn chỉ còn là ngữ cảnh.
             */}
-            <h1 className="text-xl sm:text-2xl font-display font-semibold text-text-primary flex items-center gap-2">
-              <FolderKanban className="w-5 h-5 text-brand-info shrink-0" />
-              Bàn học hôm nay
+            <h1 className="text-xl sm:text-2xl font-display font-semibold text-text-primary">
+Bàn học hôm nay
             </h1>
 
             <div className="flex items-center gap-2 pt-1">
@@ -685,9 +656,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-brand-info" />
-                  Tài liệu môn học
+                <h3 className="text-xs tabular-nums text-text-primary">
+Tài liệu môn học
                 </h3>
                 <p className="text-xs text-text-muted mt-1">
                   Lưu giáo trình, slide, đề cũ, flashcard và ghi chú để app ôn đúng nguồn.
@@ -742,9 +712,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
         <div className="space-y-6">
           {/* Health Audit Checklist */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-success" />
-              Kiến thức cần bổ sung
+            <h3 className="text-xs tabular-nums text-text-primary">
+Kiến thức cần bổ sung
             </h3>
 
             <div className="space-y-3">
@@ -774,9 +743,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
 
           {/* Version History Git-like log */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <GitCommit className="w-4 h-4 text-brand-info" />
-              Lịch sử cập nhật tài liệu
+            <h3 className="text-xs tabular-nums text-text-primary">
+Lịch sử cập nhật tài liệu
             </h3>
 
             <div className="space-y-3">
@@ -801,9 +769,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
       {/* TAB 4: LEARNING TIMELINE */}
       {activeTab === "timeline" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-            <GitCommit className="w-4 h-4 text-brand-info" />
-            Nhật ký học tập
+          <h3 className="text-xs tabular-nums text-text-primary">
+Nhật ký học tập
           </h3>
 
           <div className="space-y-4 relative pl-4 border-l border-border-primary/80">
@@ -825,9 +792,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
       {/* TAB 5: STUDY SNAPSHOTS */}
       {activeTab === "snapshots" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-5 shadow-sm">
-          <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-brand-info" />
-            Các mốc tiến bộ
+          <h3 className="text-xs tabular-nums text-text-primary">
+Các mốc tiến bộ
           </h3>
 
           <div className="space-y-3">
@@ -870,9 +836,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
       {/* TAB 6: MULTI-SUBJECT COMMAND CENTER */}
       {activeTab === "subjects" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-            <Layers className="w-4 h-4 text-brand-info" />
-            Danh sách môn học
+          <h3 className="text-xs tabular-nums text-text-primary">
+Danh sách môn học
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -922,9 +887,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
       {/* TAB 7: SUBJECT HEALTH DASHBOARD (ADMIN) */}
       {activeTab === "admin_health" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-brand-info" />
-            Báo cáo chất lượng học liệu
+          <h3 className="text-xs tabular-nums text-text-primary">
+Báo cáo chất lượng học liệu
           </h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center tabular-nums bg-bg-surface p-4 rounded-xl border border-border-primary/80">
@@ -995,9 +959,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-bg-card border border-border-primary rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border-primary pb-3">
-              <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-info" />
-                Tạo câu hỏi bằng AI từ tài liệu
+              <h3 className="text-xs tabular-nums text-text-primary">
+Tạo câu hỏi bằng AI từ tài liệu
               </h3>
               <button onClick={closeImportModal} className="text-text-muted hover:text-text-primary cursor-pointer">
                 <X className="w-4 h-4" />

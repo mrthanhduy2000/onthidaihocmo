@@ -4,11 +4,7 @@
  */
 
 import React, { useState } from "react";
-import {
-  Play, Brain, RotateCcw, Award, Layers, ChevronRight,
-  BookOpen, Bookmark, Sparkles, Filter, Clock, CheckCircle2,
-  Sliders, Shuffle
-} from "lucide-react";
+import { Play, Brain, RotateCcw, Award, Layers, ChevronRight, BookOpen, Bookmark, Sparkles, Shuffle } from "lucide-react";
 import { dbService, chapters, topics, questions } from "../services/db";
 import { aiService } from "../services/ai";
 import { ExamAttempt, DifficultyLevel } from "../types";
@@ -314,9 +310,8 @@ export default function PracticeCenterView({ activeExam, onStartExam, onNavigate
 
       {/* Secondary Custom Options Section (Collapsible/Grouped) */}
       <div className="space-y-4 pt-4 border-t border-border-primary/60">
-        <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-          <Sliders className="w-4 h-4 text-text-muted" />
-          Ôn theo chương hoặc mức độ
+        <h2 className="text-sm font-semibold text-text-primary">
+Ôn theo chương hoặc mức độ
         </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

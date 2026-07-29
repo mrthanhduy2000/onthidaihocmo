@@ -4,10 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Sliders, Layers, CheckCircle2, AlertTriangle, Clock, 
-  Brain, Play, ShieldCheck, FileCheck, Sparkles, RefreshCw, ChevronRight, Info
-} from "lucide-react";
+import { Sliders, Layers, CheckCircle2, AlertTriangle, Brain, Play, ShieldCheck, FileCheck, RefreshCw } from "lucide-react";
 import { assessmentDesignEngine } from "../services/assessmentDesignEngine";
 import { examReviewEngine } from "../services/examReviewEngine";
 import { aiService } from "../services/ai";
@@ -253,9 +250,8 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
 
       {/* Exam Rhythm & Pacing Track */}
       <div className="space-y-3">
-        <h4 className="text-xs font-semibold text-text-primary flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-brand-info" />
-          <span>Sơ đồ Pacing & Cognitive Load Rhythm Sequence</span>
+        <h4 className="text-xs font-semibold text-text-primary">
+<span>Sơ đồ Pacing & Cognitive Load Rhythm Sequence</span>
         </h4>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">

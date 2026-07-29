@@ -4,22 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Search, 
-  LayoutDashboard,
-  Play, 
-  RotateCcw, 
-  Target, 
-  Brain, 
-  Upload, 
-  Settings as SettingsIcon, 
-  X, 
-  BookOpen, 
-  FileText,
-  HelpCircle,
-  Layers,
-  Sparkles
-} from "lucide-react";
+import { Search, LayoutDashboard, Play, RotateCcw, Target, Brain, BookOpen, Layers, Sparkles, Settings as SettingsIcon } from "lucide-react";
 
 interface GlobalCommandPaletteProps {
   isOpen: boolean;

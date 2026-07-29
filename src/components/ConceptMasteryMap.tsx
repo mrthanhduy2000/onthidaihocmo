@@ -4,10 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Award, Brain, AlertTriangle, ChevronDown, ChevronUp, 
-  Play, BookOpen, RefreshCw, Calendar, Sparkles, HelpCircle 
-} from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Play, Calendar } from "lucide-react";
 import EmptyState from "./EmptyState";
 import { kbService, KnowledgeNode } from "../services/kbService";
 import { dbService, questions } from "../services/db";
@@ -86,9 +83,8 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
     <div className="bg-bg-card border border-border-primary rounded-xl p-6 space-y-6 shadow-[0_1px_2px_rgba(0,0,0,0.01)]" id="kb-mastery-map">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-primary/60 pb-5">
         <div className="space-y-1">
-          <h3 className="text-md font-medium font-display text-text-primary flex items-center gap-2">
-            <Brain className="w-5 h-5 text-text-muted animate-pulse" />
-            <span>Bản đồ thông thạo khái niệm</span>
+          <h3 className="text-md font-medium font-display text-text-primary">
+<span>Bản đồ thông thạo khái niệm</span>
           </h3>
           <p className="text-2xs text-text-muted leading-relaxed font-sans max-w-xl">
             Không chỉ chấm điểm, hệ thống theo dõi mức độ thông thạo của từng khái niệm trong tài liệu để cá nhân hóa lộ trình và tự động cảnh báo điều kiện tiên quyết.

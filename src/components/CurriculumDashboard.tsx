@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Compass, Calendar, Target, Clock, Award, CheckCircle2, 
-  AlertTriangle, Lock, ArrowRight, Play, BookOpen, ShieldCheck, 
-  TrendingUp, Layers, HelpCircle, ChevronRight, Info 
-} from "lucide-react";
+import { Compass, Calendar, Target, CheckCircle2, AlertTriangle, Lock, Play, BookOpen, Info } from "lucide-react";
 import { 
   curriculumIntelligenceEngine, 
   CurriculumPlan, 
@@ -188,9 +184,8 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
       {/* SECTION 1: LEARNING MAP (CHAPTER STATUSES) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs tabular-nums text-text-muted flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-brand-info" />
-            Bản đồ tiến trình học phần
+          <h2 className="text-xs tabular-nums text-text-muted">
+Bản đồ tiến trình học phần
           </h2>
           <span className="text-sm text-text-muted">{plan.chapterStatuses.length} chương</span>
         </div>

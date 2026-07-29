@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Brain, Sparkles, Send, Bot, RefreshCw, ChevronRight, 
-  AlertTriangle, Play, BookOpen, Lock, Unlock, CheckCircle2, 
-  TrendingUp, Award, Layers, HelpCircle, FileText
-} from "lucide-react";
+import { Send, Bot, RefreshCw, Play, Lock, Unlock } from "lucide-react";
 import { dbService, chapters } from "../services/db";
 import { aiService } from "../services/ai";
 import { kbService, KnowledgeNode } from "../services/kbService";
@@ -181,9 +177,8 @@ export default function AIHub({ onStartExam }: AIHubProps) {
           <div className="bg-bg-card border border-border-primary/80 rounded-2xl p-6 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-primary/60 pb-4">
               <div>
-                <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-                  <Layers className="w-4.5 h-4.5 text-brand-info" />
-                  Sơ đồ khái niệm và kiến thức nền
+                <h3 className="text-base font-semibold text-text-primary">
+Sơ đồ khái niệm và kiến thức nền
                 </h3>
                 <p className="text-xs text-text-muted mt-1">
                   Xem các khái niệm liên quan với nhau và nên ôn phần nào trước.

@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Play, RotateCcw, AlertCircle, X } from "lucide-react";
+import { Play, RotateCcw, AlertCircle } from "lucide-react";
 import { ExamAttempt } from "../types";
 
 interface SessionRecoveryBannerProps {

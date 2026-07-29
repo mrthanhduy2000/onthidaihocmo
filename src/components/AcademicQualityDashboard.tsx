@@ -4,10 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  ShieldCheck, BarChart2, BookOpen, AlertTriangle, CheckCircle2, 
-  XCircle, Search, Layers, RefreshCw, UserCheck, FileText, Sparkles 
-} from "lucide-react";
+import { ShieldCheck, BarChart2, BookOpen, AlertTriangle, Search, RefreshCw, UserCheck, FileText, Sparkles } from "lucide-react";
 import { evidenceCoverageAuditService, SubjectHealthOverview, CoverageMatrixEntry } from "../services/evidenceCoverageAudit";
 import { questions, dbService } from "../services/db";
 import { Question } from "../types";

@@ -4,42 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Activity, 
-  ShieldCheck, 
-  AlertTriangle, 
-  Sparkles, 
-  TrendingUp, 
-  Layers, 
-  HelpCircle, 
-  RefreshCw, 
-  CheckCircle2, 
-  XCircle, 
-  Flame, 
-  Clock, 
-  BookOpen, 
-  BarChart3, 
-  Zap, 
-  FileText, 
-  Sliders, 
-  Target, 
-  Search, 
-  ChevronRight, 
-  ChevronDown, 
-  ArrowUpRight, 
-  Award, 
-  Compass, 
-  History, 
-  Wrench, 
-  CheckSquare, 
-  AlertOctagon, 
-  PieChart, 
-  Brain, 
-  Info,
-  Check,
-  RotateCcw,
-  Sparkle
-} from "lucide-react";
+import { Activity, ShieldCheck, TrendingUp, Layers, RefreshCw, CheckCircle2, XCircle, FileText, Search, Compass, Brain, Info } from "lucide-react";
 import { 
   productObservabilityService, 
   SystemHealthOverview, 
@@ -168,9 +133,8 @@ export const LearningObservatoryView: React.FC = () => {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary flex items-center gap-3">
-              <Activity className="w-7 h-7 text-brand-info" />
-              {/* Trước 28/07/2026 tiêu đề này là "Observability & Self-Improving Platform",
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+{/* Trước 28/07/2026 tiêu đề này là "Observability & Self-Improving Platform",
                   tức chuỗi tiếng Anh ở cỡ 30px đậm, là dòng chữ to nhất cả màn, trong một sản
                   phẩm mà mọi màn khác đều thuần tiếng Việt. */}
               <span>Giám sát và tự cải thiện chất lượng học liệu</span>
@@ -377,9 +341,8 @@ export const LearningObservatoryView: React.FC = () => {
           {/* Quick Maintenance Jobs Trigger Banner */}
           <div className="bg-gradient-to-r from-brand-info/10 via-bg-surface to-bg-card border border-brand-info/20 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-text-primary flex items-center gap-2">
-                <Zap className="w-4 h-4 text-brand-info" />
-                <span>Tự động hóa Bảo trì & Quét Sức khỏe định kỳ</span>
+              <h4 className="text-sm font-bold text-text-primary">
+<span>Tự động hóa Bảo trì & Quét Sức khỏe định kỳ</span>
               </h4>
               <p className="text-xs text-text-muted">Chạy các tiến trình kiểm tra không sử dụng AI để phát hiện trùng lặp, lỗ hổng kiến thức và câu hỏi quá hạn.</p>
             </div>
@@ -426,9 +389,8 @@ export const LearningObservatoryView: React.FC = () => {
             {/* Dead Concept Summary */}
             <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-border-primary/60 pb-3">
-                <h3 className="text-sm font-bold text-text-primary flex items-center gap-2">
-                  <AlertOctagon className="w-4 h-4 text-brand-warning" />
-                  <span>Phát hiện khái niệm chưa khai thác</span>
+                <h3 className="text-sm font-bold text-text-primary">
+<span>Phát hiện khái niệm chưa khai thác</span>
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-xs tabular-nums font-bold bg-brand-warning-bg text-brand-warning">
                   {deadConcepts.length} Khái niệm
@@ -462,9 +424,8 @@ export const LearningObservatoryView: React.FC = () => {
             {/* Bloom Distribution Summary */}
             <div className="bg-bg-card border border-border-primary rounded-xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-border-primary/60 pb-3">
-                <h3 className="text-sm font-bold text-text-primary flex items-center gap-2">
-                  <PieChart className="w-4 h-4 text-brand-info" />
-                  <span>Cân bằng Bậc nhận thức Bloom</span>
+                <h3 className="text-sm font-bold text-text-primary">
+<span>Cân bằng Bậc nhận thức Bloom</span>
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-xs tabular-nums font-bold bg-brand-info-bg text-brand-info">
                   Điểm: {bloomHealth.healthScore}/100
@@ -509,9 +470,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-brand-warning" />
-                  <span>Khái niệm chưa khai thác</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Khái niệm chưa khai thác</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Phát hiện các khái niệm kiến thức có ít hơn 2 câu hỏi trong ngân hàng dữ liệu.</p>
               </div>
@@ -550,9 +510,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-brand-info" />
-                  <span>Khái niệm bị lạm dụng</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Khái niệm bị lạm dụng</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Cảnh báo các khái niệm chiếm tỷ lệ câu hỏi vượt quá 20% dung lượng ngân hàng đề.</p>
               </div>
@@ -592,9 +551,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <CheckSquare className="w-5 h-5 text-brand-success" />
-                  <span>Đánh giá phương án nhiễu</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Đánh giá phương án nhiễu</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Phân tích tần suất sinh viên chọn từng phương án A, B, C, D để phát hiện bẫy vô hiệu hoặc bẫy mơ hồ.</p>
               </div>
@@ -646,9 +604,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-brand-info" />
-                  <span>Hiệu quả ma trận đề thi</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Hiệu quả ma trận đề thi</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">So sánh tỷ lệ câu hỏi thực tế trong ngân hàng với mục tiêu phân bổ của khung thiết kế.</p>
               </div>
@@ -686,9 +643,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-brand-warning" />
-                  <span>Phát hiện sai lệch độ khó</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Phát hiện sai lệch độ khó</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Cảnh báo khoảng cách giữa độ khó thiết kế sư phạm và tỷ lệ làm sai thực tế của sinh viên.</p>
               </div>
@@ -733,9 +689,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-brand-info" />
-                  <span>Trung tâm đề xuất dành cho tác giả học liệu</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Trung tâm đề xuất dành cho tác giả học liệu</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Các hành động ưu tiên cao giúp tác giả nâng cao chất lượng đề thi và phủ kín khung CTĐT.</p>
               </div>
@@ -767,9 +722,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <AlertOctagon className="w-5 h-5 text-brand-warning" />
-                  <span>Nợ kỹ thuật học thuật</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Nợ kỹ thuật học thuật</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Danh sách các thiếu sót về dẫn nguồn giáo trình, lời giải chi tiết hoặc căn cứ học thuật.</p>
               </div>
@@ -808,9 +762,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <Award className="w-5 h-5 text-brand-info" />
-                  <span>Đánh giá mức độ sẵn sàng phát hành</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Đánh giá mức độ sẵn sàng phát hành</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Kiểm định các Quality Gates bắt buộc trước khi phê duyệt bộ đề thi chính thức.</p>
               </div>
@@ -846,9 +799,8 @@ export const LearningObservatoryView: React.FC = () => {
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-border-primary pb-4">
               <div>
-                <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
-                  <History className="w-5 h-5 text-brand-info" />
-                  <span>Nhật ký kiểm toán học thuật</span>
+                <h3 className="text-base font-bold text-text-primary">
+<span>Nhật ký kiểm toán học thuật</span>
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">Lịch sử điều chỉnh nội dung, thực thi tiến trình tự động và kiểm định chất lượng.</p>
               </div>

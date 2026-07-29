@@ -4,24 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Settings as SettingsIcon, 
-  X, 
-  Download, 
-  Upload, 
-  Bell, 
-  Moon, 
-  Sun,
-  Monitor,
-  Keyboard, 
-  CheckCircle2, 
-  AlertCircle,
-  FileSpreadsheet,
-  Target,
-  Sparkles,
-  RotateCcw,
-  AlertTriangle
-} from "lucide-react";
+import { X, Download, Upload, Moon, Sun, Monitor, CheckCircle2, RotateCcw, AlertTriangle, Settings as SettingsIcon } from "lucide-react";
 import { workspaceService } from "../services/workspaceService";
 import { dbService } from "../services/db";
 import { AppSettings, SubjectGoal } from "../types";
@@ -123,9 +106,8 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
               đắt nhất của màn hình cho một hành động vài tháng mới làm một lần, và trên khung
               375px chúng bị đẩy tràn ra ngoài. Đây mới là chỗ đúng của chúng. */}
           <div className="space-y-3">
-            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
-              <Sun className="w-4 h-4 text-brand-info" />
-              Giao diện
+            <h4 className="text-base font-bold text-text-primary font-sans">
+Giao diện
             </h4>
             <div className="flex items-center gap-2 bg-bg-surface p-3 border border-border-primary/80 rounded-xl">
               {([
@@ -152,9 +134,8 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 1: Study Goal & Exam Config */}
           <div className="space-y-3">
-            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
-              <Target className="w-4 h-4 text-brand-info" />
-              Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
+            <h4 className="text-base font-bold text-text-primary font-sans">
+Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-bg-surface p-4 border border-border-primary/80 rounded-xl">
@@ -198,9 +179,8 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 2: Product Preferences */}
           <div className="space-y-3">
-            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-info" />
-              Tùy chọn trải nghiệm
+            <h4 className="text-base font-bold text-text-primary font-sans">
+Tùy chọn trải nghiệm
             </h4>
 
             <div className="space-y-2">
@@ -227,9 +207,8 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 3: Backup & Restore */}
           <div className="space-y-3">
-            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
-              <Download className="w-4 h-4 text-brand-info" />
-              Sao lưu và khôi phục dữ liệu
+            <h4 className="text-base font-bold text-text-primary font-sans">
+Sao lưu và khôi phục dữ liệu
             </h4>
 
             <div className="p-4 bg-bg-surface border border-border-primary/80 rounded-xl space-y-3">
@@ -264,9 +243,8 @@ export default function ProductSettingsModal({ isOpen, onClose, onRefreshData }:
 
           {/* Section 4: Làm mới tiến trình học */}
           <div className="space-y-3">
-            <h4 className="text-base font-bold text-text-primary font-sans flex items-center gap-2">
-              <RotateCcw className="w-4 h-4 text-brand-warning" />
-              Làm mới tiến trình học
+            <h4 className="text-base font-bold text-text-primary font-sans">
+Làm mới tiến trình học
             </h4>
 
             <div className="p-4 bg-bg-surface border border-brand-warning/30 rounded-xl space-y-3">

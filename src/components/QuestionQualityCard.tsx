@@ -4,10 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { 
-  CheckCircle2, XCircle, AlertTriangle, ShieldCheck, 
-  FileText, BookOpen, UserCheck, ChevronDown, ChevronUp, Sparkles, MessageSquare 
-} from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, BookOpen, UserCheck, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 import { Question } from "../types";
 import { contentQualityAssurance, QuestionQualityProfile, HumanReviewStatus } from "../services/contentQualityAssurance";
 

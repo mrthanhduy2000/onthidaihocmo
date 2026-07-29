@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  BarChart2, Award, AlertTriangle, BookOpen, Clock, 
-  Trash2, RotateCcw, ChevronRight, Search, CheckCircle2, ChevronDown, ChevronUp, Layers,
-  X, Check, ArrowDown, Star, History, Sparkles, Lightbulb, HelpCircle, Bookmark
-} from "lucide-react";
+import { AlertTriangle, BookOpen, Trash2, ChevronRight, Search, ChevronDown, ChevronUp, Layers, X, Check, ArrowDown, Star, History, Sparkles, Lightbulb, HelpCircle } from "lucide-react";
 import { dbService, questionMap, topicMap, chapterMap, chapters, topics, questions } from "../services/db";
 import { TimeService } from "../services/time";
 import { Statistics, ExamAttempt, Question, DifficultyLevel } from "../types";
@@ -366,9 +362,8 @@ export default function StatsView() {
       <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-primary/60 pb-3">
           <div>
-            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-info" />
-              Nhật ký rèn luyện
+            <h3 className="text-sm font-semibold text-text-primary">
+Nhật ký rèn luyện
             </h3>
             <p className="text-sm text-text-secondary">Số câu bạn trả lời mỗi ngày trong 30 ngày gần đây</p>
           </div>
@@ -508,8 +503,8 @@ export default function StatsView() {
 
       {/* Chapter-wise Accuracy Breakdown */}
       <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-6">
-        <h3 className="text-lg font-medium font-display text-text-primary flex items-center gap-2">
-          <BarChart2 className="w-5 h-5 text-brand-info" /> Tỷ lệ làm đúng theo từng chương
+        <h3 className="text-lg font-medium font-display text-text-primary">
+Tỷ lệ làm đúng theo từng chương
         </h3>
 
         {/* Bảy chương là một DANH SÁCH, nên là hàng chứ không phải lưới thẻ. Khuôn 4.9g mục 3,
@@ -563,8 +558,8 @@ export default function StatsView() {
       <div className="bg-bg-card border border-border-primary p-6 rounded-2xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h3 className="text-lg font-medium font-display text-text-primary flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-brand-error" /> Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
+            <h3 className="text-lg font-medium font-display text-text-primary">
+Nhật ký củng cố câu sai ({wrongQuestionIds.length} câu)
             </h3>
             <p className="text-xs text-text-secondary">
               Tra cứu và ôn lý thuyết tại chỗ các câu hỏi bạn từng làm sai để khắc phục tuyệt đối.

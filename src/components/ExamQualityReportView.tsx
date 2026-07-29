@@ -4,10 +4,7 @@
  */
 
 import React from "react";
-import { 
-  ShieldCheck, AlertTriangle, CheckCircle2, Award, 
-  TrendingUp, FileText, Layers, BarChart2, HelpCircle 
-} from "lucide-react";
+import { ShieldCheck, AlertTriangle, CheckCircle2, Award, BarChart2 } from "lucide-react";
 import { ExamQualityReport } from "../services/examQualityReport";
 import QuestionQualityCard from "./QuestionQualityCard";
 

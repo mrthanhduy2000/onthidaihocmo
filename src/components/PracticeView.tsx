@@ -4,10 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  ArrowLeft, Clock, Bookmark, Flag, ChevronLeft, ChevronRight, 
-  Send, HelpCircle, Sparkles, BookOpen, Check, AlertCircle, AlertTriangle, Play, Pause, Brain, CheckCircle2
-} from "lucide-react";
+import { ArrowLeft, Clock, Bookmark, Flag, ChevronLeft, ChevronRight, Send, HelpCircle, Sparkles, BookOpen, Check, AlertTriangle, Play, Pause, Brain, CheckCircle2 } from "lucide-react";
 import { dbService, questionMap, questions, topics, chapters } from "../services/db";
 import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
@@ -1178,9 +1175,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               <div className="bg-bg-surface border border-border-primary rounded-xl p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-1">
-                    <h4 className="text-xs font-medium text-text-primary flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-brand-success animate-pulse" />
-                      <span>Bài giảng giải thích chi tiết bằng AI (Trực tuyến)</span>
+                    <h4 className="text-xs font-medium text-text-primary">
+<span>Bài giảng giải thích chi tiết bằng AI (Trực tuyến)</span>
                     </h4>
                     <p className="text-2xs text-text-secondary leading-relaxed max-w-xl font-sans">
                       Sử dụng trí tuệ nhân tạo Gemini để giải mã câu hỏi theo **Mức độ giải thích** được chọn bên dưới. AI phân tích sâu bẫy tư duy và các đáp án nhiễu.
@@ -1301,9 +1297,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
               <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)]">
                 <div className="flex flex-col gap-3 border-b border-border-primary pb-3.5">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-medium text-text-primary flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-text-muted" />
-                      <span>Bài giảng lý luận & Giải nghĩa đa cấp độ</span>
+                    <h4 className="text-xs font-medium text-text-primary">
+<span>Bài giảng lý luận & Giải nghĩa đa cấp độ</span>
                     </h4>
                   </div>
                   

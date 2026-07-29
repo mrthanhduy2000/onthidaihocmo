@@ -4,10 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  TrendingUp, Award, AlertTriangle, ShieldCheck, Clock, Brain, 
-  Sparkles, RefreshCw, Layers, Activity, Calendar, HelpCircle, ArrowUpRight, Zap
-} from "lucide-react";
+import { Award, AlertTriangle, ShieldCheck, RefreshCw, Activity, Zap } from "lucide-react";
 import { conceptMemoryService, ConceptMemoryProfile } from "../services/conceptMemoryService";
 import { DongTrong } from "./EmptyState";
 import { 
@@ -215,9 +212,8 @@ export default function LearningEvolutionView() {
       {/* Tab 1: Timeline */}
       {activeTab === "timeline" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <Clock className="w-5 h-5 text-brand-info" />
-            <span>Diễn biến độ thạo qua từng lần ôn</span>
+          <h3 className="text-base font-semibold text-text-primary">
+<span>Diễn biến độ thạo qua từng lần ôn</span>
           </h3>
 
           {snapshots.length === 0 ? (
@@ -402,9 +398,8 @@ export default function LearningEvolutionView() {
       {/* Tab 3: Forgetting Curve */}
       {activeTab === "forgetting" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-6">
-          <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <Clock className="w-5 h-5 text-brand-info" />
-            <span>Mô hình Đường cong Quên Ebbinghaus & Lịch Ôn tập Thích ứng</span>
+          <h3 className="text-base font-semibold text-text-primary">
+<span>Mô hình Đường cong Quên Ebbinghaus & Lịch Ôn tập Thích ứng</span>
           </h3>
 
           <p className="text-sm text-text-secondary">
@@ -452,9 +447,8 @@ export default function LearningEvolutionView() {
       {/* Tab 4: Learning Journey */}
       {activeTab === "journey" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-brand-info" />
-            <span>Nhật ký Tiến trình Học tập Tổng hợp</span>
+          <h3 className="text-base font-semibold text-text-primary">
+<span>Nhật ký Tiến trình Học tập Tổng hợp</span>
           </h3>
 
           <div className="space-y-3">
@@ -484,9 +478,8 @@ export default function LearningEvolutionView() {
       {/* Tab 5: Milestones */}
       {activeTab === "milestones" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <Award className="w-5 h-5 text-brand-warning" />
-            <span>Cột mốc Tiến bộ Học thuật</span>
+          <h3 className="text-base font-semibold text-text-primary">
+<span>Cột mốc Tiến bộ Học thuật</span>
           </h3>
 
           <div className="space-y-3">
@@ -511,9 +504,8 @@ export default function LearningEvolutionView() {
       {/* Tab 6: Learning Pattern Mining */}
       {activeTab === "patterns" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <Brain className="w-5 h-5 text-brand-info" />
-            <span>Khai phá quy luật phản xạ học tập</span>
+          <h3 className="text-base font-semibold text-text-primary">
+<span>Khai phá quy luật phản xạ học tập</span>
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -536,9 +528,8 @@ export default function LearningEvolutionView() {
       {/* Tab 7: Explainability Audit Log */}
       {activeTab === "audit" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
-          <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-brand-success" />
-            <span>Nhật ký kiểm toán biến đổi mô hình người học</span>
+          <h3 className="text-base font-semibold text-text-primary">
+<span>Nhật ký kiểm toán biến đổi mô hình người học</span>
           </h3>
 
           <div className="space-y-3">

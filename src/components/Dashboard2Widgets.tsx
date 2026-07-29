@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Lock, CheckCircle2, Play, Sparkles, TrendingUp, Zap, 
-  Database, Cpu, Coins, Clock, AlertTriangle, Eye, Calendar,
-  BarChart3, RefreshCw
-} from "lucide-react";
+import { Lock, CheckCircle2, Play, Sparkles, Database, Coins, RefreshCw } from "lucide-react";
 import { learningEngine, LearningRoadmap, LearningRoadmapStep } from "../services/learningEngine";
 import { learnerModelService, AIOrchestratorStats } from "../services/learnerModel";
 import { dbService, questions } from "../services/db";
@@ -130,9 +126,8 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         <div className="lg:col-span-2 bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium font-display text-text-primary flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-brand-success" /> 
-                <span>Bản đồ lộ trình học tập trực quan</span>
+              <h3 className="text-sm font-medium font-display text-text-primary">
+<span>Bản đồ lộ trình học tập trực quan</span>
               </h3>
               <button 
                 onClick={handleRefresh}
@@ -251,9 +246,8 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         {/* 2. Concept Heatmap (1 col) */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
-            <h3 className="text-sm font-medium font-display text-text-primary flex items-center gap-2">
-              <Eye className="w-4 h-4 text-brand-info" />
-              <span>Bản đồ nhiệt tri thức</span>
+            <h3 className="text-sm font-medium font-display text-text-primary">
+<span>Bản đồ nhiệt tri thức</span>
             </h3>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
               Mỗi ô vuông đại diện cho 1 khái niệm cốt lõi. Màu đậm biểu thị độ thông thạo xuất sắc.
@@ -299,9 +293,8 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         {/* 3. Learning Forecast Widget */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
-            <h3 className="text-sm font-medium font-display text-text-primary flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-brand-info" />
-              <span>Dự báo tiến trình học</span>
+            <h3 className="text-sm font-medium font-display text-text-primary">
+<span>Dự báo tiến trình học</span>
             </h3>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
               Phân tích tốc độ làm đề kết hợp đường cong lãng quên để dự tính chu kỳ ôn tập chuẩn xác.
@@ -336,9 +329,8 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         {/* 4. AI Telemetry Monitor Widget */}
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
-            <h3 className="text-sm font-medium font-display text-text-primary flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-brand-success" />
-              <span>Giám sát bộ điều phối AI</span>
+            <h3 className="text-sm font-medium font-display text-text-primary">
+<span>Giám sát bộ điều phối AI</span>
             </h3>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
               Thống kê lưu lượng cuộc gọi, ngân sách tài nguyên và tính năng bảo mật ngoại tuyến (offline fallback rate).

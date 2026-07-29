@@ -4,18 +4,7 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Plus, 
-  Play, 
-  RotateCcw, 
-  Brain, 
-  Layers, 
-  Search, 
-  Upload, 
-  Bookmark, 
-  X,
-  Target
-} from "lucide-react";
+import { Plus, Play, RotateCcw, Brain, Search, Upload, Target } from "lucide-react";
 
 interface QuickActionFABProps {
   onNavigate: (view: string, actionParam?: any) => void;

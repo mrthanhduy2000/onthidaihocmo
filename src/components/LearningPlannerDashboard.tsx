@@ -4,25 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Target, 
-  TrendingUp, 
-  Clock, 
-  Calendar, 
-  ShieldCheck, 
-  AlertTriangle, 
-  RotateCcw, 
-  Sliders, 
-  CheckCircle2, 
-  Sparkles, 
-  Trash2, 
-  Copy, 
-  Play, 
-  Info,
-  Layers,
-  ChevronRight,
-  FileSpreadsheet
-} from "lucide-react";
+import { Target, TrendingUp, Clock, AlertTriangle, Sliders, CheckCircle2, Trash2, Copy, Info, Layers } from "lucide-react";
 import { dbService } from "../services/db";
 import { examForecaster } from "../services/examForecaster";
 import { SubjectGoal, ExamPrediction, StudyDebtItem, ExamAttempt } from "../types";
@@ -459,9 +441,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
         <div className="space-y-6">
           {/* Goal Editor Form */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-5 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Target className="w-4 h-4 text-brand-info" />
-              Thiết lập Mục tiêu & Ngày thi ({dbService.getActiveSubjectName()})
+            <h3 className="text-xs tabular-nums text-text-primary">
+Thiết lập Mục tiêu & Ngày thi ({dbService.getActiveSubjectName()})
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -522,9 +503,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* Multiple Subjects Planning Overview */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-brand-info" />
-              Tổng quan lịch thi đa môn học
+            <h3 className="text-xs tabular-nums text-text-primary">
+Tổng quan lịch thi đa môn học
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -582,9 +562,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           {/* Daily Budget Distribution */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-                <Clock className="w-4 h-4 text-brand-info" />
-                Phân bổ Ngân sách Học hàng ngày ({dailyBudgetPlan.totalMinutes} phút/ngày)
+              <h3 className="text-xs tabular-nums text-text-primary">
+Phân bổ Ngân sách Học hàng ngày ({dailyBudgetPlan.totalMinutes} phút/ngày)
               </h3>
             </div>
 
@@ -606,9 +585,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* Study ROI Dashboard Table */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-info" />
-              Việc học nào đáng làm trước
+            <h3 className="text-xs tabular-nums text-text-primary">
+Việc học nào đáng làm trước
             </h3>
 
             <div className="space-y-3">
@@ -782,9 +760,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {activeTab === "simulator" && (
         <div className="space-y-6">
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-5 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-brand-info" />
-              Mô phỏng thay đổi lịch thi & thời lượng học
+            <h3 className="text-xs tabular-nums text-text-primary">
+Mô phỏng thay đổi lịch thi & thời lượng học
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -835,9 +812,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
           {/* What-if Cards */}
           <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-brand-info" />
-              Kịch bản giả định
+            <h3 className="text-xs tabular-nums text-text-primary">
+Kịch bản giả định
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -863,9 +839,8 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       {activeTab === "sessions" && (
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-border-primary pb-4">
-            <h3 className="text-xs tabular-nums text-text-primary flex items-center gap-2">
-              <Layers className="w-4 h-4 text-brand-info" />
-              Quản lý lịch sử & phiên làm bài
+            <h3 className="text-xs tabular-nums text-text-primary">
+Quản lý lịch sử & phiên làm bài
             </h3>
 
             {sessions.length > 0 && (

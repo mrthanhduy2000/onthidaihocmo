@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau mười bảy lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau mười tám lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,30 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: hệ thống trạng thái rỗng, dựng lại EmptyState từ đầu
+## Lượt mới nhất: iconography, 62 tiêu đề đeo biểu tượng trong khi Khan có 0
+
+| Đo trên trang khoá học Khan | Giá trị |
+|---|---|
+| Tiêu đề `h1..h4` | **102** |
+| Tiêu đề có biểu tượng | **0** |
+| Thẻ SVG cả trang | 599, trong đó **596 đúng cỡ 24x24** |
+
+Dự án: **62 tiêu đề đeo biểu tượng trên 16 file**, và `Sparkles` là biểu tượng mặc định cho
+tiêu đề mục ở 24 chỗ. Khi MỌI tiêu đề đều đeo biểu tượng và phần lớn đeo CÙNG MỘT hình thì
+biểu tượng thôi mang thông tin, chỉ còn lấy chỗ của chính chữ tiêu đề.
+
+Đã gỡ 62 biểu tượng và 151 import lucide không còn ai dùng trên 23 file. Biểu tượng mang nghĩa
+(trong nút, điều hướng, trạng thái có điều kiện) giữ nguyên.
+
+Bộ kiểm 211 lên **212**, `AG8`.
+
+**Sự cố khi thử phá, lặp lần thứ hai**: bản phá chèn `<Award />` mà `Award` vừa bị gỡ khỏi
+import, nên **tsc đỏ và chặng tự kiểm chứng không bao giờ chạy**. Suýt kết luận phép kiểm rỗng.
+**Thử phá phải tạo ra bản build biên dịch được** (bài học từ lượt 12).
+
+---
+
+## Lượt trước: hệ thống trạng thái rỗng, dựng lại EmptyState từ đầu
 
 ### Bản đánh giá khoảng cách còn lại, xếp theo tác động tới việc học
 
@@ -775,7 +798,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **211**, chia 33 nhóm A đến AG, đạt toàn bộ |
+| Phép tự kiểm chứng | **212**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

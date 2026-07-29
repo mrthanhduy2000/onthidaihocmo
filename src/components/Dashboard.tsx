@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Play, RotateCcw, Brain, Calendar, Clock, Award, Flame, 
-  ArrowRight, ChevronRight, CheckCircle2, AlertTriangle, BookOpen, 
-  Sparkles, Layers, TrendingUp, Target, Sliders, Eye, EyeOff, Shuffle
-} from "lucide-react";
+import { Calendar, Clock, ChevronRight, TrendingUp, Target, Eye, EyeOff, Shuffle } from "lucide-react";
 import { dbService, chapters } from "../services/db";
 import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
@@ -182,9 +178,8 @@ export default function Dashboard({ onStartExam, onNavigate }: DashboardProps) {
 
       {/* PROGRESSIVE DISCLOSURE TOGGLE FOR SECONDARY DETAILS */}
       <div className="flex items-center justify-between pt-2 border-t border-border-primary/60">
-        <h2 className="text-xs tabular-nums text-text-muted flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-brand-info" />
-          Tùy chọn ôn tập thêm
+        <h2 className="text-xs tabular-nums text-text-muted">
+Tùy chọn ôn tập thêm
         </h2>
 
         <button

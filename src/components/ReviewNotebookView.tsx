@@ -4,11 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  BookOpen, AlertTriangle, RotateCcw, CheckCircle2, Search, 
-  ChevronRight, Brain, Filter, Sparkles, Clock, ArrowUpRight, Check,
-  BookMarked, HelpCircle
-} from "lucide-react";
+import { AlertTriangle, RotateCcw, Search, ChevronRight, Brain, Filter, Sparkles } from "lucide-react";
 import { dbService, questionMap, chapterMap, questions } from "../services/db";
 import { aiService } from "../services/ai";
 import { Question, ExamAttempt } from "../types";

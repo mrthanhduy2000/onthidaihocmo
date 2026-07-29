@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Play, Sparkles, Clock, TrendingUp, HelpCircle, ArrowRight, Sun, Sunset, Moon, Coffee, ShieldCheck } from "lucide-react";
+import { Play, Clock, TrendingUp, HelpCircle, ArrowRight, Sun, Sunset, Moon, Coffee, ShieldCheck } from "lucide-react";
 import { NextBestAction } from "../services/nextBestAction";
 import { dbService, questions } from "../services/db";
 import { TimeService } from "../services/time";
