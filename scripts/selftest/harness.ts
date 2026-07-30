@@ -3149,6 +3149,61 @@ check("Biểu tượng chỉ dùng ba cỡ, không cỡ nào dưới 16px",
     ? "đúng ba cỡ 16/20/24px, không còn biểu tượng 8px hay 10px"
     : `${coIconLa.length} chỗ lệch thang: ${[...new Set(coIconLa)].slice(0, 6).join(", ")}`);
 
+// AG10. Biến thể `dark:` phải bám lớp `.dark`, không bám thiết lập hệ điều hành.
+//
+// Tìm ra ngày 30/07/2026 khi ghép ảnh minh hoạ. Tailwind v4 mặc định dịch `dark:x` thành
+// `@media (prefers-color-scheme: dark)`, tức bám thiết lập HỆ ĐIỀU HÀNH. Nhưng dự án bật chế độ
+// tối bằng `document.documentElement.classList.add("dark")` ở `db.ts`, tức bằng CÔNG TẮC TRONG
+// ỨNG DỤNG. Hai vế đều sai và sai ngược chiều nhau:
+//
+//   bật công tắc tối trong app, hệ điều hành sáng  -> nền tối nhưng KHÔNG lớp `dark:` nào chạy
+//   hệ điều hành tối, app để chế độ sáng           -> mọi lớp `dark:` chạy trên giao diện sáng
+//
+// Đây là lần thứ TƯ dự án bắt được khuôn "lách qua hệ thống mà không có gì kêu lên", sau
+// `brand-danger` chưa từng định nghĩa, `animate-fade-in-up` chưa từng có token, và 72 chỗ màu đi
+// vòng qua bộ token. Lần này thậm chí không phải lớp sai: CSS sinh ra hợp lệ, chỉ gắn vào điều
+// kiện không bao giờ khớp với cách app bật chế độ tối.
+//
+// Lỗi CÓ SẴN từ trước đợt ghép ảnh: `dark:bg-zinc-800` ở quy tắc thanh cuộn cũng chưa từng chạy.
+const cssGoc = readFileSync(path.join(process.cwd(), "src/index.css"), "utf8");
+const coDungDark = /\bdark:[a-z0-9:./[\]-]+/.test(
+  readdirSync(path.join(process.cwd(), "src/components"))
+    .filter(f => f.endsWith(".tsx"))
+    .map(f => readFileSync(path.join(process.cwd(), "src/components", f), "utf8"))
+    .join("\n") + cssGoc
+);
+check("Biến thể dark bám lớp .dark chứ không bám hệ điều hành",
+  !coDungDark || /@custom-variant\s+dark\s*\(&:where\(\.dark,\s*\.dark\s*\*\)\)/.test(cssGoc),
+  /@custom-variant\s+dark/.test(cssGoc)
+    ? "đã khai @custom-variant dark, nên mọi lớp dark: chạy đúng theo công tắc trong ứng dụng"
+    : "có dùng lớp dark: nhưng THIẾU @custom-variant, các lớp đó bám hệ điều hành chứ không bám công tắc app");
+
+// AG11. Ảnh minh hoạ ở trạng thái rỗng phải là trang trí, và không được lấn át chữ.
+//
+// Bộ 10 ảnh GPT Image do Đàm tạo, ghép vào qua prop `illustration` của `EmptyState`. Ba ràng
+// buộc, đều nhằm giữ nguyên tắc "chữ là chủ thể, ảnh là phụ" ở AGENTS.md 4.9g/4.9h:
+//
+//   1. Ảnh cao 128px (`h-32`), tức thấp hơn khối chữ bên dưới nó. Khoá CHIỀU CAO chứ không khoá
+//      chiều rộng, vì chiều cao mới quyết định ảnh có lấn át chữ hay không.
+//   2. `w-auto` giữ tỷ lệ gốc, không bóp méo ảnh.
+//   3. `loading="lazy"` vì ảnh 250-300KB mà chỉ hiện ở trạng thái rỗng, tức phần lớn người dùng
+//      không bao giờ tải tới.
+//
+// Bản đo Khan cho trạng thái rỗng KHÔNG có ảnh nào. Đây là chỗ dự án cố ý đi khác Khan, và chỉ
+// ở trạng thái rỗng: đó là lúc màn hình trống trải nhất.
+const nguonEmptyState = readFileSync(path.join(process.cwd(), "src/components/EmptyState.tsx"), "utf8");
+const rangBuocAnh = [
+  { ten: "khoá chiều cao 128px", ok: /className="[^"]*\bh-32\b/.test(nguonEmptyState) },
+  { ten: "giữ tỷ lệ bằng w-auto", ok: /className="[^"]*\bw-auto\b/.test(nguonEmptyState) },
+  { ten: "tải trễ", ok: /loading="lazy"/.test(nguonEmptyState) },
+  { ten: "ảnh trang trí thì aria-hidden", ok: /aria-hidden=\{illustrationAlt \? undefined : true\}/.test(nguonEmptyState) },
+].filter(r => !r.ok);
+check("Ảnh minh hoạ trạng thái rỗng không lấn át chữ",
+  rangBuocAnh.length === 0,
+  rangBuocAnh.length === 0
+    ? "ảnh cao 128px, giữ tỷ lệ, tải trễ, và ẩn khỏi trình đọc màn hình khi chỉ là trang trí"
+    : `thiếu ${rangBuocAnh.length} ràng buộc: ${rangBuocAnh.map(r => r.ten).join(", ")}`);
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

@@ -6,7 +6,10 @@
       "file": "il-01-home-hero.png",
       "name": "Hero trang chủ",
       "status": "needs-review",
-      "target": { "component": null, "line": null },
+      "target": {
+        "component": null,
+        "line": null
+      },
       "conflict": "App không có màn marketing/landing nào. HomeHero.tsx (view 'home') là khối lý luận số liệu dày đặc (readiness, nhịp học, hành động kế tiếp), không có chỗ trống cho ảnh minh họa lối sống. Không có vị trí thật để ghép mà không thêm bố cục mới.",
       "askDamAbout": "Có muốn thêm một khối hero trang trí mới vào Dashboard.tsx (view home) chỉ để chứa ảnh này không? Đây là thay đổi bố cục, không phải chỉ ghép ảnh vào chỗ có sẵn."
     },
@@ -14,27 +17,31 @@
       "id": "IL-02",
       "file": "il-02-learning-path.png",
       "name": "Bản đồ tri thức",
-      "status": "approved",
+      "status": "wired",
       "target": {
         "component": "src/components/ConceptMasteryMap.tsx",
         "line": 112,
         "trigger": "môn đang mở chưa có tài liệu nạp (nhánh EmptyState 'Thêm tài liệu để dựng bản đồ khái niệm')"
       },
       "conflict": null,
-      "placement": "phía trên tiêu đề EmptyState, cao ~120-140px, ảnh nhỏ hơn chữ"
+      "placement": "phía trên tiêu đề EmptyState, cao ~120-140px, ảnh nhỏ hơn chữ",
+      "wiredAt": "2026-07-30",
+      "wiredNote": "Ghép qua prop `illustration` của EmptyState, cao 128px giữ tỷ lệ 3:2, alt=\"\" kèm aria-hidden vì ảnh thuần trang trí, loading=\"lazy\". Kiểm chứng trên bản chạy thật ở cả chế độ sáng và tối."
     },
     {
       "id": "IL-03",
       "file": "il-03-empty-learning.png",
       "name": "Bàn học trống chờ bắt đầu",
-      "status": "approved",
+      "status": "wired",
       "target": {
         "component": "src/components/Dashboard.tsx",
         "line": 240,
         "trigger": "recentAttempts.length === 0 (nhánh EmptyState 'Làm bài đầu tiên để có thống kê')"
       },
       "conflict": null,
-      "placement": "phía trên tiêu đề EmptyState, cao ~120-140px"
+      "placement": "phía trên tiêu đề EmptyState, cao ~120-140px",
+      "wiredAt": "2026-07-30",
+      "wiredNote": "Ghép qua prop `illustration` của EmptyState, cao 128px giữ tỷ lệ 3:2, alt=\"\" kèm aria-hidden vì ảnh thuần trang trí, loading=\"lazy\". Kiểm chứng trên bản chạy thật ở cả chế độ sáng và tối."
     },
     {
       "id": "IL-04",
@@ -105,7 +112,10 @@
       "file": "il-09-section-artwork.png",
       "name": "Artwork trang trí giữa các mục",
       "status": "needs-review",
-      "target": { "component": null, "line": null },
+      "target": {
+        "component": null,
+        "line": null
+      },
       "conflict": "Đi ngược trực tiếp việc đã làm ở vòng 18: đo được Khan có 102 tiêu đề mục, 0 tiêu đề có icon, và dự án đã GỠ 62 icon khỏi tiêu đề của chính mình vì lý do đó. Artwork lớn giữa mục còn nặng hơn icon đã gỡ.",
       "askDamAbout": "Có chắc muốn đảo ngược đúng quyết định vừa mất một vòng làm việc để đạt được không?"
     },

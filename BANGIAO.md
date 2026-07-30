@@ -88,6 +88,77 @@ khá nặng so với các icon SVG hiện có (100-400KB so với vài KB), nế
 
 ---
 
+### 30/07/2026 (lượt 21), ghép 2 ảnh minh hoạ, và một lỗi chế độ tối có sẵn từ trước
+
+Đàm giao bộ **10 ảnh GPT Image** kèm `manifest.json` phân loại sẵn: 2 ảnh `approved` ghép được
+ngay, 7 ảnh `needs-review` phải hỏi lại vì vị trí đề xuất đi ngược một quyết định đã đo trên
+Khan. Việc phân loại ấy tiết kiệm được đúng thứ đáng tiết kiệm: nó chặn tôi khỏi ghép ảnh vào
+những chỗ mà chính dự án đã cố ý bỏ hình đi sau khi đo.
+
+**Đã ghép 2 ảnh `approved`:**
+
+| Ảnh | Vào đâu | Hiện khi nào |
+|---|---|---|
+| IL-02 bản đồ tri thức | `ConceptMasteryMap` | môn đang mở chưa có tài liệu nạp |
+| IL-03 bàn học trống | `Dashboard` (màn Tổng quan) | chưa có lượt bài nào trong lịch sử |
+
+`EmptyState` đã có prop `illustration` từ lượt 17 nhưng kiểu là `React.ReactNode`. Đổi sang
+**đường dẫn ảnh** như README đề nghị, để mỗi chỗ dùng không phải tự viết lại thẻ `img` và tự
+đoán cỡ. Ràng buộc đặt trong chính component: cao **128px** (`h-32`), `w-auto` giữ tỷ lệ 3:2,
+`loading="lazy"`, và `alt=""` kèm `aria-hidden` vì ảnh thuần trang trí (mọi thông tin đã nằm
+trong tiêu đề và mô tả, bắt trình đọc màn hình đọc thêm mô tả ảnh là làm người dùng nghe hai
+lần). Khoá CHIỀU CAO chứ không khoá chiều rộng, vì chiều cao mới quyết định ảnh có lấn át khối
+chữ hay không.
+
+**PHÁT HIỆN QUAN TRỌNG NHẤT CỦA LƯỢT NÀY, và nó không liên quan tới ảnh.**
+
+Định thêm `dark:opacity-80` để ảnh thôi chói trong chế độ tối, nên đi kiểm xem lớp ấy có chạy
+thật không. Kết quả: **không**. Tailwind v4 dịch `dark:x` thành
+`@media (prefers-color-scheme: dark)`, tức bám thiết lập **hệ điều hành**. Nhưng dự án bật chế
+độ tối bằng `document.documentElement.classList.add("dark")` (`db.ts` dòng 557), tức bằng **công
+tắc trong ứng dụng**. Hai vế sai ngược chiều nhau:
+
+- bật công tắc tối trong app, hệ điều hành đang sáng → nền chuyển tối, **không lớp `dark:` nào
+  chạy**
+- hệ điều hành đang tối, app để chế độ sáng → **mọi lớp `dark:` chạy** trên một giao diện sáng
+
+**Lỗi này CÓ SẴN từ trước, không phải do đợt ghép ảnh**: `dark:bg-zinc-800` và
+`dark:hover:bg-zinc-700` ở quy tắc thanh cuộn chưa từng chạy lần nào kể từ khi được viết.
+
+Đây là **lần thứ tư** dự án bắt được cùng một khuôn *lách qua hệ thống mà không có gì kêu lên*,
+sau `brand-danger` chưa từng được định nghĩa, `animate-fade-in-up` chưa từng có token, và 72 chỗ
+màu đi vòng qua bộ token. Lần này khó thấy nhất trong bốn lần: **lớp không hề viết sai và CSS
+sinh ra hoàn toàn hợp lệ**, chỉ là gắn vào một điều kiện không bao giờ khớp với cách app bật chế
+độ tối. Không một phép kiểm nào trước đây có thể thấy, vì cả `tsc` lẫn bộ quét token đều chỉ
+kiểm tên lớp.
+
+Sửa bằng một dòng trong `index.css`: `@custom-variant dark (&:where(.dark, .dark *));`. Kiểm
+chứng: CSS sinh ra đổi từ `@media(prefers-color-scheme:dark){.dark\:opacity-80{...}}` thành
+`.dark\:opacity-80:where(.dark,.dark *){...}`, và đo trên bản chạy thật với lớp `.dark` bật thì
+`getComputedStyle(img).opacity` trả về đúng `0.8`.
+
+**Bộ kiểm 213 lên 215**: `AG10` canh biến thể `dark`, `AG11` canh ba ràng buộc của ảnh minh hoạ.
+Cả hai đã thử phá bằng bản biên dịch được và đều bắt.
+
+**Kiểm chứng trên bản chạy thật**: cả hai ảnh đều lên đúng 180x128 (giữ tỷ lệ 3:2 từ ảnh gốc
+900x600), `complete: true`, ở cả chế độ sáng và chế độ tối. Ảnh vào build thành asset riêng
+(251KB và 297KB) chứ không nhúng vào JS, nên chỉ tải khi nhánh rỗng thật sự render.
+
+**Một chuyện về lối vào màn Tổng quan.** IL-03 ghép vào `Dashboard.tsx`, mà màn này **không có
+mục nào trên thanh điều hướng**: nó chỉ vào được qua bảng lệnh Cmd+K, mục "Mở màn Tổng quan".
+Chính mã nguồn đã ghi chú lý do (trùng vai trò với Bàn học nên rút khỏi thanh). Ghi lại vì nghĩa
+là ảnh này nằm ở màn ít người tới nhất.
+
+**Ghi nhận, không sửa**: cả hai ảnh có nhiều vùng trong suốt ở trên và dưới (nội dung chỉ chiếm
+phần giữa khung 900x600), nên khi cao 128px thì phần vẽ thật chỉ khoảng 80px, trông tách khỏi
+tiêu đề. Sửa được bằng cách cắt biên ảnh nguồn, nhưng đó là sửa tài sản chứ không phải sửa mã,
+nên để Đàm quyết.
+
+**Còn 7 ảnh `needs-review`, đã hỏi Đàm theo đúng câu ở `askDamAbout` của manifest, chưa ghép
+ảnh nào trong số đó.**
+
+---
+
 ### 29/07/2026 (lượt 20), ĐÍNH CHÍNH một dòng sai trong chính bản đánh giá của tôi
 
 Lượt này chủ yếu là sửa lỗi của chính tôi, nên ghi kỹ.

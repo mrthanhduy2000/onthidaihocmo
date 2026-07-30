@@ -50,8 +50,20 @@ interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
-  /** Hình khối phẳng tự vẽ, chỉ dùng cho trạng thái rỗng của cả một màn. */
-  illustration?: React.ReactNode;
+  /**
+   * Đường dẫn ảnh minh hoạ, lấy từ `src/assets/illustrations` qua `import`.
+   *
+   * CHỮ VẪN LÀ CHỦ THỂ, ẢNH LÀ PHỤ. Ảnh cao 128px, tức thấp hơn khối chữ bên dưới nó, đúng
+   * nguyên tắc ở AGENTS.md 4.9g và 4.9h. Bản đo Khan cho trạng thái rỗng không có ảnh nào cả,
+   * nên đây là chỗ dự án cố ý đi khác Khan một chút, và chỉ ở trạng thái rỗng: đó là lúc màn
+   * hình trống trải nhất và người học cần một tín hiệu rằng chỗ này sẽ có nội dung.
+   *
+   * Ảnh THUẦN TRANG TRÍ nên để `alt=""` và `aria-hidden`: mọi thông tin đã nằm trong tiêu đề
+   * và mô tả, bắt trình đọc màn hình đọc thêm một mô tả ảnh là làm người dùng nghe hai lần.
+   */
+  illustration?: string;
+  /** Chỉ đặt khi ảnh MANG THÔNG TIN mà chữ không nói. Để trống thì ảnh là trang trí. */
+  illustrationAlt?: string;
 }
 
 export default function EmptyState({
@@ -60,10 +72,28 @@ export default function EmptyState({
   actionLabel,
   onAction,
   illustration,
+  illustrationAlt,
 }: EmptyStateProps) {
   return (
     <div className="py-10 max-w-[42rem] space-y-3">
-      {illustration && <div className="pb-2">{illustration}</div>}
+      {illustration && (
+        <img
+          src={illustration}
+          alt={illustrationAlt || ""}
+          aria-hidden={illustrationAlt ? undefined : true}
+          loading="lazy"
+          decoding="async"
+          width={192}
+          height={128}
+          /*
+            `w-auto` giữ đúng tỷ lệ gốc 3:2, `h-32` khoá chiều cao ở 128px. Khoá chiều cao chứ
+            không khoá chiều rộng vì chiều cao mới là thứ quyết định ảnh có lấn át khối chữ hay
+            không. `dark:opacity-80` hạ độ chói trong chế độ tối: nền ảnh trong suốt nhưng nội
+            dung là các mảng be, kem, vàng nhạt, nên trên nền tối chúng sáng hơn hẳn chữ.
+          */
+          className="h-32 w-auto pb-2 select-none dark:opacity-80"
+        />
+      )}
 
       <h3 className="text-xl font-bold text-text-primary font-sans">{title}</h3>
 

@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, Play, Calendar } from "lucide-react";
 import EmptyState from "./EmptyState";
+import anhBanDoTriThuc from "../assets/illustrations/il-02-learning-path.png";
 import { kbService, KnowledgeNode } from "../services/kbService";
 import { dbService, questions } from "../services/db";
 import { ExamAttempt } from "../types";
@@ -84,7 +85,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-primary/60 pb-5">
         <div className="space-y-1">
           <h3 className="text-md font-medium font-display text-text-primary">
-<span>Bản đồ thông thạo khái niệm</span>
+            <span>Bản đồ thông thạo khái niệm</span>
           </h3>
           <p className="text-2xs text-text-muted leading-relaxed font-sans max-w-xl">
             Không chỉ chấm điểm, hệ thống theo dõi mức độ thông thạo của từng khái niệm trong tài liệu để cá nhân hóa lộ trình và tự động cảnh báo điều kiện tiên quyết.
@@ -110,6 +111,7 @@ export default function ConceptMasteryMap({ onStartExam }: ConceptMasteryMapProp
           làm, vì tưởng hệ thống đang làm hộ.
         */
         <EmptyState
+          illustration={anhBanDoTriThuc}
           title="Thêm tài liệu để dựng bản đồ khái niệm"
           description="Bản đồ này dựng từ giáo trình và tài liệu của môn. Môn đang mở chưa có tài liệu nào, nên chưa có khái niệm để vẽ."
         />

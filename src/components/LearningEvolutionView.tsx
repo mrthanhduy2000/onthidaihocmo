@@ -213,7 +213,7 @@ export default function LearningEvolutionView() {
       {activeTab === "timeline" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Diễn biến độ thạo qua từng lần ôn</span>
+            <span>Diễn biến độ thạo qua từng lần ôn</span>
           </h3>
 
           {snapshots.length === 0 ? (
@@ -399,7 +399,7 @@ export default function LearningEvolutionView() {
       {activeTab === "forgetting" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-6">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Mô hình Đường cong Quên Ebbinghaus & Lịch Ôn tập Thích ứng</span>
+            <span>Mô hình Đường cong Quên Ebbinghaus & Lịch Ôn tập Thích ứng</span>
           </h3>
 
           <p className="text-sm text-text-secondary">
@@ -448,7 +448,7 @@ export default function LearningEvolutionView() {
       {activeTab === "journey" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Nhật ký Tiến trình Học tập Tổng hợp</span>
+            <span>Nhật ký Tiến trình Học tập Tổng hợp</span>
           </h3>
 
           <div className="space-y-3">
@@ -479,7 +479,7 @@ export default function LearningEvolutionView() {
       {activeTab === "milestones" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Cột mốc Tiến bộ Học thuật</span>
+            <span>Cột mốc Tiến bộ Học thuật</span>
           </h3>
 
           <div className="space-y-3">
@@ -505,7 +505,7 @@ export default function LearningEvolutionView() {
       {activeTab === "patterns" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Khai phá quy luật phản xạ học tập</span>
+            <span>Khai phá quy luật phản xạ học tập</span>
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -529,7 +529,7 @@ export default function LearningEvolutionView() {
       {activeTab === "audit" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Nhật ký kiểm toán biến đổi mô hình người học</span>
+            <span>Nhật ký kiểm toán biến đổi mô hình người học</span>
           </h3>
 
           <div className="space-y-3">

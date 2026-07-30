@@ -127,7 +127,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium font-display text-text-primary">
-<span>Bản đồ lộ trình học tập trực quan</span>
+                <span>Bản đồ lộ trình học tập trực quan</span>
               </h3>
               <button 
                 onClick={handleRefresh}
@@ -247,7 +247,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
             <h3 className="text-sm font-medium font-display text-text-primary">
-<span>Bản đồ nhiệt tri thức</span>
+              <span>Bản đồ nhiệt tri thức</span>
             </h3>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
               Mỗi ô vuông đại diện cho 1 khái niệm cốt lõi. Màu đậm biểu thị độ thông thạo xuất sắc.
@@ -294,7 +294,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
             <h3 className="text-sm font-medium font-display text-text-primary">
-<span>Dự báo tiến trình học</span>
+              <span>Dự báo tiến trình học</span>
             </h3>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
               Phân tích tốc độ làm đề kết hợp đường cong lãng quên để dự tính chu kỳ ôn tập chuẩn xác.
@@ -330,7 +330,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
         <div className="bg-bg-card border border-border-primary rounded-xl p-5 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.01)] flex flex-col justify-between">
           <div className="space-y-1">
             <h3 className="text-sm font-medium font-display text-text-primary">
-<span>Giám sát bộ điều phối AI</span>
+              <span>Giám sát bộ điều phối AI</span>
             </h3>
             <p className="text-2xs text-text-muted leading-relaxed font-sans">
               Thống kê lưu lượng cuộc gọi, ngân sách tài nguyên và tính năng bảo mật ngoại tuyến (offline fallback rate).

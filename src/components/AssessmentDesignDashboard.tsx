@@ -251,7 +251,7 @@ export default function AssessmentDesignDashboard({ onStartExam }: AssessmentDes
       {/* Exam Rhythm & Pacing Track */}
       <div className="space-y-3">
         <h4 className="text-xs font-semibold text-text-primary">
-<span>Sơ đồ Pacing & Cognitive Load Rhythm Sequence</span>
+          <span>Sơ đồ Pacing & Cognitive Load Rhythm Sequence</span>
         </h4>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">

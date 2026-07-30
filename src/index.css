@@ -1,6 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
 
+/*
+  BIẾN THỂ `dark:` PHẢI BÁM LỚP `.dark`, KHÔNG BÁM THIẾT LẬP HỆ ĐIỀU HÀNH.
+
+  Tìm ra ngày 30/07/2026 khi ghép ảnh minh hoạ. Tailwind v4 mặc định dịch `dark:x` thành
+  `@media (prefers-color-scheme: dark) { .dark\:x { ... } }`, tức bám thiết lập của HỆ ĐIỀU
+  HÀNH. Nhưng dự án này bật chế độ tối bằng `document.documentElement.classList.add("dark")`
+  (`db.ts` dòng 557), tức bằng CÔNG TẮC TRONG ỨNG DỤNG.
+
+  Hai vế đều sai, và sai ngược chiều nhau:
+
+    người dùng bật công tắc tối trong app, hệ điều hành đang sáng
+      -> nền chuyển tối, nhưng KHÔNG lớp `dark:` nào chạy
+    hệ điều hành đang tối, người dùng để app ở chế độ sáng
+      -> mọi lớp `dark:` chạy, tức áp quy tắc chế độ tối lên một giao diện sáng
+
+  Đây là lần thứ TƯ dự án bắt được cùng một khuôn "lách qua hệ thống mà không có gì kêu lên",
+  sau `brand-danger` chưa từng được định nghĩa, `animate-fade-in-up` chưa từng có token, và 72
+  chỗ màu đi vòng qua bộ token. Lần này thậm chí không phải lớp sai: `dark:opacity-80` sinh ra
+  CSS hợp lệ, chỉ là gắn vào điều kiện không bao giờ khớp với cách app bật chế độ tối.
+
+  Lỗi này CÓ SẴN từ trước, không phải do đợt ghép ảnh: `dark:bg-zinc-800` và
+  `dark:hover:bg-zinc-700` ở quy tắc thanh cuộn phía dưới cũng chưa từng chạy.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /*
     TOKEN CHUYỂN ĐỘNG. Ba con số, không hơn.

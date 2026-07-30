@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau hai mươi lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 29/07/2026, sau hai mươi mốt lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
 
 ---
 
@@ -25,7 +25,43 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: ĐÍNH CHÍNH một dòng sai trong chính bản đánh giá
+## Lượt mới nhất: ghép 2 ảnh minh hoạ, và một lỗi chế độ tối có sẵn từ trước
+
+Đàm giao bộ **10 ảnh GPT Image** kèm `manifest.json` phân loại sẵn: 2 ảnh `approved`, 7 ảnh
+`needs-review` phải hỏi lại vì vị trí đề xuất đi ngược một quyết định đã đo trên Khan.
+
+**Đã ghép**: IL-02 vào `ConceptMasteryMap` (môn chưa có tài liệu), IL-03 vào `Dashboard` (chưa có
+lượt bài nào). Prop `illustration` của `EmptyState` đổi từ `React.ReactNode` sang **đường dẫn
+ảnh**, ràng buộc đặt trong chính component: cao **128px**, `w-auto` giữ tỷ lệ, `loading="lazy"`,
+`alt=""` kèm `aria-hidden` vì ảnh thuần trang trí.
+
+### PHÁT HIỆN QUAN TRỌNG NHẤT, và không liên quan tới ảnh
+
+**Biến thể `dark:` chưa từng chạy.** Tailwind v4 dịch `dark:x` thành
+`@media (prefers-color-scheme: dark)`, tức bám **hệ điều hành**. Nhưng dự án bật chế độ tối bằng
+`classList.add("dark")`, tức bằng **công tắc trong app**. Hai vế sai ngược chiều:
+
+- bật công tắc tối, hệ điều hành sáng → nền tối nhưng **không lớp `dark:` nào chạy**
+- hệ điều hành tối, app để sáng → **mọi lớp `dark:` chạy** trên giao diện sáng
+
+Lỗi **có sẵn từ trước**: `dark:bg-zinc-800` ở thanh cuộn chưa từng chạy lần nào.
+
+Lần thứ **tư** bắt được khuôn *lách qua hệ thống mà không có gì kêu lên*, và là lần khó thấy
+nhất: **lớp không viết sai, CSS sinh ra hợp lệ**, chỉ gắn vào điều kiện không bao giờ khớp.
+
+Sửa bằng một dòng: `@custom-variant dark (&:where(.dark, .dark *));`
+
+Bộ kiểm 213 lên **215**: `AG10`, `AG11`. Cả hai đã thử phá và đều bắt.
+
+**Ghi nhận, không sửa**: hai ảnh có nhiều vùng trong suốt trên/dưới nên phần vẽ thật chỉ khoảng
+80px trong khung 128px. Sửa được bằng cắt biên ảnh nguồn, nhưng đó là sửa tài sản không phải sửa
+mã, để Đàm quyết.
+
+**Còn 7 ảnh `needs-review`, đã hỏi Đàm, chưa ghép ảnh nào trong số đó.**
+
+---
+
+## Lượt trước: ĐÍNH CHÍNH một dòng sai trong chính bản đánh giá
 
 Bản đánh giá ở lượt 17 xếp "Loading State" mức **Lớn** với lý do "0 skeleton". **Sai.**
 
@@ -846,7 +882,7 @@ mọi kết luận phía sau thành vô nghĩa, trong khi màn hình trông vẫ
 | Chủ đề | 22 |
 | Component | 30 file |
 | Service | 46 file |
-| Phép tự kiểm chứng | **213**, chia 33 nhóm A đến AG, đạt toàn bộ |
+| Phép tự kiểm chứng | **215**, chia 33 nhóm A đến AG, đạt toàn bộ |
 | Môn đang hoạt động | Hành vi khách hàng (`customer_behavior`) |
 | Môn đã đóng | Kinh tế chính trị (`poli_econ`), đã thi xong, cố ý gỡ khỏi danh sách |
 

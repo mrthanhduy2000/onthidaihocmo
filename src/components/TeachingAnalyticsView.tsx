@@ -184,7 +184,7 @@ export default function TeachingAnalyticsView() {
           {/* Current Adaptive Policy Panel */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary">
-<span>Chính sách giảng dạy tự động</span>
+              <span>Chính sách giảng dạy tự động</span>
             </h3>
 
             <div className="space-y-3 divide-y divide-border-primary text-sm">
@@ -230,7 +230,7 @@ export default function TeachingAnalyticsView() {
           {/* Quick Performance Trends */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary">
-<span>Chỉ số Học thuật Chi tiết</span>
+              <span>Chỉ số Học thuật Chi tiết</span>
             </h3>
 
             <div className="space-y-4 text-sm">
@@ -276,7 +276,7 @@ export default function TeachingAnalyticsView() {
       {activeSubTab === "strategies" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>So sánh Hiệu quả các Phương pháp Giảng dạy</span>
+            <span>So sánh Hiệu quả các Phương pháp Giảng dạy</span>
           </h3>
 
           <div className="overflow-x-auto">
@@ -318,7 +318,7 @@ export default function TeachingAnalyticsView() {
           {/* Hardest Concepts */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary">
-<span>Khái niệm Thách thức Nhất</span>
+              <span>Khái niệm Thách thức Nhất</span>
             </h3>
 
             <div className="space-y-3">
@@ -343,7 +343,7 @@ export default function TeachingAnalyticsView() {
           {/* Frequent Misconceptions */}
           <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
             <h3 className="text-base font-semibold text-text-primary">
-<span>Bẫy Hiểu sai Phổ biến</span>
+              <span>Bẫy Hiểu sai Phổ biến</span>
             </h3>
 
             <div className="space-y-3">
@@ -368,7 +368,7 @@ export default function TeachingAnalyticsView() {
       {activeSubTab === "audit" && (
         <div className="bg-bg-card border border-border-primary rounded-xl p-6 shadow-sm space-y-4">
           <h3 className="text-base font-semibold text-text-primary">
-<span>Nhật ký kiểm toán quyết định chính sách</span>
+            <span>Nhật ký kiểm toán quyết định chính sách</span>
           </h3>
 
           <div className="space-y-3">

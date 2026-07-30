@@ -15,6 +15,7 @@ import HomeHero from "./HomeHero";
 import DailyLearningStory from "./DailyLearningStory";
 import ContinueLearningCard from "./ContinueLearningCard";
 import EmptyState from "./EmptyState";
+import anhBanHocTrong from "../assets/illustrations/il-03-empty-learning.png";
 import { DashboardOverview, Statistics, ExamAttempt, DifficultyLevel } from "../types";
 
 interface DashboardProps {
@@ -238,6 +239,7 @@ Tùy chọn ôn tập thêm
 
             {recentAttempts.length === 0 ? (
               <EmptyState
+                illustration={anhBanHocTrong}
                 title="Làm bài đầu tiên để có thống kê"
                 description="Mỗi lượt bạn nộp sẽ hiện ở đây kèm điểm và ngày làm, để nhìn lại nhịp học theo thời gian."
               />
