@@ -94,6 +94,15 @@ const PHUONG_AN = ["a", "b", "c", "d"];
  *
  * Trả về số dương khi đáp án đúng dài hơn, số âm khi nó ngắn hơn.
  */
+/**
+ * Phải khớp `NGUONG_LECH_DO_DAI` trong `src/services/ai.ts`. Nhóm kiểm AJ5 canh sự khớp này.
+ *
+ * Bản đầu của file này để 0,2 trong khi engine đã chốt 0,1, nên công cụ đo báo "5 câu vượt ngưỡng"
+ * còn engine tính ra 140. Đúng cái kiểu ba bản chép trôi ra khác nhau mà AJ5 sinh ra để canh, chỉ
+ * là lúc ấy AJ5 mới canh công thức chứ chưa canh ngưỡng.
+ */
+const NGUONG = 0.10;
+
 export function doLechDoDai(q) {
   const dungLen = String(q.options?.[q.correctAnswer] ?? "").length;
   if (dungLen === 0) return 0;
@@ -157,8 +166,8 @@ function doMotNganHang(nhan, cauHoi, doThi) {
     const dem = lechSoVoiDaiNhi.filter(x => x > nguong).length;
     console.log(`  Chênh hơn ${String(nguong).padStart(2)} ký tự so với phương án dài nhì: ${String(dem).padStart(3)} câu, tức ${so((dem / n) * 100)}%`);
   }
-  const vuotNguong = cauHoi.filter(q => doLechDoDai(q) > 0.2).length;
-  console.log(`  Vượt ngưỡng 20% của phép kiểm AJ1     : ${vuotNguong} câu, tức ${so((vuotNguong / n) * 100)}%`);
+  const vuotNguong = cauHoi.filter(q => doLechDoDai(q) > NGUONG).length;
+  console.log(`  Vượt ngưỡng ${NGUONG * 100}% của phép kiểm AJ1    : ${vuotNguong} câu, tức ${so((vuotNguong / n) * 100)}%`);
   console.log(`\n  ĐIỂM NẾU LUÔN CHỌN PHƯƠNG ÁN DÀI NHẤT MÀ KHÔNG ĐỌC CÂU HỎI: ${so(tyLeDaiNhat / 10)} trên 10`);
 
   // -------------------------------------------- 2. Vị trí đáp án đúng trong file gốc
@@ -298,7 +307,7 @@ try {
   for (const t of tongKet) {
     const dat = t.tyLeDaiNhat >= 20 && t.tyLeDaiNhat <= 35;
     console.log(`${dat ? "DAT " : "LECH"}  ${t.ten}`);
-    console.log(`      ${t.n} câu, đáp án đúng dài nhất ở ${so(t.tyLeDaiNhat)}%, ${t.vuotNguong} câu vượt ngưỡng 20%`);
+    console.log(`      ${t.n} câu, đáp án đúng dài nhất ở ${so(t.tyLeDaiNhat)}%, ${t.vuotNguong} câu vượt ngưỡng ${NGUONG * 100}%`);
   }
   console.log("\nVùng đạt của tỷ lệ dài nhất là 20% tới 35%, quanh mức ngẫu nhiên 25%.");
 } finally {

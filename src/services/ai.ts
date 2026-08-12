@@ -227,6 +227,54 @@ export function canBangDoDaiPhuongAn(q: any): boolean {
 }
 
 /**
+ * Mẫu bắt đoạn lời giải liệt kê tên các phương án SAI, ví dụ "các phương án a, c và d không...".
+ * Đòi ít nhất hai nhãn liền nhau để không dính vào câu "đáp án b đúng vì...".
+ *
+ * `(?![\p{L}\p{M}])` là phần bắt buộc, đừng bỏ. Bản đầu thiếu nó và **báo nhầm ngay lượt chạy thử
+ * đầu tiên**: "Phương án a bị ngược mệnh đề" bị đọc thành nhãn 'a' rồi nhãn 'b' của chữ "bị", còn
+ * "Phương án b chính xác" thành nhãn 'b' rồi nhãn 'c' của chữ "chính". Hai câu #3084 và #3137
+ * hoàn toàn lành lặn bị kết tội, và tệ hơn, công cụ viết lại đã vứt bỏ 4 bản viết lại tốt vì cùng
+ * lý do ấy, tức đốt lượt gọi Gemini rồi trả câu về đúng bản lệch cũ.
+ *
+ * Chép nguyên văn sang `NHAN_PHUONG_AN_TRONG_LOI_GIAI` của `scripts/rebalance-distractors.mjs`;
+ * phép kiểm AJ5 canh hai bản khớp nhau.
+ */
+export const NHAN_PHUONG_AN_TRONG_LOI_GIAI =
+  /(?:phương án|đáp án|lựa chọn)\s+((?:[a-d](?![\p{L}\p{M}])\s*(?:,|và|hoặc|\/|;)?\s*){2,})/giu;
+
+/**
+ * Lời giải có tự gọi chính ĐÁP ÁN ĐÚNG là một phương án sai không.
+ *
+ * VÌ SAO CÓ HÀM NÀY, đây là lỗi nội dung nguy hiểm nhất bắt được trong đợt 12/08/2026. Lời nhắc
+ * viết lại phương án nhiễu có nêu ví dụ bằng giá trị cụ thể, "vẫn gọi tên phương án theo đúng lối
+ * 'phương án b, c, d không phản ánh...'", với ý là giữ VĂN PHONG. Mô hình hiểu thành giữ đúng BA
+ * CHỮ CÁI ấy, nên sinh ra lời giải gọi chính đáp án đúng là phương án sai:
+ *
+ *     câu #2004, đáp án đúng 'b'  ->  "Các phương án b, c, d không phản ánh đúng..."
+ *     câu #2012, đáp án đúng 'c'  ->  "Các phương án b, c, d không phản ánh đúng..."
+ *
+ * Bài học ghi lại để khỏi lặp: chỉ dẫn nêu ví dụ bằng giá trị cụ thể thì mô hình sẽ chép lại chính
+ * giá trị ấy. Nêu ví dụ bằng ô trống, hoặc bơm thẳng giá trị thật của từng câu vào lời nhắc.
+ *
+ * Thẩm định ngược KHÔNG bắt được lỗi này, vì nó chỉ hỏi phương án nào đúng chứ không đọc lời giải.
+ * Một chốt chặn đúng đắn vẫn có vùng mù rộng đúng bằng phạm vi câu hỏi nó đặt ra.
+ *
+ * Còn một đường lây nữa khiến lỗi này đắt hơn vẻ ngoài: `optionShuffle` ĐỌC lời giải để tìm nhãn
+ * phương án rồi remap theo thứ tự đã trộn, nên nhãn sai được remap y như thật và sai tiếp sang bản
+ * đã trộn.
+ */
+export function loiGiaiGoiNhamDapAnDung(loiGiai: string, chuCaiDung: string): boolean {
+  const chuoi = String(loiGiai || "").toLowerCase();
+  const chuCai = String(chuCaiDung || "").toLowerCase();
+  const re = new RegExp(NHAN_PHUONG_AN_TRONG_LOI_GIAI.source, "giu");
+  for (let m = re.exec(chuoi); m; m = re.exec(chuoi)) {
+    const chuCaiTrongDoan: string[] = m[1].match(/[a-d]/g) ?? [];
+    if (chuCaiTrongDoan.includes(chuCai)) return true;
+  }
+  return false;
+}
+
+/**
  * Nhờ AI viết lại ĐÚNG BA phương án nhiễu cho một câu bị lệch độ dài, giữ nguyên câu hỏi và đáp
  * án đúng. Trả về câu đã sửa, hoặc `null` nếu không sửa được.
  *
@@ -236,14 +284,18 @@ export function canBangDoDaiPhuongAn(q: any): boolean {
  *    giá trị học, vì đáp án đúng chính là phần người học cần đọc kỹ nhất.
  * 2. **Viết lại luôn phần lời giải nói về phương án nhiễu.** Lời giải cũ đang mô tả nội dung cũ,
  *    để nguyên là màn hình tự mâu thuẫn. Chú ý: `optionShuffle` ĐỌC lời giải để tìm nhãn phương
- *    án rồi remap theo thứ tự mới, nên lời giải mới phải giữ đúng lối gọi tên "phương án b, c, d".
+ *    án rồi remap theo thứ tự mới.
+ *
+ *    **Bơm thẳng ba chữ cái thật của câu vào lời nhắc, tuyệt đối không nêu ví dụ bằng "b, c, d".**
+ *    Bản đầu viết đúng như vậy với ý là giữ VĂN PHONG, và mô hình chép lại nguyên ba chữ cái ấy,
+ *    đẻ ra lời giải gọi chính đáp án đúng là phương án sai. Xem `loiGiaiGoiNhamDapAnDung`.
  * 3. **Đi qua `/api/ai/complete`**, cổng chuyển tiếp đã có, chứ không dựng cổng mới. Bất biến 4.8:
  *    máy chủ không giữ dữ liệu môn học, chỉ chuyển tiếp lời nhắc.
  */
 async function vietLaiPhuongAnNhieu(q: any, subjectName: string): Promise<any | null> {
   const dung = String(q?.options?.[q?.correctAnswer] ?? "");
-  const nhieuCu = CHU_CAI_PHUONG_AN
-    .filter(k => k !== q.correctAnswer)
+  const chuCaiNhieu = CHU_CAI_PHUONG_AN.filter(k => k !== q.correctAnswer);
+  const nhieuCu = chuCaiNhieu
     .map(k => `${k}) ${String(q?.options?.[k] ?? "")}`)
     .join("\n");
   const doDaiDich = dung.length;
@@ -255,7 +307,7 @@ Câu hỏi: ${String(q?.question ?? "")}
 Đáp án ĐÚNG (giữ nguyên, tuyệt đối không sửa, dài ${doDaiDich} ký tự):
 ${dung}
 
-Ba phương án nhiễu hiện tại, cần viết lại:
+Ba phương án nhiễu hiện tại, cần viết lại, theo đúng thứ tự '${chuCaiNhieu.join("', '")}':
 ${nhieuCu}
 
 Lời giải hiện tại:
@@ -266,7 +318,8 @@ Hãy viết lại ĐÚNG BA phương án nhiễu theo các ràng buộc sau:
 2. Cùng cấu trúc ngữ pháp và cùng mức độ chi tiết với đáp án đúng.
 3. SAI rõ ràng về mặt học thuật. Mỗi phương án nhắm vào một hiểu sai có thật: nhầm sang khái niệm lân cận, đảo ngược quan hệ nhân quả, hoặc lấy một phần thay cho toàn thể.
 4. Tuyệt đối KHÔNG được là cách diễn đạt khác của đáp án đúng, và không phương án nào được đúng một phần tới mức gây tranh cãi.
-5. Viết lại phần lời giải cho khớp nội dung mới, vẫn gọi tên phương án theo lối "phương án b, c, d không phản ánh...".
+5. Viết lại phần lời giải cho khớp nội dung mới, gồm hai ý: vì sao đáp án đúng là đúng, và vì sao ba phương án nhiễu là sai.
+6. Trong lời giải, ba chữ cái được phép gọi là phương án sai CHỈ GỒM: ${chuCaiNhieu.join(", ")}. Tuyệt đối không nhắc chữ '${q.correctAnswer}' trong danh sách phương án sai, vì '${q.correctAnswer}' chính là đáp án đúng.
 
 Trả về JSON đúng lược đồ.`;
 
@@ -287,14 +340,15 @@ Trả về JSON đúng lược đồ.`;
     if (moi.length !== 3 || moi.some(s => s.length === 0)) return null;
 
     const options: any = { ...q.options };
-    const viTriNhieu = CHU_CAI_PHUONG_AN.filter(k => k !== q.correctAnswer);
-    viTriNhieu.forEach((k, i) => { options[k] = moi[i]; });
+    chuCaiNhieu.forEach((k, i) => { options[k] = moi[i]; });
 
-    const suaXong = {
-      ...q,
-      options,
-      explanation: String(parsed?.loiGiai ?? q.explanation ?? "").trim() || q.explanation,
-    };
+    const loiGiaiMoi = String(parsed?.loiGiai ?? q.explanation ?? "").trim() || q.explanation;
+    // Lời giải mới gọi chính đáp án đúng là phương án sai thì bỏ cả bản viết lại. Giữ lại câu lệch
+    // còn hơn đưa vào ngân hàng một lời giải tự mâu thuẫn, vì lời giải sai còn lây tiếp sang bản đã
+    // trộn qua `optionShuffle`.
+    if (loiGiaiGoiNhamDapAnDung(String(loiGiaiMoi ?? ""), String(q.correctAnswer ?? ""))) return null;
+
+    const suaXong = { ...q, options, explanation: loiGiaiMoi };
     // Chạy lại toàn bộ cổng chất lượng, không chỉ kiểm độ dài: bản viết lại vẫn có thể tạo ra hai
     // phương án trùng nhau hoặc một phương án rỗng.
     return isQualityQuestion(suaXong) ? suaXong : null;
