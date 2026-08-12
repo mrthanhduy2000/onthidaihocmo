@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 29/07/2026, sau hai mươi mốt lượt tái thiết kế giao diện theo Khan Academy. Đã rà hết tám màn cùng hộp thoại Cài đặt, và đang trong lượt rà thứ hai bằng con mắt người CHƯA có dữ liệu.
+**Cập nhật lần cuối**: 30/07/2026, sau hai mươi hai lượt. Đã rà hết tám màn cùng hộp thoại Cài đặt, xong lượt rà bằng con mắt người CHƯA có dữ liệu, và vừa dọn hai khoản nợ tồn từ đợt trước (dấu thập phân, bộ font thừa).
 
 ---
 
@@ -25,7 +25,51 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: ghép 2 ảnh minh hoạ, và một lỗi chế độ tối có sẵn từ trước
+## Lượt mới nhất: số viết kiểu Việt, font thừa, và ĐÍNH CHÍNH nhãn ảnh tôi gắn sai
+
+### Dấu thập phân, 46 chỗ
+
+| | Trước | Sau |
+|---|---|---|
+| Số thập phân hiển thị | `toFixed(1)` ra **"5.0 điểm"** | `soThapPhan()` ra **"5,0 điểm"** |
+| Số nguyên, ngày tháng | đã đúng từ trước qua `toLocaleString("vi-VN")` | giữ nguyên |
+
+Chỗ hiểm: hai quy ước **sống chung trên cùng một màn hình** suốt hai mươi lượt, "1.234 ký tự"
+đúng ngay cạnh "5.0 điểm" sai.
+
+**Ranh giới suýt thay nhầm**: `parseFloat(x.toFixed(2))` là phép **LÀM TRÒN** chứ không phải
+định dạng, có **8 chỗ** như vậy. Tìm thay hàng loạt sẽ âm thầm đổi giá trị tính toán mà biên
+dịch vẫn xanh. `AH1` chỉ bắt `.toFixed(` **không** nằm trong `parseFloat(`/`Number(`.
+
+### Font tải về mà không ai dùng
+
+Đợt 28/07 thay 371 chỗ dùng font đơn cách bằng `tabular-nums` nhưng **chỉ đổi chỗ DÙNG**, dòng
+`@import` vẫn tải JetBrains Mono mọi lần mở trang. Đo lại sau khi gỡ: còn đúng 1 yêu cầu font.
+Lần thứ **năm** bắt được khuôn "lách qua hệ thống mà không có gì kêu lên".
+
+### ĐÍNH CHÍNH: hai ảnh đang chạy thật đều không đạt
+
+Lượt trước tôi gắn `approved` cho IL-02 và IL-03 **theo mức khớp ngữ nghĩa với vị trí trong mã,
+chưa từng mở ảnh ra xem**. Lượt này đo:
+
+| | IL-03 (màn Tổng quan) | IL-02 (bản đồ tri thức) |
+|---|---|---|
+| Đo được | **CAM 73%**, **0%** điểm ảnh đủ đậm làm nét | ~15 vật thể, ở cỡ thật mỗi vật **~12px** |
+| Vấn đề | cam là màu **cảnh báo** của bộ token; 66% quá nhạt nên lóa trên nền tối | **không đọc được**; có chữ "A+" và một cái **cúp** ở trạng thái RỖNG |
+| Đổi cỡ cứu được? | không, lỗi ngữ nghĩa màu | không, phải cao 256px mới đọc được, lúc đó lấn át chữ |
+
+Cả 10 ảnh đều **3.000 tới 21.000 màu riêng biệt** (vector phẳng thật dưới ~50 màu).
+
+**Chưa gỡ ảnh nào**, vì đó là quyết định của Đàm. Số đo đã ghi vào `manifest.json` mục `doDuoc`.
+
+**Cần Đàm quyết**: giữ nguyên, hay tạo lại IL-02 với ảnh đơn giản hơn nhiều (3 tới 5 vật thể,
+không cúp không chữ), hay gỡ hẳn.
+
+Bộ kiểm 215 lên **218**, nhóm mới **AH**, cả ba đã thử phá và đều bắt được.
+
+---
+
+## Lượt trước: ghép 2 ảnh minh hoạ, và một lỗi chế độ tối có sẵn từ trước
 
 Đàm giao bộ **10 ảnh GPT Image** kèm `manifest.json` phân loại sẵn: 2 ảnh `approved`, 7 ảnh
 `needs-review` phải hỏi lại vì vị trí đề xuất đi ngược một quyết định đã đo trên Khan.

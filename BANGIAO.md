@@ -59,6 +59,69 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/07/2026, số viết theo cách đọc của người Việt, và ĐÍNH CHÍNH nhãn ảnh tôi gắn sai
+
+Hai việc rời nhau trong cùng một lượt.
+
+#### 1. Dấu thập phân: 46 chỗ in dấu chấm vào giữa câu tiếng Việt
+
+Tiếng Việt dùng **dấu phẩy** làm dấu thập phân, dấu chấm làm dấu phân nhóm nghìn, ngược hẳn
+tiếng Anh. Nên "mục tiêu 8.5 điểm" vừa sai quy ước vừa đọc ra thành tám nghìn năm trăm.
+
+Chỗ hiểm là dự án đã dùng ĐÚNG `toLocaleString("vi-VN")` cho số nguyên và ngày tháng từ lâu,
+nên **một màn hình có thể hiện cùng lúc "1.234 ký tự" (đúng) và "5.0 điểm" (sai)**. Hai quy ước
+sống chung suốt hai mươi lượt rà vì không có gì bắt chúng phải khớp nhau.
+
+Thêm `src/services/numberFormat.ts` với hàm `soThapPhan()`, rồi thay 24 chỗ trong tầng trình
+bày và 22 chỗ trong các chuỗi hiển thị của tầng dịch vụ (`examForecaster`, `learnerModel`,
+`learningEngine`). Chỉ đổi CHỮ, không đụng ngưỡng hay công thức nào, đúng tiền lệ đợt dịch năm
+chuỗi giọng kỹ sư trước đây.
+
+**Ranh giới quan trọng nhất, suýt thay nhầm**: `parseFloat(x.toFixed(2))` và `Number(...)`
+**không phải định dạng hiển thị mà là phép LÀM TRÒN**, kết quả chảy tiếp vào phép tính khác. Có
+**5 chỗ** như vậy trong `src/services` cộng 3 chỗ trong `Dashboard2Widgets`. Một lệnh tìm thay
+hàng loạt sẽ âm thầm đổi giá trị tính toán ở 8 chỗ mà biên dịch vẫn xanh. Phép kiểm `AH1` canh
+đúng ranh giới này bằng cách chỉ bắt `.toFixed(` **không** nằm trong `parseFloat(`/`Number(`.
+
+#### 2. Bộ font tải về mà không ai dùng
+
+Đợt 28/07/2026 thay 371 chỗ dùng font đơn cách bằng `tabular-nums`, nhưng **chỉ đổi chỗ DÙNG**.
+Dòng `@import` vẫn tải đủ bốn kiểu chữ JetBrains Mono trên **mọi lần mở trang**, và token
+`--font-mono` vẫn trỏ tới bộ font không ai gọi. Đo trên bản chạy sau khi gỡ: còn đúng 1 yêu cầu
+font, không còn JetBrains Mono.
+
+Lần thứ **năm** dự án bắt được khuôn "lách qua hệ thống mà không có gì kêu lên", sau
+`brand-danger` chưa định nghĩa, `animate-fade-in-up` chưa có token, 72 chỗ màu đi vòng qua bộ
+token, và `dark:` bám nhầm hệ điều hành. Trình duyệt tải font thừa mà không báo lỗi, biên dịch
+vẫn xanh, nên nó sống sót qua hai mươi lượt.
+
+#### 3. ĐÍNH CHÍNH: nhãn `approved` tôi gắn cho hai ảnh là kết luận thiếu căn cứ
+
+Lượt đóng gói ảnh trước, tôi gắn `approved` cho IL-02 và IL-03 rồi chúng được ghép lên bản chạy
+thật. **Tôi gắn nhãn ấy theo mức khớp NGỮ NGHĨA với một vị trí trong mã, chứ chưa từng mở ảnh ra
+xem.** Lượt này mở ra đo thì cả hai đều có vấn đề:
+
+| | IL-03 (màn Tổng quan) | IL-02 (bản đồ tri thức) |
+|---|---|---|
+| Đo được | **CAM 73%** số điểm ảnh; **0%** điểm ảnh đủ đậm làm nét chính | ~15 vật thể, ở cỡ hiển thị thật 192x128 thì **mỗi vật chỉ ~12px** |
+| Vấn đề | cam là màu **cảnh báo** của bộ token; 66% điểm ảnh quá nhạt nên thành vầng sáng trên nền tối | **không đọc được**; còn có chữ "A+" và một cái cúp, mà cúp ở trạng thái RỖNG là khen thứ chưa xảy ra |
+| Sửa được bằng đổi cỡ? | không, đây là lỗi ngữ nghĩa màu | không, muốn mỗi vật đạt 24px thì ảnh phải cao 256px, lấn át cả khối chữ |
+
+Cả 10 ảnh đều nhiều gradient (**3.000 tới 21.000 màu riêng biệt**, ảnh vector phẳng thật dưới
+~50 màu), trong khi bản đặc tả yêu cầu phẳng tuyệt đối.
+
+**Chưa gỡ ảnh nào khỏi bản chạy**, vì đây là thứ Đàm chủ động muốn có và việc gỡ là quyết định
+của chủ dự án, không phải của tôi. Số đo đã ghi đầy đủ vào `manifest.json` mục `doDuoc`.
+
+**Bài học, cùng họ với hai lần trước**: lượt 17 tôi kết luận "0 skeleton" từ `grep`; lượt 8 tôi
+kết luận mã chết từ `grep`; lần này tôi gắn nhãn duyệt cho ảnh mà không mở ảnh ra nhìn. Ba lần
+đều là **khẳng định một tính chất bằng thứ không đo được tính chất ấy**.
+
+Bộ kiểm 215 lên **218**, nhóm mới **AH**, cả ba đã thử phá và đều bắt được (bản phá lần này đều
+biên dịch sạch, tránh đúng bẫy đã mắc ở lượt 12 và 18).
+
+---
+
 ### 30/07/2026, đóng gói 10 ảnh minh họa GPT Image vào `src/assets/illustrations/`
 
 Không phải một vòng sửa mã. Đàm lập kế hoạch Illustration Master Plan (đo Khan Academy thật:

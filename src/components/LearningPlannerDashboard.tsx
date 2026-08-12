@@ -9,6 +9,7 @@ import { dbService } from "../services/db";
 import { examForecaster } from "../services/examForecaster";
 import { SubjectGoal, ExamPrediction, StudyDebtItem, ExamAttempt } from "../types";
 import { TimeService } from "../services/time";
+import { soThapPhan } from "../services/numberFormat";
 
 interface LearningPlannerDashboardProps {
   key?: string;
@@ -157,7 +158,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
         <div className="flex items-center gap-3">
           <div className="bg-bg-card border border-border-primary/80 rounded-xl px-4 py-2 text-right">
             <span className="text-2xs tabular-nums text-text-muted block">Mục tiêu hiện tại</span>
-            <span className="text-sm font-semibold text-text-primary">{goal.targetScore.toFixed(1)} điểm</span>
+            <span className="text-sm font-semibold text-text-primary">{soThapPhan(goal.targetScore, 1)} điểm</span>
           </div>
 
           <div className={`bg-bg-card border rounded-xl px-4 py-2 text-right ${chuaCoBaiLam ? "border-border-primary/80" : "border-brand-info/30"}`}>
@@ -165,7 +166,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             <span className={`text-sm font-bold ${chuaCoBaiLam ? "text-text-muted" : "text-brand-info"}`}>
               {chuaCoBaiLam
                 ? "Chưa đủ dữ liệu"
-                : `${prediction.predictedScore.toFixed(1)} ± ${prediction.confidenceMargin.toFixed(1)}`}
+                : `${soThapPhan(prediction.predictedScore, 1)} ± ${soThapPhan(prediction.confidenceMargin, 1)}`}
             </span>
           </div>
         </div>
@@ -260,7 +261,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     Chưa dự báo được, vì bạn chưa trả lời câu nào.
                   </p>
                   <p className="text-sm text-text-secondary font-sans leading-relaxed">
-                    Mục tiêu của bạn là {prediction.targetScore.toFixed(1)} điểm, còn{" "}
+                    Mục tiêu của bạn là {soThapPhan(prediction.targetScore, 1)} điểm, còn{" "}
                     {prediction.metricsBreakdown.remainingDays} ngày nữa tới kỳ thi. Làm xong lượt
                     ôn đầu tiên là màn này bắt đầu ước lượng được điểm, và mọi việc cần làm bên
                     dưới sẽ tính theo đúng chỗ bạn còn yếu.
@@ -285,7 +286,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                   <h3 className="text-sm font-bold text-text-muted font-sans">Điểm dự báo</h3>
                   <p className="text-xl font-bold text-text-primary font-sans leading-snug">
                     {chuaDuTinCay ? "Tạm tính khoảng " : "Dự báo khoảng "}
-                    {prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)} điểm.
+                    {soThapPhan(prediction.predictedScore, 1)} ± {soThapPhan(prediction.confidenceMargin, 1)} điểm.
                   </p>
                   <p className="text-sm text-text-secondary font-sans">
                     {chuaDuTinCay
@@ -298,7 +299,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                 <div className="space-y-3 md:px-6 md:border-l md:border-border-primary">
                   <h3 className="text-sm font-bold text-text-muted font-sans">Mục tiêu</h3>
                   <p className="text-xl font-bold text-text-primary font-sans leading-snug">
-                    Còn {prediction.gap.toFixed(1)} điểm nữa là tới {prediction.targetScore.toFixed(1)}.
+                    Còn {soThapPhan(prediction.gap, 1)} điểm nữa là tới {soThapPhan(prediction.targetScore, 1)}.
                   </p>
                   {/*
                     NHÃN CŨ GỌI SAI TÊN ĐẠI LƯỢNG. `readinessPercentage` là
@@ -352,7 +353,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
             <h3 className="text-xl font-bold text-text-primary font-sans">
               {chuaCoBaiLam
                 ? "Việc nên làm trước"
-                : `Việc cần làm để đi hết ${prediction.gap.toFixed(1)} điểm còn lại`}
+                : `Việc cần làm để đi hết ${soThapPhan(prediction.gap, 1)} điểm còn lại`}
             </h3>
 
             <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
@@ -362,7 +363,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     <h4 className="text-base font-bold text-text-primary font-sans">{action.title}</h4>
                     <p className="text-sm text-text-secondary font-sans pt-0.5">
                       Khoảng {action.timeEstimateMinutes} phút
-                      {chuaCoBaiLam ? "" : `, ước tính thêm ${action.impact.toFixed(1)} điểm`}
+                      {chuaCoBaiLam ? "" : `, ước tính thêm ${soThapPhan(action.impact, 1)} điểm`}
                     </p>
                   </div>
                   <button
@@ -455,7 +456,7 @@ Thiết lập Mục tiêu & Ngày thi ({dbService.getActiveSubjectName()})
                   className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-xs font-semibold text-text-primary cursor-pointer focus:outline-none"
                 >
                   {[7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0].map(s => (
-                    <option key={s} value={s}>{s.toFixed(1)} điểm</option>
+                    <option key={s} value={s}>{soThapPhan(s, 1)} điểm</option>
                   ))}
                 </select>
               </div>
@@ -537,11 +538,11 @@ Tổng quan lịch thi đa môn học
                     <div className="grid grid-cols-3 gap-2 text-center text-xs tabular-nums bg-bg-card/80 p-2.5 rounded-lg border border-border-primary/60">
                       <div>
                         <span className="text-2xs text-text-muted block">Mục tiêu</span>
-                        <strong className="text-text-primary">{subGoal.targetScore.toFixed(1)}</strong>
+                        <strong className="text-text-primary">{soThapPhan(subGoal.targetScore, 1)}</strong>
                       </div>
                       <div>
                         <span className="text-2xs text-text-muted block">Dự báo</span>
-                        <strong className="text-brand-info">{subPrediction.predictedScore.toFixed(1)}</strong>
+                        <strong className="text-brand-info">{soThapPhan(subPrediction.predictedScore, 1)}</strong>
                       </div>
                       <div>
                         <span className="text-2xs text-text-muted block">Sẵn sàng</span>
@@ -609,7 +610,7 @@ Việc học nào đáng làm trước
                   <div className="flex items-center gap-4 shrink-0">
                     <div className="text-right tabular-nums">
                       <span className="text-2xs text-text-muted block">Tăng điểm dự báo</span>
-                      <span className="text-sm font-bold text-brand-success">+{act.forecastPointGain.toFixed(2)} điểm</span>
+                      <span className="text-sm font-bold text-brand-success">+{soThapPhan(act.forecastPointGain, 2)} điểm</span>
                     </div>
                     <button
                       onClick={() => onStartExam(act.type === "wrong_notebook" ? "incorrect" : "adaptive")}
@@ -805,7 +806,7 @@ Mô phỏng thay đổi lịch thi & thời lượng học
               </div>
               <div className="text-right">
                 <span className="text-2xs tabular-nums text-brand-info block">Điểm dự báo mô phỏng</span>
-                <span className="text-2xl font-display font-bold text-brand-info">{simulatedScore.toFixed(1)}</span>
+                <span className="text-2xl font-display font-bold text-brand-info">{soThapPhan(simulatedScore, 1)}</span>
               </div>
             </div>
           </div>
@@ -825,7 +826,7 @@ Kịch bản giả định
                       {sc.impactText}
                     </span>
                     <span className="text-sm font-display font-bold text-text-primary">
-                      &rarr; {sc.projectedScore.toFixed(1)}
+                      &rarr; {soThapPhan(sc.projectedScore, 1)}
                     </span>
                   </div>
                 </div>

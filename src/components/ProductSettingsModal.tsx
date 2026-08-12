@@ -9,6 +9,7 @@ import { workspaceService } from "../services/workspaceService";
 import { dbService } from "../services/db";
 import { AppSettings, SubjectGoal } from "../types";
 import { useTheme } from "../context/ThemeContext";
+import { soThapPhan } from "../services/numberFormat";
 
 interface ProductSettingsModalProps {
   isOpen: boolean;
@@ -147,7 +148,7 @@ Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
                   className="w-full bg-bg-card border border-border-primary rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-primary"
                 >
                   {[7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0].map(s => (
-                    <option key={s} value={s}>{s.toFixed(1)} điểm</option>
+                    <option key={s} value={s}>{soThapPhan(s, 1)} điểm</option>
                   ))}
                 </select>
               </div>

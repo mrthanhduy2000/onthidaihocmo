@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /*
@@ -258,7 +258,18 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /*
+    ĐÃ GỠ `--font-mono` VÀ BỘ FONT JETBRAINS MONO, ngày 30/07/2026.
+
+    Đợt 28/07/2026 thay toàn bộ 371 chỗ dùng font đơn cách bằng `tabular-nums`, vì font đơn
+    cách làm bảng số liệu đọc như bản ghi máy chứ không như tài liệu học. Nhưng đợt ấy chỉ đổi
+    chỗ DÙNG, còn dòng `@import` vẫn tải đủ bốn kiểu chữ của JetBrains Mono trên mọi lần mở
+    trang, và token `--font-mono` vẫn nằm đây trỏ tới một bộ font không ai gọi tới.
+
+    Đây cùng một khuôn với `brand-danger` và `animate-fade-in-up`: thứ đã chết nhưng không có
+    gì kêu lên, vì trình duyệt tải font thừa mà không báo lỗi, và biên dịch vẫn xanh.
+  */
 
   /*
     THANG CHỮ CHO VIỆC ĐỌC LIÊN TỤC NHIỀU GIỜ.

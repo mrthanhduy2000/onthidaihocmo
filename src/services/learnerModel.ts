@@ -19,6 +19,7 @@ import { dbService, setConceptMasteryBothKeys, questionMap, dangKyDonDuLieuSuyRa
 import { kbService, KnowledgeNode } from "./kbService";
 import { conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "./conceptMemoryService";
 import { TimeService } from "./time";
+import { soThapPhan } from "./numberFormat";
 
 export interface ConceptProfile {
   conceptId: string;
@@ -591,7 +592,7 @@ export const learnerModelService = {
     const tyLeDungCuoiDe = tongCuoiTho > 0 ? dungCuoiTho / tongCuoiTho : 0;
 
     const giaiTrinh = duDuLieu
-      ? `Xét ${soLuotXet} lượt và ${soCauXet} câu. Tỷ lệ đúng ${(tyLeDungDauDe * 100).toFixed(1)}% ở đầu đề so với ${(tyLeDungCuoiDe * 100).toFixed(1)}% ở cuối đề. Sau khi so trong từng nhóm độ khó rồi gộp lại, mức tụt là ${(mucTut * 100).toFixed(1)} điểm phần trăm, co theo lượng bằng chứng (w = ${trongSo.toFixed(3)}) còn ${(mucTutDaCo * 100).toFixed(1)}, tức chỉ số mỏi mệt ${chiSoMoiMoi}/100.`
+      ? `Xét ${soLuotXet} lượt và ${soCauXet} câu. Tỷ lệ đúng ${soThapPhan((tyLeDungDauDe * 100), 1)}% ở đầu đề so với ${soThapPhan((tyLeDungCuoiDe * 100), 1)}% ở cuối đề. Sau khi so trong từng nhóm độ khó rồi gộp lại, mức tụt là ${soThapPhan((mucTut * 100), 1)} điểm phần trăm, co theo lượng bằng chứng (w = ${soThapPhan(trongSo, 3)}) còn ${soThapPhan((mucTutDaCo * 100), 1)}, tức chỉ số mỏi mệt ${chiSoMoiMoi}/100.`
       : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_CAU_MOI_MOI} câu trong các đề dài từ ${DO_DAI_DE_TOI_THIEU} câu trở lên, hiện có ${soCauXet} câu qua ${soLuotXet} lượt.`;
 
     return { duDuLieu, soCauXet, soLuotXet, tyLeDungDauDe, tyLeDungCuoiDe, mucTut, mucTutDaCo, chiSoMoiMoi, giaiTrinh };
@@ -637,7 +638,7 @@ export const learnerModelService = {
       : 0;
 
     const giaiTrinh = duDuLieu
-      ? `Xét ${soLuotXet} lượt đã nộp: ${tongThat}s thật so với ${tongChuan}s ước tính, tỷ lệ nhịp ${tyLeNhip.toFixed(2)}. Tỷ lệ đúng ${(tyLeDung * 100).toFixed(1)}%. Hệ số nhanh ${heSoNhanh.toFixed(2)} nhân tỷ lệ sai ${tyLeSai.toFixed(2)} cho mức đoán mò ${(tyLeDoanMo * 100).toFixed(1)}%.`
+      ? `Xét ${soLuotXet} lượt đã nộp: ${tongThat}s thật so với ${tongChuan}s ước tính, tỷ lệ nhịp ${soThapPhan(tyLeNhip, 2)}. Tỷ lệ đúng ${soThapPhan((tyLeDung * 100), 1)}%. Hệ số nhanh ${soThapPhan(heSoNhanh, 2)} nhân tỷ lệ sai ${soThapPhan(tyLeSai, 2)} cho mức đoán mò ${soThapPhan((tyLeDoanMo * 100), 1)}%.`
       : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_LUOT_NHIP} lượt đã nộp có cả thời gian thật và mốc ước tính, hiện có ${soLuotXet}.`;
 
     return {
@@ -699,7 +700,7 @@ export const learnerModelService = {
     const thuaTuTinDaCo = duDuLieu ? tyLeThuaTuTin * trongSoBangChung : 0;
 
     const giaiTrinh = duDuLieu
-      ? `Xét ${soCauXet} câu đã nộp, ${soCauGanCo} câu được gắn cờ nghi vấn. Thừa tự tin ${(tyLeThuaTuTin * 100).toFixed(1)}%, sau khi co theo lượng bằng chứng (w = ${trongSoBangChung.toFixed(3)}) còn ${(thuaTuTinDaCo * 100).toFixed(1)}%.`
+      ? `Xét ${soCauXet} câu đã nộp, ${soCauGanCo} câu được gắn cờ nghi vấn. Thừa tự tin ${soThapPhan((tyLeThuaTuTin * 100), 1)}%, sau khi co theo lượng bằng chứng (w = ${soThapPhan(trongSoBangChung, 3)}) còn ${soThapPhan((thuaTuTinDaCo * 100), 1)}%.`
       : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_CAU_XET} câu đã nộp và ${TOI_THIEU_CAU_GAN_CO} câu gắn cờ, hiện có ${soCauXet} câu và ${soCauGanCo} cờ.`;
 
     return {

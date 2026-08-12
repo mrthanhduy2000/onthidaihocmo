@@ -37,6 +37,7 @@ import { teachingAnalytics } from "../../src/services/teachingAnalytics";
 import { examQualityReportService } from "../../src/services/examQualityReport";
 import { questionGenerationEngine } from "../../src/services/questionGenerationEngine";
 import { Question } from "../../src/types";
+import { soThapPhan } from "../../src/services/numberFormat";
 
 type Result = { group: string; name: string; ok: boolean; detail: string };
 const results: Result[] = [];
@@ -3203,6 +3204,85 @@ check("Ảnh minh hoạ trạng thái rỗng không lấn át chữ",
   rangBuocAnh.length === 0
     ? "ảnh cao 128px, giữ tỷ lệ, tải trễ, và ẩn khỏi trình đọc màn hình khi chỉ là trang trí"
     : `thiếu ${rangBuocAnh.length} ràng buộc: ${rangBuocAnh.map(r => r.ten).join(", ")}`);
+
+g("AH. Số viết theo cách đọc của người Việt");
+
+// AH1. Không in dấu thập phân kiểu tiếng Anh vào câu tiếng Việt.
+//
+// Tiếng Việt dùng DẤU PHẨY làm dấu thập phân, dấu chấm làm dấu phân nhóm nghìn, ngược hẳn
+// tiếng Anh. `toFixed(1)` luôn trả dấu chấm, nên "mục tiêu 8.5 điểm" vừa sai quy ước vừa đọc
+// ra thành tám nghìn năm trăm điểm.
+//
+// Đo ngày 30/07/2026 trước khi sửa: 23 chỗ trong tầng trình bày và 7 chuỗi hiển thị trong tầng
+// dịch vụ. Cùng lúc đó `toLocaleString("vi-VN")` đã được dùng đúng cho số nguyên và ngày tháng,
+// nên MỘT màn hình có thể hiện cùng lúc "1.234 ký tự" (đúng) và "5.0 điểm" (sai).
+//
+// RANH GIỚI QUAN TRỌNG NHẤT của phép kiểm này: `parseFloat(x.toFixed(2))` và `Number(...)`
+// KHÔNG phải định dạng hiển thị mà là phép LÀM TRÒN, kết quả chảy tiếp vào phép tính khác. Có
+// 5 chỗ như vậy trong `src/services` và thay chúng sẽ đổi giá trị tính toán chứ không đổi chữ.
+// Nên phép kiểm chỉ bắt `.toFixed(` KHÔNG nằm trong `parseFloat(`/`Number(`.
+const BO_QUA_TOFIXED = new Set(["numberFormat.ts"]);
+const toFixedHienThi: string[] = [];
+for (const thuMuc of ["src/components", "src/services"]) {
+  for (const f of readdirSync(path.join(process.cwd(), thuMuc))) {
+    if (!f.endsWith(".tsx") && !f.endsWith(".ts")) continue;
+    if (BO_QUA_TOFIXED.has(f)) continue;
+    const nguon = readFileSync(path.join(process.cwd(), thuMuc, f), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")   // bỏ chú thích khối, tránh tự báo đỏ vì trích bản cũ
+      .replace(/^\s*\/\/.*$/gm, "");
+    for (const m of nguon.matchAll(/\.toFixed\(\d\)/g)) {
+      // nhìn ngược lên tối đa 200 ký tự: phép làm tròn luôn mở bằng parseFloat( hoặc Number(
+      const truoc = nguon.slice(Math.max(0, m.index! - 200), m.index!);
+      const moPhepTinh = /(?:parseFloat|Number)\(\s*\(?[^;]*$/.test(truoc);
+      if (!moPhepTinh) toFixedHienThi.push(`${f}`);
+    }
+  }
+}
+check("Số thập phân hiển thị dùng dấu phẩy, không dùng dấu chấm",
+  toFixedHienThi.length === 0,
+  toFixedHienThi.length === 0
+    ? "mọi chỗ hiển thị đi qua soThapPhan, các phép làm tròn parseFloat/Number giữ nguyên"
+    : `${toFixedHienThi.length} chỗ còn in dấu chấm: ${[...new Set(toFixedHienThi)].slice(0, 6).join(", ")}`);
+
+// AH2. `soThapPhan` phải thật sự trả về dấu phẩy.
+//
+// Phép kiểm AH1 chỉ soi mã nguồn, nên nếu hàm định dạng tự nó sai thì AH1 vẫn xanh trong khi
+// màn hình vẫn hiện dấu chấm. Đây là chỗ CHẠY THẬT hàm đó.
+const mauSo = soThapPhan(5, 1);
+const mauNghin = soThapPhan(1234.5, 1);
+check("Hàm soThapPhan trả đúng quy ước Việt",
+  mauSo === "5,0" && mauNghin === "1.234,5",
+  mauSo === "5,0" && mauNghin === "1.234,5"
+    ? `5 ra "${mauSo}", 1234.5 ra "${mauNghin}"`
+    : `sai quy ước: 5 ra "${mauSo}" (cần "5,0"), 1234.5 ra "${mauNghin}" (cần "1.234,5")`);
+
+// AH3. Không tải bộ font mà không chỗ nào dùng.
+//
+// Đợt 28/07/2026 thay 371 chỗ dùng font đơn cách bằng `tabular-nums`, nhưng chỉ đổi chỗ DÙNG.
+// Dòng `@import` vẫn tải đủ bốn kiểu chữ JetBrains Mono trên MỌI lần mở trang, và token
+// `--font-mono` vẫn trỏ tới bộ font không ai gọi. Trình duyệt không báo lỗi khi tải font thừa,
+// biên dịch vẫn xanh, nên nó sống sót qua hai mươi lượt rà.
+//
+// Cùng khuôn với `brand-danger` chưa từng định nghĩa và `animate-fade-in-up` chưa từng có
+// token: lách qua hệ thống mà không có gì kêu lên.
+const cssFont = readFileSync(path.join(process.cwd(), "src/index.css"), "utf8");
+const nguonDungFont = readdirSync(path.join(process.cwd(), "src/components"))
+  .filter(f => f.endsWith(".tsx"))
+  .map(f => readFileSync(path.join(process.cwd(), "src/components", f), "utf8"))
+  .join("\n");
+const hoFontTrongImport = [...cssFont.matchAll(/family=([A-Za-z+]+)/g)].map(m => m[1].replace(/\+/g, " "));
+const fontThua = hoFontTrongImport.filter(ten => {
+  const khoa = ten.toLowerCase().replace(/\s+/g, "-");
+  // font được coi là CÓ DÙNG nếu có token @theme trỏ tới nó và token ấy được gọi ở đâu đó
+  const coToken = new RegExp(`--font-[a-z]+:\\s*"${ten}"`).test(cssFont);
+  const coGoi = coToken && new RegExp(`font-(sans|display|mono|${khoa})\\b`).test(nguonDungFont + cssFont);
+  return !coGoi;
+});
+check("Không tải bộ font nào mà mã nguồn không dùng",
+  fontThua.length === 0,
+  fontThua.length === 0
+    ? `${hoFontTrongImport.length} bộ font tải về đều có chỗ dùng: ${hoFontTrongImport.join(", ")}`
+    : `${fontThua.length} bộ font tải về nhưng không ai dùng: ${fontThua.join(", ")}`);
 
 // ===========================================================================
 // Kết quả

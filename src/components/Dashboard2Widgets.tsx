@@ -10,6 +10,7 @@ import { learnerModelService, AIOrchestratorStats } from "../services/learnerMod
 import { dbService, questions } from "../services/db";
 import { kbService } from "../services/kbService";
 import { ExamAttempt } from "../types";
+import { soThapPhan } from "../services/numberFormat";
 
 interface Dashboard2WidgetsProps {
   onStartExam: (exam: ExamAttempt) => void;
@@ -348,7 +349,7 @@ export default function Dashboard2Widgets({ onStartExam }: Dashboard2WidgetsProp
             <div className="bg-bg-surface p-2.5 rounded-lg border border-border-primary/50">
               <span className="text-2xs text-text-muted tabular-nums block">Chi phí ước tính</span>
               <span className="text-md font-bold text-brand-success font-display flex items-center justify-center gap-0.5 mt-0.5">
-                <Coins className="w-4 h-4 text-brand-success shrink-0" /> ${telemetry.estimatedCostUsd.toFixed(4)}
+                <Coins className="w-4 h-4 text-brand-success shrink-0" /> ${soThapPhan(telemetry.estimatedCostUsd, 4)}
               </span>
             </div>
 

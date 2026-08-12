@@ -8,6 +8,7 @@ import { kbService, KnowledgeNode } from "./kbService";
 import { learnerModelService, ConceptProfile } from "./learnerModel";
 import { Question, ExamAttempt, DifficultyLevel } from "../types";
 import { TimeService } from "./time";
+import { soThapPhan } from "./numberFormat";
 
 export interface LearningRoadmapStep {
   id: string;
@@ -128,7 +129,7 @@ export const learningEngine = {
       const wrongCount = stats.incorrectQuestionHistory[q.id] || 0;
       const wrongSignal = 1 - Math.exp(-wrongCount / 2); // 1 lần: 0,39; 3 lần: 0,78; 6 lần: 0,95
       if (wrongCount > 0) {
-        reasons.push(`Từng làm sai ${wrongCount} lần (+${(0.5 * wrongSignal).toFixed(2)})`);
+        reasons.push(`Từng làm sai ${wrongCount} lần (+${soThapPhan((0.5 * wrongSignal), 2)})`);
       }
 
       // Tra khái niệm bằng bộ tra cứu có xếp hạng dùng chung (chủ đề + chương + từ vựng).
@@ -202,7 +203,7 @@ export const learningEngine = {
           const gate = 0.15 + 0.85 * clamp01(reqMastery / 70);
           if (gate < prereqGate) {
             prereqGate = gate;
-            gateReason = `Nền tảng "${reqNode.concept}" mới đạt ${Math.round(reqMastery)}% (cổng x${gate.toFixed(2)})`;
+            gateReason = `Nền tảng "${reqNode.concept}" mới đạt ${Math.round(reqMastery)}% (cổng x${soThapPhan(gate, 2)})`;
           }
         });
       });

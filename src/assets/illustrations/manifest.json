@@ -26,7 +26,14 @@
       "conflict": null,
       "placement": "phía trên tiêu đề EmptyState, cao ~120-140px, ảnh nhỏ hơn chữ",
       "wiredAt": "2026-07-30",
-      "wiredNote": "Ghép qua prop `illustration` của EmptyState, cao 128px giữ tỷ lệ 3:2, alt=\"\" kèm aria-hidden vì ảnh thuần trang trí, loading=\"lazy\". Kiểm chứng trên bản chạy thật ở cả chế độ sáng và tối."
+      "wiredNote": "Ghép qua prop `illustration` của EmptyState, cao 128px giữ tỷ lệ 3:2, alt=\"\" kèm aria-hidden vì ảnh thuần trang trí, loading=\"lazy\". Kiểm chứng trên bản chạy thật ở cả chế độ sáng và tối.",
+      "doDuoc": {
+        "soVatThe": "khoảng 15 vật thể trong khung",
+        "coHienThiThat": "192x128px, tức mỗi vật thể chỉ khoảng 12px, nhỏ hơn một biểu tượng 16px",
+        "vanDe": "KHÔNG ĐỌC ĐƯỢC ở cỡ đang chạy. Muốn mỗi vật thể đạt 24px thì ảnh phải rộng 384px, cao 256px, tức cao hơn cả khối chữ và phá nguyên tắc 'chữ là chủ thể'.",
+        "themVaoDo": "trong ảnh có chữ 'A+' (ký hiệu xếp loại kiểu Mỹ) và có cúp, bia bắn. Cúp ở trạng thái RỖNG là khen thứ chưa xảy ra, đúng điều AGENTS.md 4.9h cấm.",
+        "danhGia": "Không đạt. Cần ảnh khác đơn giản hơn nhiều (3 tới 5 vật thể), không sửa được bằng đổi cỡ hay cắt cúp."
+      }
     },
     {
       "id": "IL-03",
@@ -41,7 +48,14 @@
       "conflict": null,
       "placement": "phía trên tiêu đề EmptyState, cao ~120-140px",
       "wiredAt": "2026-07-30",
-      "wiredNote": "Ghép qua prop `illustration` của EmptyState, cao 128px giữ tỷ lệ 3:2, alt=\"\" kèm aria-hidden vì ảnh thuần trang trí, loading=\"lazy\". Kiểm chứng trên bản chạy thật ở cả chế độ sáng và tối."
+      "wiredNote": "Ghép qua prop `illustration` của EmptyState, cao 128px giữ tỷ lệ 3:2, alt=\"\" kèm aria-hidden vì ảnh thuần trang trí, loading=\"lazy\". Kiểm chứng trên bản chạy thật ở cả chế độ sáng và tối.",
+      "doDuoc": {
+        "mauChuDao": "CAM 73% số điểm ảnh nhìn thấy được",
+        "vanDe": "Cam là màu CẢNH BÁO trong bộ token của dự án (--color-warning #c2410c). Dự án đã ba lần sửa đúng lỗi 'chữ nói một đằng màu nói một nẻo' (chip 'Chưa làm câu nào' tô đỏ, thanh chương 2 câu tô cam). Một ảnh 73% cam đặt ở trạng thái 'bạn chưa làm bài nào' nói 'có vấn đề' trong khi chữ nói trung tính.",
+        "netChinh": "0% điểm ảnh đủ đậm (độ sáng dưới 90) để làm nét cấu trúc",
+        "trenNenToi": "66% điểm ảnh quá nhạt (độ sáng trên 225), thành vầng sáng trên nền tối; dark:opacity-80 có giảm nhưng không hết",
+        "danhGia": "Dùng được trên nền sáng. Trên nền tối còn vầng kem. Vấn đề màu cam là ngữ nghĩa, không sửa được bằng đổi cỡ."
+      }
     },
     {
       "id": "IL-04",
@@ -131,5 +145,9 @@
       "conflict": "Không có bằng chứng đo được ủng hộ minh họa trong hộp thoại chức năng (cài đặt, xác nhận) trên Khan Academy.",
       "askDamAbout": "Đàm có muốn minh họa hộp thoại nào cụ thể không, hay đây là ảnh dự phòng chưa cần dùng ngay?"
     }
-  ]
+  ],
+  "_doDuocNgay30_07_2026": {
+    "cachDo": "Đếm màu riêng biệt và họ sắc bằng PIL, rồi dựng lại ảnh ở ĐÚNG cỡ hiển thị thật 192x128 trên cả nền sáng lẫn nền tối kèm opacity-80.",
+    "ketLuanChung": "Cả 10 ảnh đều nhiều gradient (3.000 tới 21.000 màu riêng biệt, ảnh vector phẳng thật dưới ~50 màu). Nhãn approved ở lượt đóng gói được gắn theo mức KHỚP NGỮ NGHĨA với một vị trí trong mã, KHÔNG phải theo kiểm tra thị giác, vì lúc ấy tôi chưa từng mở ảnh ra xem. Đó là một kết luận thiếu căn cứ."
+  }
 }

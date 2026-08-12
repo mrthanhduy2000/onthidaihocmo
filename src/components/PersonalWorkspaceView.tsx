@@ -19,6 +19,7 @@ import {
   ResourceType 
 } from "../types";
 import { TimeService } from "../services/time";
+import { soThapPhan } from "../services/numberFormat";
 
 interface PersonalWorkspaceViewProps {
   key?: string;
@@ -370,11 +371,11 @@ Bàn học hôm nay
           <span className="sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
             Điểm dự kiến{" "}
             {daCoBaiLam ? (
-              <strong className="text-text-primary">{prediction.predictedScore.toFixed(1)} ± {prediction.confidenceMargin.toFixed(1)}</strong>
+              <strong className="text-text-primary">{soThapPhan(prediction.predictedScore, 1)} ± {soThapPhan(prediction.confidenceMargin, 1)}</strong>
             ) : (
               <span className="text-text-muted">Chưa đủ dữ liệu</span>
             )}
-            , mục tiêu {goal.targetScore.toFixed(1)}
+            , mục tiêu {soThapPhan(goal.targetScore, 1)}
           </span>
 
           <span className="flex items-center gap-2 sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
@@ -819,7 +820,7 @@ Các mốc tiến bộ
             </div>
             <div>
               <span className="text-2xs text-text-muted block">Điểm dự báo</span>
-              <span className="text-xl font-bold text-brand-info">{snapshots[selectedSnapshotIdx].forecastScore.toFixed(1)}</span>
+              <span className="text-xl font-bold text-brand-info">{soThapPhan(snapshots[selectedSnapshotIdx].forecastScore, 1)}</span>
             </div>
             <div>
               <span className="text-2xs text-text-muted block">Sổ câu sai</span>
@@ -863,11 +864,11 @@ Danh sách môn học
                   <div className="space-y-1.5 text-xs tabular-nums">
                     <div className="flex justify-between text-text-muted">
                       <span>Dự báo hiện tại:</span>
-                      <strong className="text-brand-info">{subPrediction.predictedScore.toFixed(1)}</strong>
+                      <strong className="text-brand-info">{soThapPhan(subPrediction.predictedScore, 1)}</strong>
                     </div>
                     <div className="flex justify-between text-text-muted">
                       <span>Điểm mục tiêu:</span>
-                      <strong className="text-text-primary">{subGoal.targetScore.toFixed(1)}</strong>
+                      <strong className="text-text-primary">{soThapPhan(subGoal.targetScore, 1)}</strong>
                     </div>
                   </div>
 

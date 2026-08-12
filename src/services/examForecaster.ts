@@ -24,6 +24,7 @@ import {
   StressTestReport
 } from "../types";
 import { TimeService } from "./time";
+import { soThapPhan } from "./numberFormat";
 
 /**
  * PHASE NEXT — SELF-CALIBRATING FORECASTING ENGINE v3.0 (Deterministic Optimization Layer)
@@ -1049,8 +1050,8 @@ export const examForecaster = {
         }
       },
       explainability: {
-        decision: `Dự báo kết quả ${finalPredictedScore.toFixed(1)} ± ${confidenceMargin.toFixed(1)} (Mục tiêu: ${goal.targetScore.toFixed(1)})`,
-        reason: `Mô hình tự hiệu chỉnh: trọng số thích ứng [Thông thạo ${(weights.masteryWeight * 100).toFixed(0)}%, Thi thử ${(weights.mockWeight * 100).toFixed(0)}%, Độ phủ ${(weights.coverageWeight * 100).toFixed(0)}%]. Hiệu chỉnh sai lệch: ${calibrationOffset > 0 ? '+' : ''}${calibrationOffset.toFixed(2)}. ${pressureCurveStage}.`,
+        decision: `Dự báo kết quả ${soThapPhan(finalPredictedScore, 1)} ± ${soThapPhan(confidenceMargin, 1)} (Mục tiêu: ${soThapPhan(goal.targetScore, 1)})`,
+        reason: `Mô hình tự hiệu chỉnh: trọng số thích ứng [Thông thạo ${soThapPhan((weights.masteryWeight * 100), 0)}%, Thi thử ${soThapPhan((weights.mockWeight * 100), 0)}%, Độ phủ ${soThapPhan((weights.coverageWeight * 100), 0)}%]. Hiệu chỉnh sai lệch: ${calibrationOffset > 0 ? '+' : ''}${soThapPhan(calibrationOffset, 2)}. ${pressureCurveStage}.`,
         evidence: `Dữ liệu: ${totalSolved} câu đã giải, ${history.length} phiên thi, ${profile.calibrationCount} lần tự hiệu chỉnh, chỉ số ổn định ${stabilityIndex}/100.`,
         policy: "Thuật toán tất định v3.0 • Tự hiệu chỉnh • Tự tối ưu trọng số • Lan truyền phụ thuộc • Hiệu suất giảm dần phi tuyến.",
         timestamp: TimeService.now().toISOString(),
