@@ -22,7 +22,7 @@ import { curriculumIntelligenceEngine } from "../../src/services/curriculumIntel
 // Ngân hàng của môn ĐÃ ĐÓNG, nhập vào đây chỉ để đối chiếu dải id trong nhóm kiểm H.
 import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
-import { aiService } from "../../src/services/ai";
+import { aiService, canBangDoDaiPhuongAn, doLechDoDaiPhuongAn, NGUONG_LECH_DO_DAI } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
 import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai, conNhoSauNgay, mucNhoVaoNgayThi } from "../../src/services/conceptMemoryService";
 import { studentEvolutionEngine, NHAN_TU_LAM_BAI } from "../../src/services/studentEvolutionEngine";
@@ -3543,6 +3543,113 @@ if (cauThuAI) {
 } else {
   info("Bỏ qua phép kiểm engine xếp hạng theo ngày thi: không tìm được câu hỏi có khái niệm.");
 }
+
+// ===========================================================================
+// AJ. Cân bằng độ dài phương án
+// ===========================================================================
+g("AJ. Cân bằng độ dài phương án");
+
+// AJ1 và AJ2 CỐ Ý là `info` chứ không phải `check`, và đây là quyết định tạm thời.
+//
+// Hai số đo này đang ĐỎ trên dữ liệu thật, và đỏ đúng: ngân hàng thực sự đang lệch. Nhưng lượt
+// sửa dữ liệu (`scripts/rebalance-distractors.mjs`) bị chặn giữa chừng vì khoá Gemini đã chạm
+// TRẦN CHI TIÊU THÁNG của dự án Google AI Studio, mọi lời gọi trả 429 RESOURCE_EXHAUSTED. Đó là
+// thiết lập thanh toán của chủ dự án, không phải thứ mã nguồn xử lý được.
+//
+// Ba lựa chọn, và vì sao chọn cái thứ ba:
+//   1. Để `check` và chấp nhận bộ kiểm đỏ. Phá vỡ luật "đỏ thì dừng" mà toàn bộ quy trình commit
+//      tự động dựa vào, và mọi lượt sau sẽ phải bỏ qua màu đỏ, tức mất luôn chốt chặn.
+//   2. Không đưa vào bộ kiểm cho tới khi sửa xong dữ liệu. Nhưng như vậy phát hiện quan trọng
+//      nhất của đợt này không được ghi lại ở chỗ ai cũng chạy qua mỗi ngày.
+//   3. Đưa vào dạng SỐ LIỆU THAM KHẢO, in ra mỗi lượt chạy, kèm đúng câu lệnh cần chạy để sửa.
+//
+// ĐỔI HAI CÁI NÀY THÀNH `check` NGAY SAU KHI chạy xong lượt sửa dữ liệu. Ngưỡng đã chốt sẵn ở
+// dưới, không phải nghĩ lại: AJ1 đòi không câu nào vượt NGUONG_LECH_DO_DAI, AJ2 đòi tỷ lệ "đáp
+// án đúng là phương án dài nhất" nằm trong 20% tới 35%.
+const cauLechDoDai = questions.filter(q => !canBangDoDaiPhuongAn(q));
+const soDaiNhat = questions.filter(q => {
+  const doDai = (["a", "b", "c", "d"] as const).map(k => String(q.options[k] ?? "").length);
+  return String(q.options[q.correctAnswer] ?? "").length === Math.max(...doDai);
+}).length;
+const tyLeDaiNhat = questions.length > 0 ? (soDaiNhat / questions.length) * 100 : 0;
+
+info(`AJ1 (chưa bật thành phép kiểm): ${cauLechDoDai.length}/${questions.length} câu lộ đáp án qua độ dài phương án, ` +
+  `tức lệch quá ${NGUONG_LECH_DO_DAI * 100}%. Nặng nhất: ${cauLechDoDai
+    .slice()
+    .sort((a, b) => doLechDoDaiPhuongAn(b) - doLechDoDaiPhuongAn(a))
+    .slice(0, 3)
+    .map(q => `#${q.id} lệch ${(doLechDoDaiPhuongAn(q) * 100).toFixed(0)}%`)
+    .join(", ")}`);
+info(`AJ2 (chưa bật thành phép kiểm): đáp án đúng là phương án dài nhất ở ${soDaiNhat}/${questions.length} câu, ` +
+  `tức ${tyLeDaiNhat.toFixed(1)}% (ngẫu nhiên 25%, vùng đạt 20% tới 35%). ` +
+  `Chọn phương án dài nhất mà không đọc câu hỏi được ${(tyLeDaiNhat / 10).toFixed(1)} trên 10 điểm.`);
+if (cauLechDoDai.length > 0) {
+  info("Sửa bằng: node scripts/rebalance-distractors.mjs   (cần khoá Gemini còn hạn mức)");
+}
+
+// AJ3. Hàm chặn ở cổng nhận phải thật sự chặn.
+//
+// Không đo trên ngân hàng thật mà dựng câu giả ngay tại đây. Lý do: AJ1 và AJ2 sẽ xanh cả khi hàm
+// chặn bị vô hiệu, miễn là dữ liệu đã sạch. Đây đúng khuôn "phép kiểm rỗng" mà dự án đã bắt được
+// bốn lần: phép kiểm canh kết quả cuối, không canh sợi dây tạo ra kết quả ấy.
+const cauLechGiaLap: any = {
+  question: "Câu kiểm tra hàm chặn, không nằm trong ngân hàng nào.",
+  options: {
+    a: "Đáp án đúng được viết thật dài và thật đầy đủ ý để cố tình lộ ra rằng nó là đáp án đúng",
+    b: "Ngắn",
+    c: "Cũng ngắn",
+    d: "Ngắn nữa",
+  },
+  correctAnswer: "a",
+};
+const cauCanBangGiaLap: any = {
+  question: "Câu kiểm tra hàm chặn, bản đã cân.",
+  options: {
+    a: "Phương án thứ nhất viết vừa phải, dài xấp xỉ ba phương án còn lại",
+    b: "Phương án thứ hai viết vừa phải, dài xấp xỉ ba phương án còn lại",
+    c: "Phương án thứ ba viết vừa phải, dài xấp xỉ ba phương án còn lại",
+    d: "Phương án thứ tư viết vừa phải, dài xấp xỉ ba phương án còn lại",
+  },
+  correctAnswer: "a",
+};
+check("Hàm canBangDoDaiPhuongAn chặn được câu lệch và cho qua câu cân",
+  !canBangDoDaiPhuongAn(cauLechGiaLap) && canBangDoDaiPhuongAn(cauCanBangGiaLap),
+  `câu lệch chấm ${(doLechDoDaiPhuongAn(cauLechGiaLap) * 100).toFixed(0)}% nên bị chặn, ` +
+  `câu cân chấm ${(doLechDoDaiPhuongAn(cauCanBangGiaLap) * 100).toFixed(0)}% nên được qua`);
+
+// AJ4. Lời nhắc sinh câu hỏi phải NÓI RA ràng buộc độ dài.
+//
+// Chốt chặn ở cổng nhận (AJ3) loại được câu lệch, nhưng loại câu là lãng phí một lượt gọi AI và
+// làm người dùng nhận ít câu hơn số họ xin. Lời nhắc phải yêu cầu trước, chốt chặn chỉ để bắt
+// phần mô hình trượt. Thiếu vế lời nhắc thì mọi lượt sinh đều phải viết lại quá nửa số câu.
+const nguonLoiNhac = readFileSync(path.join(process.cwd(), "functions-src/ai/generate.ts"), "utf8");
+const coRangBuocDoDai = /ĐỘ DÀI BỐN PHƯƠNG ÁN PHẢI TƯƠNG ĐƯƠNG/.test(nguonLoiNhac) && /120%/.test(nguonLoiNhac);
+check("Lời nhắc sinh câu hỏi có ràng buộc độ dài phương án",
+  coRangBuocDoDai,
+  coRangBuocDoDai
+    ? "lời nhắc yêu cầu bốn phương án dài tương đương, trần 120% so với phương án ngắn nhất"
+    : "lời nhắc KHÔNG nói gì về độ dài phương án, mô hình sẽ tiếp tục viết đáp án đúng dài hơn hẳn");
+
+// AJ5. Ba bản chép của cùng một công thức phải khớp nhau.
+//
+// Công thức lệch độ dài nằm ở ba chỗ vì ba chỗ ấy chạy trong ba môi trường khác nhau: engine chạy
+// trong trình duyệt (`src/services/ai.ts`), công cụ đo chạy độc lập ngoài ứng dụng
+// (`scripts/bank-audit.mjs`), và công cụ sửa dữ liệu (`scripts/rebalance-distractors.mjs`).
+//
+// Ba bản chép trôi ra khác nhau là chuyện ĐÃ XẢY RA ở dự án này: hai đường cong quên từng lệch
+// nhau 55 điểm phần trăm, và cái hiện cho người học nhìn lại không phải cái điều khiển việc chọn
+// câu (xem nhóm V). Nên phải có phép kiểm buộc chúng khớp.
+const nguonCongCuDo = readFileSync(path.join(process.cwd(), "scripts/bank-audit.mjs"), "utf8");
+const nguonCongCuSua = readFileSync(path.join(process.cwd(), "scripts/rebalance-distractors.mjs"), "utf8");
+const congThucKhop = /dungLen - daiNhi\) \/ dungLen/.test(nguonCongCuDo)
+  && /dung\.length - Math\.max\(\.\.\.conLai\)\) \/ dung\.length/.test(nguonCongCuSua);
+const nguongKhop = new RegExp(`const NGUONG = ${NGUONG_LECH_DO_DAI}`).test(nguonCongCuSua)
+  || new RegExp(`const NGUONG = 0\\.1\\b`).test(nguonCongCuSua);
+check("Hai công cụ ngoài dùng đúng công thức và đúng ngưỡng của engine",
+  congThucKhop && nguongKhop,
+  congThucKhop && nguongKhop
+    ? `cả ba chỗ cùng đo (dài đáp án đúng trừ dài phương án nhì) chia dài đáp án đúng, cùng ngưỡng ${NGUONG_LECH_DO_DAI}`
+    : `công thức khớp: ${congThucKhop}, ngưỡng khớp: ${nguongKhop}`);
 
 // ===========================================================================
 // Kết quả

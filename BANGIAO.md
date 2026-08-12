@@ -59,6 +59,89 @@ sao, và còn nợ gì.
 
 ---
 
+### 12/08/2026, chặn thiên lệch độ dài, và một lỗi mà thẩm định ngược KHÔNG bắt được
+
+Tiếp lượt trước. Lượt trước dựng thước và đo ra 67,1% câu có đáp án đúng dài nhất. Lượt này chặn
+nguồn và dựng công cụ sửa hồi tố.
+
+#### Đã xong
+
+| Phần | Trạng thái |
+|---|---|
+| 1A. Lời nhắc `functions-src/ai/generate.ts` thêm yêu cầu 15, 16, 17 | XONG, commit `e71999a` |
+| 1B. Chốt chặn đo bằng số ký tự ở cổng nhận trong `ai.ts` | XONG, commit `e71999a` |
+| Sửa hai phép kiểm chập chờn AB2, AB3 | XONG, commit `3958003` |
+| Nhóm kiểm AJ | XONG, ba phép kiểm thật cộng hai số liệu tham khảo |
+| 1C. Viết lại 140 câu đã có trong ngân hàng | **BỊ CHẶN**, xem bên dưới |
+
+#### Lỗi bắt được khi chạy thử, và vì sao chốt chặn đã có không bắt nổi
+
+Chạy thử 3 câu trước khi chạy cả mẻ. Cả 3 đều qua thẩm định ngược, độ lệch từ 61%, 57%, 56% xuống
+âm. Nhưng đọc bằng mắt thì lời giải viết lại ghi:
+
+> "Các phương án **b**, c, d không phản ánh đúng..."
+
+trong khi đáp án đúng của câu #2004 chính là **b**, và của câu #2012 là **c**. Tức lời giải tự gọi
+chính đáp án đúng là phương án sai.
+
+Nguyên nhân nằm ở lời nhắc của tôi: *"vẫn gọi tên phương án theo đúng lối 'phương án b, c, d không
+phản ánh...'"*. Ý tôi là giữ nguyên VĂN PHONG, mô hình hiểu là giữ nguyên ĐÚNG BA CHỮ CÁI ấy.
+
+**Thẩm định ngược không bắt được, và không thể bắt được**, vì nó chỉ hỏi "phương án nào đúng" chứ
+không đọc lời giải. Một chốt chặn đúng đắn vẫn có vùng mù đúng bằng phạm vi câu hỏi nó đặt ra.
+
+Nặng hơn: `optionShuffle` ĐỌC lời giải để tìm nhãn phương án rồi remap theo thứ tự đã trộn, nên
+một lời giải gọi sai tên sẽ được remap y như thật rồi sai tiếp sang cả bản đã trộn.
+
+Đã sửa hai lớp: lời nhắc nói thẳng ba chữ cái nhiễu là những chữ nào, và thêm hàm
+`loiGiaiGoiNhamDapAnDung` kiểm lại đầu ra. Chạy lại 4 câu, lời giải nay ghi đúng
+"Đáp án b đúng vì... Các phương án a, c, d là sai vì...".
+
+**Bài học giữ lại**: *chỉ dẫn nêu ví dụ bằng giá trị cụ thể thì mô hình sẽ chép lại chính giá trị
+ấy.* Muốn nói về văn phong thì phải nói về văn phong, còn giá trị thì truyền vào bằng biến.
+
+Và bài học thứ hai, đắt hơn: **chạy thử một mẻ nhỏ rồi ĐỌC BẰNG MẮT trước khi chạy cả mẻ.** Bốn
+mươi câu đầu tiên đã trôi qua chốt chặn tự động mà vẫn sai nội dung.
+
+#### Bị chặn: khoá Gemini chạm trần chi tiêu tháng
+
+Chạy cả mẻ 140 câu thì 31 câu đầu đều trả:
+
+```
+429 RESOURCE_EXHAUSTED
+Your project has exceeded its monthly spending cap.
+```
+
+Đây là thiết lập thanh toán trong Google AI Studio của chủ dự án, mã nguồn không xử lý được, và
+tôi không đụng vào thiết lập thanh toán. **Không câu nào bị ghi dở vào file dữ liệu**, vì script
+chỉ ghi sau khi chạy xong toàn bộ.
+
+#### Vì sao AJ1 và AJ2 là `info` chứ không phải `check`
+
+Hai số đo ấy đang đỏ trên dữ liệu thật, và đỏ đúng. Ba lựa chọn:
+
+1. Để `check` và chấp nhận bộ kiểm đỏ. Phá luật "đỏ thì dừng" mà toàn bộ quy trình commit tự động
+   dựa vào, và từ đó mọi lượt sau sẽ quen bỏ qua màu đỏ, tức mất luôn chốt chặn.
+2. Chưa đưa vào bộ kiểm. Phát hiện quan trọng nhất của đợt không được ghi ở chỗ ai cũng chạy qua.
+3. **Đưa vào dạng số liệu tham khảo**, in mỗi lượt chạy kèm đúng câu lệnh cần chạy để sửa.
+
+Chọn cách thứ ba. **Đổi hai cái đó thành `check` ngay sau khi chạy xong lượt sửa dữ liệu**, ngưỡng
+đã chốt sẵn trong chú thích, không phải nghĩ lại.
+
+#### Việc Đàm cần làm để mở khoá 1C
+
+Vào [AI Studio](https://ai.studio/spend) nâng trần chi tiêu tháng, hoặc chờ sang tháng mới. Rồi:
+
+```
+node scripts/rebalance-distractors.mjs
+```
+
+Ước lượng: 140 câu, mỗi câu 2 lượt gọi Gemini Flash, tổng khoảng 280 lượt. Xong thì đọc
+`rebalance-report.md`, soát tay ít nhất 20 câu, chạy `node scripts/bank-audit.mjs` để đối chiếu
+với mốc nền, rồi đổi AJ1 và AJ2 sang `check`.
+
+---
+
 ### 12/08/2026, thước đo ngân hàng câu hỏi, và một cái bẫy sống sót qua 227 phép kiểm
 
 Đàm hỏi sản phẩm cần xây thêm gì. Thay vì trả lời bằng cảm nhận, tôi đo. Lượt đo đó tìm ra một

@@ -14,14 +14,29 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Đợt 8 giai đoạn, **đang ở ranh giới giữa Giai đoạn 0 và Giai đoạn 1** |
-| **Current Milestone** | Giai đoạn 1: khử thiên lệch độ dài của ngân hàng câu hỏi |
-| **Current Phase** | Giai đoạn 0 XONG, chưa sửa một câu hỏi nào |
-| **Completed %** | 1 trên 9 khối việc (Giai đoạn 0 tới 8) |
+| **Current Objective** | Đợt 8 giai đoạn, Giai đoạn 1 xong phần chặn nguồn |
+| **Current Milestone** | **Giai đoạn 1C BỊ CHẶN**: khoá Gemini chạm trần chi tiêu tháng |
+| **Current Phase** | Giai đoạn 0 XONG. Giai đoạn 1: 1A và 1B XONG, 1C chờ Đàm mở hạn mức |
+| **Completed %** | 1,7 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **227/227 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **230/230 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
+
+### VIỆC ĐÀM CẦN LÀM ĐỂ MỞ KHOÁ GIAI ĐOẠN 1C
+
+Khoá Gemini đã chạm trần chi tiêu tháng, mọi lời gọi trả `429 RESOURCE_EXHAUSTED`. Đây là thiết
+lập thanh toán trong Google AI Studio, mã nguồn không xử lý được.
+
+1. Vào https://ai.studio/spend nâng trần chi tiêu, hoặc chờ sang tháng mới.
+2. Chạy `node scripts/rebalance-distractors.mjs` (khoảng 280 lượt gọi Gemini Flash cho 140 câu).
+3. Đọc `rebalance-report.md`, **soát tay ít nhất 20 câu ngẫu nhiên**.
+4. Chạy `node scripts/bank-audit.mjs`, đối chiếu với mốc nền bên dưới.
+5. **Đổi AJ1 và AJ2 trong `scripts/selftest/harness.ts` từ `info` sang `check`.** Ngưỡng đã chốt
+   sẵn trong chú thích ngay tại đó, không phải nghĩ lại.
+
+Chưa làm bước này thì ngân hàng vẫn còn 140 câu lộ đáp án qua độ dài phương án. Bộ kiểm in con số
+ấy ra ở phần "Số liệu tham khảo" mỗi lượt chạy.
 
 ---
 
