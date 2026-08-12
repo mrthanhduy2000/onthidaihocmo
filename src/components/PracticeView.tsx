@@ -707,7 +707,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   let oChuCai = "w-8 border-2 border-text-secondary text-text-secondary group-hover:border-text-primary group-hover:text-text-primary";
 
                   if (isSelected && !reveal) {
-                    mauChu = "text-[color:var(--nut-chinh)] font-medium";
+                    mauChu = "text-brand-info font-medium";
                     oChuCai = "w-8 bg-[color:var(--nut-chinh)] text-white border-2 border-transparent";
                   } else if (reveal) {
                     if (isCorrect) {
@@ -934,7 +934,7 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                           <button
                             onClick={() => handleRequestAIExplanation(activeQuestion.id)}
                             disabled={aiLoading[activeQuestion.id]}
-                            className="text-[color:var(--nut-chinh)] text-sm font-bold flex items-center gap-1.5 cursor-pointer hover:underline disabled:opacity-50 disabled:cursor-default"
+                            className="text-brand-info text-sm font-bold flex items-center gap-1.5 cursor-pointer hover:underline disabled:opacity-50 disabled:cursor-default"
                           >
                             <Sparkles className="w-4 h-4 shrink-0" />
                             <span>{aiLoading[activeQuestion.id] ? "Đang phân tích" : "Nhờ gia sư AI phân tích sâu"}</span>
@@ -1275,7 +1275,17 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                     )}
 
                     {/* The main AI Lecture body */}
-                    <div className="bg-bg-card p-5 rounded-lg border border-border-primary/60 text-xs text-text-secondary leading-relaxed font-sans prose dark:prose-invert max-w-none">
+                    {/*
+                      Đã gỡ `prose dark:prose-invert max-w-none` ngày 30/07/2026: plugin
+                      `@tailwindcss/typography` KHÔNG có trong package.json, nên ba lớp này chưa
+                      từng sinh ra một dòng CSS nào. Đo trên trình duyệt: dựng một thẻ mang lớp
+                      `prose` rồi đọc lại kiểu tính toán, không khác gì thẻ trần.
+
+                      Cùng khuôn với `brand-danger` chưa từng định nghĩa và `animate-fade-in-up`
+                      chưa từng có token. Nội dung ở đây do `SimpleMarkdown` dựng nên vốn đã có
+                      kiểu riêng, không mất gì khi gỡ.
+                    */}
+                    <div className="bg-bg-card p-5 rounded-lg border border-border-primary/60 text-xs text-text-secondary leading-relaxed font-sans">
                       <div className="flex items-center gap-1.5 mb-3 text-2xs tabular-nums text-brand-info font-bold">
                         <Sparkles className="w-4 h-4 shrink-0" />
                         <span>Bài giảng AI (Góc nhìn: {
@@ -1388,7 +1398,8 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                             </span>
                           )}
                         </div>
-                        <div className="whitespace-pre-line leading-relaxed prose dark:prose-invert max-w-none">
+                        {/* Gỡ `prose dark:prose-invert max-w-none`, xem lý do ở chú thích trên. */}
+                        <div className="whitespace-pre-line leading-relaxed">
                           <SimpleMarkdown text={displayExplanation} />
                         </div>
                         

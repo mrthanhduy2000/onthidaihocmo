@@ -59,6 +59,79 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/07/2026, rà chế độ tối lần đầu, và một hồi quy do chính bản sửa của tôi gây ra
+
+Lượt trước thêm `@custom-variant dark`, tức mọi lớp `dark:` **bắt đầu chạy lần đầu tiên trong
+đời dự án**. Nhưng chế độ tối chưa từng được rà, vì suốt hai mươi lượt mọi phép đo tương phản
+đều chạy ở chế độ sáng.
+
+#### Lỗi nặng nhất: nút quan trọng nhất sản phẩm rớt chuẩn ở chế độ tối
+
+Bộ ba màu nút của chế độ tối đặt theo ý định "sáng hơn một bậc cho nổi trên nền sẫm", nhưng
+**chưa từng đo với chữ trắng nằm trên nó**:
+
+| bậc | màu cũ | với chữ trắng | |
+|---|---|---|---|
+| cơ bản | `#3b7ae4` | **4,13:1** | RỚT |
+| rê chuột | `#4d86e8` | **3,56:1** | RỚT, bậc tệ nhất |
+| bấm | `#2f6ed6` | 4,86:1 | đạt |
+
+Đây là nút "Bắt đầu" mở một lượt ôn. Bản sáng được ghi chép kỹ 5,85:1 từ 28/07, bản tối thì
+không ai đo. Bộ cũ còn sai **hướng**: rê chuột SÁNG lên trong khi bấm lại tối đi, ngược với
+bản sáng vốn tối dần đều qua từng bậc.
+
+#### Rồi bản sửa của tôi đẻ ra lỗi mới ở chiều ngược lại
+
+Làm tối `--nut-chinh` xuống `#2f6ed6` khiến phép kiểm chuyển xanh. Nhưng **đo lại trên trình
+duyệt sau khi sửa** thì 16 tên khái niệm ở màn Hỏi AI rớt xuống **4,02:1**, vì chúng dùng chính
+token ấy làm **màu chữ liên kết**.
+
+Truy ra gốc: **một token đang gánh hai vai trò kéo ngược nhau.**
+
+| | cần | `#3b7ae4` (cũ) | `#2f6ed6` (tôi đổi) |
+|---|---|---|---|
+| nền nút, chữ trắng đè lên | ≥4,5 với trắng | **4,13 RỚT** | 4,86 đạt |
+| màu chữ liên kết trên nền tối | ≥4,5 với nền | 4,74 đạt | **4,02 RỚT** |
+
+Không giá trị nào thoả cả hai, nên đổi màu chỉ là đổi lỗi này lấy lỗi kia. Sửa đúng là **tách
+vai trò**: `--nut-chinh` chỉ còn làm nền nút, 5 chỗ dùng nó làm màu chữ chuyển sang `brand-info`
+vốn là token màu liên kết có sẵn và đạt cả hai chế độ (sáng 5,35:1, tối 7,69:1).
+
+Đúng bài học đã ghi từ lượt cũ: *sửa một chỗ bịa có thể đẻ ra chỗ bịa mới ở chiều ngược lại.*
+Bắt được chỉ vì đo lại sau khi sửa thay vì dừng ở lúc phép kiểm chuyển xanh.
+
+#### Hai lớp chết cùng họ với `brand-danger`
+
+- **`prose` và `dark:prose-invert`** dùng ở 2 chỗ trong `PracticeView`, nhưng
+  `@tailwindcss/typography` **không có trong `package.json`**. Kiểm chứng trên trình duyệt: dựng
+  một thẻ mang lớp `prose` rồi đọc kiểu tính toán, không khác gì thẻ trần. Lần thứ **sáu** cùng
+  khuôn "lách qua hệ thống mà không có gì kêu lên".
+- **Bốn lớp `zinc` ở quy tắc thanh cuộn** trong `index.css`, sót lại sau đợt dọn 72 chỗ hôm
+  29/07 vì `AF3b` cố ý chỉ quét `src/components`. Trước 30/07 thì hai lớp `dark:` ở đó chưa từng
+  chạy nên không ai thấy gì lạ; nay chúng chạy thật, và thanh cuộn thành thứ duy nhất trong app
+  không đổi theo bộ màu chung.
+
+#### Một phép đo của tôi SAI, và nó suýt thành bốn phát hiện giả
+
+Bản đầu của hàm đo tương phản trên trình duyệt tô sẵn nền `#000` lên canvas trước khi tô màu
+cần đo, nên **màu trong suốt bị đọc thành đen đục**. Hậu quả: mọi nền đều báo `#000000`, và
+chế độ sáng hiện ra "20 chỗ rớt chuẩn" trong đó có cả thanh điều hướng chính ở 1,36:1.
+
+Sửa lại thành `clearRect` rồi tô thẳng, kèm gộp chồng nền từ dưới lên cho đúng: **chế độ sáng
+0 chỗ rớt chuẩn**. Toàn bộ 20 chỗ là lỗi phép đo. Đã không báo chúng thành phát hiện.
+
+Cùng lượt còn một phép đo hỏng nữa: `window.innerWidth` trả về 0 trong ngữ cảnh chạy JS của
+công cụ, nên mọi màn đều báo "tràn ngang". Cũng đã bỏ, không báo.
+
+*Bài học: một phép đo sai không cho ra "không có kết quả", nó cho ra kết quả SAI trông rất giống
+thật. Cả hai lần đều lộ ra nhờ một con số vô lý (nền `#000000` trên trang trắng, khung rộng 0px).*
+
+Bộ kiểm 218 lên **222**: `AH4` (nút chính hai chế độ), `AH4b` (màu nền nút không được làm màu
+chữ), `AH5` (lớp prose khi chưa cài plugin), `AH6` (`index.css` không dùng màu Tailwind thô).
+Cả bốn đã thử phá và đều bắt được, bản phá đều biên dịch sạch.
+
+---
+
 ### 30/07/2026, số viết theo cách đọc của người Việt, và ĐÍNH CHÍNH nhãn ảnh tôi gắn sai
 
 Hai việc rời nhau trong cùng một lượt.

@@ -25,7 +25,54 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: số viết kiểu Việt, font thừa, và ĐÍNH CHÍNH nhãn ảnh tôi gắn sai
+## Lượt mới nhất: rà chế độ tối lần đầu, và một hồi quy do chính tôi gây ra
+
+Lượt trước thêm `@custom-variant dark`, tức **mọi lớp `dark:` bắt đầu chạy lần đầu**. Chế độ tối
+chưa từng được rà vì suốt hai mươi lượt mọi phép đo tương phản đều chạy ở chế độ sáng.
+
+### Nút quan trọng nhất sản phẩm rớt chuẩn ở chế độ tối
+
+| bậc | màu cũ | với chữ trắng | |
+|---|---|---|---|
+| cơ bản | `#3b7ae4` | **4,13:1** | RỚT |
+| rê chuột | `#4d86e8` | **3,56:1** | RỚT |
+| bấm | `#2f6ed6` | 4,86:1 | đạt |
+
+Bộ cũ còn sai **hướng**: rê chuột SÁNG lên trong khi bấm tối đi, ngược bản sáng.
+
+### Rồi bản sửa của tôi đẻ ra lỗi ngược chiều
+
+Làm tối nút xong thì phép kiểm xanh, nhưng **đo lại trên trình duyệt** thấy 16 tên khái niệm ở
+màn Hỏi AI rớt xuống 4,02:1. Gốc rễ: **một token gánh hai vai trò kéo ngược nhau**.
+
+| | cần | `#3b7ae4` | `#2f6ed6` |
+|---|---|---|---|
+| nền nút, chữ trắng đè lên | ≥4,5 với trắng | **4,13 RỚT** | 4,86 đạt |
+| màu chữ liên kết trên nền tối | ≥4,5 với nền | 4,74 đạt | **4,02 RỚT** |
+
+Sửa đúng là **tách vai trò**: `nut-chinh` chỉ làm nền nút, 5 chỗ dùng làm màu chữ chuyển sang
+`brand-info` (sáng 5,35:1, tối 7,69:1). `AH4b` canh không cho tái phạm.
+
+### Hai lớp chết, lần thứ sáu cùng khuôn
+
+`prose`/`dark:prose-invert` dùng 2 chỗ nhưng **plugin typography không hề được cài**. Bốn lớp
+`zinc` ở thanh cuộn sót lại vì `AF3b` cố ý chỉ quét `src/components`.
+
+### MỘT PHÉP ĐO CỦA TÔI SAI, suýt thành bốn phát hiện giả
+
+Hàm đo tương phản bản đầu tô sẵn nền `#000` trước khi tô màu cần đo, nên **màu trong suốt bị đọc
+thành đen đục**. Chế độ sáng hiện ra "20 chỗ rớt chuẩn" gồm cả thanh điều hướng ở 1,36:1. Sửa
+lại thì **0 chỗ rớt**. Một phép đo nữa cũng hỏng: `window.innerWidth` trả 0 nên mọi màn báo tràn
+ngang. Đã bỏ cả hai, không báo thành phát hiện.
+
+**Bài học**: phép đo sai không cho ra "không có kết quả", nó cho ra **kết quả sai trông rất
+giống thật**. Cả hai lần đều lộ nhờ một con số vô lý (nền `#000000` trên trang trắng, khung 0px).
+
+Bộ kiểm 218 lên **222** (`AH4`, `AH4b`, `AH5`, `AH6`), cả bốn đã thử phá và bắt được.
+
+---
+
+## Lượt trước: số viết kiểu Việt, font thừa, và ĐÍNH CHÍNH nhãn ảnh tôi gắn sai
 
 ### Dấu thập phân, 46 chỗ
 

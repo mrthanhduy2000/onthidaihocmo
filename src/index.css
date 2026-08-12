@@ -213,10 +213,50 @@
     Chế độ tối: dải điều hướng phải SẪM HƠN nền trang, ngược với chế độ sáng nơi nó sẫm hơn
     nền. Giữ đúng vai trò phân tách vùng công cụ khỏi vùng nội dung.
   */
-  /* Chế độ tối: nút chính sáng hơn một bậc cho nổi trên nền sẫm. */
-  --nut-chinh: #3b7ae4;
-  --nut-chinh-re-chuot: #4d86e8;
-  --nut-chinh-bam: #2f6ed6;
+  /*
+    CHẾ ĐỘ TỐI: NÚT CHÍNH SÁNG HƠN BẢN SÁNG, NHƯNG PHẢI ĐO VỚI CHỮ TRẮNG TRƯỚC.
+
+    Sửa ngày 30/07/2026. Bộ ba cũ là `#3b7ae4 / #4d86e8 / #2f6ed6`, đặt theo đúng ý định "sáng
+    hơn một bậc cho nổi trên nền sẫm" nhưng **chưa từng đo tương phản với chữ trắng nằm trên nó**:
+
+        cơ bản    #3b7ae4  với chữ trắng  4,13:1   RỚT ngưỡng AA 4,5:1
+        rê chuột  #4d86e8  với chữ trắng  3,56:1   RỚT, và là bậc tệ nhất
+        bấm       #2f6ed6  với chữ trắng  4,86:1   đạt
+
+    Đây là nút hành động chính của cả sản phẩm, tức nút "Bắt đầu" mở một lượt ôn. Bản sáng được
+    ghi chép kỹ ở trên (5,85:1) nhưng bản tối thì không ai đo, vì tương phản chỉ được kiểm ở chế
+    độ sáng suốt hai mươi lượt.
+
+    Càng sáng thì càng nổi trên nền trang NHƯNG càng chìm với chữ trắng đặt trên nó. Hai ràng
+    buộc kéo ngược nhau, nên phải đo cả hai đầu:
+
+        cơ bản    #2f6ed6   chữ trắng 4,86:1 (AA)   nền trang 4,02:1 (đạt 3:1 cho thành phần)
+        rê chuột  #2a66cc   chữ trắng 5,43:1        nền trang 3,60:1
+        bấm       #2560c4   chữ trắng 5,92:1        nền trang 3,30:1
+
+    Bộ cũ còn sai HƯỚNG: rê chuột thì SÁNG lên trong khi bấm lại tối đi. Bản sáng đi một chiều
+    tối dần qua từng bậc, nay bản tối cũng vậy.
+
+    KÈM THEO, VÀ ĐÂY MỚI LÀ PHẦN QUAN TRỌNG: `--nut-chinh` từng bị dùng làm CẢ HAI vai trò.
+
+        làm NỀN NÚT, chữ trắng đè lên   -> muốn màu TỐI đi   (để chữ trắng nổi)
+        làm MÀU CHỮ liên kết trên trang -> muốn màu SÁNG lên (để chữ nổi trên nền tối)
+
+    Hai ràng buộc kéo ngược nhau nên KHÔNG giá trị nào thoả cả hai ở chế độ tối:
+
+        #3b7ae4 (cũ)  nền nút 4,13:1 RỚT  |  chữ liên kết 4,74:1 đạt
+        #2f6ed6 (mới) nền nút 4,86:1 đạt  |  chữ liên kết 4,02:1 RỚT
+
+    Nên chỉ đổi màu là đổi lỗi này lấy lỗi kia. Cách sửa đúng là TÁCH VAI TRÒ: `--nut-chinh` chỉ
+    còn là nền nút, còn 5 chỗ dùng nó làm màu chữ liên kết đã chuyển sang `brand-info`, vốn là
+    token màu liên kết có sẵn và đạt cả hai chế độ (sáng 5,35:1, tối 7,69:1).
+
+    Phát hiện được vì đo lại SAU khi sửa chứ không dừng ở lúc phép kiểm chuyển xanh. Đúng bài
+    học đã ghi: sửa một chỗ có thể đẻ ra lỗi mới ở chiều ngược lại.
+  */
+  --nut-chinh: #2f6ed6;
+  --nut-chinh-re-chuot: #2a66cc;
+  --nut-chinh-bam: #2560c4;
 
   --nav-nen: #0d1526;
   --nav-chu: #f5f5f7;
@@ -687,7 +727,17 @@ input[type="text"], select {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-zinc-300/60 dark:bg-zinc-800 rounded-full hover:bg-zinc-400 dark:hover:bg-zinc-700 transition-colors;
+  /*
+    Dùng token của dự án thay cho `zinc` thô, ngày 30/07/2026.
+
+    Bốn lớp `zinc` ở đây là chỗ cuối cùng còn đi vòng qua bộ token, sót lại sau đợt dọn 72 chỗ
+    hôm 29/07: phép kiểm `AF3b` chỉ quét `src/components` nên không nhìn tới file này.
+
+    Trước 30/07 thì hai lớp `dark:` ở đây chưa từng chạy (thiếu `@custom-variant dark`), nên
+    thanh cuộn ở chế độ tối vẫn dùng màu của chế độ sáng. Nay chúng chạy thật, và nếu để `zinc`
+    thì thanh cuộn là thứ duy nhất trong app không đổi theo bộ màu chung.
+  */
+  @apply bg-border-primary rounded-full hover:bg-text-dimmed transition-colors;
 }
 
 /* Subtle spotlight or gradient focus accent */

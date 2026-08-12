@@ -271,10 +271,10 @@ Sơ đồ khái niệm và kiến thức nền
                             }}
                             className="w-full text-left py-3 px-2 -mx-2 rounded-lg hover:bg-bg-surface transition cursor-pointer group flex items-start gap-3"
                           >
-                            <Play className="w-4 h-4 mt-1 shrink-0 fill-current text-[color:var(--nut-chinh)]" />
+                            <Play className="w-4 h-4 mt-1 shrink-0 fill-current text-brand-info" />
                             <span className="min-w-0 space-y-1">
                               <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-                                <span className="text-base font-medium text-[color:var(--nut-chinh)] group-hover:underline">
+                                <span className="text-base font-medium text-brand-info group-hover:underline">
                                   {node.concept}
                                 </span>
                                 <span className="text-sm text-text-muted">{score}% nắm chắc</span>

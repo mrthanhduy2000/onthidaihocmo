@@ -3284,6 +3284,124 @@ check("Không tải bộ font nào mà mã nguồn không dùng",
     ? `${hoFontTrongImport.length} bộ font tải về đều có chỗ dùng: ${hoFontTrongImport.join(", ")}`
     : `${fontThua.length} bộ font tải về nhưng không ai dùng: ${fontThua.join(", ")}`);
 
+// AH4. Nút hành động chính phải đọc được ở CẢ HAI chế độ, không chỉ chế độ sáng.
+//
+// Tìm ra ngày 30/07/2026 khi rà chế độ tối lần đầu. Bộ ba màu nút của chế độ tối được đặt theo
+// ý định "sáng hơn một bậc cho nổi trên nền sẫm" nhưng chưa từng đo với CHỮ TRẮNG nằm trên nó:
+//
+//     cơ bản    #3b7ae4   4,13:1   RỚT ngưỡng AA
+//     rê chuột  #4d86e8   3,56:1   RỚT, bậc tệ nhất
+//     bấm       #2f6ed6   4,86:1   đạt
+//
+// Đây là nút mở một lượt ôn, tức nút quan trọng nhất sản phẩm. Bản sáng được ghi chép kỹ
+// (5,85:1) từ 28/07 nhưng bản tối thì không, vì suốt hai mươi lượt mọi phép đo tương phản đều
+// chạy ở chế độ sáng.
+//
+// HAI RÀNG BUỘC KÉO NGƯỢC NHAU, nên phải đo cả hai đầu: càng sáng thì càng nổi trên nền trang
+// nhưng càng chìm với chữ trắng đặt trên nó. Phép kiểm canh cả hai.
+const khoiToi = (cssTheme.match(/\.dark\s*\{[\s\S]*?\n\}/) || [""])[0];
+const khoiSangNut = (cssTheme.match(/:root\s*\{[\s\S]*?\n\}/) || [""])[0];
+function docBienNut(khoi: string, ten: string): string | null {
+  const m = khoi.match(new RegExp(`--${ten}\\s*:\\s*(#[0-9a-fA-F]{6})`));
+  return m ? m[1] : null;
+}
+const nutHong: string[] = [];
+const nutDat: string[] = [];
+for (const [nhan, khoi, nenTrang] of [
+  ["sáng", khoiSangNut, "#ffffff"],
+  ["tối", khoiToi, null],
+] as const) {
+  const nenApp = nenTrang ?? docBienNut(khoi, "bg-app");
+  for (const bac of ["nut-chinh", "nut-chinh-re-chuot", "nut-chinh-bam"]) {
+    const mau = docBienNut(khoi, bac);
+    if (!mau) continue;
+    const voiChu = doTuongPhan(mau, "#ffffff");
+    // 4,5:1 cho chữ trắng trên nút; 3:1 cho chính nút tách khỏi nền trang (WCAG 1.4.11)
+    const voiNen = nenApp ? doTuongPhan(mau, nenApp) : 99;
+    const ok = voiChu >= 4.5 && voiNen >= 3;
+    (ok ? nutDat : nutHong).push(
+      `${nhan}/${bac} ${mau} chữ ${voiChu.toFixed(2)}:1 nền ${voiNen.toFixed(2)}:1`);
+  }
+}
+check("Nút chính đọc được ở cả chế độ sáng lẫn chế độ tối",
+  nutHong.length === 0,
+  nutHong.length === 0
+    ? `cả ${nutDat.length} bậc đều đạt: ${nutDat.join("; ")}`
+    : `${nutHong.length} bậc rớt chuẩn: ${nutHong.join("; ")}`);
+
+// AH4b. Màu NỀN NÚT không được đem dùng làm MÀU CHỮ, vì hai vai trò kéo ngược nhau.
+//
+// Tìm ra ngay sau khi sửa AH4, bằng cách đo lại trên trình duyệt thay vì dừng ở lúc phép kiểm
+// chuyển xanh. Làm tối `--nut-chinh` cho chữ trắng đọc được đã khiến 16 tên khái niệm ở màn
+// Hỏi AI rớt xuống 4,02:1, vì chúng dùng chính token ấy làm màu chữ liên kết.
+//
+//     làm NỀN NÚT, chữ trắng đè lên   -> muốn TỐI đi   (#2f6ed6 đạt 4,86:1 với trắng)
+//     làm MÀU CHỮ trên nền trang      -> muốn SÁNG lên (#2f6ed6 chỉ còn 4,02:1 với nền tối)
+//
+// Không giá trị nào thoả cả hai, nên đây không phải chuyện chọn màu mà là chuyện TÁCH VAI TRÒ.
+// Màu chữ liên kết đã có sẵn token riêng là `brand-info`.
+const dungNutLamChu: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const nguon = readFileSync(path.join(process.cwd(), "src/components", f), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "");
+  if (/text-(?:\[color:var\(--nut-chinh\)\]|nut-chinh)/.test(nguon)) dungNutLamChu.push(f);
+}
+check("Màu nền nút không bị đem dùng làm màu chữ",
+  dungNutLamChu.length === 0,
+  dungNutLamChu.length === 0
+    ? "nut-chinh chỉ dùng làm nền nút, màu chữ liên kết đi qua brand-info"
+    : `${dungNutLamChu.length} file dùng nut-chinh làm màu chữ: ${dungNutLamChu.join(", ")}`);
+
+// AH5. Không dùng lớp tiện ích mà dự án KHÔNG có định nghĩa cho nó.
+//
+// `prose` và `dark:prose-invert` được dùng ở hai chỗ trong `PracticeView`, nhưng plugin
+// `@tailwindcss/typography` KHÔNG có trong `package.json`, nên ba lớp ấy chưa từng sinh ra một
+// dòng CSS nào. Kiểm chứng trên trình duyệt: dựng một thẻ mang lớp `prose` rồi đọc kiểu tính
+// toán, không khác gì thẻ trần.
+//
+// Đây là lần thứ SÁU dự án bắt được khuôn "lách qua hệ thống mà không có gì kêu lên", sau
+// `brand-danger` chưa định nghĩa, `animate-fade-in-up` chưa có token, 72 chỗ màu đi vòng qua bộ
+// token, `dark:` bám nhầm hệ điều hành, và bộ font tải về không ai dùng.
+const goiPlugin = JSON.parse(readFileSync(path.join(process.cwd(), "package.json"), "utf8"));
+const coTypography = Object.keys({ ...goiPlugin.dependencies, ...goiPlugin.devDependencies })
+  .some(k => k.includes("typography"));
+const dungProse: string[] = [];
+for (const f of readdirSync(path.join(process.cwd(), "src/components"))) {
+  if (!f.endsWith(".tsx")) continue;
+  const nguon = readFileSync(path.join(process.cwd(), "src/components", f), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "");
+  if (/className="[^"]*\bprose\b/.test(nguon)) dungProse.push(f);
+}
+check("Không dùng lớp prose khi chưa cài plugin typography",
+  coTypography || dungProse.length === 0,
+  coTypography
+    ? "đã cài @tailwindcss/typography nên lớp prose có hiệu lực"
+    : dungProse.length === 0
+      ? "chưa cài plugin typography, và cũng không chỗ nào dùng lớp prose"
+      : `chưa cài plugin nhưng ${dungProse.length} file vẫn dùng prose: ${dungProse.join(", ")}`);
+
+// AH6. Thanh cuộn cũng phải đi qua bộ token, không dùng màu Tailwind thô.
+//
+// Nhóm AF3b quét `src/components` để bắt màu đi vòng qua bộ token, nhưng CỐ Ý loại trừ
+// `index.css`, nên bốn lớp `zinc` ở quy tắc thanh cuộn sống sót qua đợt dọn 72 chỗ hôm 29/07.
+//
+// Trước 30/07 thì hai lớp `dark:` ở đó chưa từng chạy, nên thanh cuộn chế độ tối vẫn dùng màu
+// của chế độ sáng và không ai thấy gì lạ. Sau khi `@custom-variant dark` được thêm, chúng chạy
+// thật, và thanh cuộn thành thứ duy nhất trong app không đổi theo bộ màu chung.
+const cssCuon = readFileSync(path.join(process.cwd(), "src/index.css"), "utf8")
+  .replace(/\/\*[\s\S]*?\*\//g, "");
+const HO_MAU_THO = ["zinc", "slate", "gray", "neutral", "stone", "red", "orange", "amber",
+  "yellow", "lime", "green", "emerald", "teal", "cyan", "sky", "blue", "indigo", "violet",
+  "purple", "fuchsia", "pink", "rose"];
+const mauThoTrongCss = HO_MAU_THO.filter(ho =>
+  new RegExp(`@apply[^;]*\\b(?:bg|text|border)-${ho}-\\d`).test(cssCuon));
+check("index.css không dùng màu Tailwind thô, chỉ dùng token",
+  mauThoTrongCss.length === 0,
+  mauThoTrongCss.length === 0
+    ? "mọi quy tắc @apply trong index.css đều đi qua bộ token của dự án"
+    : `${mauThoTrongCss.length} họ màu thô còn trong index.css: ${mauThoTrongCss.join(", ")}`);
+
 // ===========================================================================
 // Kết quả
 // ===========================================================================

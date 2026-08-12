@@ -383,7 +383,7 @@ Bàn học hôm nay
             {prediction.metricsBreakdown.studyDebtCount > 0 && (
               <button
                 onClick={() => onNavigateView("review")}
-                className="text-[color:var(--nut-chinh)] font-bold hover:underline cursor-pointer whitespace-nowrap"
+                className="text-brand-info font-bold hover:underline cursor-pointer whitespace-nowrap"
               >
                 Sửa ngay &rarr;
               </button>
