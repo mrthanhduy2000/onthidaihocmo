@@ -175,14 +175,17 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
         text,
         genCount,
         title,
-        (batchDone, totalBatches, accumulated) => {
+        // Ba giai đoạn nói ba câu khác nhau, xem chú thích cùng ý ở ChapterQuestionGeneratorModal.
+        (batchDone, totalBatches, accumulated, giaiDoan) => {
           const pct = totalBatches > 0 ? Math.round((batchDone / totalBatches) * 100) : 0;
           setImportProgress(Math.max(5, Math.min(99, pct)));
-          setImportStep(
-            batchDone >= totalBatches
-              ? "Đang lưu vào ngân hàng câu hỏi..."
-              : `AI đang soạn lượt ${batchDone + 1}/${totalBatches} (đã có ${accumulated} câu)...`
-          );
+          if (giaiDoan === "luu") {
+            setImportStep("Đang lưu vào ngân hàng câu hỏi...");
+          } else if (giaiDoan === "canbang") {
+            setImportStep(`Đang cân lại độ dài phương án câu ${batchDone + 1}/${totalBatches}...`);
+          } else {
+            setImportStep(`AI đang soạn lượt ${batchDone + 1}/${totalBatches} (đã có ${accumulated} câu)...`);
+          }
         },
         genChapterId || undefined
       );
@@ -212,6 +215,12 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
       }
       if (result.duplicatesSkipped > 0) {
         notes.push(`Đã bỏ ${result.duplicatesSkipped} câu trùng lặp.`);
+      }
+      if (result.lechDoDaiDaSua > 0) {
+        notes.push(`Đã cân lại độ dài phương án cho ${result.lechDoDaiDaSua} câu.`);
+      }
+      if (result.lechDoDaiBiLoai > 0) {
+        notes.push(`Đã loại ${result.lechDoDaiBiLoai} câu lộ đáp án qua độ dài phương án.`);
       }
       if (result.failedBatches > 0) {
         notes.push(`Có ${result.failedBatches} lượt gọi AI lỗi (đã bỏ qua); bấm "Tạo tiếp" để bổ sung nếu cần.`);

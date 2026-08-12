@@ -43,11 +43,20 @@ async function apiHeaders(): Promise<Record<string, string>> {
  * tra câu hỏi theo id nên môn tự tạo luôn nhận 404 và âm thầm rơi về lời giải ngoại tuyến.
  * Chạy ở trình duyệt thì mọi môn đều đúng, không phải deploy lại khi thêm môn.
  */
-async function callGemini(prompt: string, taskType: string, subjectName: string): Promise<string> {
+async function callGemini(
+  prompt: string,
+  taskType: string,
+  subjectName: string,
+  /**
+   * Ràng buộc dạng đầu ra. Cổng `complete.ts` đã chuyển tiếp sẵn hai trường này xuống Gemini;
+   * không truyền thì nhận về văn xuôi rồi phải đoán, chất lượng tụt hẳn.
+   */
+  dangDauRa?: { responseMimeType?: string; responseSchema?: unknown }
+): Promise<string> {
   const response = await fetch("/api/ai/complete", {
     method: "POST",
     headers: await apiHeaders(),
-    body: JSON.stringify({ prompt, taskType, subjectName }),
+    body: JSON.stringify({ prompt, taskType, subjectName, ...(dangDauRa || {}) }),
   });
   if (!response.ok) {
     throw new Error(`Cổng AI trả về ${response.status}`);
@@ -160,6 +169,140 @@ function normalizeQuestionText(s: string): string {
  * Kiểm tra một câu thô từ AI có đạt chất lượng tối thiểu không: có đề bài, đủ 4 phương án
  * khác rỗng, đáp án đúng nằm trong a/b/c/d và 4 phương án không trùng lặp nhau.
  */
+/** Các giai đoạn của một lượt sinh ngân hàng, dùng để giao diện nói đúng việc đang chạy. */
+export type GiaiDoanSinhCauHoi = "soan" | "canbang" | "luu";
+
+/**
+ * NGƯỠNG LỆCH ĐỘ DÀI PHƯƠNG ÁN, và vì sao đúng con số này.
+ *
+ * Đo ngày 12/08/2026 bằng `scripts/bank-audit.mjs`: đáp án đúng là phương án DÀI NHẤT ở **63,4%**
+ * số câu của môn đang mở, trong khi ngẫu nhiên là 25%. Chỉ cần luôn chọn phương án dài nhất mà
+ * KHÔNG ĐỌC CÂU HỎI là được **6,3 trên 10 điểm**. Phần biên soạn tay còn lệch nặng hơn phần AI
+ * sinh (75,0% so với 62,9%), nên đây là thói quen soạn đề nói chung chứ không phải tật riêng của
+ * mô hình ngôn ngữ: người soạn viết đáp án đúng cho thật đủ ý rồi viết ba phương án nhiễu cho xong.
+ *
+ * Vì sao `optionShuffle` không cứu được: nó trộn tất định để xoá thiên lệch **vị trí**, và làm
+ * đúng việc đó. Nhưng **trộn vị trí không đụng gì tới độ dài**, nên cái bẫy còn nguyên sau khi
+ * trộn. Một biện pháp phòng thủ có sẵn khiến người đọc mã tin rằng thiên lệch đã được lo xong.
+ *
+ * Ngưỡng 0,10 chọn theo số đo chứ không chọn cho tròn. Bản đầu đặt 0,20 và **tự mâu thuẫn**:
+ *
+ *   | Ngưỡng | Số câu phải sửa | Tỷ lệ "dài nhất" còn lại |
+ *   |--------|-----------------|--------------------------|
+ *   | 0,20   | 87              | 41,1%  rớt vùng đạt      |
+ *   | 0,15   | 119             | 32,9%  sát mép trên      |
+ *   | 0,10   | 140             | 27,4%  giữa vùng đạt     |
+ *   | 0,05   | 162             | 21,9%  sát mép dưới      |
+ *
+ * Vùng đạt là 20% tới 35%, quanh mức ngẫu nhiên 25%. Nhóm kiểm AJ canh cả hai đầu.
+ */
+export const NGUONG_LECH_DO_DAI = 0.10;
+
+const CHU_CAI_PHUONG_AN = ["a", "b", "c", "d"] as const;
+
+/**
+ * Đáp án đúng dài hơn phương án dài NHÌ bao nhiêu phần.
+ *
+ * So với phương án dài nhì chứ không so với trung bình ba phương án còn lại, vì người làm bài
+ * nhặt đáp án bằng cách nhìn phương án nào NỔI HẲN LÊN, tức so với đối thủ gần nhất của nó. Một
+ * câu có đáp án đúng 100 ký tự và ba phương án 95, 30, 30 thì lệch nhiều so với trung bình nhưng
+ * mắt không nhặt ra được đáp án, vì đã có một phương án khác dài xấp xỉ.
+ *
+ * Trả về số dương khi đáp án đúng dài hơn, số âm khi nó ngắn hơn. Công thức này trùng đúng với
+ * `doLechDoDai` trong `scripts/bank-audit.mjs`; sửa một bên thì phải sửa bên kia.
+ */
+export function doLechDoDaiPhuongAn(q: any): number {
+  const dung = String(q?.options?.[q?.correctAnswer] ?? "");
+  if (dung.length === 0) return 0;
+  const conLai = CHU_CAI_PHUONG_AN
+    .filter(k => k !== q.correctAnswer)
+    .map(k => String(q?.options?.[k] ?? "").length);
+  if (conLai.length === 0) return 0;
+  return (dung.length - Math.max(...conLai)) / dung.length;
+}
+
+/** Câu có bốn phương án đủ cân về độ dài để không lộ đáp án. */
+export function canBangDoDaiPhuongAn(q: any): boolean {
+  return doLechDoDaiPhuongAn(q) <= NGUONG_LECH_DO_DAI;
+}
+
+/**
+ * Nhờ AI viết lại ĐÚNG BA phương án nhiễu cho một câu bị lệch độ dài, giữ nguyên câu hỏi và đáp
+ * án đúng. Trả về câu đã sửa, hoặc `null` nếu không sửa được.
+ *
+ * Ba điều cố ý:
+ *
+ * 1. **Không rút gọn đáp án đúng.** Cắt đáp án đúng cho ngắn lại thì hết lệch nhưng câu hỏi mất
+ *    giá trị học, vì đáp án đúng chính là phần người học cần đọc kỹ nhất.
+ * 2. **Viết lại luôn phần lời giải nói về phương án nhiễu.** Lời giải cũ đang mô tả nội dung cũ,
+ *    để nguyên là màn hình tự mâu thuẫn. Chú ý: `optionShuffle` ĐỌC lời giải để tìm nhãn phương
+ *    án rồi remap theo thứ tự mới, nên lời giải mới phải giữ đúng lối gọi tên "phương án b, c, d".
+ * 3. **Đi qua `/api/ai/complete`**, cổng chuyển tiếp đã có, chứ không dựng cổng mới. Bất biến 4.8:
+ *    máy chủ không giữ dữ liệu môn học, chỉ chuyển tiếp lời nhắc.
+ */
+async function vietLaiPhuongAnNhieu(q: any, subjectName: string): Promise<any | null> {
+  const dung = String(q?.options?.[q?.correctAnswer] ?? "");
+  const nhieuCu = CHU_CAI_PHUONG_AN
+    .filter(k => k !== q.correctAnswer)
+    .map(k => `${k}) ${String(q?.options?.[k] ?? "")}`)
+    .join("\n");
+  const doDaiDich = dung.length;
+
+  const prompt = `Một câu hỏi trắc nghiệm đang bị lỗi: đáp án đúng dài hơn hẳn ba phương án nhiễu, nên người học đoán được đáp án chỉ bằng cách chọn phương án dài nhất.
+
+Câu hỏi: ${String(q?.question ?? "")}
+
+Đáp án ĐÚNG (giữ nguyên, tuyệt đối không sửa, dài ${doDaiDich} ký tự):
+${dung}
+
+Ba phương án nhiễu hiện tại, cần viết lại:
+${nhieuCu}
+
+Lời giải hiện tại:
+${String(q?.explanation ?? "")}
+
+Hãy viết lại ĐÚNG BA phương án nhiễu theo các ràng buộc sau:
+1. Mỗi phương án nhiễu dài từ ${Math.round(doDaiDich * 0.85)} tới ${Math.round(doDaiDich * 1.15)} ký tự.
+2. Cùng cấu trúc ngữ pháp và cùng mức độ chi tiết với đáp án đúng.
+3. SAI rõ ràng về mặt học thuật. Mỗi phương án nhắm vào một hiểu sai có thật: nhầm sang khái niệm lân cận, đảo ngược quan hệ nhân quả, hoặc lấy một phần thay cho toàn thể.
+4. Tuyệt đối KHÔNG được là cách diễn đạt khác của đáp án đúng, và không phương án nào được đúng một phần tới mức gây tranh cãi.
+5. Viết lại phần lời giải cho khớp nội dung mới, vẫn gọi tên phương án theo lối "phương án b, c, d không phản ánh...".
+
+Trả về JSON đúng lược đồ.`;
+
+  try {
+    const raw = await callGemini(prompt, "QuizGeneration", subjectName, {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "object",
+        properties: {
+          phuongAnNhieu: { type: "array", items: { type: "string" } },
+          loiGiai: { type: "string" },
+        },
+        required: ["phuongAnNhieu", "loiGiai"],
+      },
+    });
+    const parsed = JSON.parse(raw);
+    const moi: string[] = Array.isArray(parsed?.phuongAnNhieu) ? parsed.phuongAnNhieu.map((s: any) => String(s).trim()) : [];
+    if (moi.length !== 3 || moi.some(s => s.length === 0)) return null;
+
+    const options: any = { ...q.options };
+    const viTriNhieu = CHU_CAI_PHUONG_AN.filter(k => k !== q.correctAnswer);
+    viTriNhieu.forEach((k, i) => { options[k] = moi[i]; });
+
+    const suaXong = {
+      ...q,
+      options,
+      explanation: String(parsed?.loiGiai ?? q.explanation ?? "").trim() || q.explanation,
+    };
+    // Chạy lại toàn bộ cổng chất lượng, không chỉ kiểm độ dài: bản viết lại vẫn có thể tạo ra hai
+    // phương án trùng nhau hoặc một phương án rỗng.
+    return isQualityQuestion(suaXong) ? suaXong : null;
+  } catch {
+    return null;
+  }
+}
+
 function isQualityQuestion(q: any): boolean {
   if (!q || typeof q.question !== "string" || q.question.trim().length < 8) return false;
   const o = q.options;
@@ -536,16 +679,16 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
   /**
    * Sinh ngân hàng câu hỏi từ tài liệu (Gemini 3.6 Flash): tự chia nhỏ nội dung dài thành
    * nhiều đoạn, gọi AI nhiều lượt (mỗi lượt tối đa 8 câu, chạy tuần tự tránh nghẽn), khử
-   * trùng lặp rồi lưu vào ngân hàng của môn đang chọn.
-   * onProgress(batchDone, totalBatches, accumulated) để cập nhật tiến trình theo lượt.
+   * trùng lặp, **cân bằng độ dài phương án**, rồi lưu vào ngân hàng của môn đang chọn.
+   * onProgress(batchDone, totalBatches, accumulated, giaiDoan) để cập nhật tiến trình.
    */
   async generateQuestionBankFromText(
     text: string,
     targetTotal: number,
     sourceTitle?: string,
-    onProgress?: (batchDone: number, totalBatches: number, accumulated: number) => void,
+    onProgress?: (batchDone: number, totalBatches: number, accumulated: number, giaiDoan?: GiaiDoanSinhCauHoi) => void,
     targetChapterId?: number
-  ): Promise<{ added: number; requested: number; batches: number; duplicatesSkipped: number; failedBatches: number }> {
+  ): Promise<{ added: number; requested: number; batches: number; duplicatesSkipped: number; failedBatches: number; lechDoDaiDaSua: number; lechDoDaiBiLoai: number }> {
     const subjectId = dbService.getActiveSubjectId();
     const target = Math.min(Math.max(Math.floor(targetTotal) || 5, 2), 60);
     const perBatchMax = 8;
@@ -574,7 +717,7 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     let lastError: Error | null = null;
 
     for (let b = 0; b < plan.length; b++) {
-      if (onProgress) onProgress(b, totalBatches, collected.length);
+      if (onProgress) onProgress(b, totalBatches, collected.length, "soan");
       try {
         const raw = await requestQuestionBatch(plan[b].chunk, plan[b].count, targetChapterId);
         for (const q of raw) {
@@ -590,19 +733,61 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
         lastError = e instanceof Error ? e : new Error(String(e));
       }
     }
-    if (onProgress) onProgress(totalBatches, totalBatches, collected.length);
 
     if (collected.length === 0) {
       throw lastError || new Error("AI chưa tạo được câu hỏi hợp lệ. Hãy thử lại với nội dung dài và rõ hơn.");
     }
 
+    // ------------------------------------------------- Cân bằng độ dài phương án
+    //
+    // Chặng này chặn ngay tại cổng nhận, trước khi câu hỏi kịp vào ngân hàng. Lời nhắc ở
+    // `functions-src/ai/generate.ts` đã yêu cầu bốn phương án dài tương đương (yêu cầu 15 tới 17),
+    // nhưng lời nhắc là lời khuyên chứ không phải ràng buộc: mô hình vẫn trượt. Đây là chốt chặn
+    // thật, đo bằng số ký tự.
+    //
+    // Câu lệch được gửi đi viết lại ĐÚNG MỘT lượt. Lệch tiếp thì LOẠI HẲN chứ không cho vào ngân
+    // hàng kèm một lời ghi chú, vì một câu hỏi lộ đáp án qua độ dài không dạy được gì ngoài mẹo
+    // làm bài, và mọi tầng đo lường phía sau sẽ ăn phải tín hiệu nhiễm đó.
+    const subjectName = dbService.getActiveSubjectName();
+    const daCanBang: any[] = [];
+    let lechDoDaiDaSua = 0;
+    let lechDoDaiBiLoai = 0;
+    for (let i = 0; i < collected.length; i++) {
+      const q = collected[i];
+      if (canBangDoDaiPhuongAn(q)) { daCanBang.push(q); continue; }
+      if (onProgress) onProgress(i, collected.length, daCanBang.length, "canbang");
+      const sua = await vietLaiPhuongAnNhieu(q, subjectName);
+      if (sua && canBangDoDaiPhuongAn(sua)) {
+        daCanBang.push(sua);
+        lechDoDaiDaSua++;
+      } else {
+        lechDoDaiBiLoai++;
+      }
+    }
+
+    if (daCanBang.length === 0) {
+      throw new Error(
+        `AI có soạn được ${collected.length} câu nhưng câu nào cũng bị lộ đáp án qua độ dài phương án, và lượt viết lại cũng không cứu được. Hãy thử lại với nội dung dài và rõ hơn.`
+      );
+    }
+
+    if (onProgress) onProgress(collected.length, collected.length, daCanBang.length, "luu");
+
     // Gán ID mới không trùng rồi lưu một lần. Ép về chương đích nếu người dùng chỉ định.
     const existingIds = questions.map(q => q.id);
     let nextId = (existingIds.length ? Math.max(...existingIds) : 0) + 1;
-    const processed: Question[] = collected.map(q => rawToQuestion(q, nextId++, source, targetChapterId));
+    const processed: Question[] = daCanBang.map(q => rawToQuestion(q, nextId++, source, targetChapterId));
 
     dbService.addQuestionsToSubject(subjectId, processed);
-    return { added: processed.length, requested: target, batches: totalBatches, duplicatesSkipped, failedBatches };
+    return {
+      added: processed.length,
+      requested: target,
+      batches: totalBatches,
+      duplicatesSkipped,
+      failedBatches,
+      lechDoDaiDaSua,
+      lechDoDaiBiLoai,
+    };
   },
 
   /**

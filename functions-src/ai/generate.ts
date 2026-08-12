@@ -54,7 +54,10 @@ ${chapterInstruction}
 11. Điền learningObjective: mục tiêu học tập cụ thể của câu hỏi này.
 12. Điền concept: Tên khái niệm/học thuyết cụ thể (ví dụ 'Cầu dẫn dụ - Derived Demand', 'Tổ hợp Marketing', 'Quy luật giá trị thặng dư').
 13. Điền misconception: Hiểu sai phổ biến nhất của sinh viên về khái niệm này mà đề bài đang nhắm tới cài bẫy.
-14. Điền bloomLevel: Phân loại theo thang đo Bloom: 'Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'.${chapterGuide}`;
+14. Điền bloomLevel: Phân loại theo thang đo Bloom: 'Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create'.
+15. ĐỘ DÀI BỐN PHƯƠNG ÁN PHẢI TƯƠNG ĐƯƠNG NHAU. Đếm số ký tự của từng phương án: phương án dài nhất không được vượt quá 120% phương án ngắn nhất. Tuyệt đối KHÔNG viết đáp án đúng thật dài và đầy đủ trong khi ba phương án nhiễu viết cụt lủn. Đây là lỗi làm hỏng cả đề: người học sẽ học được mẹo "cứ chọn phương án dài nhất" thay vì học kiến thức, và điểm luyện tập sẽ cao giả tạo so với năng lực thật.
+16. Ba phương án nhiễu phải CÙNG CẤU TRÚC NGỮ PHÁP và CÙNG MỨC ĐỘ CHI TIẾT với đáp án đúng. Mỗi phương án nhiễu phải nhắm vào một hiểu sai có thật của sinh viên (nhầm sang khái niệm lân cận, đảo ngược quan hệ nhân quả, lấy một phần thay cho toàn thể), không được là câu vô nghĩa viết cho đủ bốn phương án.
+17. Không để lộ đáp án qua cách dùng từ. Đáp án đúng không được là phương án DUY NHẤT chứa từ hạn định mềm ('thường', 'có thể', 'một trong những', 'nhìn chung'), và các phương án nhiễu không được là phương án DUY NHẤT chứa từ tuyệt đối ('luôn luôn', 'duy nhất', 'không bao giờ', 'mọi trường hợp').${chapterGuide}`;
 
     const ai = getAI();
     const response = await ai.models.generateContent({

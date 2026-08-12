@@ -70,14 +70,19 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
         text,
         genCount,
         title,
-        (batchDone, totalBatches, accumulated) => {
+        // Ba giai đoạn nói ba câu khác nhau. Trước đây chặng nào cũng rơi vào nhánh "Đang lưu vào
+        // ngân hàng câu hỏi" khi lượt soạn xong, nên chặng cân bằng độ dài (có gọi AI, có thể lâu
+        // hơn cả lượt soạn) sẽ hiện một câu nói sai việc đang chạy.
+        (batchDone, totalBatches, accumulated, giaiDoan) => {
           const pct = totalBatches > 0 ? Math.round((batchDone / totalBatches) * 100) : 0;
           setProgress(Math.max(5, Math.min(99, pct)));
-          setStep(
-            batchDone >= totalBatches
-              ? "Đang lưu vào ngân hàng câu hỏi..."
-              : `AI đang soạn lượt ${batchDone + 1}/${totalBatches} (đã có ${accumulated} câu)...`
-          );
+          if (giaiDoan === "luu") {
+            setStep("Đang lưu vào ngân hàng câu hỏi...");
+          } else if (giaiDoan === "canbang") {
+            setStep(`Đang cân lại độ dài phương án câu ${batchDone + 1}/${totalBatches}...`);
+          } else {
+            setStep(`AI đang soạn lượt ${batchDone + 1}/${totalBatches} (đã có ${accumulated} câu)...`);
+          }
         },
         chapterId
       );
@@ -87,6 +92,8 @@ export default function ChapterQuestionGeneratorModal({ chapterId, chapterTitle,
         notes.push(`Mới đạt ${result.added}/${result.requested} câu; dán thêm nội dung dài hơn để tạo nhiều hơn.`);
       }
       if (result.duplicatesSkipped > 0) notes.push(`Đã bỏ ${result.duplicatesSkipped} câu trùng lặp.`);
+      if (result.lechDoDaiDaSua > 0) notes.push(`Đã cân lại độ dài phương án cho ${result.lechDoDaiDaSua} câu.`);
+      if (result.lechDoDaiBiLoai > 0) notes.push(`Đã loại ${result.lechDoDaiBiLoai} câu lộ đáp án qua độ dài phương án.`);
       if (result.failedBatches > 0) notes.push(`Có ${result.failedBatches} lượt AI lỗi (đã bỏ qua).`);
       if (usedExisting) notes.push("Đã tự sinh thêm từ nội dung chương có sẵn (bạn không cần dán tài liệu).");
       setNote(notes.join(" "));
