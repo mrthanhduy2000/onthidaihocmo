@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 30/07/2026, sau hai mươi hai lượt. Đã rà hết tám màn cùng hộp thoại Cài đặt, xong lượt rà bằng con mắt người CHƯA có dữ liệu, và vừa dọn hai khoản nợ tồn từ đợt trước (dấu thập phân, bộ font thừa).
+**Cập nhật lần cuối**: 12/08/2026, mở đợt mới gồm 8 giai đoạn theo kế hoạch Đàm đã duyệt. Vừa xong Giai đoạn 0: dựng thước đo ngân hàng câu hỏi và ghi mốc nền.
 
 ---
 
@@ -14,14 +14,84 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Không có việc đang làm dở |
-| **Current Milestone** | Tái thiết kế giao diện theo triết lý Khan Academy, **7 vòng ĐÃ XONG** |
-| **Current Phase** | Dừng ở ranh giới commit sạch |
-| **Completed %** | 100% phần đã nhận làm, kiểm chứng cả trong Node lẫn trên trình duyệt |
+| **Current Objective** | Đợt 8 giai đoạn, **đang ở ranh giới giữa Giai đoạn 0 và Giai đoạn 1** |
+| **Current Milestone** | Giai đoạn 1: khử thiên lệch độ dài của ngân hàng câu hỏi |
+| **Current Phase** | Giai đoạn 0 XONG, chưa sửa một câu hỏi nào |
+| **Completed %** | 1 trên 9 khối việc (Giai đoạn 0 tới 8) |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bản đang chạy thật** | Bảy commit của đợt này đã push |
+| **Bộ kiểm** | **227/227 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
+
+---
+
+## Đợt đang chạy: kế hoạch 8 giai đoạn, Đàm duyệt ngày 12/08/2026
+
+Kế hoạch đầy đủ nằm ở `~/.claude/plans/h-y-t-o-plan-chi-eager-moore.md`. Tóm tắt để AI sau khỏi
+phải mở file ngoài repo:
+
+| GĐ | Việc | Nhóm kiểm | Trạng thái |
+|---|---|---|---|
+| 0 | Dọn bàn, dựng thước đo ngân hàng | không | **XONG 12/08** |
+| 1 | Khử thiên lệch độ dài ngân hàng câu hỏi | `AJ` | tiếp theo |
+| 2 | Đường báo câu hỏi sai, cho `REJECTED` có hiệu lực | `AK` | chưa |
+| 3 | Hàng đợi ôn hôm nay, đưa `nextReviewAt` ra màn hình | `AL` | chưa |
+| 4 | Bỏ số bịa ở tầng mục tiêu (ngày thi, điểm mục tiêu) | `AM` | chưa, **cân nhắc đẩy lên ngay sau GĐ1** |
+| 5 | Ghi thời gian từng câu | `AN` | chưa |
+| 6 | Chế độ nhớ lại chủ động, chạy song song trắc nghiệm | `AO` | chưa |
+| 7 | Nạp môn mới trong một buổi tối | `AP` | chưa |
+| 8 | Tách gói giao diện, dọn mã chết | `AQ` | chưa |
+
+**Vì sao Giai đoạn 4 nên đẩy lên sớm**: bất biến 4.9i vừa thêm ngày 30/07 chấm ưu tiên ôn theo
+**mức nhớ vào ngày thi**, trọng số 0,15. Yếu tố đó đọc `goal.examDate`, mà `getSubjectGoal` đang
+**bịa ngày thi bằng hôm nay cộng 14 ngày** khi Đàm chưa đặt. Trước 30/07 đây chỉ là lỗi hiển thị;
+từ 30/07 nó đã thành lỗi **điều khiển việc chọn câu**.
+
+Bốn quyết định Đàm đã chốt, đừng tự đổi:
+
+1. Làm cả 8 giai đoạn.
+2. Sửa câu lệch bằng cách **AI viết lại 3 phương án nhiễu**, không rút gọn đáp án đúng.
+3. Chế độ nhớ lại **chạy song song** trắc nghiệm, người học tự chọn.
+4. **KHÔNG** cài lên điện thoại, **KHÔNG** đồng bộ đa thiết bị. Giữ nguyên quyết định cũ.
+
+---
+
+## Lượt mới nhất: thước đo ngân hàng câu hỏi, và cái bẫy sống sót qua 227 phép kiểm
+
+Công cụ mới `scripts/bank-audit.mjs`, chạy `node scripts/bank-audit.mjs`. Không sửa gì, chỉ in
+bảng số. Chạy nó trước và sau mọi lượt đụng vào dữ liệu câu hỏi.
+
+### Mốc nền đo ngày 12/08/2026
+
+| Ngân hàng | Số câu | Đáp án đúng DÀI NHẤT | Điểm nếu luôn chọn dài nhất | Vượt ngưỡng 0,10 |
+|---|---|---|---|---|
+| Hành vi khách hàng, biên soạn tay | 12 | **75,0%** | **7,5/10** | 6 |
+| Hành vi khách hàng, AI sinh | 280 | **62,9%** | **6,3/10** | 134 |
+| Kinh tế chính trị, môn đã đóng | 60 | 50,0% | 5,0/10 | ngoài phạm vi |
+| **Môn đang mở, cộng lại** | **292** | **63,4%** | **6,3/10** | **140** |
+
+Ngẫu nhiên là 25%. Chọn phương án dài nhất mà **không đọc câu hỏi** được **6,3 trên 10 điểm**.
+
+**Vì sao lọt qua 227 phép kiểm**: `optionShuffle` trộn tất định để xoá thiên lệch **vị trí**, và
+chú thích đầu file nói rõ mục đích ấy, nên người đọc mã tin rằng thiên lệch đã được lo xong.
+Nhưng **trộn vị trí không đụng gì tới độ dài**. Lần thứ bảy bắt được khuôn *lách qua hệ thống mà
+không có gì kêu lên*, và là lần đầu khuôn ấy nằm trong **dữ liệu** chứ không nằm trong mã.
+
+### Ba kết luận cũ bị lượt đo này chứng minh là SAI
+
+1. **`bloomLevel` rỗng 280/280 không phải lỗi.** `loadSubject` gọi `suyRaMucBloom` điền lúc nạp
+   môn: 237/280 câu suy từ `learningObjective`, 43 câu lùi về độ khó, ra 6 bậc thật. Bảng chấm ưu
+   tiên **không** thiếu tiêu chí nào. Đừng đi điền `bloomLevel` vào file dữ liệu.
+2. **`estimatedTime` chỉ phẳng ở ngân hàng AI sinh** (35,0 giây cả ba mức). Hai ngân hàng biên
+   soạn tay CÓ bám độ khó (30,0 / 41,7 / 50,0 và 30,8 / 38,8 / 45,4). Con số "34,7 / 35,3 / 35,2"
+   ghi ở mục cũ bên dưới là trung bình trộn lẫn hai loại nên che mất sự thật này.
+3. **Đồ thị tri thức có 16 nút, không phải 18.**
+
+### Một chỗ kế hoạch tự mâu thuẫn, bắt được TRƯỚC khi viết mã
+
+Ngưỡng "lệch quá 20% thì viết lại" nghe hợp lý nhưng chỉ đưa tỷ lệ dài nhất về 41,1%, trong khi
+phép kiểm đi kèm đòi 20 tới 35%. Đã chốt ngưỡng **0,10**, viết lại **140 câu**, dự phóng còn
+**27,4%**. Bài học: *một ngưỡng nghe hợp lý vẫn phải chiếu vào mục tiêu cuối trước khi tin nó.*
 
 ---
 

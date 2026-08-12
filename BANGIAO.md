@@ -59,6 +59,86 @@ sao, và còn nợ gì.
 
 ---
 
+### 12/08/2026, thước đo ngân hàng câu hỏi, và một cái bẫy sống sót qua 227 phép kiểm
+
+Đàm hỏi sản phẩm cần xây thêm gì. Thay vì trả lời bằng cảm nhận, tôi đo. Lượt đo đó tìm ra một
+lỗi mà **không phép kiểm nào trong 227 phép kiểm chạm tới được**, vì nó không nằm trong mã.
+
+#### Phát hiện: ngân hàng câu hỏi đang dạy mẹo làm bài
+
+| Ngân hàng | Số câu | Đáp án đúng là phương án DÀI NHẤT | Điểm nếu luôn chọn dài nhất mà không đọc câu hỏi |
+|---|---|---|---|
+| Hành vi khách hàng, biên soạn tay | 12 | **75,0%** | **7,5/10** |
+| Hành vi khách hàng, AI sinh | 280 | **62,9%** | **6,3/10** |
+| Kinh tế chính trị, môn đã đóng | 60 | 50,0% | 5,0/10 |
+| **Môn đang mở, cộng lại** | **292** | **63,4%** | **6,3/10** |
+
+Mức ngẫu nhiên là 25%. Đáp án đúng dài hơn trung bình ba phương án còn lại **16,4 ký tự**.
+
+**Vì sao nó sống sót lâu như vậy**: dự án ĐÃ lo chuyện thiên lệch và đã xử lý, nhưng xử lý đúng
+một nửa. `optionShuffle` trộn tất định theo mã câu để xoá thiên lệch **vị trí**, và chú thích đầu
+file nói rõ mục đích ấy. Nhưng **trộn vị trí không đụng gì tới độ dài**. Một biện pháp phòng thủ
+có sẵn khiến người đọc mã tin rằng chuyện thiên lệch đã được lo xong.
+
+Đây là lần thứ **bảy** dự án bắt được khuôn *lách qua hệ thống mà không có gì kêu lên*, sau
+`brand-danger` chưa định nghĩa, `animate-fade-in-up` chưa có token, 72 chỗ màu đi vòng qua bộ
+token, `dark:` bám nhầm hệ điều hành, bộ font tải về không ai dùng, và lớp `prose` chưa cài
+plugin. Khác biệt của lần này: **sáu lần trước đều nằm trong mã, lần này nằm trong DỮ LIỆU.**
+
+**Vì sao nghiêm trọng hơn một lỗi soạn đề**: mọi tầng đo lường phía sau (mô hình người học, đường
+cong quên, độ thạo khái niệm, bộ dự báo điểm) đều ăn chuỗi trả lời này làm đầu vào. Bộ dự báo đã
+được hiệu chuẩn tới độ dốc 1,00 và sai lệch trung bình 0,22, nhưng nó đang hiệu chuẩn trên một
+tín hiệu bị nhiễm. Máy đo chính xác tuyệt đối vẫn cho kết quả sai nếu vật cần đo bị đặt lệch.
+
+#### Đã làm lượt này: dựng thước, chưa sửa
+
+`scripts/bank-audit.mjs`, chạy bằng `node scripts/bank-audit.mjs`. Không sửa gì, chỉ in bảng số.
+Nó là mốc nền để so trước và sau mọi lượt đụng vào dữ liệu câu hỏi.
+
+Đóng gói file dữ liệu bằng esbuild rồi nạp vào Node, **không** tách bằng biểu thức chính quy.
+Lý do: `customer_behavior.ts` viết khoá không có dấu nháy còn `customer_behavior_generated.ts`
+lại có, nên một bộ tách bằng biểu thức chính quy sẽ đúng với file này và **sai âm thầm** với file
+kia. Cũng không nhập thẳng `db.ts` vì nó đi qua `import.meta.env` (Bẫy 2).
+
+#### Ba chỗ chính lượt đo này chứng minh tôi đã kết luận SAI trước đó
+
+1. **`bloomLevel` rỗng 280/280 KHÔNG phải lỗi.** Tôi đo trên file dữ liệu rồi kết luận bảng chấm
+   ưu tiên chạy thiếu một tiêu chí. Nhưng `loadSubject` gọi `suyRaMucBloom` điền lại lúc nạp môn:
+   237/280 câu suy từ `learningObjective`, 43 câu lùi về độ khó, ra 6 bậc phân bố thật. Đúng bài
+   học đã ghi trong `WORKSTATE.md`: đếm trên dữ liệu thô mà không biết dự án xử lý nó ở đâu thì
+   con số thu được vô nghĩa.
+2. **`estimatedTime` chỉ phẳng ở ngân hàng AI sinh** (35,0 giây cho cả ba mức khó). Hai ngân hàng
+   biên soạn tay CÓ bám độ khó: 30,0 / 41,7 / 50,0 và 30,8 / 38,8 / 45,4 giây. Con số
+   "34,7 / 35,3 / 35,2" ghi trước đây là trung bình của cả hai loại trộn lẫn nên che mất sự thật.
+3. **Đồ thị tri thức có 16 nút, không phải 18.** Con số 18 đến từ `grep 'concept:'` vốn đếm lẫn
+   trường `concept` của các kiểu dữ liệu khác trong cùng file.
+
+#### Một chỗ chính kế hoạch sửa tự mâu thuẫn, phát hiện trước khi viết dòng mã nào
+
+Bản kế hoạch đầu đặt ngưỡng "lệch quá 20% thì phải viết lại". Đo thử thì nhóm vượt 20% chỉ có 87
+câu, và viết lại hết nhóm ấy chỉ đưa tỷ lệ dài nhất từ 63,4% xuống **41,1%**, tức vẫn rớt vùng
+đạt 20 tới 35% mà chính phép kiểm kèm theo đòi hỏi. **Hai phép kiểm sẽ chống nhau.**
+
+| Ngưỡng | Số câu phải viết lại | Tỷ lệ dài nhất còn lại |
+|---|---|---|
+| 0,20 | 87 | 41,1%, rớt |
+| 0,15 | 119 | 32,9%, sát mép trên |
+| **0,10** | **140** | **27,4%, giữa vùng đạt** |
+| 0,05 | 162 | 21,9%, sát mép dưới |
+
+Đã chốt **0,10**. Bài học giữ lại: *một ngưỡng nghe hợp lý vẫn phải đem chiếu vào mục tiêu cuối
+trước khi tin nó, vì hai con số cùng nghe hợp lý có thể mâu thuẫn nhau.*
+
+#### Còn nợ ngay sau lượt này
+
+Chưa sửa một câu hỏi nào. Lượt sau: chặn nguồn ở lời nhắc `functions-src/ai/generate.ts`, chặn ở
+cổng nhận trong `ai.ts`, rồi cho AI viết lại ba phương án nhiễu của **140 câu** (gồm cả 12 câu
+biên soạn tay, vì phần tay còn lệch nặng hơn phần AI sinh). Bắt buộc có chặng **thẩm định ngược**:
+gửi lại câu đã sửa ở một lượt gọi độc lập, không cho biết đáp án, hỏi phương án nào đúng. Lệch
+thì giữ nguyên bản cũ. Nhóm kiểm mới sẽ là **AJ**, vì `AI` vừa bị lượt 30/07 dùng mất.
+
+---
+
 ### 30/07/2026, lịch ôn bám NGÀY THI: chỗ sản phẩm này vượt được Anki
 
 Đàm yêu cầu trí tuệ ngang hoặc hơn Anki. Đo trước khi sửa, thay vì đoán xem Anki hơn ở đâu.
