@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 12/08/2026, mở đợt mới gồm 8 giai đoạn theo kế hoạch Đàm đã duyệt. Vừa xong Giai đoạn 0: dựng thước đo ngân hàng câu hỏi và ghi mốc nền.
+**Cập nhật lần cuối**: 12/08/2026, **XONG Giai đoạn 1** của đợt 8 giai đoạn. Ngân hàng câu hỏi đã hết lộ đáp án qua độ dài phương án.
 
 ---
 
@@ -14,29 +14,42 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Đợt 8 giai đoạn, Giai đoạn 1 xong phần chặn nguồn |
-| **Current Milestone** | **Giai đoạn 1C BỊ CHẶN**: khoá Gemini chạm trần chi tiêu tháng |
-| **Current Phase** | Giai đoạn 0 XONG. Giai đoạn 1: 1A và 1B XONG, 1C chờ Đàm mở hạn mức |
-| **Completed %** | 1,7 trên 9 khối việc |
+| **Current Objective** | Đợt 8 giai đoạn, bước tiếp là Giai đoạn 4 (xem lý do đẩy lên bên dưới) |
+| **Current Milestone** | Giai đoạn 1 XONG cả 1A, 1B, 1C |
+| **Current Phase** | Giai đoạn 0 và 1 XONG. Chưa bắt đầu giai đoạn nào tiếp theo |
+| **Completed %** | 2 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **230/230 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **234/234 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
-### VIỆC ĐÀM CẦN LÀM ĐỂ MỞ KHOÁ GIAI ĐOẠN 1C
+### HAI VIỆC CHỈ ĐÀM LÀM ĐƯỢC, không AI nào thay được
 
-Khoá Gemini đã chạm trần chi tiêu tháng, mọi lời gọi trả `429 RESOURCE_EXHAUSTED`. Đây là thiết
-lập thanh toán trong Google AI Studio, mã nguồn không xử lý được.
+**1. Soát tay tối thiểu 20 câu ngẫu nhiên trong [rebalance-report.md](rebalance-report.md).**
+133 câu vừa được AI viết lại ba phương án nhiễu và viết lại lời giải. Máy đã chặn được: lệch độ
+dài, hai phương án trùng nhau, lời giải gọi nhầm nhãn phương án, và phương án nhiễu hoá thành
+đúng (thẩm định ngược). Máy **không** chặn được: phương án nhiễu sai một cách vô lý tới mức loại
+được ngay mà không cần học bài, hoặc lời giải đúng hình thức nhưng lệch nội dung giáo trình.
+Rủi ro thật là nội dung sai, không phải định dạng sai.
 
-1. Vào https://ai.studio/spend nâng trần chi tiêu, hoặc chờ sang tháng mới.
-2. Chạy `node scripts/rebalance-distractors.mjs` (khoảng 280 lượt gọi Gemini Flash cho 140 câu).
-3. Đọc `rebalance-report.md`, **soát tay ít nhất 20 câu ngẫu nhiên**.
-4. Chạy `node scripts/bank-audit.mjs`, đối chiếu với mốc nền bên dưới.
-5. **Đổi AJ1 và AJ2 trong `scripts/selftest/harness.ts` từ `info` sang `check`.** Ngưỡng đã chốt
-   sẵn trong chú thích ngay tại đó, không phải nghĩ lại.
+**2. Bản deploy thật đang MẤT TOÀN BỘ tính năng AI.** Đo ngày 12/08/2026, ba bằng chứng độc lập:
 
-Chưa làm bước này thì ngân hàng vẫn còn 140 câu lộ đáp án qua độ dài phương án. Bộ kiểm in con số
-ấy ra ở phần "Số liệu tham khảo" mỗi lượt chạy.
+- gói entry đã deploy `index-RvdNTB7h.js` không chứa địa chỉ supabase nào và **0 chuỗi JWT**, tức
+  `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY` **không được đặt lúc Vercel dựng bản**
+- địa chỉ Supabase trong `.env` máy nhà **không phân giải được DNS** (ENOTFOUND), trong khi
+  `supabase.co` phân giải bình thường, nên nhiều khả năng dự án Supabase đã bị xoá hoặc tạm dừng
+- cả 4 cổng `/api/ai/*` trả 401 khi gọi không token
+
+Hệ quả: `isSupabaseConfigured` false, `supabase` null, `ensureSession()` trả null, không có token,
+**mọi tính năng AI âm thầm rơi về chế độ ngoại tuyến mà không báo gì cho người dùng**. Giao diện
+vẫn chạy bình thường vì ứng dụng vốn cục bộ trước, nên nhìn màn hình không thấy gì bất thường.
+
+Cần làm: dựng lại dự án Supabase, bật Anonymous sign-ins, đặt hai biến môi trường trong Vercel,
+deploy lại. Đụng tài khoản và khoá bí mật nên AI không làm thay được.
+
+**Lưu ý cho AI sau**: `npm run check:prod` KHÔNG tự kết luận được chuyện này, nó chỉ báo "chưa xác
+minh được đường có token". Muốn biết chắc thì tải gói entry đã deploy về rồi tìm chuỗi
+`https://<mã>.supabase.co` và chuỗi JWT `eyJ...` trong đó.
 
 ---
 
@@ -48,10 +61,10 @@ phải mở file ngoài repo:
 | GĐ | Việc | Nhóm kiểm | Trạng thái |
 |---|---|---|---|
 | 0 | Dọn bàn, dựng thước đo ngân hàng | không | **XONG 12/08** |
-| 1 | Khử thiên lệch độ dài ngân hàng câu hỏi | `AJ` | tiếp theo |
+| 1 | Khử thiên lệch độ dài ngân hàng câu hỏi | `AJ` (7) | **XONG 12/08** |
 | 2 | Đường báo câu hỏi sai, cho `REJECTED` có hiệu lực | `AK` | chưa |
 | 3 | Hàng đợi ôn hôm nay, đưa `nextReviewAt` ra màn hình | `AL` | chưa |
-| 4 | Bỏ số bịa ở tầng mục tiêu (ngày thi, điểm mục tiêu) | `AM` | chưa, **cân nhắc đẩy lên ngay sau GĐ1** |
+| 4 | Bỏ số bịa ở tầng mục tiêu (ngày thi, điểm mục tiêu) | `AM` | chưa, **nên làm TIẾP THEO** |
 | 5 | Ghi thời gian từng câu | `AN` | chưa |
 | 6 | Chế độ nhớ lại chủ động, chạy song song trắc nghiệm | `AO` | chưa |
 | 7 | Nạp môn mới trong một buổi tối | `AP` | chưa |

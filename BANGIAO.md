@@ -59,6 +59,108 @@ sao, và còn nợ gì.
 
 ---
 
+### 12/08/2026, sửa xong 140 câu lệch độ dài, và ba lần chính mình đo sai
+
+Khép lại Giai đoạn 1 của kế hoạch 8 giai đoạn. Lượt trước đã chặn nguồn; lượt này sửa phần đã nằm
+sẵn trong ngân hàng.
+
+#### Kết quả đo được, trước và sau
+
+| Số đo, môn Hành vi khách hàng, 292 câu | Trước | Sau |
+|---|---|---|
+| Đáp án đúng là phương án dài nhất | **63,4%** | **31,2%** (vùng đạt 20 tới 35%) |
+| Điểm nếu luôn chọn phương án dài nhất, không đọc câu hỏi | **6,3/10** | **3,1/10** |
+| Số câu vượt ngưỡng lệch 0,10 | 140 | **1** |
+| Câu trùng văn bản, phương án rỗng, lời giải rỗng | 0 / 0 / 0 | 0 / 0 / 0 |
+
+133 câu được AI viết lại và qua đủ năm chốt chặn; 130 câu áp được vào file. Một câu (#3214) bị
+**thẩm định ngược từ chối** nên giữ nguyên bản cũ, xem mục miễn trừ trong AJ1.
+
+Bộ kiểm: **230 lên 234**, không phép kiểm nào biến mất (đã so danh sách tên trước và sau).
+
+#### Ba lần tự đo sai, ghi lại vì cả ba đều thuộc loại dễ lặp
+
+**1. Dự phóng "viết lại thì tỷ lệ dài nhất về mức ngẫu nhiên 25%" là SAI.** Lời nhắc yêu cầu phương
+án nhiễu dài 85 tới 115% đáp án đúng, và kế hoạch ngầm tin mô hình rải đều trong khoảng ấy. Chạy thử
+8 câu, đo thật: **4 trên 6 câu, tức 67%, đáp án đúng VẪN là dài nhất**, vì mô hình bám mép dưới cho
+an toàn. Độ lệch tụt từ 0,47 xuống 0,05 nhưng dấu vẫn dương. Chạy cả mẻ theo lời nhắc ấy sẽ ra
+khoảng 40 tới 48%, trượt đúng vùng đạt mà phép kiểm AJ2 đòi.
+
+Sửa bằng cách **quyết tất định trong script thay vì giao cho mô hình**: mã câu chia hết cho 4 thì
+giữ đáp án đúng làm phương án dài nhất, còn lại bắt buộc có ít nhất một phương án nhiễu dài hơn.
+
+Bài học: một tỷ lệ mong muốn thì phải **dựng ra**, không trông chờ nó tự rơi vào. Đây là lần thứ hai
+trong cùng đợt một con số nghe hợp lý không chịu nổi phép chiếu vào mục tiêu cuối (lần một là ngưỡng
+0,20).
+
+**2. Phép kiểm AJ6 vừa viết ra đã báo nhầm ngay hai câu.** Mẫu tìm nhãn phương án thiếu ranh giới
+chữ, nên "Phương án a bị ngược mệnh đề" bị đọc thành nhãn 'a' rồi nhãn 'b' của chữ "bị", và "Phương
+án b chính xác" thành 'b' rồi 'c' của chữ "chính". Hai câu #3084 và #3137 hoàn toàn lành lặn bị kết
+tội. Tệ hơn: cùng cái mẫu ấy đang chạy trong công cụ sửa, nên nó đã **vứt bỏ 4 bản viết lại tốt**,
+tức đốt lượt gọi Gemini rồi trả câu về đúng bản lệch cũ.
+
+Vá bằng `(?![\p{L}\p{M}])`, thử lại trên 8 ca gồm cả hai ca báo nhầm và đúng ca lỗi thật hôm trước,
+rồi xoá 6 mục khỏi bộ nhớ đệm và chạy lại chúng.
+
+Bài học: **một phép kiểm mới đỏ ngay lần chạy đầu thì nghi phép kiểm trước, đừng nghi dữ liệu trước.**
+Ở đây dữ liệu đúng còn phép kiểm sai.
+
+**3. `scripts/bank-audit.mjs` âm thầm giữ ngưỡng 0,2 trong khi engine đã chốt 0,1.** Công cụ đo báo
+"5 câu vượt ngưỡng", engine đếm ra 140. Đúng cái kiểu ba bản chép trôi ra khác nhau mà AJ5 sinh ra để
+canh, chỉ là lúc ấy AJ5 mới canh công thức chứ **chưa canh ngưỡng ở file này**. Đã mở rộng AJ5 canh
+cả hai công cụ.
+
+#### Hai chỗ khác cùng một cái bẫy
+
+Lỗi "lời nhắc nêu ví dụ bằng giá trị cụ thể thì mô hình chép lại chính giá trị ấy" hoá ra nằm ở **hai
+file**, không phải một. Ngoài script sửa dữ liệu (đã vá hôm trước), đường chạy trong trình duyệt
+`vietLaiPhuongAnNhieu` của [ai.ts](src/services/ai.ts) vẫn còn nguyên câu `vẫn gọi tên phương án theo
+lối "phương án b, c, d không phản ánh..."`. Đường này chạy mỗi lần Đàm sinh câu hỏi từ tài liệu.
+
+Đã sửa cả hai theo cùng một cách: bơm thẳng ba chữ cái thật của từng câu vào lời nhắc, cộng chốt chặn
+`loiGiaiGoiNhamDapAnDung` chặn ở đầu ra. Và thêm **AJ7 canh nguyên nhân** (lời nhắc có bơm chữ cái
+không) bên cạnh **AJ6 canh hậu quả** (dữ liệu có lời giải gọi nhầm không).
+
+#### Tiết kiệm lời gọi Gemini, theo yêu cầu của Đàm
+
+Bản đầu gọi 2 lượt mỗi câu, 280 lượt cho 140 câu. Bản này gộp lô 4 câu cho viết lại và 8 câu cho thẩm
+định ngược, còn **53 lượt**, giảm hơn 5 lần. Thêm bộ nhớ đệm ngoài repo tại
+`~/.claude/backups/onthidaihocmo/rebalance-cache.json` để lượt chạy lại không gọi lại thứ đã xong;
+lượt chạy hôm trước đã đốt 31 lượt rồi mất trắng vì chưa có nó.
+
+Đánh đổi phải biết: gộp lô làm mô hình chia sự chú ý, chất lượng từng câu có thể tụt. Đã đọc bằng mắt
+mẫu từ cả mẻ chạy thử lẫn mẻ gộp lô, chất lượng giữ được. Lô 4 là mức đã cân, đừng nâng lên 10.
+
+#### Còn nợ, hai việc CHỈ ĐÀM LÀM ĐƯỢC
+
+**1. Soát tay tối thiểu 20 câu ngẫu nhiên trong [rebalance-report.md](rebalance-report.md).** Không
+tự động hoá được, vì rủi ro thật là nội dung sai chứ không phải định dạng sai. Máy đã chặn được:
+lệch độ dài, phương án trùng nhau, lời giải gọi nhầm nhãn, và phương án nhiễu hoá thành đúng. Máy
+**không** chặn được: phương án nhiễu sai nhưng sai một cách vô lý tới mức loại được ngay mà không cần
+học, hoặc lời giải viết đúng hình thức nhưng lệch nội dung giáo trình.
+
+**2. Bản deploy thật đang MẤT TOÀN BỘ tính năng AI.** Phát hiện khi chạy `npm run check:prod`, ba
+bằng chứng độc lập:
+
+- gói entry đã deploy `index-RvdNTB7h.js` không chứa địa chỉ supabase nào và **0 chuỗi JWT**, nghĩa
+  là `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY` **không được đặt lúc Vercel dựng bản**
+- địa chỉ Supabase trong `.env` máy nhà **không phân giải được DNS** (ENOTFOUND), trong khi
+  `supabase.co` thì phân giải bình thường, nên nhiều khả năng dự án Supabase đã bị xoá hoặc tạm dừng
+- cả 4 cổng `/api/ai/*` trả 401 khi gọi không token
+
+Hệ quả dây chuyền: `isSupabaseConfigured` false, `supabase` null, `ensureSession()` trả null, không
+có token, **mọi tính năng AI âm thầm rơi về chế độ ngoại tuyến mà không báo gì cho người dùng**. Giao
+diện vẫn chạy bình thường vì ứng dụng vốn cục bộ trước.
+
+Cần Đàm: dựng lại dự án Supabase, bật Anonymous sign-ins, đặt hai biến môi trường trong Vercel, deploy
+lại. Không tự động hoá được vì đụng tới tài khoản và khoá bí mật.
+
+Đáng nói thêm: đây đúng là **Bẫy 1** trong AGENTS.md, build xanh không đảm bảo bản deploy còn sống. Và
+lần này còn tệ hơn mô tả trong Bẫy 1, vì `npm run check:prod` cũng **không tự kết luận được**, nó chỉ
+báo "chưa xác minh được đường có token". Phải đi soi gói đã deploy mới ra.
+
+---
+
 ### 12/08/2026, chặn thiên lệch độ dài, và một lỗi mà thẩm định ngược KHÔNG bắt được
 
 Tiếp lượt trước. Lượt trước dựng thước và đo ra 67,1% câu có đáp án đúng dài nhất. Lượt này chặn
