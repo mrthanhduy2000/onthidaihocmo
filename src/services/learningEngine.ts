@@ -9,6 +9,7 @@ import { learnerModelService, ConceptProfile } from "./learnerModel";
 import { Question, ExamAttempt, DifficultyLevel } from "../types";
 import { TimeService } from "./time";
 import { soThapPhan } from "./numberFormat";
+import { mucNhoVaoNgayThi } from "./conceptMemoryService";
 
 export interface LearningRoadmapStep {
   id: string;
@@ -120,6 +121,27 @@ export const learningEngine = {
       return stats.conceptMastery?.[node.concept] ?? stats.conceptMastery?.[node.id] ?? 50;
     };
 
+    /*
+      SỐ NGÀY CÒN LẠI TỚI KỲ THI, đọc MỘT LẦN cho cả lượt chấm.
+
+      Lấy qua `getSubjectGoal` để dùng chung một nguồn với bộ dự báo điểm và bộ lập kế hoạch
+      chương trình. Lưu ý: hàm ấy luôn trả về một ngày thi, mặc định là hôm nay cộng 14 ngày khi
+      người học chưa tự đặt. Đây là quy ước sẵn có của dự án, không phải thứ mục này dựng ra;
+      đi lệch khỏi nó sẽ khiến lịch ôn và bảng dự báo nói hai ngày thi khác nhau.
+
+      Không đọc được thì để `null`, và mọi trọng số bên dưới lùi về đúng bộ cũ.
+    */
+    let soNgayToiKyThi: number | null = null;
+    try {
+      const ngayThi = dbService.getSubjectGoal()?.examDate;
+      if (ngayThi) {
+        const cach = TimeService.daysBetween(TimeService.today(), ngayThi);
+        if (Number.isFinite(cach)) soNgayToiKyThi = Math.max(0, cach);
+      }
+    } catch {
+      soNgayToiKyThi = null;
+    }
+
     return pool.map(q => {
       const reasons: string[] = [];
 
@@ -150,6 +172,7 @@ export const learningEngine = {
       // trọng số chính là độ gần gũi. Khái niệm chỉ liên quan mờ nhạt thì góp tiếng nói nhỏ,
       // thay vì được tính ngang hàng với khái niệm trùng khớp chủ đề.
       let sumNeed = 0, sumForget = 0, sumOverdue = 0, sumConf = 0, sumImp = 0, sumBloom = 0;
+      let sumRuiRoKyThi = 0;
       let weightTotal = 0;
       let prereqGate = 1.0; // cổng chặt nhất, chỉ nhân một lần ở cuối
       let gateReason = "";
@@ -171,6 +194,35 @@ export const learningEngine = {
         if (profile.nextReviewAt) {
           const overdueDays = (now - new Date(profile.nextReviewAt).getTime()) / 86400000;
           sumOverdue += w * clamp01(overdueDays / 7);
+        }
+
+        /*
+          3b. NGUY CƠ QUÊN MẤT TRƯỚC NGÀY THI. Đây là yếu tố duy nhất nhìn về TƯƠNG LAI.
+
+          Sáu yếu tố còn lại đều đo trạng thái BÂY GIỜ, nên một khái niệm mong manh vừa học
+          xong trông hoàn toàn khoẻ mạnh: mức quên bằng 0, chưa quá hạn ôn, độ thạo vừa được
+          nâng. Nhưng nếu độ bền của nó là 1,5 ngày mà kỳ thi còn 14 ngày thì tới hôm thi chỉ
+          còn 5%, tức nó gần như chắc chắn mất trước khi dùng tới.
+
+          Đo được ngày 30/07/2026, ba khái niệm ĐỀU VỪA HỌC HÔM NAY, kỳ thi còn 14 ngày:
+
+              S = 27,3 ngày  ->  nhớ bây giờ 100%,  nhớ ngày thi 60%
+              S =  7,9 ngày  ->  nhớ bây giờ 100%,  nhớ ngày thi 17%
+              S =  1,5 ngày  ->  nhớ bây giờ 100%,  nhớ ngày thi  5%
+
+          Cả ba chấm như nhau ở bảng cũ, dù tới ngày thi chúng lệch 55 điểm phần trăm.
+
+          Đây cũng là chỗ sản phẩm này làm được thứ Anki không làm: Anki xếp lịch cho trí nhớ
+          vô thời hạn nên giữ một mức nhớ mục tiêu cố định, còn người ôn thi chỉ cần nhớ cao
+          nhất vào ĐÚNG MỘT NGÀY.
+        */
+        const doBen = profile.doBenTriNhoNgay;
+        if (typeof doBen === "number" && Number.isFinite(doBen)) {
+          const ngayNghi = profile.lastStudiedAt
+            ? Math.max(0, (now - new Date(profile.lastStudiedAt).getTime()) / 86400000)
+            : 0;
+          const nhoNgayThi = mucNhoVaoNgayThi(doBen, soNgayToiKyThi, ngayNghi);
+          if (nhoNgayThi !== null) sumRuiRoKyThi += w * clamp01(1 - nhoNgayThi);
         }
 
         // 4. Thiếu tự tin, liên tục thay cho ngưỡng cứng 0,4.
@@ -216,19 +268,40 @@ export const learningEngine = {
       const importance = sumImp / wt;
       const bloomFit = sumBloom / wt;
 
-      const base =
-        0.30 * need +
-        0.25 * forget +
-        0.15 * overdue +
-        0.10 * confGap +
-        0.10 * importance +
-        0.10 * bloomFit;
+      /*
+        TRỌNG SỐ. Có ngày thi thì nhường một phần cho yếu tố nhìn về tương lai; không có thì
+        giữ NGUYÊN bộ cũ để hành vi không đổi.
+
+        Phần nhường lấy chủ yếu từ `forget` (0,25 xuống 0,15) vì hai yếu tố này hỏi cùng một
+        câu hỏi ở hai mốc thời gian khác nhau, nên để cả hai ở trọng số cao là đếm hai lần cùng
+        một thứ. Lấy thêm 0,03 từ `overdue` và 0,02 từ `need` cho đủ 0,15.
+      */
+      const coNgayThi = soNgayToiKyThi !== null;
+      const ruiRoKyThi = sumRuiRoKyThi / wt;
+
+      const base = coNgayThi
+        ? 0.28 * need +
+          0.15 * forget +
+          0.15 * ruiRoKyThi +
+          0.12 * overdue +
+          0.10 * confGap +
+          0.10 * importance +
+          0.10 * bloomFit
+        : 0.30 * need +
+          0.25 * forget +
+          0.15 * overdue +
+          0.10 * confGap +
+          0.10 * importance +
+          0.10 * bloomFit;
 
       const score = Math.max(0.01, base * prereqGate + 0.5 * wrongSignal);
 
       if (need > 0.5) reasons.push(`Khái niệm còn yếu (${Math.round(need * 100)}% thiếu hụt)`);
       if (forget > 0.4) reasons.push(`Đang quên dần (còn nhớ ${Math.round((1 - forget) * 100)}%)`);
       if (overdue > 0.2) reasons.push(`Quá hạn ôn tập`);
+      if (coNgayThi && ruiRoKyThi > 0.5) {
+        reasons.push(`Dễ quên mất trước ngày thi (dự báo còn nhớ ${Math.round((1 - ruiRoKyThi) * 100)}% vào hôm thi)`);
+      }
       if (importance > 0.7) reasons.push(`Khái niệm trọng tâm của môn`);
       if (gateReason) reasons.push(gateReason);
 

@@ -59,6 +59,87 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/07/2026, lịch ôn bám NGÀY THI: chỗ sản phẩm này vượt được Anki
+
+Đàm yêu cầu trí tuệ ngang hoặc hơn Anki. Đo trước khi sửa, thay vì đoán xem Anki hơn ở đâu.
+
+#### Đứng ở đâu so với Anki
+
+| | Anki SM-2 | Anki FSRS | Dự án này |
+|---|---|---|---|
+| Đường cong quên | không có | luỹ thừa `(1+F·t/S)^D` | hàm mũ `e^(-t/S)` |
+| Tự hiệu chuẩn từ lịch sử thật | không | có | **có**, `w = 1 - e^(-n/6)` |
+| Biết ngày thi | **không** | **không** | có, nhưng **không dùng để xếp lịch** |
+
+Phần hiệu chuẩn đã vượt SM-2 từ trước. Khoảng cách thật không nằm ở đó.
+
+#### Lỗ hổng thật: bảy yếu tố chấm ưu tiên, sáu cái chỉ nhìn hiện tại
+
+Ba khái niệm **đều vừa học hôm nay**, kỳ thi còn 14 ngày:
+
+| độ bền S | nhớ bây giờ | nhớ ngày thi |
+|---|---|---|
+| 27,3 ngày | 100% | 60% |
+| 7,9 ngày | 100% | 17% |
+| 1,5 ngày | 100% | **5%** |
+
+Cả ba chấm như nhau. Một khái niệm mong manh vừa học xong trông hoàn toàn khoẻ mạnh dưới con
+mắt hệ thống, trong khi nó sẽ bay sạch trước khi thi.
+
+Đây là chỗ Anki **không thể** làm: Anki xếp lịch cho trí nhớ vô thời hạn, giữ mức nhớ mục tiêu
+cố định rồi nới dần khoảng cách, vì nó không biết có kỳ thi nào. Người ôn thi chỉ cần nhớ cao
+nhất vào **đúng một ngày**.
+
+#### Đã làm
+
+`mucNhoVaoNgayThi` trong `conceptMemoryService`, **gọi lại đúng `conNhoSauNgay`** chứ không viết
+đường cong mới (bất biến 4.9c). Cất `S` lên `ConceptProfile.doBenTriNhoNgay`, vì `forgettingScore`
+chỉ nói mức nhớ tại thời điểm tính nên từ nó không chiếu tới mốc tương lai được. Thêm yếu tố thứ
+bảy vào bảng chấm, trọng số 0,15 lấy chủ yếu từ `forget` (0,25 xuống 0,15) vì hai yếu tố hỏi
+cùng một câu hỏi ở hai mốc thời gian, để cả hai ở trọng số cao là đếm hai lần cùng một thứ.
+
+**Chưa có ngày thi thì lùi về đúng bộ trọng số cũ**, không đổi hành vi.
+
+Kiểm chứng qua engine thật: cùng một hồ sơ, kỳ thi còn 60 ngày chấm **0,2943**, còn 1 ngày chấm
+**0,1897**.
+
+#### Cái bẫy đáng nhớ nhất lượt này
+
+**Bốn phép kiểm đầu đều xanh trong khi yếu tố mới không đổi được thứ hạng nào.** `AI1` canh phần
+toán, `AI2` canh nhánh thiếu dữ liệu, `AI3` canh đường cong chung, `AI4` canh sợi dây nối. Tất cả
+đều đúng, và tất cả đều **không** trả lời được câu hỏi duy nhất đáng hỏi: bảng chấm có đổi thứ
+hạng không. Phải có `AI5` đi qua `scoreQuestions` thật mới lộ.
+
+Và `AI5` bản đầu **cũng sai**: nó ghi thẳng `S` vào hồ sơ để dựng hai kịch bản, nhưng
+`getOrCreateProfile` gọi `recalculateForgettingScore` ở **mỗi lần đọc** nên giá trị ghi vào bị
+tính đè ngay. Kết quả: hai điểm bằng nhau tuyệt đối (0,2459 so với 0,2459), trông y hệt như yếu
+tố mới bị nhân với trọng số 0. Suýt đi sửa mã nguồn vốn đang đúng. Cách cô lập đúng: **giữ
+nguyên hồ sơ, chỉ đổi ngày thi** rồi chấm lại.
+
+*Bài học: một nhóm phép kiểm có thể xanh toàn bộ mà vẫn không canh thứ mình tưởng nó canh. Phép
+kiểm cuối cùng phải đi qua đúng đường mà người dùng đi.*
+
+#### Giới hạn đã biết, ghi lại để người sau khỏi tưởng là lỗi
+
+Thước đo này là "nếu không ôn lại lần nào nữa thì tới hôm thi còn nhớ bao nhiêu". Với kỳ thi rất
+xa thì nó bão hòa, vì khái niệm nào cũng sẽ quên hết nếu không ôn. Nó có ý nghĩa nhất ở tầm vài
+tuần, đúng tầm sản phẩm này phục vụ.
+
+#### Còn lại để vượt Anki xa hơn, xếp theo tác động
+
+1. **Đường cong luỹ thừa thay hàm mũ.** Đo được: cùng một mốc xa, hàm mũ nói còn **1,8%** thì
+   luỹ thừa của FSRS nói còn **71,8%**. Hàm mũ tắt quá nhanh ở đuôi dài, nên hệ thống tưởng
+   người học đã quên thứ họ vẫn nhớ rồi bắt ôn lại thừa. Đây là thay đổi chạm mọi thứ, cần một
+   lượt riêng.
+2. **Bốn mức trả lời thay cho đúng/sai.** Dự án đã có sẵn **cờ nghi vấn**; ghép với đúng/sai là
+   thành bốn mức ngang Again/Hard/Good/Easy mà không cần thu thập thêm dữ liệu.
+3. **Ngưỡng ôn lại 60% đang viết cứng** (`-ln(0.6)·S`), trong khi Anki mặc định 90%. Ở mức 60%
+   thì khoảng 40% số lần ôn là không nhớ ra.
+
+Bộ kiểm 222 lên **227**, nhóm mới **AI**, cả năm đã thử phá và đều bắt được.
+
+---
+
 ### 30/07/2026, rà chế độ tối lần đầu, và một hồi quy do chính bản sửa của tôi gây ra
 
 Lượt trước thêm `@custom-variant dark`, tức mọi lớp `dark:` **bắt đầu chạy lần đầu tiên trong

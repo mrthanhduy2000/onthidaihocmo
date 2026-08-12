@@ -495,6 +495,50 @@ Kèm hai quy tắc chung phát hiện cùng lượt:
   "adaptive" vào giữa câu và còn tô đậm. Phải tra qua bản đồ tên tiếng Việt, và **mã lạ thì bỏ
   hẳn mệnh đề** chứ không in mã ra, vì bản đồ không bao giờ phủ hết mã đang được dùng.
 
+### 4.9i. Lịch ôn phải nhìn tới NGÀY THI, không chỉ nhìn trạng thái hiện tại
+
+Thêm ngày 30/07/2026. Đây là chỗ sản phẩm này cố ý làm khác Anki, và làm được thứ Anki không
+làm được.
+
+Anki xếp lịch cho trí nhớ **vô thời hạn**: giữ một mức nhớ mục tiêu cố định rồi nới dần khoảng
+cách. Đúng cho người học ngoại ngữ. Nhưng người ôn thi chỉ cần nhớ cao nhất vào **đúng một
+ngày**, nên câu hỏi đúng không phải "giờ còn nhớ bao nhiêu" mà là "**tới hôm thi còn nhớ bao
+nhiêu**".
+
+Đo được trước khi sửa, ba khái niệm ĐỀU VỪA HỌC HÔM NAY, kỳ thi còn 14 ngày:
+
+| độ bền S | nhớ bây giờ | nhớ ngày thi |
+|---|---|---|
+| 27,3 ngày | 100% | 60% |
+| 7,9 ngày | 100% | 17% |
+| 1,5 ngày | 100% | **5%** |
+
+Sáu yếu tố cũ của bảng chấm ưu tiên đều đo trạng thái **bây giờ**, nên cả ba chấm như nhau dù
+tới ngày thi chúng lệch 55 điểm phần trăm. Một khái niệm mong manh vừa học xong trông hoàn toàn
+khoẻ mạnh, trong khi nó sẽ bay sạch trước khi dùng tới.
+
+Ba ràng buộc, nhóm kiểm **AI** canh cả năm mặt:
+
+1. **Không viết đường cong quên mới.** `mucNhoVaoNgayThi` chỉ gọi lại `conNhoSauNgay` với một
+   mốc thời gian khác. Đúng bất biến 4.9c, và `AI3` so kết quả hai đường để chặn bản thứ hai
+   mọc lại.
+2. **Chưa có ngày thi thì trả `null`**, và bảng chấm lùi về đúng bộ trọng số cũ. Không bịa một
+   ngày thi mặc định rồi dựng cả thang ưu tiên lên trên nó.
+3. **Độ bền `S` phải được cất lại trên hồ sơ** (`ConceptProfile.doBenTriNhoNgay`). Không có nó
+   thì không chiếu tới một mốc tương lai được, vì `forgettingScore` chỉ nói mức nhớ tại thời
+   điểm tính. `AI4` canh sợi dây này.
+
+**Cái bẫy đã mắc khi làm mục này**: bốn phép kiểm đầu đều xanh trong khi yếu tố mới **không đổi
+được thứ hạng nào**. Chúng chỉ canh phần toán và phần nối dây. Phải có `AI5` đi qua
+`scoreQuestions` thật mới thấy. Và `AI5` bản đầu cũng sai: nó ghi thẳng `S` vào hồ sơ, nhưng
+`getOrCreateProfile` gọi `recalculateForgettingScore` ở **mỗi lần đọc** nên giá trị ghi vào bị
+tính đè ngay, cho ra hai điểm bằng nhau tuyệt đối trông y như yếu tố mới bị vô hiệu. Cách cô lập
+đúng: giữ nguyên hồ sơ, **chỉ đổi ngày thi** rồi chấm lại.
+
+**Giới hạn đã biết, đừng tưởng là lỗi**: thước đo này là "nếu không ôn lại lần nào nữa thì tới
+hôm thi còn nhớ bao nhiêu". Với kỳ thi rất xa (hàng trăm ngày) nó bão hòa, vì khái niệm nào cũng
+sẽ quên hết nếu không ôn. Nó có ý nghĩa nhất ở tầm vài tuần, đúng tầm sản phẩm này phục vụ.
+
 ### 4.10. Khóa câu đã trả lời ở chế độ gia sư
 
 `PracticeView.tsx` giữ `lockedIds`: câu đã trả lời trong chế độ gia sư bị khóa vĩnh viễn,

@@ -25,7 +25,71 @@ quyết định.
 
 ---
 
-## Lượt mới nhất: rà chế độ tối lần đầu, và một hồi quy do chính tôi gây ra
+## Lượt mới nhất: lịch ôn bám NGÀY THI, chỗ sản phẩm này vượt được Anki
+
+Đàm yêu cầu trí tuệ ngang hoặc hơn Anki. Đo trước, rồi mới sửa.
+
+### Dự án đang ở đâu so với Anki
+
+| | Anki SM-2 (mặc định tới 2023) | Anki FSRS (hiện nay) | Dự án này |
+|---|---|---|---|
+| Đường cong quên | không có, chỉ nhân hệ số dễ | luỹ thừa `(1+F·t/S)^D` | **hàm mũ `e^(-t/S)`** |
+| Tự hiệu chuẩn từ dữ liệu người học | không | có, tối ưu 17+ tham số | **có**, `w = 1 - e^(-n/6)` |
+| Biết ngày thi | **không** | **không** | có, nhưng **chưa dùng để xếp lịch** |
+
+Phần hiệu chuẩn của dự án đã vượt SM-2. Khoảng cách thật nằm ở chỗ khác.
+
+### Lỗ hổng: sáu yếu tố chấm ưu tiên đều chỉ nhìn HIỆN TẠI
+
+Ba khái niệm **đều vừa học hôm nay**, kỳ thi còn 14 ngày:
+
+| độ bền S | nhớ bây giờ | nhớ ngày thi |
+|---|---|---|
+| 27,3 ngày | 100% | 60% |
+| 7,9 ngày | 100% | 17% |
+| 1,5 ngày | 100% | **5%** |
+
+Cả ba chấm **như nhau**, dù tới ngày thi lệch 55 điểm phần trăm. Khái niệm mong manh vừa học
+xong trông hoàn toàn khoẻ mạnh, trong khi nó bay sạch trước khi dùng tới.
+
+Đây đúng là chỗ Anki **không thể** làm: Anki xếp lịch cho trí nhớ vô thời hạn vì nó không biết
+ngày thi. Người ôn thi chỉ cần nhớ cao nhất vào đúng một ngày.
+
+### Đã làm
+
+Thêm `mucNhoVaoNgayThi` (gọi lại đúng đường cong duy nhất, không viết công thức mới), cất `S`
+lên hồ sơ, và thêm yếu tố thứ bảy vào bảng chấm với trọng số 0,15. Chưa có ngày thi thì trọng
+số lùi về **đúng bộ cũ**, không đổi hành vi.
+
+Kiểm chứng qua engine thật: cùng một hồ sơ, kỳ thi còn 60 ngày chấm **0,2943**, còn 1 ngày chấm
+**0,1897**.
+
+### Cái bẫy đã mắc, đáng nhớ nhất lượt này
+
+**Bốn phép kiểm đầu đều xanh trong khi yếu tố mới không đổi được thứ hạng nào.** Chúng chỉ canh
+phần toán và phần nối dây. Phải có phép kiểm đi qua `scoreQuestions` thật mới lộ.
+
+Và phép kiểm đầu cuối bản đầu **cũng sai**: nó ghi thẳng `S` vào hồ sơ, nhưng `getOrCreateProfile`
+gọi `recalculateForgettingScore` ở **mỗi lần đọc** nên giá trị bị tính đè ngay, cho ra hai điểm
+bằng nhau tuyệt đối trông y như yếu tố mới bị vô hiệu. Cách cô lập đúng: giữ nguyên hồ sơ, chỉ
+đổi ngày thi.
+
+Bộ kiểm 222 lên **227**, nhóm mới **AI**, cả năm đã thử phá và đều bắt được.
+
+### Còn lại để vượt Anki xa hơn
+
+- **Đường cong luỹ thừa thay cho hàm mũ.** FSRS đổi vì hàm mũ tắt quá nhanh ở đuôi dài: cùng
+  một mốc, hàm mũ nói còn 1,8% thì luỹ thừa nói còn 71,8%. Hệ quả thật: hệ thống tưởng người học
+  đã quên thứ họ vẫn nhớ, rồi bắt ôn lại thừa. Đây là thay đổi lớn, chạm mọi thứ, nên cần một
+  lượt riêng.
+- **Bốn mức trả lời thay cho đúng/sai.** Anki có Again/Hard/Good/Easy. Dự án đã có sẵn **cờ nghi
+  vấn**, ghép với đúng/sai là thành bốn mức mà không cần thu thập thêm dữ liệu.
+- **Ngưỡng ôn lại 60% đang viết cứng** (`-ln(0.6)·S`). Anki mặc định 90%. Ở mức 60% thì khoảng
+  40% số lần ôn là không nhớ ra, cao hơn hẳn mức Anki nhắm tới.
+
+---
+
+## Lượt trước: rà chế độ tối lần đầu, và một hồi quy do chính tôi gây ra
 
 Lượt trước thêm `@custom-variant dark`, tức **mọi lớp `dark:` bắt đầu chạy lần đầu**. Chế độ tối
 chưa từng được rà vì suốt hai mươi lượt mọi phép đo tương phản đều chạy ở chế độ sáng.

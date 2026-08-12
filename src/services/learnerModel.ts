@@ -38,6 +38,17 @@ export interface ConceptProfile {
   isFlagged: boolean;
   learningVelocity: number; // average score slope
   nextReviewAt?: string; // ISO timestamp
+  /**
+   * Độ bền trí nhớ tính bằng NGÀY, chính là `S` trong `R(t) = e^(-t/S)`.
+   *
+   * Vì sao phải lưu chứ không tính lại ở nơi cần: `forgettingScore` chỉ nói mức nhớ TẠI THỜI
+   * ĐIỂM tính, nên từ nó không chiếu tới được một mốc khác trong tương lai. Muốn hỏi "tới ngày
+   * thi thì còn nhớ bao nhiêu" thì bắt buộc phải có `S`.
+   *
+   * Vẫn đúng bất biến 4.9c: giá trị này do `doBenTriNhoNgay` sinh ra, đây chỉ là chỗ CẤT nó
+   * lại, không phải một công thức thứ hai.
+   */
+  doBenTriNhoNgay?: number;
 }
 
 export interface AdaptiveMemory {
@@ -841,7 +852,9 @@ export const learnerModelService = {
     return {
       ...profile,
       forgettingScore: parseFloat(forgettingScore.toFixed(3)),
-      nextReviewAt: new Date(nextReviewTime).toISOString()
+      nextReviewAt: new Date(nextReviewTime).toISOString(),
+      // Cất lại S để nơi khác chiếu được mức nhớ tới một mốc tương lai, xem chú thích ở kiểu.
+      doBenTriNhoNgay: parseFloat(doBenNgay.toFixed(3))
     };
   },
 

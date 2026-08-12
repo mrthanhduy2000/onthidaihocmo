@@ -350,6 +350,48 @@ export function conNhoSauNgay(doBenNgay: number, soNgay: number): number {
 }
 
 /**
+ * MỨC CÒN NHỚ DỰ BÁO VÀO NGÀY THI, thứ mà một ứng dụng luyện thi phải tối ưu.
+ *
+ * VÌ SAO CẦN, và vì sao đây là chỗ sản phẩm này làm được thứ Anki không làm được.
+ *
+ * Anki xếp lịch cho trí nhớ VÔ THỜI HẠN: nó giả định người học muốn nhớ mãi mãi, nên giữ một
+ * mức nhớ mục tiêu cố định rồi nới dần khoảng cách. Đúng cho người học ngoại ngữ, nhưng sai
+ * mục tiêu cho người ôn thi, vì người ôn thi chỉ cần nhớ CAO NHẤT VÀO ĐÚNG MỘT NGÀY.
+ *
+ * Hệ quả đo được ngày 30/07/2026, ba khái niệm ĐỀU VỪA HỌC HÔM NAY với kỳ thi còn 14 ngày:
+ *
+ *     khái niệm                        S(ngày)   nhớ BÂY GIỜ   nhớ NGÀY THI
+ *     dễ, đã ôn giãn cách nhiều lần      27,3        100%           60%
+ *     trung bình                          7,9        100%           17%
+ *     khó, hay quên                       1,5        100%            5%
+ *
+ * Cả ba đều 100% ở hiện tại, nên yếu tố "mức quên" trong bảng chấm ưu tiên chấm chúng NHƯ NHAU,
+ * dù tới ngày thi chúng lệch nhau 55 điểm phần trăm. Một khái niệm mong manh vừa học xong trông
+ * hoàn toàn khoẻ mạnh dưới con mắt của hệ thống cũ, trong khi nó sẽ bay sạch trước khi thi.
+ *
+ * KHÔNG viết đường cong mới ở đây, đúng bất biến 4.9c: hàm này chỉ gọi lại `conNhoSauNgay` với
+ * một mốc thời gian khác. Đổi công thức quên ở một chỗ thì cả hai đường vẫn đi cùng nhau.
+ *
+ * @param doBenNgay  độ bền, lấy từ `doBenTriNhoNgay`
+ * @param soNgayToiKyThi  số ngày từ HÔM NAY tới ngày thi
+ * @param soNgayDaNghi  số ngày từ lần học cuối tới HÔM NAY, mặc định 0 khi vừa học xong
+ * @returns tỷ lệ còn nhớ dự báo vào ngày thi, hoặc `null` khi CHƯA ĐẶT ngày thi
+ */
+export function mucNhoVaoNgayThi(
+  doBenNgay: number,
+  soNgayToiKyThi: number | null | undefined,
+  soNgayDaNghi: number = 0
+): number | null {
+  // Chưa đặt ngày thi thì KHÔNG đoán. Trả null để nơi gọi giữ nguyên hành vi cũ, đúng nếp
+  // "thiếu dữ liệu thì không suy diễn" của dự án.
+  if (soNgayToiKyThi === null || soNgayToiKyThi === undefined || !Number.isFinite(soNgayToiKyThi)) {
+    return null;
+  }
+  const tongNgay = Math.max(0, soNgayDaNghi) + Math.max(0, soNgayToiKyThi);
+  return conNhoSauNgay(doBenNgay, tongNgay);
+}
+
+/**
  * Độ bền trí nhớ cho một hồ sơ khái niệm. Gói lại việc rút bằng chứng từ hồ sơ.
  *
  * Trước đây công thức bị chép làm hai bản giống hệt nhau ở calculateRetentionScore và

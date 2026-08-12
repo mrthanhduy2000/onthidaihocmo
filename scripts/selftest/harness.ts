@@ -24,7 +24,7 @@ import { questions as closedSubjectQuestions } from "../../src/data/questions";
 import { shuffleQuestionOptions } from "../../src/services/optionShuffle";
 import { aiService } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
-import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "../../src/services/conceptMemoryService";
+import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai, conNhoSauNgay, mucNhoVaoNgayThi } from "../../src/services/conceptMemoryService";
 import { studentEvolutionEngine, NHAN_TU_LAM_BAI } from "../../src/services/studentEvolutionEngine";
 import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvaluationEngine";
 import { TimeService } from "../../src/services/time";
@@ -3401,6 +3401,121 @@ check("index.css không dùng màu Tailwind thô, chỉ dùng token",
   mauThoTrongCss.length === 0
     ? "mọi quy tắc @apply trong index.css đều đi qua bộ token của dự án"
     : `${mauThoTrongCss.length} họ màu thô còn trong index.css: ${mauThoTrongCss.join(", ")}`);
+
+g("AI. Lịch ôn bám NGÀY THI, không chỉ bám trạng thái hiện tại");
+
+// AI1. Mức nhớ dự báo vào ngày thi phải phân hóa được các khái niệm cùng vừa học xong.
+//
+// Đây là chỗ sản phẩm này làm được thứ Anki KHÔNG làm. Anki xếp lịch cho trí nhớ vô thời hạn:
+// nó giữ một mức nhớ mục tiêu cố định rồi nới dần khoảng cách, đúng cho người học ngoại ngữ.
+// Người ôn thi thì chỉ cần nhớ cao nhất vào ĐÚNG MỘT NGÀY, nên câu hỏi đúng không phải "giờ
+// còn nhớ bao nhiêu" mà là "tới hôm thi còn nhớ bao nhiêu".
+//
+// Đo ngày 30/07/2026, ba khái niệm ĐỀU VỪA HỌC HÔM NAY, kỳ thi còn 14 ngày:
+//
+//     S = 27,3 ngày  ->  nhớ bây giờ 100%,  nhớ ngày thi 60%
+//     S =  7,9 ngày  ->  nhớ bây giờ 100%,  nhớ ngày thi 17%
+//     S =  1,5 ngày  ->  nhớ bây giờ 100%,  nhớ ngày thi  5%
+//
+// Sáu yếu tố cũ của bảng chấm đều đo trạng thái BÂY GIỜ, nên cả ba chấm như nhau dù tới ngày
+// thi chúng lệch 55 điểm phần trăm.
+const S_BEN = 27.3, S_TRUNG = 7.9, S_MONG = 1.5;
+const bayGioBa = [S_BEN, S_TRUNG, S_MONG].map(s => conNhoSauNgay(s, 0));
+const ngayThiBa = [S_BEN, S_TRUNG, S_MONG].map(s => mucNhoVaoNgayThi(s, 14, 0)!);
+const bayGioGiongNhau = Math.max(...bayGioBa) - Math.min(...bayGioBa) < 0.01;
+const ngayThiPhanHoa = Math.max(...ngayThiBa) - Math.min(...ngayThiBa) > 0.4;
+check("Mức nhớ ngày thi phân hóa được thứ mà mức nhớ hiện tại không thấy",
+  bayGioGiongNhau && ngayThiPhanHoa,
+  `bây giờ cả ba đều ${(bayGioBa[0] * 100).toFixed(0)}%; tới ngày thi lần lượt ` +
+  ngayThiBa.map(v => `${(v * 100).toFixed(0)}%`).join(", "));
+
+// AI2. Chưa đặt được ngày thi thì KHÔNG đoán, và hành vi cũ giữ nguyên.
+//
+// Đúng nếp "thiếu dữ liệu thì không suy diễn" của dự án. Trả `null` để nơi gọi lùi về đúng bộ
+// trọng số cũ, thay vì bịa một ngày thi mặc định rồi dựng cả thang ưu tiên lên trên nó.
+const khongNgayThi = [null, undefined, NaN].map(v => mucNhoVaoNgayThi(10, v as any, 0));
+check("Chưa có ngày thi thì trả null chứ không đoán",
+  khongNgayThi.every(v => v === null),
+  khongNgayThi.every(v => v === null)
+    ? "cả ba trường hợp thiếu ngày thi đều trả null"
+    : `có trường hợp vẫn trả số: ${JSON.stringify(khongNgayThi)}`);
+
+// AI3. Hàm mức nhớ ngày thi phải DÙNG LẠI đường cong duy nhất, không tự dựng công thức mới.
+//
+// Bất biến 4.9c: cả dự án chỉ có MỘT công thức độ bền. Phép kiểm này so kết quả hai đường: gọi
+// thẳng `conNhoSauNgay` với tổng số ngày, và gọi `mucNhoVaoNgayThi`. Lệch nhau nghĩa là ai đó
+// đã viết đường cong thứ hai, đúng cái đã từng khiến hai đường lệch 55 điểm phần trăm.
+const lechDuongCong = [
+  { S: 3, nghi: 2, toiThi: 10 },
+  { S: 12, nghi: 0, toiThi: 30 },
+  { S: 40, nghi: 5, toiThi: 7 },
+].map(c => Math.abs(mucNhoVaoNgayThi(c.S, c.toiThi, c.nghi)! - conNhoSauNgay(c.S, c.nghi + c.toiThi)));
+check("Mức nhớ ngày thi đi qua đúng đường cong quên duy nhất",
+  lechDuongCong.every(d => d < 1e-9),
+  lechDuongCong.every(d => d < 1e-9)
+    ? "ba mốc thử đều khớp tuyệt đối với conNhoSauNgay"
+    : `lệch khỏi đường cong chung: ${lechDuongCong.map(d => d.toFixed(6)).join(", ")}`);
+
+// AI4. Độ bền `S` phải được CẤT LẠI trên hồ sơ, nếu không thì không chiếu tới ngày thi được.
+//
+// `forgettingScore` chỉ nói mức nhớ TẠI THỜI ĐIỂM tính, từ nó không suy ra được mức nhớ ở một
+// mốc tương lai. Thiếu `S` thì yếu tố nhìn về tương lai im lặng và bảng chấm lặng lẽ quay về
+// hành vi cũ mà không có gì báo.
+const nguonLearnerModelAI = readFileSync(path.join(process.cwd(), "src/services/learnerModel.ts"), "utf8")
+  .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const nguonEngineAI = readFileSync(path.join(process.cwd(), "src/services/learningEngine.ts"), "utf8")
+  .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const catLaiS = /doBenTriNhoNgay:\s*parseFloat\(/.test(nguonLearnerModelAI);
+const engineDocS = /profile\.doBenTriNhoNgay/.test(nguonEngineAI);
+const engineDocNgayThi = /getSubjectGoal\(\)/.test(nguonEngineAI) && /mucNhoVaoNgayThi\(/.test(nguonEngineAI);
+check("Sợi dây từ độ bền tới bảng chấm ưu tiên còn nguyên",
+  catLaiS && engineDocS && engineDocNgayThi,
+  catLaiS && engineDocS && engineDocNgayThi
+    ? "learnerModel cất S lại, learningEngine đọc S và đọc ngày thi rồi chiếu tới hôm thi"
+    : `đứt ở: ${[!catLaiS && "learnerModel không cất S", !engineDocS && "engine không đọc S",
+        !engineDocNgayThi && "engine không đọc ngày thi"].filter(Boolean).join("; ")}`);
+
+// AI5. Đi qua ENGINE THẬT: khái niệm mong manh phải được xếp cao hơn khái niệm bền,
+// dù CẢ HAI vừa học xong và mức nhớ hiện tại của chúng bằng nhau.
+//
+// Bốn phép kiểm trên chỉ canh phần toán và phần nối dây. Phép kiểm này canh thứ thật sự quan
+// trọng: bảng chấm có ĐỔI THỨ HẠNG hay không. Không có nó thì cả nhóm AI có thể xanh trong khi
+// yếu tố mới bị nhân với trọng số 0 và không ảnh hưởng gì tới đề được sinh ra.
+//
+// Cách dựng: lấy một câu hỏi thật, tạo bằng chứng thật cho khái niệm của nó, rồi chấm HAI LẦN
+// với đúng một thứ khác nhau là độ bền `S` cất trên hồ sơ. Mọi yếu tố khác giữ nguyên.
+// CÁCH CÔ LẬP: giữ NGUYÊN hồ sơ, chỉ đổi mỗi NGÀY THI rồi chấm lại. Mọi yếu tố khác đọc từ
+// cùng một hồ sơ nên không thể đổi, vậy chênh lệch điểm chỉ có thể đến từ yếu tố mới.
+//
+// Không cô lập được bằng cách ghi thẳng `S` vào hồ sơ: `getOrCreateProfile` gọi
+// `recalculateForgettingScore` ở MỖI LẦN ĐỌC nên giá trị ghi vào bị tính đè ngay. Bản đầu của
+// phép kiểm này làm vậy và cho hai điểm bằng nhau tuyệt đối, trông y như yếu tố mới bị vô hiệu.
+const cauThuAI = questions.find(q => kbService.resolveConceptsForQuestion(dbService.getActiveSubjectId(), q, 1).length > 0);
+if (cauThuAI) {
+  const khaiNiemAI = kbService.resolveConceptsForQuestion(dbService.getActiveSubjectId(), cauThuAI, 1)[0].node.concept;
+  for (let i = 0; i < 8; i++) learnerModelService.logConceptAttempt(khaiNiemAI, true, 12);
+
+  const mucTieuGoc = dbService.getSubjectGoal();
+  const chamVoiNgayThi = (soNgay: number): number => {
+    dbService.saveSubjectGoal({
+      ...mucTieuGoc,
+      examDate: TimeService.formatDateISO(TimeService.parseToDate(TimeService.now().getTime() + soNgay * NGAY_MS)),
+    });
+    return learningEngine.scoreQuestions([cauThuAI])[0].score;
+  };
+
+  const diemThiXa = chamVoiNgayThi(60);  // còn 60 ngày, nếu không ôn lại thì tới hôm thi mất nhiều
+  const diemThiGan = chamVoiNgayThi(1);  // còn 1 ngày, kiến thức vừa học chắc chắn còn nguyên
+  dbService.saveSubjectGoal(mucTieuGoc);
+
+  check("Ngày thi thật sự đổi được thứ hạng ưu tiên trong engine",
+    diemThiXa > diemThiGan,
+    diemThiXa > diemThiGan
+      ? `cùng một hồ sơ: kỳ thi còn 60 ngày chấm ${diemThiXa.toFixed(4)}, còn 1 ngày chấm ${diemThiGan.toFixed(4)}`
+      : `ngày thi KHÔNG ảnh hưởng tới điểm: 60 ngày ${diemThiXa.toFixed(4)} so với 1 ngày ${diemThiGan.toFixed(4)}`);
+} else {
+  info("Bỏ qua phép kiểm engine xếp hạng theo ngày thi: không tìm được câu hỏi có khái niệm.");
+}
 
 // ===========================================================================
 // Kết quả
