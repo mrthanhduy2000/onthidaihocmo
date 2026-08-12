@@ -2304,11 +2304,38 @@ dbService.clearAllHistory();
 // ===========================================================================
 g("AB. Mỏi mệt đo từ vị trí câu trong đề");
 
-/** Chơi nhiều đề với mô hình đúng sai gắn với VỊ TRÍ theo ý đồ. */
+/**
+ * Chơi nhiều đề với mô hình đúng sai gắn với VỊ TRÍ theo ý đồ.
+ *
+ * BỘ CÂU PHẢI TẤT ĐỊNH, và đây là lần thứ hai dự án phải học lại bài này.
+ *
+ * Bản trước lấy thẳng `de.questions` mà `generateExam({ type: "random" })` trả về. Nhưng nhánh
+ * "random" xếp đề bằng `shuffleInPlace`, vốn gọi `Math.random()`, nên **mỗi lượt chạy bốc một bộ
+ * câu khác nhau**. Đúng sai lại được suy ra từ `id % 10`, thành ra biên độ tín hiệu phụ thuộc vào
+ * việc mã câu nào tình cờ rơi vào phần đầu hay phần cuối đề.
+ *
+ * Đo được ngày 12/08/2026: cùng một mã nguồn, hai lượt chạy liên tiếp cho chỉ số mỏi mệt **29**
+ * rồi **100**, trong khi ngưỡng đạt là 60. Tức phép kiểm này lúc xanh lúc đỏ mà không ai đụng
+ * vào thứ nó canh.
+ *
+ * Đây đúng khuôn đã ghi trong WORKSTATE: *"phép kiểm chập chờn còn tệ hơn không có phép kiểm"*,
+ * và nó từng làm một lượt trước commit khi đang đỏ. Nhóm AB6 đã được dựng lại tất định vì lý do
+ * này, nhưng AB2 và AB3 thì bị bỏ sót vì chúng dùng một hàm mô phỏng khác.
+ *
+ * Cách sửa: giữ nguyên công thức đúng sai và giữ nguyên ngưỡng, **chỉ thay bộ câu bằng một lát
+ * cắt tất định** của ngân hàng. Không nới ngưỡng, vì nới ngưỡng là giấu vấn đề chứ không sửa.
+ */
+const CAU_MO_PHONG_TAT_DINH = questions
+  .map(q => q.id)
+  .slice()
+  .sort((a, b) => a - b);
+
 function moPhongMoiMoi(kieu: "deu" | "moi" | "nong") {
   dbService.clearAllHistory();
   for (let e = 0; e < 6; e++) {
     const de = aiService.generateExam({ type: "random", count: 21 });
+    // Thay bộ câu ngẫu nhiên bằng lát cắt tất định, giữ nguyên mọi trường khác của lượt làm bài.
+    de.questions = CAU_MO_PHONG_TAT_DINH.slice(e * 21, e * 21 + 21);
     de.answers = {};
     de.timeSpent = 700;
     de.questions.forEach((id, i) => {
