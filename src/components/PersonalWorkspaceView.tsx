@@ -11,6 +11,7 @@ import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
 import { examForecaster } from "../services/examForecaster";
 import { learnerModelService } from "../services/learnerModel";
+import { contentQualityAssurance } from "../services/contentQualityAssurance";
 import { 
   LearningResource, 
   KnowledgeHealthItem, 
@@ -271,6 +272,8 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView, onO
    * nhớ thay đổi theo từng giờ trôi qua.
    */
   const hangDoiOn = learnerModelService.layKhaiNiemToiHan();
+  /** Số câu người học đã báo là có vấn đề và chưa xử lý. */
+  const soCauCanXuLy = contentQualityAssurance.demCauCanXuLy(activeSubId);
   /** Đã có bài làm nào chưa. Nhiều con số chỉ có nghĩa khi đã có bài, xem chỗ dùng bên dưới. */
   const daCoBaiLam = dbService.getStatistics().totalSolved > 0;
   const coCauSai = prediction.metricsBreakdown.studyDebtCount > 0;
@@ -431,6 +434,24 @@ Bàn học hôm nay
             )}
             {goal.targetScore !== null ? `, mục tiêu ${soThapPhan(goal.targetScore, 1)}` : ""}
           </span>
+
+          {/*
+            Số câu người học đã báo là có vấn đề. Chỉ hiện khi lớn hơn 0: một dòng "0 câu chờ xử
+            lý" vừa vô nghĩa vừa mời người học đi tìm việc không có.
+
+            Một DÒNG CHỮ, không phải một thẻ (khuôn trình bày 4.9g).
+          */}
+          {soCauCanXuLy > 0 && (
+            <span className="flex items-center gap-2 sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
+              <span><strong className="text-text-primary">{soCauCanXuLy} câu</strong> bạn đã báo có vấn đề</span>
+              <button
+                onClick={() => onNavigateView("quality_dashboard")}
+                className="text-brand-info font-bold hover:underline cursor-pointer whitespace-nowrap"
+              >
+                Xem lại
+              </button>
+            </span>
+          )}
 
           <span className="flex items-center gap-2 sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
             <span><strong className="text-text-primary">{prediction.metricsBreakdown.studyDebtCount} câu</strong> cần sửa</span>

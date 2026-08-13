@@ -5,6 +5,8 @@
 
 import { Question } from "../types";
 import { questionDuplicateDetector, DuplicateDetectionResult } from "./questionDuplicateDetector";
+import { dbService } from "./db";
+import { TimeService } from "./time";
 
 export interface ExplanationAuditResult {
   explainsCorrectAnswer: boolean;
@@ -62,8 +64,33 @@ export interface QuestionQualityProfile {
   academicLanguageIssues: string[];
 }
 
-// In-memory human review storage map
-const humanReviewsStore = new Map<number, HumanReviewStatus>();
+/**
+ * KHO ĐÁNH DẤU CÂU CÓ VẤN ĐỀ, lưu xuống `localStorage` và GẮN MÃ MÔN.
+ *
+ * Bản trước là một `Map` thuần trong bộ nhớ. Nghĩa là người học báo một câu sai đáp án, tải lại
+ * trang là mất sạch, và câu ấy quay lại đề ngay hôm sau. Một đường báo lỗi mà mất dấu khi tải lại
+ * còn tệ hơn không có, vì nó khiến người học tin là đã xử lý xong.
+ *
+ * Gắn mã môn vào khoá theo đúng nếp của dự án: hai môn khác nhau có hai ngân hàng câu hỏi khác
+ * nhau, mã câu trùng nhau được, nên khoá không gắn mã môn sẽ khiến câu bị loại ở môn này biến mất
+ * luôn ở môn kia.
+ */
+function khoaDanhGia(subjectId?: string): string {
+  return `poly_econ_human_reviews_${subjectId || dbService.getActiveSubjectId()}`;
+}
+
+function docTatCaDanhGia(subjectId?: string): Record<number, HumanReviewStatus> {
+  try {
+    const raw = localStorage.getItem(khoaDanhGia(subjectId));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function ghiTatCaDanhGia(bang: Record<number, HumanReviewStatus>, subjectId?: string): void {
+  localStorage.setItem(khoaDanhGia(subjectId), JSON.stringify(bang));
+}
 
 export const contentQualityAssurance = {
   /**
@@ -292,7 +319,7 @@ export const contentQualityAssurance = {
     };
 
     // Human Review status
-    const storedReview = humanReviewsStore.get(q.id) || {
+    const storedReview = docTatCaDanhGia()[q.id] || {
       status: "PENDING"
     };
 
@@ -327,9 +354,43 @@ export const contentQualityAssurance = {
     const record: HumanReviewStatus = {
       status,
       reviewerNotes,
-      reviewedAt: new Date().toISOString()
+      reviewedAt: TimeService.now().toISOString()
     };
-    humanReviewsStore.set(questionId, record);
+    const bang = docTatCaDanhGia();
+    bang[questionId] = record;
+    ghiTatCaDanhGia(bang);
     return record;
+  },
+
+  /** Toàn bộ đánh dấu của môn đang mở, tra theo mã câu. */
+  layTatCaDanhGia(subjectId?: string): Record<number, HumanReviewStatus> {
+    return docTatCaDanhGia(subjectId);
+  },
+
+  /**
+   * Mã các câu đã bị người học loại bỏ. `generateExam` đọc hàm này để không đưa chúng ra nữa.
+   *
+   * Trước 13/08/2026 trạng thái `REJECTED` lưu được nhưng KHÔNG nơi nào đọc ngoài chính service
+   * này, nên đánh dấu một câu là sai đáp án hoàn toàn không ngăn nó xuất hiện lại. Đó là lý do
+   * cả tầng duyệt nội dung tồn tại mà không thay đổi được gì.
+   */
+  layMaCauBiLoai(subjectId?: string): number[] {
+    const bang = docTatCaDanhGia(subjectId);
+    return Object.keys(bang)
+      .filter(id => bang[Number(id)]?.status === "REJECTED")
+      .map(Number);
+  },
+
+  /** Số câu đang chờ người học xử lý, tính cả loại bỏ lẫn cần sửa. */
+  demCauCanXuLy(subjectId?: string): number {
+    const bang = docTatCaDanhGia(subjectId);
+    return Object.values(bang).filter(v => v.status === "REJECTED" || v.status === "NEEDS_REVISION").length;
+  },
+
+  /** Bỏ đánh dấu cho một câu, để nó quay lại diện được ra đề. */
+  boDanhDau(questionId: number, subjectId?: string): void {
+    const bang = docTatCaDanhGia(subjectId);
+    delete bang[questionId];
+    ghiTatCaDanhGia(bang, subjectId);
   }
 };

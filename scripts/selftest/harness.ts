@@ -35,6 +35,7 @@ import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngin
 import { kbService } from "../../src/services/kbService";
 import { learnerModelService, mocNhipChuan, nhipRiengMoiCau, studentModelService } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
+import { contentQualityAssurance } from "../../src/services/contentQualityAssurance";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { teachingAnalytics } from "../../src/services/teachingAnalytics";
 import { examQualityReportService } from "../../src/services/examQualityReport";
@@ -3714,6 +3715,113 @@ check("Lời nhắc viết lại phương án nhiễu bơm chữ cái thật c�
   bomChuCaiTrongEngine && bomChuCaiTrongCongCu
     ? "cả đường trình duyệt lẫn đường sửa hàng loạt đều nói rõ ba chữ cái nhiễu của chính câu đang sửa"
     : `engine bơm: ${bomChuCaiTrongEngine}, công cụ sửa bơm: ${bomChuCaiTrongCongCu}. Thiếu thì mô hình sẽ chép lại chữ cái trong ví dụ và gọi nhầm đáp án đúng là phương án sai`);
+
+// ===========================================================================
+// AK. Đường báo câu hỏi sai, và hiệu lực thật của việc loại bỏ
+// ===========================================================================
+g("AK. Báo câu hỏi sai");
+
+// AK1. BỘ QUÉT CẢ HỌ: mọi giá trị khai trong `currentView` phải có ít nhất một lối vào.
+//
+// Đây là phép kiểm giá trị nhất nhóm này. `AcademicQualityDashboard` (345 dòng),
+// `QuestionQualityCard` (249 dòng) và `contentQualityAssurance` (335 dòng), tổng khoảng 929 dòng,
+// đã viết xong và render đúng khi `currentView === "quality_dashboard"`, nhưng KHÔNG nơi nào đặt
+// giá trị đó. Màn hình xây xong mà không có cửa.
+//
+// Canh cả họ chứ không canh đúng một ca, vì lỗi này sẽ lặp lại với mọi màn thêm sau.
+const nguonApp = readFileSync(path.join(process.cwd(), "src/App.tsx"), "utf8");
+const nguonTimNhanhAK = readFileSync(path.join(process.cwd(), "src/components/GlobalCommandPalette.tsx"), "utf8");
+const khaiBaoView = nguonApp.match(/useState<("[a-z_]+"(\s*\|\s*)?)+>/);
+const cacView = khaiBaoView ? (khaiBaoView[0].match(/"[a-z_]+"/g) || []).map(v => v.replace(/"/g, "")) : [];
+const viewKhongCoCua = cacView.filter(v => {
+  if (v === "workspace" || v === "practice") return false; // hai màn mặc định, luôn tới được
+  // Phải tính CẢ mảng điểm đến của thanh điều hướng. Bản đầu chỉ tìm các lời gọi `setCurrentView`
+  // nên báo nhầm màn "progress" là không có cửa, trong khi nó nằm ngay trên thanh nav với nhãn
+  // "Báo cáo". Một bộ quét cả họ mà quét thiếu một loại cửa thì báo động giả, và báo động giả làm
+  // người ta tập thói quen bỏ qua nó.
+  const coTrongApp = new RegExp(`setCurrentView\\("${v}"`).test(nguonApp)
+    || new RegExp(`onNavigate\\("${v}"`).test(nguonApp)
+    || new RegExp(`onNavigateView\\("${v}"`).test(nguonApp)
+    || new RegExp(`view: "${v}"`).test(nguonApp);
+  const coTrongTimNhanh = new RegExp(`onNavigate\\("${v}"`).test(nguonTimNhanhAK);
+  const coTrongComponent = readdirSync(thuMucComponent)
+    .filter(t => t.endsWith(".tsx"))
+    .some(t => new RegExp(`onNavigateView\\("${v}"`).test(readFileSync(path.join(thuMucComponent, t), "utf8")));
+  return !coTrongApp && !coTrongTimNhanh && !coTrongComponent;
+});
+check("Mọi màn khai trong currentView đều có ít nhất một lối vào",
+  cacView.length > 0 && viewKhongCoCua.length === 0,
+  viewKhongCoCua.length === 0
+    ? `${cacView.length} màn, màn nào cũng có nút hoặc mục tìm nhanh dẫn tới`
+    : `${viewKhongCoCua.length} màn xây xong mà không có cửa: ${viewKhongCoCua.join(", ")}`);
+
+// AK2. Câu bị loại KHÔNG được xuất hiện lại, kiểm trên 30 đề liên tiếp.
+//
+// Trước 13/08/2026 trạng thái `REJECTED` lưu được nhưng 0 nơi đọc ngoài chính service, nên đánh
+// dấu một câu là sai đáp án hoàn toàn không ngăn nó ra đề. Kiểm nhiều đề liên tiếp chứ không một
+// đề, vì một đề có thể ngẫu nhiên không chứa câu ấy.
+const maCauThuAK = questions[0].id;
+contentQualityAssurance.updateHumanReview(maCauThuAK, "REJECTED", "phép kiểm AK2");
+let soLanLotRa = 0;
+for (let i = 0; i < 30; i++) {
+  const de = aiService.generateExam({ type: "random", count: 20 });
+  if (de.questions.includes(maCauThuAK)) soLanLotRa++;
+}
+check("Câu đã báo sai không quay lại trong 30 đề liên tiếp",
+  soLanLotRa === 0,
+  soLanLotRa === 0
+    ? `câu #${maCauThuAK} bị loại và không lọt vào đề nào trong 30 đề, mỗi đề 20 câu`
+    : `câu #${maCauThuAK} vẫn lọt ra ${soLanLotRa} trên 30 đề dù đã bị đánh dấu loại bỏ`);
+
+// AK3. Đánh dấu phải SỐNG QUA việc tải lại trang.
+//
+// Bản trước lưu trong một `Map` thuần trong bộ nhớ. Người học báo một câu sai đáp án, tải lại
+// trang là mất sạch, và câu ấy quay lại đề ngay hôm sau. Một đường báo lỗi mất dấu khi tải lại còn
+// tệ hơn không có, vì nó khiến người học tin là đã xử lý xong.
+const khoaDanhGiaAK = `poly_econ_human_reviews_${dbService.getActiveSubjectId()}`;
+const daGhiXuongKho = localStorage.getItem(khoaDanhGiaAK) !== null
+  && JSON.parse(localStorage.getItem(khoaDanhGiaAK) || "{}")[maCauThuAK]?.status === "REJECTED";
+check("Đánh dấu câu có vấn đề được ghi xuống kho và gắn mã môn",
+  daGhiXuongKho,
+  daGhiXuongKho
+    ? `khoá ${khoaDanhGiaAK} giữ được trạng thái, tải lại trang không mất`
+    : "đánh dấu chỉ nằm trong bộ nhớ, tải lại trang là mất");
+
+// AK4. Cờ nghi vấn và cờ báo lỗi nội dung là HAI ĐƯỜNG RIÊNG.
+//
+// Cờ nghi vấn là nghi ngờ về NGƯỜI HỌC ("tôi không chắc"), chảy vào `attempt.flags` rồi vào tầng
+// trí nhớ. Báo lỗi nội dung là nghi ngờ về CÂU HỎI. Gộp lại thì hai tín hiệu nhiễm lẫn nhau: người
+// học không chắc bài sẽ vô tình loại bỏ câu hỏi tốt, còn câu hỏi hỏng lại được ghi vào hồ sơ trí
+// nhớ như một điểm yếu của người học.
+const maCauThuAK4 = questions[1].id;
+contentQualityAssurance.boDanhDau(maCauThuAK4);
+dbService.toggleFlag(maCauThuAK4);
+const sauKhiGanCo = contentQualityAssurance.layTatCaDanhGia()[maCauThuAK4];
+dbService.toggleFlag(maCauThuAK4);
+check("Cắm cờ nghi vấn KHÔNG đụng tới trạng thái duyệt nội dung",
+  sauKhiGanCo === undefined,
+  sauKhiGanCo === undefined
+    ? "hai đường tách bạch, cắm cờ nghi vấn không tạo bản ghi duyệt nào"
+    : `cắm cờ nghi vấn đã tạo bản ghi duyệt trạng thái ${sauKhiGanCo.status}, hai tín hiệu đang nhiễm lẫn nhau`);
+
+// AK5. Không chuỗi tiếng Anh nào trên hai màn chất lượng.
+//
+// Bản đánh giá cũ ghi "chuỗi tiếng Anh lọt ra giao diện: 0", nhưng phép đo ấy chạy trên 10 màn CÓ
+// LỐI VÀO, mà hai màn này không nằm trong số đó. Một phép đo chỉ đúng trong phạm vi nó quét.
+const CHUOI_ANH_CAM = ["Gate PASSED", "Gate FAILED", "Score:", ">FULL<", ">PARTIAL<"];
+const nguonHaiManChatLuong = [
+  "src/components/QuestionQualityCard.tsx",
+  "src/components/AcademicQualityDashboard.tsx",
+].map(f => readFileSync(path.join(process.cwd(), f), "utf8")).join("\n");
+const conChuoiAnh = CHUOI_ANH_CAM.filter(c => nguonHaiManChatLuong.includes(c));
+check("Hai màn chất lượng không còn chuỗi tiếng Anh lọt ra giao diện",
+  conChuoiAnh.length === 0,
+  conChuoiAnh.length === 0
+    ? `quét ${CHUOI_ANH_CAM.length} chuỗi từng lọt ra, không chuỗi nào còn`
+    : `còn: ${conChuoiAnh.join(", ")}`);
+
+contentQualityAssurance.boDanhDau(maCauThuAK);
+contentQualityAssurance.boDanhDau(maCauThuAK4);
 
 // ===========================================================================
 // AL. Hàng đợi ôn hôm nay, xếp theo lợi ích cho ngày thi

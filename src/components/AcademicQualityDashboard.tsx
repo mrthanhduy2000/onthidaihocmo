@@ -195,7 +195,7 @@ export default function AcademicQualityDashboard() {
                       cd.coverageStatus === "PARTIAL" ? "bg-brand-warning-bg text-brand-warning" :
                       "bg-brand-error-bg text-brand-error"
                     }`}>
-                      {cd.coverageStatus}
+                      {cd.coverageStatus === "FULL" ? "Phủ đủ" : cd.coverageStatus === "PARTIAL" ? "Phủ một phần" : "Chưa phủ"}
                     </span>
                   </div>
 

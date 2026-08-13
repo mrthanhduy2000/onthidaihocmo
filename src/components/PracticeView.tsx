@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Clock, Bookmark, Flag, ChevronLeft, ChevronRight, Send, HelpCircle, Sparkles, BookOpen, Check, AlertTriangle, Play, Pause, Brain, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Clock, Bookmark, Flag, ChevronLeft, ChevronRight, Send, HelpCircle, Sparkles, BookOpen, Check, AlertTriangle, Play, Pause, Brain, CheckCircle2, ShieldAlert, X } from "lucide-react";
 import { dbService, questionMap, questions, topics, chapters } from "../services/db";
 import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
 import { ExamAttempt, Question, UserSettings } from "../types";
 import { kbService } from "../services/kbService";
+import { contentQualityAssurance } from "../services/contentQualityAssurance";
 import SimpleMarkdown from "./SimpleMarkdown";
 
 interface PracticeProps {
@@ -263,6 +264,38 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
       return { ...prev, bookmarks };
     });
     showToast(isBookmarked ? "Đã lưu câu hỏi vào danh sách ôn tập" : "Đã xóa câu hỏi khỏi danh sách ôn tập");
+  };
+
+  /** Mã câu đang mở hộp báo lỗi nội dung, `null` khi không mở. */
+  const [dangBaoLoiCau, setDangBaoLoiCau] = useState<number | null>(null);
+  const [ghiChuBaoLoi, setGhiChuBaoLoi] = useState("");
+
+  /**
+   * BỐN LÝ DO, và ánh xạ sang hai trạng thái duyệt.
+   *
+   * Hai lý do đầu là lỗi khiến câu KHÔNG DÙNG ĐƯỢC nữa nên đặt `REJECTED`, tức loại luôn khỏi
+   * diện ra đề. Hai lý do sau là câu vẫn đúng nhưng viết chưa tốt, nên đặt `NEEDS_REVISION`: vẫn
+   * ra đề nhưng nằm trong danh sách chờ sửa.
+   *
+   * Ranh giới này quan trọng hơn vẻ ngoài. Loại nhầm một câu đúng thì người học mất một câu để
+   * luyện; giữ lại một câu sai đáp án thì người học học sai kiến thức rồi mang vào phòng thi.
+   */
+  const LY_DO_BAO_LOI: Array<{ ma: string; nhan: string; trangThai: "REJECTED" | "NEEDS_REVISION" }> = [
+    { ma: "dap-an-sai", nhan: "Đáp án đánh dấu sai", trangThai: "REJECTED" },
+    { ma: "nhieu-dap-an", nhan: "Có hơn một phương án đúng", trangThai: "REJECTED" },
+    { ma: "toi-nghia", nhan: "Câu hỏi tối nghĩa", trangThai: "NEEDS_REVISION" },
+    { ma: "loi-giai-mau-thuan", nhan: "Lời giải mâu thuẫn với đáp án", trangThai: "NEEDS_REVISION" },
+  ];
+
+  const guiBaoLoi = (maCau: number, lyDo: { nhan: string; trangThai: "REJECTED" | "NEEDS_REVISION" }) => {
+    // Gọi lại đúng hàm đã có, KHÔNG dựng kho lưu trữ mới.
+    contentQualityAssurance.updateHumanReview(
+      maCau,
+      lyDo.trangThai,
+      ghiChuBaoLoi.trim() ? `${lyDo.nhan}. ${ghiChuBaoLoi.trim()}` : lyDo.nhan
+    );
+    setDangBaoLoiCau(null);
+    setGhiChuBaoLoi("");
   };
 
   const toggleFlag = (qId: number) => {
@@ -1033,7 +1066,76 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                   >
                     <Flag className={`w-4 h-4 ${activeFlagged ? "fill-current" : ""}`} />
                   </button>
+
+                  {/*
+                    NÚT BÁO CÂU CÓ VẤN ĐỀ, KHÁC HẲN CỜ NGHI VẤN BÊN CẠNH.
+
+                    Cờ nghi vấn là nghi ngờ về NGƯỜI HỌC ("tôi không chắc"), chảy vào
+                    `attempt.flags` rồi vào tầng trí nhớ. Nút này là nghi ngờ về CÂU HỎI ("câu này
+                    sai"), chảy vào tầng duyệt nội dung rồi loại câu khỏi diện ra đề.
+
+                    Gộp hai thứ vào một nút thì hai tín hiệu nhiễm lẫn nhau: người học không chắc
+                    bài sẽ vô tình loại bỏ câu hỏi tốt, còn câu hỏi hỏng lại được ghi vào hồ sơ trí
+                    nhớ như một điểm yếu của người học. Nhóm kiểm AK4 canh đúng ranh giới này.
+                  */}
+                  <button
+                    onClick={() => setDangBaoLoiCau(activeQuestion.id)}
+                    className="p-2 rounded-md transition duration-150 cursor-pointer text-text-muted hover:bg-bg-surface hover:text-brand-error"
+                    title={`Báo câu hỏi này có vấn đề về nội dung (mã câu #${activeQuestion.id})`}
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                  </button>
                 </div>
+
+                {/*
+                  HỘP BÁO LỖI. Một hộp nhỏ, không phải một trang riêng, để người học báo xong quay
+                  lại làm bài ngay chứ không mất mạch.
+                */}
+                {dangBaoLoiCau !== null && (
+                  <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center px-4 animate-fade-in">
+                    <div className="bg-bg-card border border-border-primary rounded-2xl max-w-md w-full shadow-2xl">
+                      <div className="flex items-center justify-between px-5 py-4 border-b border-border-primary">
+                        <h3 className="text-base font-bold text-text-primary font-sans">Câu này có vấn đề gì?</h3>
+                        <button
+                          onClick={() => { setDangBaoLoiCau(null); setGhiChuBaoLoi(""); }}
+                          className="text-text-muted hover:text-text-primary cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="px-5 py-4 space-y-3">
+                        <p className="text-sm text-text-secondary">
+                          Câu số {dangBaoLoiCau}. Chọn một lý do. Hai lý do đầu sẽ gỡ câu này khỏi
+                          các đề sau.
+                        </p>
+
+                        <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+                          {LY_DO_BAO_LOI.map(ly => (
+                            <button
+                              key={ly.ma}
+                              onClick={() => guiBaoLoi(dangBaoLoiCau, ly)}
+                              className="py-3 text-left text-sm text-text-primary hover:text-brand-info cursor-pointer flex items-center justify-between gap-3"
+                            >
+                              <span>{ly.nhan}</span>
+                              <span className="text-2xs text-text-muted shrink-0">
+                                {ly.trangThai === "REJECTED" ? "gỡ khỏi đề" : "chờ sửa"}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+
+                        <textarea
+                          value={ghiChuBaoLoi}
+                          onChange={(e) => setGhiChuBaoLoi(e.target.value)}
+                          rows={2}
+                          placeholder="Ghi chú thêm (không bắt buộc)"
+                          className="w-full bg-bg-surface border border-border-primary rounded-lg px-3 py-2 text-sm text-text-primary focus:outline-none placeholder:text-text-muted"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Giữa: vị trí trong phiên và mức khó, viết thành CÂU thay vì hai cái chip.
                     Khan viết tiến độ thành câu ("Hoàn thành 7 câu hỏi") chứ không đóng khung. */}

@@ -118,6 +118,13 @@ export default function GlobalCommandPalette({
       action: () => { onNavigate("observatory"); onClose(); }
     },
     {
+      id: "cmd_quality_dashboard",
+      category: "Công cụ",
+      title: "Xem và sửa câu hỏi có vấn đề",
+      icon: Sparkles,
+      action: () => { onNavigate("quality_dashboard"); onClose(); }
+    },
+    {
       id: "cmd_curriculum",
       category: "Chương trình",
       title: "Xem Ma trận Đề thi & Khung Chương trình",

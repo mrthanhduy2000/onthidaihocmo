@@ -5,6 +5,7 @@
 
 import { dbService, questionMap, topicMap, chapterMap, questions, chapters, topics } from "./db";
 import { kbService } from "./kbService";
+import { contentQualityAssurance } from "./contentQualityAssurance";
 import { TimeService } from "./time";
 import { learningEngine } from "./learningEngine";
 import { learnerModelService } from "./learnerModel";
@@ -865,6 +866,19 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     });
 
     let pool = [...questions];
+
+    // LOẠI BỎ CÂU NGƯỜI HỌC ĐÃ BÁO LÀ SAI, trước mọi bước lọc theo loại đề.
+    //
+    // Đây là thay đổi nhỏ nhất trong cả đợt nhưng tạo khác biệt lớn nhất: trước 13/08/2026 trạng
+    // thái `REJECTED` lưu được mà KHÔNG nơi nào đọc, nên đánh dấu một câu là sai đáp án hoàn toàn
+    // không ngăn nó xuất hiện lại. Cả tầng duyệt nội dung tồn tại mà không đổi được gì.
+    //
+    // Đặt ở đây, tức thao tác trên `pool` lấy từ `questionMap` (bản ĐÃ TRỘN phương án, bất biến
+    // 4.1), không đụng mảng gốc.
+    const maCauBiLoai = new Set(contentQualityAssurance.layMaCauBiLoai());
+    if (maCauBiLoai.size > 0) {
+      pool = pool.filter(q => !maCauBiLoai.has(q.id));
+    }
 
     // Filter candidate pool according to config
     if (config.type === "chapter" && config.chapterId) {

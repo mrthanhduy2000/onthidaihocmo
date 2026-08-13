@@ -8,6 +8,23 @@ import { CheckCircle2, XCircle, AlertTriangle, BookOpen, UserCheck, ChevronDown,
 import { Question } from "../types";
 import { contentQualityAssurance, QuestionQualityProfile, HumanReviewStatus } from "../services/contentQualityAssurance";
 
+/**
+ * Thang Bloom bằng tiếng Việt.
+ *
+ * Sáu chuỗi này lọt ra giao diện suốt nhiều đợt rà mà không ai bắt được, vì bản đánh giá cũ đo
+ * "chuỗi tiếng Anh lọt ra giao diện: 0" trên 10 màn CÓ LỐI VÀO, mà màn Chất lượng học thuật lại
+ * không nằm trong số đó. Một phép đo chỉ đúng trong phạm vi nó quét.
+ */
+const BLOOM_TIENG_VIET: Record<string, string> = {
+  Remember: "Nhớ lại",
+  Understand: "Hiểu",
+  Apply: "Vận dụng",
+  Analyze: "Phân tích",
+  Evaluate: "Đánh giá",
+  Create: "Sáng tạo",
+};
+
+
 interface QuestionQualityCardProps {
   key?: any;
   question: Question;
@@ -49,7 +66,7 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           </span>
 
           <span className="text-2xs tabular-nums text-text-muted bg-bg-surface px-2 py-0.5 rounded border border-border-primary">
-            {question.bloomLevel || "Remember"}
+            {BLOOM_TIENG_VIET[question.bloomLevel || "Remember"] || "Nhớ lại"}
           </span>
         </div>
 
@@ -58,18 +75,18 @@ export default function QuestionQualityCard({ question, pool = [], onReviewUpdat
           {profile.gatePassed ? (
             <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-success bg-brand-success-bg border border-brand-success/30 px-2.5 py-1 rounded-full">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Gate PASSED</span>
+              <span>Qua cổng chất lượng</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 text-2xs tabular-nums font-bold text-brand-error bg-brand-error-bg border border-brand-error/30 px-2.5 py-1 rounded-full">
               <XCircle className="w-4 h-4 shrink-0" />
-              <span>Gate FAILED ({profile.gateViolations.length})</span>
+              <span>Không qua cổng ({profile.gateViolations.length} lỗi)</span>
             </span>
           )}
 
           {/* Overall Quality Score */}
           <div className={`px-3 py-1 rounded-full border text-xs tabular-nums font-bold ${getScoreColor(profile.metrics.overallScore)}`}>
-            Score: {profile.metrics.overallScore}/100
+            Điểm {profile.metrics.overallScore}/100
           </div>
         </div>
       </div>
