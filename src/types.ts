@@ -181,7 +181,7 @@ export interface ExamReviewResult {
 
 export interface ExamAttempt {
   id: string;
-  examType: "sequential" | "random" | "ai-smart" | "chapter" | "topic" | "difficulty" | "incorrect" | "bookmark" | "adaptive" | "custom" | "due";
+  examType: "sequential" | "random" | "ai-smart" | "chapter" | "topic" | "difficulty" | "incorrect" | "bookmark" | "adaptive" | "custom" | "due" | "recall";
   chapterId?: number;
   topicId?: string;
   difficulty?: DifficultyLevel;
@@ -211,8 +211,64 @@ export interface ExamAttempt {
    * Việc này KHÔNG hồi tố được, chỉ có tác dụng từ lúc bật.
    */
   answerTimings?: Record<number, number>;
+  /**
+   * Các lượt NHỚ LẠI CHỦ ĐỘNG của phiên này. Rỗng hoặc vắng với đề trắc nghiệm.
+   *
+   * Vì sao nhét vào chính `ExamAttempt` thay vì dựng một kho riêng: bất biến 4.9e nói
+   * `dbService.addOnSubmit` là **cây cầu duy nhất** giữa việc học và tầng trí nhớ. Một kho riêng
+   * sẽ cần một cây cầu thứ hai, và hai cây cầu là đúng cái đã sinh ra "hai đường cong quên" phải
+   * gộp lại hồi tháng 7. Nhớ lại đi chung một chuyến với trắc nghiệm, chỉ khác nội dung chở.
+   */
+  recallAttempts?: RecallAttempt[];
   examSpecification?: ExamSpecification;
   examReviewResult?: ExamReviewResult;
+}
+
+/**
+ * Một câu hỏi mở dựng từ MỘT nút đồ thị tri thức.
+ *
+ * Sinh tất định ngay trong trình duyệt, KHÔNG gọi AI. Nút tri thức đã có sẵn định nghĩa, ý chi
+ * tiết, bẫy hiểu sai và mẹo nhớ do người soạn viết tay; hỏi AI viết lại chỉ tốn một lượt gọi để
+ * nhận về thứ kém hơn bản gốc, và làm câu hỏi đổi mỗi lần mở màn hình.
+ */
+export interface RecallPrompt {
+  /** Tên khái niệm theo đồ thị tri thức, tức bộ tra chính thống (bất biến 4.5). */
+  conceptName: string;
+  /** Câu hỏi mở hiện cho người học. Không chứa đáp án. */
+  prompt: string;
+  /** Các ý người học cần nêu được. Đây là thước chấm, và TUYỆT ĐỐI không hiện trước khi nộp. */
+  expectedPoints: string[];
+  /** Nguồn của nút tri thức, để phần chấm trích dẫn được chứ không phán suông. */
+  sourceEvidence: string;
+  /** Bẫy hiểu sai đã ghi sẵn trong nút. Rỗng khi nút không ghi. */
+  misconceptionToWatch: string;
+}
+
+/**
+ * Kết quả chấm MỘT lượt nhớ lại.
+ *
+ * `duDuLieu: false` nghĩa là CHƯA CHẤM ĐƯỢC, không phải chấm ra 0 điểm. Hai thứ đó khác nhau về
+ * bản chất và màn hình phải nói khác nhau: một bên là "mô hình không trả lời hợp lệ", một bên là
+ * "bạn trả lời sai". Nhầm hai thứ này là dựng điểm giả, đúng thứ bất biến 4.9 cấm.
+ */
+export interface RecallAttempt {
+  conceptName: string;
+  /** Nguyên văn người học gõ. Giữ lại để về sau đối chiếu được cách chấm. */
+  answerText: string;
+  gradedAt: string;
+  /** `null` khi chưa chấm được. */
+  passed: boolean | null;
+  /** Các ý người học ĐÃ nêu được. */
+  hitPoints: string[];
+  /** Các ý còn thiếu. */
+  missingPoints: string[];
+  /** `true` khi câu trả lời rơi đúng vào bẫy hiểu sai của nút. `null` khi chưa chấm được. */
+  misconceptionHit: boolean | null;
+  duDuLieu: boolean;
+  /** Vì sao chưa chấm được, viết cho người học đọc. Rỗng khi đã chấm được. */
+  lyDoChuaCham: string;
+  /** Số giây người học ngồi gõ câu trả lời này. */
+  thoiGianGiay: number;
 }
 
 export interface Statistics {

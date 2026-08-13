@@ -624,14 +624,29 @@ Bàn học hôm nay
                 </p>
               )}
 
-              <div className="pt-3">
+              {/*
+                HAI CÁCH ÔN CÙNG MỘT HÀNG ĐỢI, người học tự chọn. Trắc nghiệm nhanh và nhẹ, viết
+                lại chậm và nặng nhưng luyện đúng thao tác phòng thi đòi. Không tự chọn giúp, vì
+                chọn cái nào còn tùy hôm nay còn bao nhiêu sức.
+              */}
+              <div className="pt-3 flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => onStartExam("due")}
                   className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
                 >
                   Ôn {hangDoiOn.danhSach.length} khái niệm này
                 </button>
+                <button
+                  onClick={() => onNavigateView("recall_session")}
+                  className="px-4 h-9 bg-bg-card border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer"
+                >
+                  Ôn bằng cách viết lại
+                </button>
               </div>
+              <p className="text-xs text-text-muted pt-1.5">
+                Viết lại là cách luyện nặng hơn: bạn tự viết ra rồi bài chấm chỉ đúng ý còn thiếu,
+                thay vì chọn một trong bốn phương án.
+              </p>
             </div>
           )}
 

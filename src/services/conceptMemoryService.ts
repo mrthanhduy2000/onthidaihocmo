@@ -438,18 +438,49 @@ export function loiIchOnHomNay(
   const doBenHienTai = doBenTriNhoNgay(bangChung);
   const nhoNeuKhongOn = conNhoSauNgay(doBenHienTai, Math.max(0, soNgayDaNghi) + Math.max(0, soNgayToiKyThi));
 
-  // Ôn hôm nay tức là THÊM MỘT LẦN NHỚ LẠI ĐÚNG vào hôm nay, nên vừa bồi độ bền vừa đặt lại đồng
+  /*
+    ĐỘ GẮNG SỨC KHI NHỚ LẠI, và vì sao một lượt ôn không phải lúc nào cũng đáng một lượt.
+
+    ĐO ĐƯỢC NGÀY 13/08/2026, trên bản chạy thật: ôn xong 6 khái niệm, quay lại Bàn học thì hàng
+    đợi vẫn liệt kê đúng 6 khái niệm ấy, vẫn hứa "ôn hôm nay nâng thêm 25 điểm phần trăm". Ôn lại
+    lần nữa ngay lập tức vẫn được hứa y như vậy. Tức hàng đợi mời người học ôn dồn vô hạn.
+
+    Nguyên nhân nằm ở chỗ tinh vi. `doBenTriNhoNgay` CÓ khử ôn dồn ở hệ số giãn cách, vì hệ số ấy
+    đếm số NGÀY LỊCH khác nhau nên lượt thứ hai trong cùng ngày không cộng thêm gì. Nhưng phần nền
+    `1,8·log2(soLanNhoLaiDung + 1)` thì vẫn cộng nguyên một lượt, bất kể lượt đó cách lượt trước
+    mười phút hay mười ngày. Một nửa công thức khử ôn dồn, nửa kia vẫn thưởng cho nó.
+
+    CÁCH SỬA, và vì sao sửa ở đây chứ không sửa công thức độ bền. Bất biến 4.9c: cả dự án chỉ có
+    MỘT công thức độ bền trí nhớ, và `doBenTriNhoNgay` là hàm thuần của bằng chứng, nó không được
+    biết "lần ôn trước cách đây bao lâu". Phán đoán về giãn cách thuộc về chỗ RA QUYẾT ĐỊNH xếp
+    lịch, tức chính hàm này.
+
+    Vì vậy lượt ôn giả định không còn được tính tròn 1, mà tính theo mức đã quên tại thời điểm ôn:
+
+        doGangSucNhoLai = 1 - R(lúc này)
+
+    Vừa ôn xong thì R gần 1, gắng sức gần 0, lợi ích gần 0: đúng hiệu ứng giãn cách. Để lâu tới
+    lúc R tụt còn 0,3 thì gắng sức 0,7, gần trọn một lượt. Đây cũng là chiều mà FSRS dùng cho hệ
+    số tăng độ bền của nó, chỉ khác là ở đây viết ra dạng đơn giản nhất đọc được.
+
+    Tính chất bắt buộc phải giữ: ôn lại NGAY LẬP TỨC cho lợi ích gần bằng 0. Nhóm kiểm AO canh nó.
+  */
+  const nhoLucNay = conNhoSauNgay(doBenHienTai, Math.max(0, soNgayDaNghi));
+  const doGangSucNhoLai = Math.max(0, Math.min(1, 1 - nhoLucNay));
+
+  // Ôn hôm nay tức là thêm một lần nhớ lại đúng vào hôm nay, nên vừa bồi độ bền vừa đặt lại đồng
   // hồ nghỉ về 0. Cộng luôn mốc học của hôm nay để hiệu ứng giãn cách tính đúng: ôn thêm một lần
   // trong CÙNG một ngày đã học thì không được cộng thêm ngày giãn cách nào.
   const bangChungSauKhiOn: BangChungTriNho = {
     ...bangChung,
-    soLanNhoLaiDung: (bangChung.soLanNhoLaiDung || 0) + 1,
+    soLanNhoLaiDung: (bangChung.soLanNhoLaiDung || 0) + doGangSucNhoLai,
     mocHocISO: [...(bangChung.mocHocISO || []), TimeService.now().toISOString()],
   };
   const doBenSauKhiOn = doBenTriNhoNgay(bangChungSauKhiOn);
   const nhoNeuOn = conNhoSauNgay(doBenSauKhiOn, Math.max(0, soNgayToiKyThi));
 
-  return nhoNeuOn - nhoNeuKhongOn;
+  // Bồi độ bền không bao giờ làm mức nhớ ngày thi TỤT, nên lợi ích âm chỉ có thể là nhiễu số học.
+  return Math.max(0, nhoNeuOn - nhoNeuKhongOn);
 }
 
 /**

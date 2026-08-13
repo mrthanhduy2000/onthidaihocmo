@@ -125,6 +125,13 @@ export default function GlobalCommandPalette({
       action: () => { onNavigate("quality_dashboard"); onClose(); }
     },
     {
+      id: "cmd_recall_session",
+      category: "Ôn tập",
+      title: "Ôn bằng cách viết lại (nhớ lại chủ động)",
+      icon: BookOpen,
+      action: () => { onNavigate("recall_session"); onClose(); }
+    },
+    {
       id: "cmd_curriculum",
       category: "Chương trình",
       title: "Xem Ma trận Đề thi & Khung Chương trình",

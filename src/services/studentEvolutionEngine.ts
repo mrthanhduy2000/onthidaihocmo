@@ -542,8 +542,105 @@ export const NHAN_TU_LAM_BAI = "Tự làm bài";
 //   - `recommendedReviewInterval` cứng 48 hoặc 12 giờ, chạy song song và mâu thuẫn với lịch
 //     ôn thật do `conceptMemoryService` tính từ độ bền trí nhớ. Hai lịch ôn cho cùng một
 //     khái niệm, đúng khuôn "hai đường cong quên" đã phải gộp trước đó.
+/**
+ * Nhãn cho lượt NHỚ LẠI CHỦ ĐỘNG. Khác hẳn `NHAN_TU_LAM_BAI`, và sự khác đó là có thật.
+ *
+ * Lượt trắc nghiệm: người học bấm một phương án, không ai giảng gì, nên nó truyền
+ * `capNhatBangChienLuoc: false`. Lượt nhớ lại: bài chấm chỉ ra ĐÍCH DANH ý nào người học nêu
+ * được, ý nào còn thiếu, và có rơi vào bẫy hiểu sai nào không. Đó là dạy, nên nó CÓ được cộng vào
+ * bảng hiệu quả chiến lược.
+ *
+ * Dùng nhầm nhãn ở đây là đẻ ra một phong cách dạy không tồn tại rồi `adaptiveTeachingPolicy` có
+ * thể chọn chính nó, đúng lỗi đã ghi ở bất biến 4.9e mục 3.
+ */
+export const NHAN_NHO_LAI_CHU_DONG = "Nhớ lại chủ động";
+
+/**
+ * Mã câu quy ước cho lượt nhớ lại. Lượt nhớ lại KHÔNG gắn với câu hỏi nào trong ngân hàng, nó hỏi
+ * thẳng vào một nút tri thức. Dùng số âm để không bao giờ đụng mã câu thật, và để nơi nào đọc
+ * nhầm cũng lộ ra ngay thay vì âm thầm tra ra một câu có thật.
+ */
+export const MA_CAU_NHO_LAI = -1;
+
 dbService.addOnSubmit((attempt) => {
-  if (!attempt || !attempt.answers) return;
+  if (!attempt) return;
+
+  /*
+    NHÁNH NHỚ LẠI CHỦ ĐỘNG, đi chung cây cầu này chứ không mở đường thứ hai (bất biến 4.9e).
+
+    Đặt TRƯỚC nhánh trắc nghiệm vì một phiên nhớ lại có `answers` rỗng, mà nhánh dưới thoát sớm
+    khi không có câu trả lời nào. Hai nhánh không loại trừ nhau về mặt kiểu dữ liệu, chỉ là trên
+    thực tế mỗi phiên chỉ có một loại.
+
+    CHỈ ghi lượt `duDuLieu: true`. Lượt chưa chấm được KHÔNG phải lượt 0 điểm: ghi nó vào là bịa ra
+    một bằng chứng "người học không nhớ" từ một sự cố của cổng AI.
+  */
+  const luotNhoLai = (attempt.recallAttempts || []).filter(r => r && r.duDuLieu && r.passed !== null);
+  if (luotNhoLai.length > 0) {
+    const subjectIdNhoLai = dbService.getActiveSubjectId();
+    const doThi = kbService.getKnowledgeGraph(subjectIdNhoLai);
+    const modelNhoLai = studentModelService.getStudentModel();
+
+    luotNhoLai.forEach(luot => {
+      const node = doThi.find(n => n.concept === luot.conceptName);
+      const bayHieuSai = luot.misconceptionHit
+        ? (node?.teaching?.misconception || node?.commonMistakes || undefined)
+        : undefined;
+
+      const danhGiaNhoLai = pedagogicalEvaluationEngine.evaluateInteraction({
+        learningPlan: { bloom: "Understand" } as any,
+        teachingDecision: { actionType: NHAN_NHO_LAI_CHU_DONG } as any,
+        studentModel: modelNhoLai,
+        // Engine chỉ đọc ba thứ từ `question`: `concept` (đã bị `conceptName` ghi đè), `misconception`,
+        // và độ dài `question` để ước tải nhận thức. Truyền đúng chữ NGƯỜI HỌC ĐÃ ĐỌC, không bịa câu.
+        question: {
+          concept: luot.conceptName,
+          misconception: node?.teaching?.misconception || "",
+          question: luot.answerText,
+        } as any,
+        // Đạt hay chưa đạt là tín hiệu đúng sai của lượt này. Ánh xạ thẳng vào hai chuỗi so sánh
+        // của engine thay vì bịa ra một chữ cái phương án cho một câu không có phương án nào.
+        studentAnswer: luot.passed ? "dat" : "chua-dat",
+        correctAnswer: "dat",
+        responseTimeSeconds: luot.thoiGianGiay,
+        retryCount: 0,
+        // Không có nút cờ nghi vấn trong chế độ nhớ lại, nên KHÔNG có tín hiệu tự tin. 0,5 là giá
+        // trị "không biết" mà `doTuTinTuCoNghiVan` trả về khi vắng tín hiệu, dùng lại cho nhất quán.
+        confidence: 0.5,
+        // Không đoán mò được một câu tự luận, nên không xét.
+        guessDetection: false,
+        evidenceCoverage: 1,
+        teachingStrategy: NHAN_NHO_LAI_CHU_DONG,
+        bloomLevel: "Understand",
+        misconceptionType: bayHieuSai,
+        conceptName: luot.conceptName,
+        // CÓ giảng: bài chấm chỉ ra đích danh ý còn thiếu và bẫy hiểu sai.
+        capNhatBangChienLuoc: true
+      });
+
+      studentEvolutionEngine.processInteraction({
+        conceptName: luot.conceptName,
+        subjectId: subjectIdNhoLai,
+        update: {
+          wasCorrect: !!luot.passed,
+          confidence: 0.5,
+          coTinHieuTuTin: false,
+          responseTimeSeconds: luot.thoiGianGiay,
+          teachingStrategy: NHAN_NHO_LAI_CHU_DONG,
+          explanationLength: "balanced",
+          detectedMisconception: bayHieuSai,
+          questionId: MA_CAU_NHO_LAI
+        },
+        evaluation: danhGiaNhoLai
+      });
+
+      if (bayHieuSai) {
+        studentModelService.logMisconception(luot.conceptName, bayHieuSai, MA_CAU_NHO_LAI);
+      }
+    });
+  }
+
+  if (!attempt.answers) return;
   const activeSubjectId = dbService.getActiveSubjectId();
   const answers = attempt.answers;
   const questionMap = dbService.getQuestionMap();

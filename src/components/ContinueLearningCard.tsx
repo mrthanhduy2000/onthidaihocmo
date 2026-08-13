@@ -13,11 +13,25 @@ interface ContinueLearningCardProps {
 }
 
 /* Nhãn tiếng Việt cho các loại phiên luyện tập của engine. Chỉ là lớp dịch khi hiển thị. */
+/*
+  Bảng này phải phủ HẾT mọi giá trị khai trong `ExamAttempt["examType"]`, vì dòng dưới in thẳng mã
+  nội bộ khi tra không ra. Đo được ngày 13/08/2026: loại `due` thêm ở Giai đoạn 3 không có nhãn,
+  nên người học đang đọc được chữ "due" nguyên văn trên thẻ tiếp tục học. Phép kiểm AO6 canh cả họ
+  này để loại thêm sau không lặp lại.
+*/
 const NHAN_LOAI_PHIEN: Record<string, string> = {
+  sequential: "thứ tự gốc",
+  random: "ngẫu nhiên",
   adaptive: "thích ứng",
   "ai-smart": "thi thử",
   chapter: "theo chương",
+  topic: "theo chủ đề",
+  difficulty: "theo độ khó",
   incorrect: "ôn câu sai",
+  bookmark: "câu đã đánh dấu",
+  custom: "tự chọn",
+  due: "ôn khái niệm tới hạn",
+  recall: "nhớ lại chủ động",
   mock: "thi thử",
 };
 

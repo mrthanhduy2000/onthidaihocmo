@@ -440,6 +440,26 @@ function rawToQuestion(q: any, id: number, source: string, forcedChapterId?: num
   };
 }
 
+/**
+ * Cổng gọi AI ở mức thấp, mở ra cho các dịch vụ khác dựng lời nhắc RIÊNG của mình.
+ *
+ * Vì sao mở: chế độ nhớ lại chủ động cần một lời nhắc chấm bài hoàn toàn khác lời nhắc giải thích
+ * câu hỏi, và `ai.ts` đã 1.055 dòng. Nhét thêm một họ lời nhắc nữa vào đây là làm file này thành
+ * chỗ chứa mọi thứ. Nhưng phần TRUYỀN TẢI thì phải dùng chung, vì bất biến 4.8 đòi mọi lượt gọi
+ * đều đi qua `/api/ai/complete` và máy chủ không được giữ dữ liệu môn học.
+ *
+ * Đây KHÔNG phải cửa để bỏ qua kiểm tra đầu ra. Nơi gọi tự chịu trách nhiệm kiểm tra thứ nhận về,
+ * và phải nói "chưa làm được" khi mô hình trả rác chứ không được tự điền giá trị thay nó.
+ */
+export async function goiCongAI(
+  prompt: string,
+  taskType: string,
+  subjectName: string,
+  dangDauRa?: { responseMimeType?: string; responseSchema?: unknown }
+): Promise<string> {
+  return callGemini(prompt, taskType, subjectName, dangDauRa);
+}
+
 export const aiService = {
   /**
    * Generates a local diagnostic recommendation based on user performance history.

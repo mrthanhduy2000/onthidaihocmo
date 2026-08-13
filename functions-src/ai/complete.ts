@@ -29,6 +29,7 @@ const ALLOWED_TASK_TYPES: TaskType[] = [
   "QuizGeneration",
   "GeneralChat",
   "DiagnosticRecommendation",
+  "RecallGrading",
 ];
 
 export default async function handler(req: any, res: any) {

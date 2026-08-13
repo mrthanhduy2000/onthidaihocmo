@@ -21,6 +21,7 @@ import PersonalWorkspaceView from "./components/PersonalWorkspaceView";
 import { LearningObservatoryView } from "./components/LearningObservatoryView";
 import SessionRecoveryBanner from "./components/SessionRecoveryBanner";
 import GlobalCommandPalette from "./components/GlobalCommandPalette";
+import RecallSessionView from "./components/RecallSessionView";
 import ProductSettingsModal from "./components/ProductSettingsModal";
 import { dbService } from "./services/db";
 import { workspaceService } from "./services/workspaceService";
@@ -49,7 +50,7 @@ const DIEM_DEN = [
 ] as const;
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<"workspace" | "home" | "practice" | "review" | "progress" | "ai_coach" | "quality_dashboard" | "curriculum" | "forecast" | "observatory">("workspace");
+  const [currentView, setCurrentView] = useState<"workspace" | "home" | "practice" | "review" | "progress" | "ai_coach" | "quality_dashboard" | "curriculum" | "forecast" | "observatory" | "recall_session">("workspace");
   const [activeExam, setActiveExam] = useState<ExamAttempt | null>(null);
   const [stats, setStats] = useState(dbService.getStatistics());
   const [activeSubjectId, setActiveSubjectId] = useState(dbService.getActiveSubjectId());
@@ -315,6 +316,13 @@ export default function App() {
             onNavigateView={(view) => setCurrentView(view as any)}
             onOpenSettings={() => setIsSettingsOpen(true)}
             phienBanMucTieu={phienBanMucTieu}
+          />
+        )}
+
+        {currentView === "recall_session" && (
+          <RecallSessionView
+            key={activeSubjectId}
+            onNavigateHome={handleNavigateHome}
           />
         )}
 

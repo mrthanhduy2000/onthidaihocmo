@@ -27,8 +27,8 @@ import {
   NGUONG_LECH_DO_DAI, NHAN_PHUONG_AN_TRONG_LOI_GIAI,
 } from "../../src/services/ai";
 import { learningEngine } from "../../src/services/learningEngine";
-import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai, conNhoSauNgay, mucNhoVaoNgayThi } from "../../src/services/conceptMemoryService";
-import { studentEvolutionEngine, NHAN_TU_LAM_BAI } from "../../src/services/studentEvolutionEngine";
+import { conceptMemoryService, doBenTriNhoDoDuoc, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai, conNhoSauNgay, mucNhoVaoNgayThi, loiIchOnHomNay } from "../../src/services/conceptMemoryService";
+import { studentEvolutionEngine, NHAN_TU_LAM_BAI, NHAN_NHO_LAI_CHU_DONG } from "../../src/services/studentEvolutionEngine";
 import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvaluationEngine";
 import { TimeService } from "../../src/services/time";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
@@ -36,6 +36,7 @@ import { kbService } from "../../src/services/kbService";
 import { learnerModelService, mocNhipChuan, nhipRiengMoiCau, studentModelService } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { contentQualityAssurance } from "../../src/services/contentQualityAssurance";
+import { taoCauHoiNhoLai, chamCauTraLoi, docKetQuaCham } from "../../src/services/recallService";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { teachingAnalytics } from "../../src/services/teachingAnalytics";
 import { examQualityReportService } from "../../src/services/examQualityReport";
@@ -3851,6 +3852,303 @@ check("Không lời gọi nào mở đoạn đếm mà đi vòng qua cổng ba �
 dbService.clearAllHistory();
 
 // ===========================================================================
+// AO. Nhớ lại chủ động
+// ===========================================================================
+g("AO. Nhớ lại chủ động");
+
+const nguonManNhoLai = readFileSync(path.join(process.cwd(), "src/components/RecallSessionView.tsx"), "utf8");
+
+// AO1. Định nghĩa chuẩn TUYỆT ĐỐI không được dựng ra trước khi người học nộp bài.
+//
+// Đây là phép kiểm quan trọng nhất nhóm này, vì nó canh chính lý do chế độ này tồn tại. Đọc định
+// nghĩa rồi mới viết thì thứ luyện được chỉ còn là đọc hiểu, và bằng chứng đưa vào đường cong quên
+// thành bằng chứng của một việc khác hẳn.
+//
+// Canh ở nguồn theo VỊ TRÍ trong file: mọi chỗ nhắc tới định nghĩa chuẩn hoặc thước chấm phải nằm
+// SAU mốc mở khối "đã chấm". Ẩn bằng CSS không tính là ẩn, nên không canh bằng class.
+/*
+  Quét trên bản ĐÃ BÓC CHÚ THÍCH. Bản đầu quét thẳng văn bản nguồn và đỏ ngay lần chạy đầu, vì nó
+  bắt đúng dòng chú thích giải thích rằng chỗ đó không được có `expectedPoints`. Một bộ quét không
+  phân biệt được chú thích với mã sẽ phạt chính lời giải thích về nó, và đó là lần thứ ba trong dự
+  án một phép kiểm mới đỏ vì bản thân nó sai chứ không phải vì mã sai.
+
+  Thay bằng khoảng trắng cùng độ dài để mọi vị trí ký tự vẫn khớp với bản gốc.
+*/
+const giuDoDai = (m: string) => m.replace(/[^\n]/g, " ");
+const manNhoLaiKhongChuThich = nguonManNhoLai
+  .replace(/\/\*[\s\S]*?\*\//g, giuDoDai)
+  .replace(/\/\/[^\n]*/g, giuDoDai);
+
+const mocDaCham = manNhoLaiKhongChuThich.indexOf('trangThai === "da-cham" && ketQua');
+const mocThanHam = manNhoLaiKhongChuThich.indexOf("return (");
+const viTriLoNoiDung: string[] = [];
+[".definition", "expectedPoints", "memoryHook"].forEach(dau => {
+  for (let i = manNhoLaiKhongChuThich.indexOf(dau); i !== -1; i = manNhoLaiKhongChuThich.indexOf(dau, i + 1)) {
+    // Chỉ xét từ thân hàm dựng màn trở đi; phần khai báo và nhập khẩu phía trên không dựng ra gì.
+    if (i < mocThanHam) continue;
+    if (mocDaCham === -1 || i < mocDaCham) viTriLoNoiDung.push(dau);
+  }
+});
+// Bộ nhớ đệm tra nút tri thức cũng phải tự khóa lại khi chưa chấm, không chỉ dựa vào chỗ đặt JSX.
+const memoTuKhoa = /trangThai !== "da-cham"\) return null/.test(manNhoLaiKhongChuThich);
+check("Định nghĩa chuẩn không được dựng ra trước khi người học nộp bài",
+  viTriLoNoiDung.length === 0 && memoTuKhoa && mocDaCham !== -1,
+  viTriLoNoiDung.length > 0
+    ? `lộ nội dung trước khi chấm: ${[...new Set(viTriLoNoiDung)].join(", ")}`
+    : !memoTuKhoa
+      ? "bộ tra nút tri thức không tự khóa khi chưa chấm"
+      : "thước chấm và định nghĩa chuẩn đều nằm sau mốc đã chấm, bộ tra nút cũng tự khóa");
+
+// AO2. Kết quả chấm phải CHẢY TỚI tầng trí nhớ, qua đúng cây cầu `addOnSubmit`.
+dbService.clearAllHistory();
+const doThiAO = kbService.getKnowledgeGraph(dbService.getActiveSubjectId());
+const nutAO = doThiAO.find(n => !n.laNutTongHop && n.definition && n.definition.length > 20);
+const tenKhaiNiemAO = nutAO ? nutAO.concept : "";
+const truocAO = conceptMemoryService.getConceptProfile(tenKhaiNiemAO);
+const soLanTruocAO = truocAO?.timesStudied || 0;
+
+const phienNhoLai: any = {
+  id: "recall_test_ao2",
+  examType: "recall",
+  startTime: TimeService.now().toISOString(),
+  endTime: TimeService.now().toISOString(),
+  questions: [],
+  answers: {},
+  bookmarks: [],
+  flags: [],
+  isSubmitted: true,
+  score: 1,
+  timeSpent: 90,
+  recallAttempts: [{
+    conceptName: tenKhaiNiemAO,
+    answerText: "Bài viết thử của phép kiểm, đủ dài để không bị chặn ở cổng độ dài tối thiểu.",
+    gradedAt: TimeService.now().toISOString(),
+    passed: true,
+    hitPoints: ["ý một", "ý hai"],
+    missingPoints: [],
+    misconceptionHit: false,
+    duDuLieu: true,
+    lyDoChuaCham: "",
+    thoiGianGiay: 90,
+  }],
+};
+dbService.saveAttempt(phienNhoLai);
+const sauAO = conceptMemoryService.getConceptProfile(tenKhaiNiemAO);
+const soLanSauAO = sauAO?.timesStudied || 0;
+check("Một lượt nhớ lại đã chấm chảy được tới hồ sơ trí nhớ khái niệm",
+  tenKhaiNiemAO !== "" && soLanSauAO > soLanTruocAO,
+  tenKhaiNiemAO === ""
+    ? "không tìm được nút tri thức nào để thử, phép kiểm đang rỗng"
+    : `hồ sơ "${tenKhaiNiemAO}" tăng từ ${soLanTruocAO} lên ${soLanSauAO} lần ôn`);
+
+// AO3. Lượt nhớ lại phải mang nhãn CÓ GIẢNG, khác hẳn nhãn tự làm bài.
+//
+// Bất biến 4.9e mục 3: dùng nhầm nhãn là đẻ ra một phong cách dạy không tồn tại rồi
+// `adaptiveTeachingPolicy` có thể chọn chính nó. Ở đây khác chiều với lượt trắc nghiệm: nhớ lại
+// THẬT SỰ có giảng (bài chấm chỉ đích danh ý còn thiếu), nên nó phải được cộng vào bảng chiến lược.
+const lichSuChamAO = pedagogicalEvaluationEngine.getEvaluationHistory() || [];
+const banGhiNhoLai = lichSuChamAO.filter(e => e && e.conceptName === tenKhaiNiemAO && e.teachingStrategy === NHAN_NHO_LAI_CHU_DONG);
+const nhamNhanTuLam = lichSuChamAO.some(e => e && e.conceptName === tenKhaiNiemAO && e.teachingStrategy === NHAN_TU_LAM_BAI);
+check("Lượt nhớ lại mang nhãn có giảng, không mượn nhãn tự làm bài",
+  banGhiNhoLai.length > 0 && !nhamNhanTuLam,
+  banGhiNhoLai.length === 0
+    ? "không có bản ghi chấm nào mang nhãn nhớ lại chủ động"
+    : nhamNhanTuLam
+      ? "lượt nhớ lại bị dán nhãn tự làm bài"
+      : `${banGhiNhoLai.length} bản ghi mang nhãn "${NHAN_NHO_LAI_CHU_DONG}"`);
+
+// AO4. Nhớ lại KHÔNG được đụng vào `answers` của trắc nghiệm, và không được đếm thành câu đã làm.
+//
+// Hai luồng dùng chung một bản ghi `ExamAttempt`, nên đây là chỗ dễ lẫn nhất: một lượt viết lại bị
+// đếm thành một câu trắc nghiệm đã giải sẽ thổi phồng mọi thống kê phía sau.
+// Hai vế, và vế nguồn là vế quan trọng. Bản đầu chỉ có vế hành vi, tức kiểm chính bản ghi mà
+// harness vừa tự dựng ra vài dòng trên: một phép kiểm tự khen mình. Phá thử `RecallSessionView`
+// cho nó ghi thẳng vào `answers` thì phép kiểm vẫn xanh. Nay canh thêm ở NGUỒN, đúng chỗ bản ghi
+// thật được dựng.
+const thongKeSauAO = dbService.getStatistics();
+const luotNhoLaiTrongLichSu = dbService.getHistory().find(h => h.id === "recall_test_ao2");
+const khoiDungBanGhi = manNhoLaiKhongChuThich.slice(
+  manNhoLaiKhongChuThich.indexOf("const banGhi: ExamAttempt"),
+  manNhoLaiKhongChuThich.indexOf("dbService.saveAttempt")
+);
+const nguonDungHai = /questions:\s*\[\]/.test(khoiDungBanGhi) && /answers:\s*\{\}/.test(khoiDungBanGhi);
+check("Lượt nhớ lại không lẫn vào đường trắc nghiệm",
+  !!luotNhoLaiTrongLichSu
+    && Object.keys(luotNhoLaiTrongLichSu.answers || {}).length === 0
+    && (luotNhoLaiTrongLichSu.questions || []).length === 0
+    && thongKeSauAO.totalSolved === 0
+    && nguonDungHai,
+  !luotNhoLaiTrongLichSu
+    ? "không lưu được lượt nhớ lại vào lịch sử"
+    : !nguonDungHai
+      ? "màn nhớ lại đang ghi vào answers hoặc questions của trắc nghiệm"
+      : `answers rỗng, questions rỗng, số câu đã giải vẫn ${thongKeSauAO.totalSolved}`);
+
+// AO5. Mô hình trả về thứ không dùng được thì phải nói CHƯA CHẤM ĐƯỢC, tuyệt đối không dựng điểm.
+//
+// VÌ SAO KHÔNG DÙNG `outputValidationService` như bản kế hoạch ghi: hàm đó tự điền giá trị bịa khi
+// thiếu trường, vì nó viết cho phần giải thích câu hỏi nơi một câu chung chung còn đỡ hơn màn hình
+// trống. Ở đây thì ngược hẳn, điền bừa là dựng ra một kết quả chấm chưa hề xảy ra.
+const caRac = [
+  ["không phải JSON", "xin lỗi tôi không chắc"],
+  ["JSON nhưng thiếu trường", '{"dat": true}'],
+  ["dat không phải kiểu luận lý", '{"dat":"co","roiVaoBayHieuSai":false,"yDaNeuDuoc":[],"yConThieu":[]}'],
+  ["hai mảng không phải mảng", '{"dat":true,"roiVaoBayHieuSai":false,"yDaNeuDuoc":"a","yConThieu":"b"}'],
+  ["rỗng hoàn toàn", ""],
+];
+const racLotLuoi = caRac.filter(([, raw]) => docKetQuaCham(raw) !== null).map(([ten]) => ten);
+const casachDoc = docKetQuaCham('{"dat":true,"roiVaoBayHieuSai":false,"yDaNeuDuoc":["x"],"yConThieu":[]}');
+check("Kết quả chấm không dùng được thì bị chặn, không được tự điền cho đủ trường",
+  racLotLuoi.length === 0 && casachDoc !== null,
+  racLotLuoi.length > 0
+    ? `lọt lưới: ${racLotLuoi.join("; ")}`
+    : `chặn cả ${caRac.length} dạng rác, vẫn đọc được bản hợp lệ`);
+
+// AO9. HIỆU ỨNG GIÃN CÁCH: ôn lại ngay lập tức phải gần như KHÔNG mang lợi ích nào.
+//
+// ĐO ĐƯỢC NGÀY 13/08/2026 trên bản chạy thật, và không phép kiểm nào trong 265 phép kiểm bắt được:
+// ôn xong 6 khái niệm, quay lại Bàn học thì hàng đợi vẫn liệt kê đúng 6 khái niệm ấy, vẫn hứa
+// "ôn hôm nay nâng thêm 25 điểm phần trăm". Tức hàng đợi mời người học ôn dồn vô hạn.
+//
+// Nguyên nhân tinh vi: `doBenTriNhoNgay` CÓ khử ôn dồn ở hệ số giãn cách (đếm số ngày lịch khác
+// nhau), nhưng phần nền `1,8·log2(soLanNhoLaiDung + 1)` vẫn cộng nguyên một lượt bất kể lượt đó
+// cách lượt trước mười phút hay mười ngày. Nửa công thức khử ôn dồn, nửa kia vẫn thưởng cho nó.
+//
+// Đây là chỗ ăn thua so với Anki, nên phải ghim bằng số đo chứ không bằng lời hứa trong chú thích.
+const bcGianCach: any = {
+  soLanNhoLaiDung: 4, soLanNhoLaiSai: 2, dinhCaoDoThao: 60, doKhoKhaiNiem: 6.0,
+  mocHocISO: ["2026-08-05T09:00:00Z", "2026-08-08T09:00:00Z", "2026-08-13T09:00:00Z"], capNhoLai: [],
+};
+const loiIchNgay0 = loiIchOnHomNay(bcGianCach, 3, 0) ?? -1;
+const loiIchNuaNgay = loiIchOnHomNay(bcGianCach, 3, 0.5) ?? -1;
+const loiIch3Ngay = loiIchOnHomNay(bcGianCach, 3, 3) ?? -1;
+const loiIch10Ngay = loiIchOnHomNay(bcGianCach, 3, 10) ?? -1;
+const tangDonDieu = loiIchNgay0 < loiIchNuaNgay && loiIchNuaNgay < loiIch3Ngay && loiIch3Ngay < loiIch10Ngay;
+check("Ôn lại ngay lập tức gần như không mang lợi ích, càng để lâu lợi ích càng lớn",
+  loiIchNgay0 < 0.01 && tangDonDieu,
+  loiIchNgay0 >= 0.01
+    ? `vừa ôn xong mà ôn lại vẫn được hứa ${(loiIchNgay0 * 100).toFixed(1)} điểm phần trăm`
+    : !tangDonDieu
+      ? "lợi ích không tăng đơn điệu theo số ngày đã nghỉ"
+      : `nghỉ 0 ngày ${(loiIchNgay0 * 100).toFixed(1)} điểm, nửa ngày ${(loiIchNuaNgay * 100).toFixed(1)}, 3 ngày ${(loiIch3Ngay * 100).toFixed(1)}, 10 ngày ${(loiIch10Ngay * 100).toFixed(1)}`);
+
+// AO10. Hệ quả trên hàng đợi thật: vừa ôn xong thì khái niệm đó RỜI khỏi việc hôm nay.
+//
+// Đây là thứ Anki làm được bằng cách giấu thẻ đi tới kỳ hạn sau. Ở đây nó phải rơi ra một cách tự
+// nhiên từ chính đường cong, chứ không bằng một luật riêng dán thêm bên ngoài.
+dbService.clearAllHistory();
+dbService.saveSubjectGoal({ ...(dbService.getSubjectGoal() || {} as any), examDate: TimeService.formatDateISO(TimeService.parseToDate(TimeService.now().getTime() + 5 * 86400000)) });
+const deVuaOn = aiService.generateExam({ type: "random", count: 8 });
+deVuaOn.answers = {};
+deVuaOn.questions.forEach(id => { const qq = questionMap.get(id); if (qq) deVuaOn.answers[id] = qq.correctAnswer; });
+deVuaOn.isSubmitted = true;
+dbService.saveAttempt(deVuaOn);
+// Tập khái niệm VỪA HỌC XONG, tra qua đúng bộ tra chính thống (bất biến 4.5). Bản đầu của phép
+// kiểm này lọc theo `soNgayQuaHan > -0.01`, tức đo "đã tới hạn chưa" chứ không đo "vừa học xong
+// chưa", nên nó xanh cả khi hành vi cũ vẫn còn nguyên. Phá thử mới lộ ra.
+const khaiNiemVuaHoc = new Set<string>();
+deVuaOn.questions.forEach(id => {
+  const qq = questionMap.get(id);
+  if (!qq) return;
+  const nut = kbService.getConceptForQuestion(dbService.getActiveSubjectId(), qq);
+  if (nut) khaiNiemVuaHoc.add(nut.concept);
+});
+const hangDoiNgaySauKhiOn = learnerModelService.layKhaiNiemToiHan();
+const conSotLaiAO = hangDoiNgaySauKhiOn.danhSach.filter(m => khaiNiemVuaHoc.has(m.tenKhaiNiem));
+check("Khái niệm vừa ôn xong rời khỏi việc hôm nay, không bị mời ôn dồn",
+  hangDoiNgaySauKhiOn.xepTheoNgayThi && khaiNiemVuaHoc.size > 0 && conSotLaiAO.length === 0,
+  !hangDoiNgaySauKhiOn.xepTheoNgayThi || khaiNiemVuaHoc.size === 0
+    ? "không đặt được ngày thi hoặc không tra ra khái niệm nào, phép kiểm đang rỗng"
+    : conSotLaiAO.length === 0
+      ? `vừa học ${khaiNiemVuaHoc.size} khái niệm, không khái niệm nào trong số đó bị mời ôn lại; hàng đợi còn ${hangDoiNgaySauKhiOn.danhSach.length} khái niệm khác`
+      : `${conSotLaiAO.length}/${khaiNiemVuaHoc.size} khái niệm vừa học xong vẫn bị mời ôn lại ngay`);
+dbService.clearAllHistory();
+
+// AO8. BỘ QUÉT CẢ HỌ: mọi loại tác vụ trình duyệt gửi lên phải được máy chủ CÔNG NHẬN.
+//
+// Cổng `complete.ts` gặp `taskType` lạ thì IM LẶNG hạ về `"AcademicExplanation"`, không báo lỗi,
+// không ghi nhật ký. Đo được ngày 13/08/2026: bản đầu của phần chấm nhớ lại gửi lên
+// `"recall-grading"` và bị hạ về mặc định, nghĩa là chấm bài chạy ở nhiệt độ 0,15 của việc giải
+// thích thay vì 0,05 đã chọn. Cùng một bài viết có thể ra hai kết quả chấm khác nhau, mà nhiễu đó
+// không dừng ở màn hình: nó đi thẳng vào đường cong quên rồi vào lịch ôn các tuần sau.
+//
+// Canh cả họ vì mọi tính năng AI thêm sau đều có thể vấp đúng chỗ này mà không có dấu hiệu gì.
+const nguonCongComplete = readFileSync(path.join(process.cwd(), "functions-src/ai/complete.ts"), "utf8");
+const khoiChoPhep = nguonCongComplete.slice(
+  nguonCongComplete.indexOf("ALLOWED_TASK_TYPES"),
+  nguonCongComplete.indexOf("];", nguonCongComplete.indexOf("ALLOWED_TASK_TYPES"))
+);
+const loaiDuocPhep = (khoiChoPhep.match(/"([A-Za-z]+)"/g) || []).map(s => s.replace(/"/g, ""));
+const loaiTrinhDuyetGui: string[] = [];
+["src/services/recallService.ts", "src/services/ai.ts"].forEach(f => {
+  const src = readFileSync(path.join(process.cwd(), f), "utf8");
+  const re = /(?:goiCongAI|callGemini)\(\s*[^,]+,\s*"([^"]+)"/g;
+  for (let m = re.exec(src); m; m = re.exec(src)) loaiTrinhDuyetGui.push(m[1]);
+});
+const loaiKhongDuocCongNhan = [...new Set(loaiTrinhDuyetGui)].filter(t => !loaiDuocPhep.includes(t));
+check("Mọi loại tác vụ AI trình duyệt gửi lên đều được máy chủ công nhận",
+  loaiTrinhDuyetGui.length > 0 && loaiDuocPhep.length > 0 && loaiKhongDuocCongNhan.length === 0,
+  loaiTrinhDuyetGui.length === 0 || loaiDuocPhep.length === 0
+    ? "không đọc được danh sách loại tác vụ, phép kiểm đang rỗng"
+    : loaiKhongDuocCongNhan.length === 0
+      ? `${new Set(loaiTrinhDuyetGui).size} loại tác vụ đều nằm trong ${loaiDuocPhep.length} loại máy chủ nhận`
+      : `bị hạ ngầm về mặc định: ${loaiKhongDuocCongNhan.join(", ")}`);
+
+// AO6. Hai đường thất bại phải cùng nói CHƯA CHẤM ĐƯỢC, không đường nào dựng ra điểm.
+//
+// Chạy trên hàm chấm THẬT, không mô phỏng. Bộ kiểm chạy offline (`check.mjs` ghim `fetch` luôn từ
+// chối), nên đường "cổng AI không phản hồi" được thử đúng như lúc mạng hỏng ngoài đời.
+//
+// Bất đồng bộ nên phải nối vào chuỗi chờ ở cuối file, `await` cấp cao nhất không dùng được vì bộ
+// kiểm được gói ra định dạng cjs.
+const cauHoiThuAO = nutAO ? taoCauHoiNhoLai(nutAO) : null;
+async function kiemTraChamNhoLai() {
+  // Chạy sau toàn bộ phần đồng bộ nên nhóm hiện hành đã trôi sang chỗ khác. Đặt lại cho đúng, nếu
+  // không thì phép kiểm này bị xếp nhầm vào nhóm cuối cùng và người đọc kết quả tra không ra.
+  g("AO. Nhớ lại chủ động");
+  if (!cauHoiThuAO) {
+    check("Hai đường thất bại khi chấm đều không dựng ra điểm", false, "không dựng được câu hỏi thử, phép kiểm đang rỗng");
+    return;
+  }
+  // Đường 1: câu trả lời quá ngắn, chặn ngay tại cổng, không tốn lượt gọi AI.
+  const qNgan = await chamCauTraLoi(cauHoiThuAO, "chưa nhớ", 3);
+  // Đường 2: câu trả lời đủ dài nhưng cổng AI chết.
+  const qDut = await chamCauTraLoi(cauHoiThuAO, "Đây là một câu trả lời đủ dài để đi qua cổng độ dài tối thiểu.", 40);
+  const catCa = [qNgan, qDut];
+  const hong = catCa.filter(r => r.duDuLieu !== false || r.passed !== null || r.lyDoChuaCham.length === 0);
+  // Hai đường phải nêu HAI lý do khác nhau, nếu trùng thì màn hình nói sai nguyên nhân cho người học.
+  const lyDoKhacNhau = qNgan.lyDoChuaCham !== qDut.lyDoChuaCham;
+  check("Hai đường thất bại khi chấm đều không dựng ra điểm, và nói đúng nguyên nhân",
+    hong.length === 0 && lyDoKhacNhau,
+    hong.length > 0
+      ? `${hong.length}/2 đường vẫn dựng ra kết quả chấm`
+      : !lyDoKhacNhau
+        ? "hai nguyên nhân khác nhau nhưng báo cùng một lý do"
+        : "câu quá ngắn và cổng AI chết đều trả duDuLieu=false, mỗi đường một lý do riêng");
+}
+
+// AO7. BỘ QUÉT CẢ HỌ: mọi giá trị khai trong `examType` phải có nhãn tiếng Việt.
+//
+// `ContinueLearningCard` in THẲNG mã nội bộ khi tra không ra nhãn. Đo được ngày 13/08/2026: loại
+// `due` thêm ở Giai đoạn 3 không có nhãn, nên người học đang đọc chữ "due" nguyên văn trên màn.
+// Canh cả họ chứ không canh một ca, vì mỗi loại đề thêm sau sẽ lặp lại đúng lỗi này.
+const nguonTypesAO = readFileSync(path.join(process.cwd(), "src/types.ts"), "utf8");
+const khaiExamType = nguonTypesAO.match(/examType:\s*((?:"[a-z-]+"\s*\|\s*)*"[a-z-]+")/);
+const cacLoaiDe = khaiExamType ? (khaiExamType[1].match(/"([a-z-]+)"/g) || []).map(s => s.replace(/"/g, "")) : [];
+const nguonTheTiepTuc = readFileSync(path.join(process.cwd(), "src/components/ContinueLearningCard.tsx"), "utf8");
+const bangNhan = nguonTheTiepTuc.slice(nguonTheTiepTuc.indexOf("NHAN_LOAI_PHIEN"), nguonTheTiepTuc.indexOf("};", nguonTheTiepTuc.indexOf("NHAN_LOAI_PHIEN")));
+const thieuNhanLoaiDe = cacLoaiDe.filter(loai => !new RegExp(`(^|[\\s{,])"?${loai}"?\\s*:`, "m").test(bangNhan));
+check("Mọi loại đề đều có nhãn tiếng Việt, không loại nào lộ mã nội bộ ra màn hình",
+  cacLoaiDe.length > 0 && thieuNhanLoaiDe.length === 0,
+  cacLoaiDe.length === 0
+    ? "không đọc được danh sách loại đề, phép kiểm đang rỗng"
+    : thieuNhanLoaiDe.length === 0
+      ? `cả ${cacLoaiDe.length} loại đề đều có nhãn`
+      : `thiếu nhãn cho: ${thieuNhanLoaiDe.join(", ")}`);
+
+dbService.clearAllHistory();
+
+// ===========================================================================
 // AK. Đường báo câu hỏi sai, và hiệu lực thật của việc loại bỏ
 // ===========================================================================
 g("AK. Báo câu hỏi sai");
@@ -4298,5 +4596,9 @@ function inKetQua(): void {
 kiemTraMonTuTao()
   .catch((e: any) => {
     check("Môn người dùng tự tạo cũng chạy được tầng suy luận", false, `lỗi ngoài dự kiến: ${e?.message}`);
+  })
+  .then(kiemTraChamNhoLai)
+  .catch((e: any) => {
+    check("Hai đường thất bại khi chấm đều không dựng ra điểm", false, `lỗi ngoài dự kiến: ${e?.message}`);
   })
   .then(inKetQua);

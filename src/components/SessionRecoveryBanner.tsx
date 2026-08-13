@@ -45,6 +45,8 @@ const TEN_KIEU_BAI: Record<string, string> = {
   "retention-revision": "ôn lại cho nhớ lâu",
   mastery: "kiểm tra độ thạo",
   custom: "tự chọn",
+  due: "ôn khái niệm tới hạn",
+  recall: "nhớ lại chủ động",
 };
 
 export default function SessionRecoveryBanner({ session, onResume, onDiscard }: SessionRecoveryBannerProps) {

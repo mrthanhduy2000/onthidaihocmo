@@ -59,6 +59,122 @@ sao, và còn nợ gì.
 
 ---
 
+### 13/08/2026, nhớ lại chủ động, và nửa công thức giãn cách bị bỏ quên
+
+Giai đoạn 6. Bộ kiểm: **258 lên 268**, không phép kiểm nào biến mất.
+
+#### Vì sao thêm một chế độ học thứ hai
+
+Chọn một trong bốn phương án là dạng luyện trí nhớ **yếu nhất**: người học chỉ cần NHẬN RA đáp án
+khi nhìn thấy nó, và ba phương án nhiễu luôn thu hẹp không gian tìm kiếm giúp. Viết ra câu trả lời
+từ đầu óc trống là dạng **mạnh nhất**, vì nó bắt đúng thao tác phòng thi sẽ đòi. Trước lượt này
+`questionType` có đúng một giá trị `"multiple-choice"` trên toàn dự án.
+
+**Đây cũng là chỗ sản phẩm này vượt Anki, và không phải ở thuật toán.** Anki hỏi người học "bạn tự
+thấy nhớ tới mức nào" rồi tin câu trả lời ấy: bốn nút Again / Hard / Good / Easy đều do chính người
+học tự chấm mình, mà sai lệch của việc tự chấm luôn nghiêng về phía lạc quan. Ở đây bài chấm đọc
+CHÍNH CÂU CHỮ người học viết ra và đối chiếu với các ý bắt buộc lấy từ nút tri thức biên soạn tay.
+Bằng chứng đưa vào đường cong quên là bằng chứng đo được, không phải lời tự khai.
+
+**Rẻ hơn vẻ ngoài**: không sinh ngân hàng câu hỏi mới. Đồ thị tri thức đã có 16 nút với định nghĩa,
+ý chi tiết, bẫy hiểu sai và mẹo nhớ. Câu hỏi mở dựng **tất định ngay trong trình duyệt** từ nút,
+bám theo `type` của nút (nút phân loại thì hỏi liệt kê các loại, nút quy trình thì hỏi các bước).
+Không tốn lượt gọi AI nào cho khâu sinh câu hỏi, và câu hỏi không nhảy múa mỗi lần mở màn hình.
+Một lượt gọi AI cho một khái niệm, chỉ ở khâu chấm.
+
+#### Hai chỗ làm khác bản kế hoạch, nói rõ lý do
+
+**Một.** Kế hoạch bảo cho kết quả chấm đi qua `outputValidationService`. Hàm đó **tự điền giá trị
+bịa khi thiếu trường** (`"Khái niệm X theo giáo trình chuẩn."`, `"Ví dụ thực tế về X..."`), vì nó
+viết cho phần giải thích câu hỏi nơi một câu chung chung còn đỡ hơn màn hình trống. Ở đây thì ngược
+hẳn: điền bừa nghĩa là người học nhận một kết quả chấm trông như thật trong khi mô hình chưa hề
+chấm. Đã viết bộ đọc riêng, nghiêm ngặt, sai một trường là `duDuLieu: false`. AO5 thử 5 dạng rác.
+
+**Hai.** Kế hoạch bảo nới `questionType` thành `"multiple-choice" | "recall"` để `tsc` liệt kê nơi
+cần sửa. Cách này đã thất bại ở Giai đoạn 4 vì dự án tắt `strictNullChecks`, và ở đây còn tệ hơn:
+câu nhớ lại không phải `Question`, không có bốn phương án, không có `correctAnswer`. Nới ra là khai
+một biến thể không bao giờ tồn tại. Đã dựng `RecallPrompt` và `RecallAttempt` riêng.
+
+#### Đi chung cây cầu, không mở đường thứ hai
+
+`recallAttempts` nhét vào chính `ExamAttempt`, và nhánh xử lý đặt ngay trong `dbService.addOnSubmit`
+(bất biến 4.9e). Một kho riêng sẽ cần một cây cầu thứ hai, đúng cái đã sinh ra "hai đường cong quên"
+phải gộp lại hồi tháng 7.
+
+Nhãn `NHAN_NHO_LAI_CHU_DONG` với `capNhatBangChienLuoc: true`, **ngược chiều** với lượt trắc nghiệm.
+Lý do có thật: lượt trắc nghiệm không có ai giảng nên truyền `false`, còn lượt nhớ lại thì bài chấm
+chỉ ra đích danh ý nào nêu được, ý nào thiếu, có rơi vào bẫy nào. Đó là dạy.
+
+Chốt chặn cuối, ngoài `duDuLieu`: người học bấm "tôi không đồng ý với cách chấm" thì lượt đó bị loại
+khỏi bằng chứng trí nhớ. Một lần AI chấm sai không được phép đẩy đường cong quên đi sai hướng khi
+chính người học đã nói thẳng là nó sai.
+
+#### Lỗi nặng nhất tìm được, và không phép kiểm nào trong 265 phép kiểm bắt được
+
+Sau khi dựng xong, mở trình duyệt ôn thật 6 khái niệm. Quay lại Bàn học thì hàng đợi **vẫn liệt kê
+đúng 6 khái niệm ấy**, vẫn hứa "ôn hôm nay nâng thêm 25 điểm phần trăm". Ôn lại lần nữa ngay lập tức
+vẫn được hứa y như vậy. Hàng đợi đang mời người học ôn dồn vô hạn, và không có tín hiệu nào cho biết
+hôm nay đã xong việc, tức thua đúng cái Anki làm tốt nhất.
+
+Nguyên nhân rất tinh vi. `doBenTriNhoNgay` **có** khử ôn dồn ở hệ số giãn cách, vì hệ số ấy đếm số
+NGÀY LỊCH khác nhau nên lượt thứ hai trong cùng ngày không cộng thêm gì. Nhưng phần nền
+`1,8·log2(soLanNhoLaiDung + 1)` vẫn cộng **nguyên một lượt**, bất kể lượt đó cách lượt trước mười
+phút hay mười ngày. Nửa công thức khử ôn dồn, nửa kia vẫn thưởng cho nó. Khối chú thích ngay trên
+công thức khẳng định hiệu ứng giãn cách "nay đã tính đúng", và nó đúng một nửa.
+
+Sửa trong `loiIchOnHomNay` chứ không sửa công thức độ bền, vì bất biến 4.9c chỉ cho phép một công
+thức độ bền và `doBenTriNhoNgay` là hàm thuần của bằng chứng, nó không được biết "lần ôn trước cách
+đây bao lâu". Phán đoán về giãn cách thuộc về chỗ ra quyết định xếp lịch. Lượt ôn giả định nay tính
+theo mức đã quên tại thời điểm ôn, `doGangSucNhoLai = 1 - R(lúc này)`, cùng chiều với hệ số tăng độ
+bền của FSRS nhưng viết ở dạng đơn giản nhất đọc được.
+
+Đo trên một khái niệm có S = 7,31 ngày, thi còn 3 ngày:
+
+| Số ngày đã nghỉ | Mức còn nhớ lúc này | Lợi ích nếu ôn hôm nay |
+|---|---|---|
+| 0 | 100,0% | **0,0 điểm phần trăm** |
+| 0,5 | 93,4% | 4,6 |
+| 1 | 87,2% | 8,9 |
+| 3 | 66,3% | 23,5 |
+| 10 | 25,5% | 51,9 |
+
+Đo trên bản chạy thật, trước và sau: hàng đợi ngay sau khi ôn xong 6 khái niệm giảm từ **6 khái niệm
+vẫn được hứa 25 điểm** xuống **1 khái niệm được hứa 1 điểm**.
+
+**Điểm ăn thua so với Anki nằm ở chỗ này**: Anki đạt được điều tương tự bằng cách giấu thẻ đi tới kỳ
+hạn sau, tức một luật dán thêm bên ngoài mô hình. Ở đây nó rơi ra tự nhiên từ chính đường cong, và
+vẫn đo bằng đúng một đơn vị có nghĩa với người ôn thi: điểm phần trăm mức nhớ **vào ngày thi**.
+
+AO9 và AO10 ghim tính chất này bằng số đo. Phá thử: khôi phục hành vi cũ thì AO9 báo "vừa ôn xong mà
+ôn lại vẫn được hứa 3,1 điểm" và AO10 báo "8/8 khái niệm vừa học xong vẫn bị mời ôn lại ngay".
+
+#### Ba lỗi nhỏ hơn lộ ra trong lúc làm
+
+1. **`taskType` bị hạ ngầm.** Cổng `complete.ts` gặp loại tác vụ lạ thì im lặng hạ về
+   `"AcademicExplanation"`, không báo gì. Bản đầu gửi `"recall-grading"` nên chấm bài chạy ở nhiệt
+   độ 0,15 của việc giải thích. Cùng một bài viết có thể ra hai kết quả chấm khác nhau, mà nhiễu đó
+   đi thẳng vào đường cong quên. Đã thêm loại `RecallGrading` ở nhiệt độ **0,05**, thấp nhất thang.
+   AO8 quét cả họ này.
+2. **`ContinueLearningCard` in thẳng mã nội bộ** khi tra không ra nhãn, nên loại `due` thêm ở Giai
+   đoạn 3 đang hiện chữ "due" nguyên văn cho người học. Đã phủ hết 12 loại, AO7 canh cả họ.
+3. **AO4 là phép kiểm rỗng ở bản đầu**: nó kiểm chính bản ghi mà harness vừa tự dựng vài dòng trên,
+   nên phá `RecallSessionView` cho ghi thẳng vào `answers` thì nó vẫn xanh. Đã thêm vế quét nguồn.
+   AO10 cũng vấp đúng kiểu này: bản đầu lọc theo `soNgayQuaHan` tức đo "đã tới hạn chưa" chứ không
+   đo "vừa học xong chưa".
+
+**Bài học lặp lại lần thứ tư**: phá thử từng phép kiểm mới là bắt buộc, không phải nghi thức. Ba
+trong mười phép kiểm nhóm này sai ở bản đầu, và cả ba chỉ lộ ra khi phá.
+
+#### Chưa nghiệm thu được, nói rõ
+
+Cổng AI trả **401** cả trên máy nhà lẫn bản deploy, vì phiên đăng nhập Supabase đã chết. Phần chấm
+bài đã chạy trọn luồng với cổng được **giả lập** ở trình duyệt: câu hỏi sinh đúng theo loại nút,
+chấm ra "chưa đạt 1 trên 2 ý", cảnh báo đúng bẫy hiểu sai của nút, và định nghĩa chuẩn hiện **sau
+cùng**. Nhưng **chất lượng chấm thật của Gemini thì chưa ai đo**, và đó là việc phải làm ngay sau khi
+Đàm dựng lại Supabase.
+
+---
+
 ### 13/08/2026, ghi thời gian TỪNG CÂU, và một cổng có cửa sau
 
 Giai đoạn 5. Trước lượt này ứng dụng chỉ ghi **tổng thời gian cả lượt**, nên ba chỉ số phải sống
