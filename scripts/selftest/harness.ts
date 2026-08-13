@@ -4302,6 +4302,113 @@ dbService.deleteSubject(maMonThuAP);
 dbService.clearAllHistory();
 
 // ===========================================================================
+// AQ. Tách gói và mã chết
+// ===========================================================================
+g("AQ. Tách gói và mã chết");
+
+const nguonAppAQ = readFileSync(path.join(process.cwd(), "src/App.tsx"), "utf8");
+
+// AQ1. Mọi màn nạp muộn phải nằm TRONG một ranh giới `Suspense` có trạng thái chờ thật.
+//
+// Đây là phép kiểm bắt buộc của giai đoạn này, vì hỏng kiểu này ra MÀN HÌNH TRẮNG chứ không ra
+// lỗi build: `npm run build` xanh, `tsc` xanh, và người học mở màn thì thấy trắng tinh. Không có
+// cách nào khác để bắt ngoài việc canh ở nguồn cộng với mở mắt nhìn trên trình duyệt.
+//
+// Bọc MỘT ranh giới quanh cả vùng nội dung chứ không bọc từng màn: bọc từng màn thì mỗi màn thêm
+// sau lại phải nhớ bọc, và quên một lần là màn hình trắng.
+const soManNapMuon = (nguonAppAQ.match(/=\s*lazy\(/g) || []).length;
+const coRanhGioi = /<Suspense\s+fallback=\{<[A-ZĐ]/.test(nguonAppAQ);
+const viTriSuspense = nguonAppAQ.indexOf("<Suspense");
+const viTriDongMain = nguonAppAQ.indexOf("</main>");
+const viTriMoMain = nguonAppAQ.indexOf("<main");
+const bocCaVung = viTriSuspense > viTriMoMain && viTriSuspense < viTriDongMain
+  && nguonAppAQ.indexOf("</Suspense>") < viTriDongMain;
+check("Mọi màn nạp muộn nằm trong một ranh giới chờ, không màn nào lọt ra ngoài",
+  soManNapMuon > 0 && coRanhGioi && bocCaVung,
+  soManNapMuon === 0
+    ? "không có màn nào nạp muộn, phép kiểm đang rỗng"
+    : !coRanhGioi
+      ? "có màn nạp muộn nhưng không có ranh giới chờ, sẽ ra màn hình trắng"
+      : !bocCaVung
+        ? "ranh giới chờ không bọc cả vùng nội dung, màn thêm sau có thể lọt ra ngoài"
+        : `${soManNapMuon} màn nạp muộn, một ranh giới bọc cả vùng nội dung`);
+
+// AQ2. Gói MÃ phải dưới ngưỡng. Gói DỮ LIỆU được miễn trừ, và nói rõ vì sao.
+//
+// ĐO ĐƯỢC NGÀY 13/08/2026, và đây là chỗ bản kế hoạch đặt sai mục tiêu. Kế hoạch đòi "gói lớn
+// nhất dưới 500 KB". Đo ra thì gói lớn nhất là **1.081 KB và nó không chứa mã**: nó là ngân hàng
+// câu hỏi (724 KB dữ liệu nguồn, có "Theo Slide", "knowledgeMapping", "correctAnswer"). Kích
+// thước ấy KHÔNG nhúc nhích qua cả ba lượt tách gói, và đó chính là dấu hiệu lộ ra bản chất.
+//
+// Đưa nó xuống dưới 500 KB đòi nạp dữ liệu môn học bất đồng bộ, tức `db.ts` thôi nhập tĩnh và mọi
+// nơi đọc `questions` phải chờ. Đó là thay đổi kiến trúc sâu, rủi ro cao, đổi lấy một chút thời
+// gian tải trên đúng một máy MacBook chạy cục bộ. Cố ý KHÔNG làm, và ghi rõ ở đây thay vì lặng lẽ
+// hạ ngưỡng cho vừa.
+//
+// Ngưỡng đặt cho gói MÃ, nơi việc tách gói thật sự có tác dụng: 973 KB xuống 423 KB.
+const NGUONG_GOI_MA_KB = 500;
+const thuMucGoi = path.join(process.cwd(), "dist/assets");
+let goiMaLonNhat = { ten: "", kb: 0 };
+let coGoiDuLieu = false;
+try {
+  readdirSync(thuMucGoi).filter(f => f.endsWith(".js")).forEach(f => {
+    const noiDung = readFileSync(path.join(thuMucGoi, f), "utf8");
+    const kb = Buffer.byteLength(noiDung) / 1024;
+    // Gói chứa ngân hàng câu hỏi thì là gói DỮ LIỆU, nhận diện bằng chính nội dung chứ không bằng
+    // tên file, vì tên file mang mã băm đổi sau mỗi lượt build.
+    const laGoiDuLieu = /knowledgeMapping|correctAnswer/.test(noiDung);
+    if (laGoiDuLieu) { coGoiDuLieu = true; return; }
+    if (kb > goiMaLonNhat.kb) goiMaLonNhat = { ten: f, kb };
+  });
+} catch { /* chưa build thì bỏ qua, chặng build chạy sau chặng này */ }
+if (goiMaLonNhat.ten) {
+  check("Gói mã lớn nhất dưới ngưỡng, gói dữ liệu được miễn trừ có lý do",
+    goiMaLonNhat.kb < NGUONG_GOI_MA_KB,
+    goiMaLonNhat.kb < NGUONG_GOI_MA_KB
+      ? `gói mã lớn nhất ${goiMaLonNhat.kb.toFixed(0)} KB, dưới ngưỡng ${NGUONG_GOI_MA_KB} KB${coGoiDuLieu ? "; gói ngân hàng câu hỏi miễn trừ" : ""}`
+      : `gói mã ${goiMaLonNhat.ten} nặng ${goiMaLonNhat.kb.toFixed(0)} KB, vượt ngưỡng ${NGUONG_GOI_MA_KB} KB`);
+} else {
+  info("Chưa có thư mục dist nên chưa đo được kích thước gói. Chạy `npm run build` rồi đo lại.");
+}
+
+// AQ3. Không file nào trong `src/` được xuất mà không có nơi nào nhập.
+//
+// Phép kiểm này giữ cho nợ mã chết không tái phát, đáng giá hơn chính lượt dọn. Đợt này đã gỡ
+// 1.263 dòng ở 6 file không nơi nào nhắc tới.
+//
+// QUÉT CẢ `scripts/` VÀ `functions-src/`, không chỉ `src/`. Hai tiền lệ: bộ kiểm nhập thẳng rất
+// nhiều dịch vụ nên một file trông mồ côi trong `src/` vẫn có thể đang được nó dùng; và
+// `aiOrchestrator.ts` không có nơi nhập nào trong `src/` nhưng là đường chạy thật của hàm
+// serverless `recommend.ts`. Quét thiếu một trong hai là xóa nhầm mã đang sống.
+const cacThuMucNguon = ["src/services", "src/components"];
+const noiNhapAQ: string[] = [];
+["src", "src/services", "src/components", "scripts/selftest", "functions-src/ai", "functions-src/_lib"].forEach(tm => {
+  const duongDan = path.join(process.cwd(), tm);
+  try {
+    readdirSync(duongDan, { withFileTypes: true })
+      .filter(e => e.isFile() && /\.(ts|tsx)$/.test(e.name))
+      .forEach(e => noiNhapAQ.push(readFileSync(path.join(duongDan, e.name), "utf8")));
+  } catch { /* thư mục không tồn tại thì bỏ qua */ }
+});
+const fileMoCoi: string[] = [];
+cacThuMucNguon.forEach(tm => {
+  const duongDan = path.join(process.cwd(), tm);
+  readdirSync(duongDan, { withFileTypes: true })
+    .filter(e => e.isFile() && /\.(ts|tsx)$/.test(e.name))
+    .forEach(e => {
+      const ten = e.name.replace(/\.(ts|tsx)$/, "");
+      const duocNhap = noiNhapAQ.some(src =>
+        new RegExp(`from\\s+["'][^"']*\\/${ten}["']`).test(src) || new RegExp(`import\\(["'][^"']*\\/${ten}["']\\)`).test(src));
+      if (!duocNhap) fileMoCoi.push(`${tm}/${e.name}`);
+    });
+});
+check("Không file nguồn nào mồ côi, tính cả nơi nhập từ bộ kiểm và hàm serverless",
+  fileMoCoi.length === 0,
+  fileMoCoi.length === 0
+    ? `quét ${cacThuMucNguon.length} thư mục nguồn, không file nào không có nơi nhập`
+    : `mồ côi: ${fileMoCoi.join(", ")}`);
+
+// ===========================================================================
 // AK. Đường báo câu hỏi sai, và hiệu lực thật của việc loại bỏ
 // ===========================================================================
 g("AK. Báo câu hỏi sai");

@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 13/08/2026, **XONG Giai đoạn 1 tới 6, Giai đoạn 7 làm được phần không cần AI**.
+**Cập nhật lần cuối**: 13/08/2026, **XONG cả 8 giai đoạn**, trừ thuật sĩ nạp môn đang chờ Supabase sống lại.
 
 ---
 
@@ -14,12 +14,12 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Đợt 8 giai đoạn, còn Giai đoạn 8 và phần thuật sĩ của Giai đoạn 7 |
-| **Current Milestone** | Tạo được môn mới từ giao diện; ranh giới giữa các môn đã kín |
-| **Current Phase** | Giai đoạn 0 tới 6 XONG, 7 xong phần đo được. Tiếp theo: Giai đoạn 8 |
-| **Completed %** | 8 trên 9 khối việc |
+| **Current Objective** | Đợt 8 giai đoạn ĐÃ XONG. Còn nợ: thuật sĩ nạp môn (chờ AI sống lại) |
+| **Current Milestone** | Gói mã 973 xuống 374 KB, gỡ 1.263 dòng mã chết |
+| **Current Phase** | Cả 8 giai đoạn XONG. Việc chặn đường: Supabase chết nên AI 401 |
+| **Completed %** | 9 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **274/274 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **277/277 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 

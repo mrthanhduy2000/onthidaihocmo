@@ -3,7 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI } from "@google/genai";
+/*
+  NHẬP MUỘN `@google/genai`, chỉ khi thật sự chạy trên Node.
+
+  Đo ngày 13/08/2026: gói `index` nặng 1.081 KB, trong đó có cả bộ SDK Gemini. Nhưng nhánh dùng
+  SDK là nhánh `else` của `if (chayTrenTrinhDuyet)`, tức nhánh chỉ chạy trong các script Node.
+  Trên trình duyệt mọi lượt gọi đều đi qua `goiQuaCongChuyenTiep` để giữ bất biến 4.8 (máy chủ
+  giữ khóa, trình duyệt không). Nhập tĩnh nghĩa là bắt mọi người học tải một thư viện mà mã chạy
+  trong trình duyệt không bao giờ chạm tới.
+*/
 import { TaskType, temperatureStrategy } from "./temperatureStrategy";
 import { StructuredAIExplanationResponse, GEMINI_EXPLANATION_RESPONSE_SCHEMA } from "./aiResponseSchema";
 import { CompressedContext } from "./contextWindowBuilder";
@@ -169,6 +177,7 @@ export class Gemini36FlashProvider implements AIProvider {
 
       while (attempt < maxRetries) {
         try {
+          const { GoogleGenAI } = await import("@google/genai");
           const ai = new GoogleGenAI({ apiKey });
           const config: any = {
             temperature,

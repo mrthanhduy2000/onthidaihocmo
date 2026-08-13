@@ -59,6 +59,77 @@ sao, và còn nợ gì.
 
 ---
 
+### 13/08/2026, tách gói, và gói nặng nhất hóa ra không phải mã
+
+Giai đoạn 8, giai đoạn cuối của đợt. Bộ kiểm: **274 lên 277**, không phép kiểm nào biến mất.
+
+#### Đo được, trước và sau
+
+| Gói | Trước | Sau |
+|---|---|---|
+| Gói `App` | 973 KB | **423 KB** |
+| Gói mã lớn nhất | 973 KB | **374 KB** |
+| Gói ngân hàng câu hỏi | 1.081 KB | 1.081 KB, không đổi |
+| Mã chết đã gỡ | | **1.263 dòng, 6 file** |
+
+Hai việc riêng biệt cho hai nửa mức giảm:
+
+**Nạp muộn năm màn nặng** (`StatsView`, `LearningPlannerDashboard`, `AcademicQualityDashboard`,
+`CurriculumDashboard`, `LearningObservatoryView`), cộng lại khoảng 3.600 dòng: 973 xuống 800 KB.
+Cố ý KHÔNG tách `Dashboard`, `PracticeCenterView`, `ReviewNotebookView`, `PersonalWorkspaceView`,
+`AIHub` vì chúng nằm trên đường đi của mọi phiên học, tách chúng chỉ đổi một lượt tải thành hai.
+
+**Bỏ bộ SDK Gemini khỏi bản trình duyệt**: 800 xuống 423 KB, tức lớn hơn cả phần tách màn. Đo được
+`@google/genai` bị gói vào bản trình duyệt qua ba file, trong khi trình duyệt LUÔN đi qua cổng
+chuyển tiếp `/api/ai/complete` (bất biến 4.8) và không bao giờ gọi SDK. Hai chỗ:
+
+- `aiResponseSchema.ts` nhập `Type` chỉ để dùng một enum chuỗi (`Type.OBJECT` chính là `"OBJECT"`),
+  mà nhập nó kéo theo toàn bộ SDK. Viết thẳng chuỗi, bỏ được cả phụ thuộc, không đổi một byte nào
+  của dữ liệu gửi đi.
+- `aiProvider.ts` dùng `GoogleGenAI` ở nhánh `else` của `if (chayTrenTrinhDuyet)`, tức nhánh chỉ
+  chạy trong script Node. Đổi sang nhập muộn.
+
+#### Chỗ bản kế hoạch đặt sai mục tiêu
+
+Kế hoạch đòi "gói lớn nhất dưới 500 KB". Đo ra thì gói lớn nhất là **1.081 KB và nó không chứa
+mã**: nó là ngân hàng câu hỏi, 724 KB dữ liệu nguồn. Dấu hiệu lộ ra bản chất là kích thước ấy
+**không nhúc nhích một byte** qua cả ba lượt tách gói.
+
+Đưa nó xuống dưới 500 KB đòi nạp dữ liệu môn học bất đồng bộ, tức `db.ts` thôi nhập tĩnh và mọi
+nơi đọc `questions` phải chờ. Đó là thay đổi kiến trúc sâu, rủi ro cao, đổi lấy một chút thời gian
+tải trên đúng một máy MacBook chạy cục bộ. **Cố ý không làm.** AQ2 đặt ngưỡng cho gói MÃ, nơi việc
+tách gói thật sự có tác dụng, và miễn trừ gói dữ liệu bằng cách nhận diện theo NỘI DUNG chứ không
+theo tên file, vì tên file mang mã băm đổi sau mỗi lượt build.
+
+Ghi rõ ở đây thay vì lặng lẽ hạ ngưỡng cho vừa.
+
+#### Mã chết, và một file suýt bị xóa nhầm
+
+Gỡ 6 file, 1.263 dòng: `importPipeline.ts`, `validation.ts`, `Dashboard2Widgets.tsx`,
+`DashboardClock.tsx`, `QuickActionFAB.tsx`, `AssessmentDesignDashboard.tsx`. Cả sáu đều 0 nơi nhắc
+tới trong `src/`, `scripts/` và `functions-src/`.
+
+**`aiOrchestrator.ts` trông y hệt mã chết và suýt bị xóa**: 0 nơi nhập trong toàn bộ `src/`. Nhưng
+nó là đường chạy thật của hàm serverless `functions-src/ai/recommend.ts`. Xóa nó là làm hỏng cổng
+gợi ý trên bản chạy thật, và `npm run check` vẫn xanh vì chặng nạp gói hàm chỉ kiểm nạp được hay
+không chứ không kiểm chạy đúng.
+
+Vì vậy AQ3 quét cả `scripts/` lẫn `functions-src/`, không chỉ `src/`. Quét thiếu một trong hai là
+xóa nhầm mã đang sống.
+
+#### Nghiệm thu bằng mắt, bắt buộc
+
+Kế hoạch cảnh báo: hỏng tách gói ra **màn hình trắng** chứ không ra lỗi build, nên `npm run check`
+xanh không chứng minh được gì. Đã mở đủ **năm màn nạp muộn** trên bản chạy thật, cả năm đều có nội
+dung thật (1.713 tới 5.905 ký tự), không màn nào trắng. Các gói nạp muộn trả 200 đúng lúc cần,
+xác nhận việc tách gói chạy thật chứ không chỉ chạy trên giấy.
+
+AQ1 canh việc mọi màn nạp muộn nằm trong ranh giới chờ. Bọc MỘT ranh giới quanh cả vùng nội dung
+thay vì năm ranh giới quanh năm màn: bọc từng màn thì mỗi màn thêm sau lại phải nhớ bọc, và quên
+một lần là màn hình trắng.
+
+---
+
 ### 13/08/2026, ranh giới giữa các môn, và một cánh cửa chưa từng được dựng
 
 Giai đoạn 7, phần làm được. Bộ kiểm: **268 lên 274**, không phép kiểm nào biến mất.

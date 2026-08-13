@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   Play, RotateCcw, BarChart3, Brain,
   GraduationCap, Flame, Award, Target,
@@ -12,16 +12,52 @@ import {
 import Dashboard from "./components/Dashboard";
 import PracticeCenterView from "./components/PracticeCenterView";
 import ReviewNotebookView from "./components/ReviewNotebookView";
-import StatsView from "./components/StatsView";
+
 import AIHub from "./components/AIHub";
-import AcademicQualityDashboard from "./components/AcademicQualityDashboard";
-import CurriculumDashboard from "./components/CurriculumDashboard";
-import LearningPlannerDashboard from "./components/LearningPlannerDashboard";
+
+
+
 import PersonalWorkspaceView from "./components/PersonalWorkspaceView";
-import { LearningObservatoryView } from "./components/LearningObservatoryView";
+
 import SessionRecoveryBanner from "./components/SessionRecoveryBanner";
 import GlobalCommandPalette from "./components/GlobalCommandPalette";
 import RecallSessionView from "./components/RecallSessionView";
+
+/*
+  NĂM MÀN NẶNG NHẤT NẠP MUỘN, tách khỏi gói chính.
+
+  Đo trước khi tách: gói `index` 1.081 KB và gói `App` 973 KB, cả hai vượt ngưỡng cảnh báo 500 KB
+  của Vite. Năm màn dưới đây cộng lại khoảng 3.600 dòng và người học chỉ mở chúng khi thật sự
+  muốn xem, chứ không mở trong mọi phiên.
+
+  BẮT BUỘC có ranh giới `Suspense` với một trạng thái chờ THẬT. Hỏng kiểu này ra MÀN HÌNH TRẮNG
+  chứ không ra lỗi build, nên `npm run check` xanh không chứng minh được gì; phải mở từng màn trên
+  trình duyệt. Nhóm kiểm AQ canh việc mỗi màn nạp muộn đều nằm trong một ranh giới `Suspense`.
+
+  Không tách `Dashboard`, `PracticeCenterView`, `ReviewNotebookView`, `PersonalWorkspaceView`,
+  `AIHub`: bốn màn đầu nằm trên đường đi của mọi phiên học, tách chúng chỉ đổi một lượt tải thành
+  hai lượt.
+*/
+const StatsView = lazy(() => import("./components/StatsView"));
+const AcademicQualityDashboard = lazy(() => import("./components/AcademicQualityDashboard"));
+const CurriculumDashboard = lazy(() => import("./components/CurriculumDashboard"));
+const LearningPlannerDashboard = lazy(() => import("./components/LearningPlannerDashboard"));
+const LearningObservatoryView = lazy(() =>
+  import("./components/LearningObservatoryView").then(m => ({ default: m.LearningObservatoryView })));
+
+/**
+ * Trạng thái chờ trong lúc nạp một màn. Dùng lại khuôn skeleton ba thanh đã có ở màn làm bài và
+ * màn nhớ lại, không phát minh dạng thứ tư.
+ */
+function DangNapMan() {
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-10 space-y-2.5 animate-pulse">
+      <div className="h-3 bg-bg-surface rounded w-3/4" />
+      <div className="h-3 bg-bg-surface rounded w-full" />
+      <div className="h-3 bg-bg-surface rounded w-2/3" />
+    </div>
+  );
+}
 import ProductSettingsModal from "./components/ProductSettingsModal";
 import { dbService } from "./services/db";
 import { workspaceService } from "./services/workspaceService";
@@ -291,6 +327,15 @@ export default function App() {
 
       {/* Main workspace */}
       <main className="min-h-[calc(100vh-3rem)] pb-20 lg:pb-0">
+      {/*
+        MỘT ranh giới `Suspense` bọc CẢ vùng nội dung, thay vì năm ranh giới quanh năm màn.
+
+        Bọc từng màn thì mỗi màn thêm sau lại phải nhớ bọc, và quên một lần là ra màn hình trắng
+        chứ không ra lỗi build. Bọc cả vùng thì không màn nạp muộn nào lọt ra ngoài được, kể cả
+        màn thêm sau. Cái giá phải trả bằng 0: các màn nạp đồng bộ không bao giờ treo nên không
+        bao giờ chạm tới trạng thái chờ này.
+      */}
+      <Suspense fallback={<DangNapMan />}>
         {/* Session Recovery Banner */}
         {!isDeepFocus && unfinishedSession && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
@@ -384,6 +429,7 @@ export default function App() {
         {currentView === "observatory" && (
           <LearningObservatoryView key={activeSubjectId} />
         )}
+      </Suspense>
       </main>
 
       {/*

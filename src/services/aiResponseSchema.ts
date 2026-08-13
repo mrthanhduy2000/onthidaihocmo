@@ -3,7 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Type } from "@google/genai";
+/*
+  KHÔNG nhập `Type` từ `@google/genai`.
+
+  `Type` chỉ là một enum chuỗi (`Type.OBJECT` chính là `"OBJECT"`), nhưng nhập nó kéo theo TOÀN BỘ
+  bộ SDK vào gói trình duyệt. Đo ngày 13/08/2026: `@google/genai` bị gói vào bản trình duyệt qua ba
+  file, trong khi trình duyệt luôn đi qua cổng chuyển tiếp `/api/ai/complete` và không bao giờ gọi
+  SDK. Viết thẳng chuỗi là bỏ được cả phụ thuộc mà không đổi một byte nào của dữ liệu gửi đi.
+
+  Giá trị lấy đúng từ enum của thư viện: TYPE_UNSPECIFIED, STRING, NUMBER, INTEGER, BOOLEAN,
+  ARRAY, OBJECT, NULL.
+*/
+const Type = {
+  STRING: "STRING",
+  NUMBER: "NUMBER",
+  INTEGER: "INTEGER",
+  BOOLEAN: "BOOLEAN",
+  ARRAY: "ARRAY",
+  OBJECT: "OBJECT",
+} as const;
 
 export interface StructuredAIExplanationResponse {
   concept: string;
