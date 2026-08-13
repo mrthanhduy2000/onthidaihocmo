@@ -416,7 +416,11 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
                exam.examType === "adaptive" ? "Học tập thích ứng" :
                exam.examType === "chapter" ? `Luyện tập Chương ${exam.chapterId}` :
                exam.examType === "topic" ? `Luyện tập Chủ đề ${exam.topicId}` :
-               exam.examType === "random" ? "Luyện tập Ngẫu nhiên" : "Luyện tập theo Thứ tự gốc"}
+               exam.examType === "random" ? "Luyện tập Ngẫu nhiên" :
+               exam.examType === "due" ? "Ôn khái niệm tới hạn" :
+               exam.examType === "incorrect" ? "Làm lại câu từng sai" :
+               exam.examType === "bookmark" ? "Ôn câu đã đánh dấu" :
+               exam.examType === "difficulty" ? `Luyện tập mức ${exam.difficulty}` : "Luyện tập theo Thứ tự gốc"}
             </h1>
             <p className="text-2xs text-text-muted mt-0.5 font-sans truncate">
               {exam.isSubmitted ? "Xem lại đáp án và phân tích lý luận từ hệ thống AI" : `Phiên ôn luyện: ${examQuestions.length} câu hỏi lý thuyết`}

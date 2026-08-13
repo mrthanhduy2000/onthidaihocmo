@@ -392,6 +392,67 @@ export function mucNhoVaoNgayThi(
 }
 
 /**
+ * LỢI ÍCH CỦA VIỆC ÔN KHÁI NIỆM NÀY HÔM NAY, đo bằng mức nhớ tăng thêm VÀO NGÀY THI.
+ *
+ * ĐÂY LÀ CHỖ SẢN PHẨM NÀY LÀM ĐƯỢC THỨ ANKI KHÔNG LÀM ĐƯỢC, và khác hẳn với
+ * `mucNhoVaoNgayThi` vốn chỉ trả lời "tới ngày thi còn nhớ bao nhiêu". Hàm này trả lời câu hỏi
+ * thật sự cần cho việc xếp lịch: **ôn thẻ này hôm nay thì được thêm bao nhiêu vào ngày thi.**
+ *
+ * ANKI XẾP LỊCH CHO TRÍ NHỚ VÔ THỜI HẠN. Cả SM-2 lẫn FSRS đều chọn thẻ theo một quy tắc duy
+ * nhất: mức nhớ dự báo HÔM NAY đã tụt xuống dưới mức mong muốn hay chưa (FSRS mặc định 0,90).
+ * Không có khái niệm hạn chót trong mô hình. Với người ôn thi thì mục tiêu khác hẳn: nhớ CAO
+ * NHẤT VÀO ĐÚNG MỘT NGÀY, và mọi thứ sau ngày đó không tính điểm.
+ *
+ * BA CA CHO THẤY HAI CÁCH XẾP KHÁC NHAU RA SAO. Lấy chính công thức của dự án, S là độ bền tính
+ * theo ngày:
+ *
+ *     ca 1  S = 27,3 ngày, thi còn 5 ngày
+ *           không ôn: 83%   ôn hôm nay: 93%   lợi ích +10 điểm phần trăm
+ *
+ *     ca 2  S = 1,5 ngày, thi còn 30 ngày
+ *           không ôn: 0%    ôn hôm nay: 0%    lợi ích gần bằng 0
+ *           Ôn hôm nay gần như VÔ ÍCH cho ngày thi: dù có đẩy độ bền lên 2,5 ngày thì 30 ngày
+ *           sau vẫn quên sạch. Anki vẫn bắt ôn, và người học vẫn sẽ quên. Việc đúng phải làm là
+ *           ĐỂ DÀNH khái niệm này tới gần ngày thi.
+ *
+ *     ca 3  S = 1,5 ngày, thi còn 3 ngày, tức đúng khái niệm ở ca 2 nhưng sát ngày thi
+ *           không ôn: 14%   ôn hôm nay: 30%   lợi ích +16 điểm phần trăm, cao nhất bảng
+ *
+ * Cùng một khái niệm, cùng một trạng thái trí nhớ, mà thứ tự ưu tiên LẬT NGƯỢC hoàn toàn chỉ vì
+ * ngày thi xa hay gần. Không cách xếp nào chỉ nhìn trạng thái hiện tại làm được điều đó.
+ *
+ * KHÔNG viết đường cong mới ở đây (bất biến 4.9c). Hàm này chỉ gọi lại `doBenTriNhoNgay` và
+ * `conNhoSauNgay` với hai bộ bằng chứng khác nhau.
+ *
+ * @returns `null` khi CHƯA ĐẶT ngày thi. Nơi gọi phải lùi về cách xếp theo mức quá hạn và nói rõ
+ *          là đang lùi, chứ không được lặng lẽ coi lợi ích bằng 0.
+ */
+export function loiIchOnHomNay(
+  bangChung: BangChungTriNho,
+  soNgayToiKyThi: number | null | undefined,
+  soNgayDaNghi: number = 0
+): number | null {
+  if (soNgayToiKyThi === null || soNgayToiKyThi === undefined || !Number.isFinite(soNgayToiKyThi)) {
+    return null;
+  }
+  const doBenHienTai = doBenTriNhoNgay(bangChung);
+  const nhoNeuKhongOn = conNhoSauNgay(doBenHienTai, Math.max(0, soNgayDaNghi) + Math.max(0, soNgayToiKyThi));
+
+  // Ôn hôm nay tức là THÊM MỘT LẦN NHỚ LẠI ĐÚNG vào hôm nay, nên vừa bồi độ bền vừa đặt lại đồng
+  // hồ nghỉ về 0. Cộng luôn mốc học của hôm nay để hiệu ứng giãn cách tính đúng: ôn thêm một lần
+  // trong CÙNG một ngày đã học thì không được cộng thêm ngày giãn cách nào.
+  const bangChungSauKhiOn: BangChungTriNho = {
+    ...bangChung,
+    soLanNhoLaiDung: (bangChung.soLanNhoLaiDung || 0) + 1,
+    mocHocISO: [...(bangChung.mocHocISO || []), TimeService.now().toISOString()],
+  };
+  const doBenSauKhiOn = doBenTriNhoNgay(bangChungSauKhiOn);
+  const nhoNeuOn = conNhoSauNgay(doBenSauKhiOn, Math.max(0, soNgayToiKyThi));
+
+  return nhoNeuOn - nhoNeuKhongOn;
+}
+
+/**
  * Độ bền trí nhớ cho một hồ sơ khái niệm. Gói lại việc rút bằng chứng từ hồ sơ.
  *
  * Trước đây công thức bị chép làm hai bản giống hệt nhau ở calculateRetentionScore và
@@ -402,7 +463,14 @@ export function mucNhoVaoNgayThi(
  * `heSoDoKho` không đọc thẳng `difficultyScore` mà pha với tiên nghiệm biên soạn tay, xem
  * `doKhoTienNghiem` ở trên.
  */
-function memoryStrengthDays(profile: ConceptMemoryProfile): number {
+/**
+ * Rút bằng chứng trí nhớ từ một hồ sơ khái niệm.
+ *
+ * Tách ra khỏi `memoryStrengthDays` để `loiIchOnHomNay` dùng lại được đúng bộ bằng chứng ấy. Nếu
+ * để hai nơi tự dựng bằng chứng riêng thì đó là bản chép thứ hai, và dự án đã có tiền lệ hai bản
+ * chép của cùng một đường cong lệch nhau 55 điểm phần trăm.
+ */
+export function rutBangChungTriNho(profile: ConceptMemoryProfile): BangChungTriNho {
   // Độ khó dùng để chấm: pha giữa TIÊN NGHIỆM biên soạn tay và số ĐO ĐƯỢC từ lịch sử học, theo
   // đúng công thức co của dự án `w = 1 - e^(-n/6)`. Chưa học lần nào thì w bằng 0 nên tin hoàn
   // toàn vào tiên nghiệm; học nhiều rồi thì tiên nghiệm nhường chỗ cho dữ liệu thật.
@@ -419,7 +487,7 @@ function memoryStrengthDays(profile: ConceptMemoryProfile): number {
   const soDung = daTachDungSai ? profile.timesCorrect : Math.max(0, profile.timesStudied);
   const soSai = daTachDungSai ? profile.timesWrong : 0;
 
-  return doBenTriNhoNgay({
+  return {
     soLanNhoLaiDung: soDung,
     soLanNhoLaiSai: soSai,
     dinhCaoDoThao: profile.historicalPeak,
@@ -429,7 +497,11 @@ function memoryStrengthDays(profile: ConceptMemoryProfile): number {
     daVungOnDinh: profile.isStableMastered,
     mocHocISO: (profile.scoreHistory || []).map(h => h.timestamp),
     capNhoLai: rutCapNhoLai(profile.scoreHistory),
-  });
+  };
+}
+
+function memoryStrengthDays(profile: ConceptMemoryProfile): number {
+  return doBenTriNhoNgay(rutBangChungTriNho(profile));
 }
 
 /**

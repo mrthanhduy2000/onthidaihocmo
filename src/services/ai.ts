@@ -880,6 +880,43 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     } else if (config.type === "bookmark") {
       const stats = dbService.getStatistics();
       pool = pool.filter(q => stats.bookmarks.includes(q.id));
+    } else if (config.type === "due") {
+      // ĐỀ TỚI HẠN ÔN: chỉ lấy câu thuộc các khái niệm đang nằm trong hàng đợi ôn hôm nay, và giữ
+      // ĐÚNG THỨ TỰ ƯU TIÊN của hàng đợi ấy.
+      //
+      // Thứ tự là phần dễ đánh mất nhất. Hàng đợi đã xếp theo lợi ích cho ngày thi, nên nếu ở đây
+      // chỉ lọc rồi để `pool` giữ thứ tự cũ thì công sức xếp lịch bay sạch: người học vẫn gặp câu
+      // của khái niệm ít lợi ích nhất trước tiên khi đề bị cắt ngắn.
+      //
+      // Bất biến 4.5: tra khái niệm qua `kbService`, không dùng `question.concept` (nhãn ấy khớp
+      // bộ tra chính thống ở 0/292 câu).
+      const hangDoi = learnerModelService.layKhaiNiemToiHan();
+      const thuHang = new Map<string, number>();
+      hangDoi.danhSach.forEach((m, i) => thuHang.set(m.tenKhaiNiem, i));
+
+      const chamTheoHangDoi = (q: any): number | null => {
+        const ds = kbService.resolveConceptsForQuestion(dbService.getActiveSubjectId(), q, 3);
+        let tot: number | null = null;
+        for (const r of ds) {
+          const hang = thuHang.get(r.node.concept);
+          if (hang !== undefined && (tot === null || hang < tot)) tot = hang;
+        }
+        return tot;
+      };
+
+      // Nhóm bị hoãn xếp SAU nhóm chính, nhưng vẫn được vào đề. Chúng thật sự đã tới hạn ôn, chỉ
+      // là ôn hôm nay ít lợi cho ngày thi; khi người học xin nhiều câu hơn số hàng đợi chính có
+      // thì lấy chúng vẫn đúng hơn hẳn việc lấy bừa câu của khái niệm chưa tới hạn.
+      const soTrongDanhSachChinh = hangDoi.danhSach.length;
+      hangDoi.hoanLai.forEach((m, i) => {
+        if (!thuHang.has(m.tenKhaiNiem)) thuHang.set(m.tenKhaiNiem, soTrongDanhSachChinh + i);
+      });
+
+      const coHang = pool
+        .map(q => ({ q, hang: chamTheoHangDoi(q) }))
+        .filter((x): x is { q: any; hang: number } => x.hang !== null);
+      coHang.sort((a, b) => (a.hang - b.hang) || (a.q.id - b.q.id));
+      pool = coHang.map(x => x.q);
     } else if (config.type === "adaptive") {
       // Xếp hạng theo điểm ưu tiên, có nhiễu NHÂN nhẹ để hai đề liên tiếp không giống hệt nhau.
       //
@@ -940,7 +977,10 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     // Với các loại đề có ràng buộc (chương, chủ đề, mức độ, câu sai, câu đánh dấu),
     // KHÔNG được lấy bù từ toàn bộ ngân hàng câu hỏi khi lọc ra rỗng, nếu không
     // "đề theo Chương X" sẽ bị trộn câu của chương khác mà vẫn dán nhãn Chương X.
-    const constrainedTypes = ["chapter", "topic", "difficulty", "incorrect", "bookmark"];
+    // "due" PHẢI nằm trong danh sách này. Thiếu nó thì hàng đợi rỗng sẽ khiến `pool` được lấy bù
+    // bằng TOÀN BỘ ngân hàng, và đề dán nhãn "ôn khái niệm tới hạn" lại toàn câu của khái niệm
+    // chưa tới hạn. Phép kiểm AL6 bắt được đúng ca ấy: 10 trên 10 câu lạc đề.
+    const constrainedTypes = ["chapter", "topic", "difficulty", "incorrect", "bookmark", "due"];
     if (pool.length === 0 && !constrainedTypes.includes(config.type as string)) {
       pool = [...questions];
     }

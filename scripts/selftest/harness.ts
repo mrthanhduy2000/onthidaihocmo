@@ -3716,6 +3716,200 @@ check("Lời nhắc viết lại phương án nhiễu bơm chữ cái thật c�
     : `engine bơm: ${bomChuCaiTrongEngine}, công cụ sửa bơm: ${bomChuCaiTrongCongCu}. Thiếu thì mô hình sẽ chép lại chữ cái trong ví dụ và gọi nhầm đáp án đúng là phương án sai`);
 
 // ===========================================================================
+// AL. Hàng đợi ôn hôm nay, xếp theo lợi ích cho ngày thi
+// ===========================================================================
+g("AL. Hàng đợi ôn hôm nay");
+
+// Dựng hai khái niệm có TRẠNG THÁI TRÍ NHỚ ngược nhau, rồi hỏi cùng một câu ở hai mốc ngày thi.
+//
+// - "bền": đã nhớ lại đúng nhiều lần, trải qua nhiều ngày lịch khác nhau, nên độ bền lớn.
+// - "mong manh": mới học, nhớ lại sai nhiều, nên độ bền nhỏ.
+//
+// Cả hai đều học lần cuối cùng một ngày, nên mọi khác biệt về thứ hạng chỉ có thể tới từ độ bền
+// và từ khoảng cách tới ngày thi.
+const KHOA_HO_SO_KN = `poly_econ_concept_profiles_${dbService.getActiveSubjectId()}`;
+const hoSoKhaiNiemDaLuu = localStorage.getItem(KHOA_HO_SO_KN);
+const mucTieuTruocAL = localStorage.getItem(`poly_econ_goal_${dbService.getActiveSubjectId()}`);
+
+function dungHoSoOnTap(ten: string, soDung: number, soSai: number, soNgayNghi: number, soNgayLich: number) {
+  const bayGioMs = TimeService.now().getTime();
+  const mocHoc: string[] = [];
+  for (let i = 0; i < soNgayLich; i++) {
+    mocHoc.push(new Date(bayGioMs - (soNgayNghi + i) * NGAY_MS).toISOString());
+  }
+  const hoSo = {
+    ...learnerModelService.getOrCreateProfile(ten),
+    attemptsCount: soDung + soSai,
+    correctCount: soDung,
+    incorrectCount: soSai,
+    reviewHistory: mocHoc,
+    lastStudiedAt: new Date(bayGioMs - soNgayNghi * NGAY_MS).toISOString(),
+  };
+  const tatCa = learnerModelService.getConceptProfiles();
+  tatCa[ten] = hoSo as any;
+  localStorage.setItem(KHOA_HO_SO_KN, JSON.stringify(tatCa));
+}
+
+function datNgayThi(soNgay: number | null) {
+  dbService.saveSubjectGoal({
+    subjectId: dbService.getActiveSubjectId(),
+    targetScore: 8.5,
+    examDate: soNgay === null
+      ? null
+      : TimeService.formatDateISO(TimeService.parseToDate(TimeService.now().getTime() + soNgay * NGAY_MS)),
+    dailyStudyMinutes: 120,
+    priority: "High",
+    updatedAt: TimeService.now().toISOString(),
+  });
+}
+
+// DÙNG TÊN KHÁI NIỆM THẬT của đồ thị tri thức, không bịa tên.
+//
+// Bản đầu của nhóm này đặt tên "AL bền" và "AL mong manh". Bốn phép kiểm đầu vẫn xanh vì chúng chỉ
+// đọc hàng đợi, nhưng AL6 đỏ ngay: không câu hỏi nào tra ra được hai cái tên ấy nên hồ câu rỗng.
+// Chính nhờ vậy mới lộ ra lỗi thật ở `generateExam`, xem chú thích `constrainedTypes`.
+const doThiAL = kbService.getKnowledgeGraph(dbService.getActiveSubjectId());
+const TEN_BEN = doThiAL[0]?.concept ?? "AL bền";
+const TEN_MONG_MANH = doThiAL[1]?.concept ?? "AL mong manh";
+
+localStorage.removeItem(KHOA_HO_SO_KN);
+dungHoSoOnTap(TEN_BEN, 9, 0, 3, 6);
+dungHoSoOnTap(TEN_MONG_MANH, 1, 4, 3, 1);
+
+// AL1. Chưa đặt ngày thi thì lùi về đúng cách của Anki và NÓI RA là đang lùi.
+datNgayThi(null);
+const hangDoiKhongNgayThi = learnerModelService.layKhaiNiemToiHan();
+check("Chưa đặt ngày thi thì hàng đợi lùi về xếp theo mức quá hạn",
+  hangDoiKhongNgayThi.xepTheoNgayThi === false && hangDoiKhongNgayThi.soNgayToiKyThi === null,
+  hangDoiKhongNgayThi.xepTheoNgayThi === false
+    ? `cờ xepTheoNgayThi = false nên màn hình biết mà nói đúng, hàng đợi có ${hangDoiKhongNgayThi.danhSach.length} khái niệm`
+    : "vẫn báo đang xếp theo ngày thi trong khi không có ngày thi nào");
+
+// AL2. PHÉP KIỂM QUAN TRỌNG NHẤT CỦA CẢ NHÓM: thứ hạng phải LẬT NGƯỢC khi ngày thi tới gần.
+//
+// Đây là thứ không bộ xếp lịch nào chỉ nhìn trạng thái hiện tại làm được, kể cả FSRS của Anki.
+// Cùng hai khái niệm, cùng một trạng thái trí nhớ, chỉ đổi mỗi khoảng cách tới ngày thi:
+//
+//   thi còn xa  -> ưu tiên khái niệm BỀN, vì ôn nó thì tới ngày thi còn giữ được
+//   thi sát nút -> ưu tiên khái niệm MONG MANH, vì giờ ôn vào thì kịp còn nóng tới hôm thi
+//
+// Không có phép kiểm này thì cả nhóm AL vẫn xanh trong khi hàng đợi thực chất chỉ xếp theo mức
+// quá hạn, tức đúng bằng Anki.
+datNgayThi(45);
+const hangDoiThiXa = learnerModelService.layKhaiNiemToiHan();
+datNgayThi(2);
+const hangDoiThiGan = learnerModelService.layKhaiNiemToiHan();
+
+const dauBangThiXa = hangDoiThiXa.danhSach[0]?.tenKhaiNiem ?? "(rỗng)";
+const dauBangThiGan = hangDoiThiGan.danhSach[0]?.tenKhaiNiem ?? "(rỗng)";
+const daLatNguoc = dauBangThiXa === TEN_BEN && dauBangThiGan === TEN_MONG_MANH;
+check("Thứ tự ôn lật ngược khi ngày thi tới gần, thứ Anki không làm được",
+  daLatNguoc,
+  daLatNguoc
+    ? `thi còn 45 ngày thì đầu bảng là "${TEN_BEN}" (bền), thi còn 2 ngày thì đầu bảng là "${TEN_MONG_MANH}" (mong manh)`
+    : `thi xa đầu bảng "${dauBangThiXa}", thi gần đầu bảng "${dauBangThiGan}". Lợi ích đo được: xa ${hangDoiThiXa.danhSach.map(m => `${m.tenKhaiNiem}=${((m.loiIchNeuOnHomNay ?? 0) * 100).toFixed(1)}`).join(", ")} | gần ${hangDoiThiGan.danhSach.map(m => `${m.tenKhaiNiem}=${((m.loiIchNeuOnHomNay ?? 0) * 100).toFixed(1)}`).join(", ")}`);
+
+// AL3. Khái niệm ôn hôm nay cũng vô ích cho ngày thi phải bị HOÃN, kèm lý do đọc được.
+//
+// Anki vẫn bắt ôn thẻ ấy vì nó chỉ hỏi "đã tới hạn chưa". Đây là phần công sức bị lãng phí mà
+// người ôn thi không có để mà phí.
+const biHoanKhiThiXa = hangDoiThiXa.hoanLai.map(m => m.tenKhaiNiem);
+const hoanDung = biHoanKhiThiXa.includes(TEN_MONG_MANH) && hangDoiThiXa.hoanLai.every(m => m.lyDo.length > 0);
+check("Khái niệm ôn hôm nay không giúp gì cho ngày thi thì bị hoãn kèm lý do",
+  hoanDung,
+  hoanDung
+    ? `"${TEN_MONG_MANH}" bị hoãn khi thi còn 45 ngày: ${hangDoiThiXa.hoanLai[0]?.lyDo}`
+    : `danh sách hoãn: [${biHoanKhiThiXa.join(", ")}], lợi ích của mong manh = ${((hangDoiThiXa.hoanLai.find(m => m.tenKhaiNiem === TEN_MONG_MANH)?.loiIchNeuOnHomNay ?? hangDoiThiXa.danhSach.find(m => m.tenKhaiNiem === TEN_MONG_MANH)?.loiIchNeuOnHomNay ?? 0) * 100).toFixed(2)} điểm phần trăm`);
+
+// AL4. Hàng đợi phải cắt theo QUỸ THỜI GIAN thật, và phải nói ra đã cắt mất bao nhiêu.
+//
+// Anki cắt theo số thẻ mỗi ngày, một con số người dùng phải tự đoán. Ở đây quỹ là số phút người
+// học đã đặt, tốc độ là nhịp đo được của chính họ, nên phần bị cắt là phần thật sự không kịp làm.
+//
+// Cắt âm thầm thì màn hình đọc ra là "hôm nay chỉ có bấy nhiêu việc", một lời nói dối do bỏ sót.
+for (let i = 2; i < Math.min(14, doThiAL.length); i++) dungHoSoOnTap(doThiAL[i].concept, 3, 1, 4, 2);
+datNgayThi(7);
+const hangDoiChatHep = learnerModelService.layKhaiNiemToiHan(5);
+const soCauUocTinh = hangDoiChatHep.danhSach.length * 3;
+const vuaKhungGio = soCauUocTinh * hangDoiChatHep.giayMoiCauDaDung <= 5 * 60 + 1e-6;
+const catDung = vuaKhungGio && hangDoiChatHep.soBiCatDoHetGio > 0;
+check("Hàng đợi cắt theo quỹ thời gian thật và nói ra phần bị cắt",
+  catDung,
+  catDung
+    ? `quỹ 5 phút ở nhịp ${hangDoiChatHep.giayMoiCauDaDung}s một câu cho ${hangDoiChatHep.danhSach.length} khái niệm, còn ${hangDoiChatHep.soBiCatDoHetGio} khái niệm được báo là bị cắt`
+    : `${hangDoiChatHep.danhSach.length} khái niệm tức ${soCauUocTinh} câu, vượt quỹ 5 phút; báo cắt ${hangDoiChatHep.soBiCatDoHetGio}`);
+
+// AL5. Tất định (bất biến 4.7). Gọi hai lần liên tiếp phải cho cùng thứ tự.
+const thuTuAL1 = learnerModelService.layKhaiNiemToiHan(60).danhSach.map(m => m.tenKhaiNiem).join("|");
+const thuTuAL2 = learnerModelService.layKhaiNiemToiHan(60).danhSach.map(m => m.tenKhaiNiem).join("|");
+check("Hàng đợi ôn tất định giữa hai lần gọi liên tiếp",
+  thuTuAL1 === thuTuAL2 && thuTuAL1.length > 0,
+  thuTuAL1 === thuTuAL2 ? `${thuTuAL1.split("|").length} khái niệm, thứ tự khớp hoàn toàn` : `lần 1: ${thuTuAL1}\nlần 2: ${thuTuAL2}`);
+
+// AL6. Đề loại "due" chỉ được chứa câu thuộc khái niệm đang trong hàng đợi.
+const hangDoiChoDe = learnerModelService.layKhaiNiemToiHan(60);
+const deToiHan = aiService.generateExam({ type: "due", count: 10 });
+const tenTrongHangDoi = new Set(hangDoiChoDe.danhSach.map(m => m.tenKhaiNiem));
+// `exam.questions` là mảng MÃ câu, không phải câu. Tra qua `questionMap` để lấy bản ĐÃ TRỘN
+// phương án, đúng bất biến 4.1.
+const cauLacDe = deToiHan.questions.filter(id => {
+  const q = questionMap.get(id);
+  if (!q) return true;
+  const ds = kbService.resolveConceptsForQuestion(dbService.getActiveSubjectId(), q, 3);
+  return !ds.some(r => tenTrongHangDoi.has(r.node.concept));
+});
+check("Đề loại tới hạn chỉ chứa câu của khái niệm trong hàng đợi",
+  deToiHan.questions.length > 0 && cauLacDe.length === 0,
+  cauLacDe.length === 0
+    ? `${deToiHan.questions.length} câu, tất cả thuộc ${tenTrongHangDoi.size} khái niệm đang tới hạn`
+    : `${cauLacDe.length} trên ${deToiHan.questions.length} câu không thuộc khái niệm nào trong hàng đợi`);
+
+// AL7b. MỌI loại đề khai trong `examType` phải có nhãn riêng trên màn làm bài.
+//
+// Bắt được khi mở trình duyệt: đề loại "due" hiện tiêu đề "Luyện tập theo Thứ tự gốc", vì chuỗi
+// nhãn là một dãy tam nguyên có nhánh cuối làm mặc định, nên loại nào chưa liệt kê đều rơi vào đó
+// mà không báo lỗi gì. Ba loại incorrect, bookmark, difficulty cũng đang rơi vào đấy từ trước.
+//
+// Đây là họ lỗi "nhãn mặc định nuốt mọi ca chưa xử lý", cùng họ với `constrainedTypes` thiếu
+// "due" đã bắt ở AL6. Nhánh mặc định im lặng luôn là chỗ đáng đặt phép kiểm.
+const nguonManLamBai = readFileSync(path.join(process.cwd(), "src/components/PracticeView.tsx"), "utf8");
+const LOAI_DE_PHAI_CO_NHAN = ["ai-smart", "adaptive", "chapter", "topic", "random", "due", "incorrect", "bookmark", "difficulty"];
+const thieuNhan = LOAI_DE_PHAI_CO_NHAN.filter(t => !new RegExp(`examType === "${t}"`).test(nguonManLamBai));
+check("Mọi loại đề đều có nhãn riêng trên màn làm bài",
+  thieuNhan.length === 0,
+  thieuNhan.length === 0
+    ? `${LOAI_DE_PHAI_CO_NHAN.length} loại đề đều có nhánh nhãn riêng, không loại nào rơi vào nhãn mặc định`
+    : `thiếu nhãn cho: ${thieuNhan.join(", ")}, các loại này sẽ hiện nhầm là "Luyện tập theo Thứ tự gốc"`);
+
+// AL7. Màn hình KHÔNG được liệt kê khái niệm tới hạn khi người học chưa làm bài nào.
+//
+// Bất biến 4.9h. Hồ sơ trắng vẫn có thể sinh ra hàng đợi nếu ai đó nạp dữ liệu bằng đường khác,
+// và khi ấy màn hình sẽ giục người học "ôn lại" thứ họ chưa từng học. Canh ở NGUỒN vì đây là điều
+// kiện hiển thị, không phải giá trị tính được.
+const nguonBanHocAL = readFileSync(path.join(process.cwd(), "src/components/PersonalWorkspaceView.tsx"), "utf8");
+const chanBoiDaCoBaiLam = /!daCoBaiLam \|\| hangDoiOn\.danhSach\.length === 0/.test(nguonBanHocAL);
+check("Màn Bàn học không liệt kê khái niệm tới hạn khi chưa có bài làm",
+  chanBoiDaCoBaiLam,
+  chanBoiDaCoBaiLam
+    ? "khối hàng đợi nằm sau nhánh kiểm daCoBaiLam, người chưa làm bài thấy câu dẫn bắt đầu"
+    : "khối hàng đợi KHÔNG được chặn bởi daCoBaiLam, hồ sơ trắng sẽ bị giục ôn lại thứ chưa từng học");
+
+// AL8. Ô tìm nhanh phải có lối vào hàng đợi, và chỉ hiện khi có việc thật.
+const nguonTimNhanh = readFileSync(path.join(process.cwd(), "src/components/GlobalCommandPalette.tsx"), "utf8");
+const coLoiVaoTimNhanh = /hangDoiOn\.danhSach\.length > 0/.test(nguonTimNhanh)
+  && /onNavigate\("practice", \{ type: "due" \}\)/.test(nguonTimNhanh);
+check("Ô tìm nhanh có lối vào hàng đợi ôn và chỉ hiện khi có việc",
+  coLoiVaoTimNhanh,
+  coLoiVaoTimNhanh
+    ? "mục Ôn khái niệm tới hạn chỉ dựng khi hàng đợi khác rỗng, bấm vào mở đúng đề loại due"
+    : "thiếu lối vào, hoặc mục vẫn hiện khi hàng đợi rỗng");
+
+localStorage.removeItem(KHOA_HO_SO_KN);
+if (hoSoKhaiNiemDaLuu !== null) localStorage.setItem(KHOA_HO_SO_KN, hoSoKhaiNiemDaLuu);
+if (mucTieuTruocAL !== null) localStorage.setItem(`poly_econ_goal_${dbService.getActiveSubjectId()}`, mucTieuTruocAL);
+else localStorage.removeItem(`poly_econ_goal_${dbService.getActiveSubjectId()}`);
+
+// ===========================================================================
 // AM. Không bịa ngày thi và điểm mục tiêu
 // ===========================================================================
 g("AM. Không bịa ngày thi và điểm mục tiêu");

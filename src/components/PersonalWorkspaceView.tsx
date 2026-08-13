@@ -10,6 +10,7 @@ import { kbService } from "../services/kbService";
 import { aiService } from "../services/ai";
 import { workspaceService } from "../services/workspaceService";
 import { examForecaster } from "../services/examForecaster";
+import { learnerModelService } from "../services/learnerModel";
 import { 
   LearningResource, 
   KnowledgeHealthItem, 
@@ -265,6 +266,11 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView, onO
     : [];
 
   const remainingDays = prediction.metricsBreakdown.remainingDays;
+  /**
+   * Hàng đợi ôn hôm nay. Tính lại tất định ở mỗi lần dựng màn, không cất vào ô nhớ, vì mức còn
+   * nhớ thay đổi theo từng giờ trôi qua.
+   */
+  const hangDoiOn = learnerModelService.layKhaiNiemToiHan();
   /** Đã có bài làm nào chưa. Nhiều con số chỉ có nghĩa khi đã có bài, xem chỗ dùng bên dưới. */
   const daCoBaiLam = dbService.getStatistics().totalSolved > 0;
   const coCauSai = prediction.metricsBreakdown.studyDebtCount > 0;
@@ -517,25 +523,96 @@ Bàn học hôm nay
                đã có sẵn: chưa làm bài thì nói trung tính và KHÔNG có tích xanh; làm rồi mà sổ
                sạch thì mới khen, lúc đó lời khen đúng.
           */}
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-text-muted">Nên làm trước</span>
-            <h3 className="text-xl font-bold text-text-primary font-sans">
-              {daCoBaiLam ? "Ôn theo điểm yếu" : "Bắt đầu bằng một lượt ôn ngắn"}
-            </h3>
-            <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem] pt-0.5">
-              {daCoBaiLam
-                ? "Tập trung vào phần dễ quên và các câu từng làm sai."
-                : "Hệ thống chưa biết bạn yếu ở đâu. Làm xong lượt đầu là nó có căn cứ để chọn câu cho bạn."}
-            </p>
-            <div className="pt-3">
-              <button
-                onClick={() => onStartExam("adaptive")}
-                className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
-              >
-                {daCoBaiLam ? "Ôn ngay" : "Bắt đầu"}
-              </button>
+          {/*
+            HÀNG ĐỢI ÔN HÔM NAY.
+
+            Ba nhánh, kiểm theo ĐÚNG thứ tự này:
+              1. chưa làm bài nào  -> giữ nguyên câu dẫn cũ, tuyệt đối không liệt kê khái niệm
+                 (bất biến 4.9h: màn hình phải nói đúng với người chưa bắt đầu)
+              2. có khái niệm đáng ôn -> liệt kê, mỗi khái niệm một HÀNG (khuôn 4.9g, không thẻ,
+                 không viền, không nền)
+              3. không có gì đáng ôn -> nói thẳng như vậy rồi mời học phần mới. Không bịa việc ra
+                 lấp chỗ trống.
+
+            Câu chữ phải đổi theo cờ `xepTheoNgayThi`. Có ngày thi thì hàng đợi trả lời câu hỏi
+            "ôn cái gì hôm nay thì ngày thi được lợi nhất"; chưa đặt ngày thi thì nó lùi về hỏi
+            "cái gì quá hạn lâu nhất", đúng lối Anki. Nói nhầm hai thứ này là hứa một đằng làm
+            một nẻo.
+          */}
+          {!daCoBaiLam || hangDoiOn.danhSach.length === 0 ? (
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-text-muted">Nên làm trước</span>
+              <h3 className="text-xl font-bold text-text-primary font-sans">
+                {!daCoBaiLam
+                  ? "Bắt đầu bằng một lượt ôn ngắn"
+                  : "Hôm nay chưa có khái niệm nào tới hạn ôn"}
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem] pt-0.5">
+                {!daCoBaiLam
+                  ? "Hệ thống chưa biết bạn yếu ở đâu. Làm xong lượt đầu là nó có căn cứ để chọn câu cho bạn."
+                  : "Phần đã học vẫn còn đủ chắc. Học thêm phần mới sẽ có lợi hơn là ôn lại lúc này."}
+              </p>
+              <div className="pt-3">
+                <button
+                  onClick={() => onStartExam("adaptive")}
+                  className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
+                >
+                  {daCoBaiLam ? "Học phần mới" : "Bắt đầu"}
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-text-muted">Nên làm trước</span>
+              <h3 className="text-xl font-bold text-text-primary font-sans">
+                Hôm nay cần ôn {hangDoiOn.danhSach.length} khái niệm
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem] pt-0.5">
+                {hangDoiOn.xepTheoNgayThi
+                  ? `Xếp theo mức có lợi nhất cho ngày thi, còn ${hangDoiOn.soNgayToiKyThi} ngày.`
+                  : "Xếp theo khái niệm quá hạn ôn lâu nhất. Đặt ngày thi trong Cài đặt để xếp theo mức có lợi nhất cho hôm thi."}
+              </p>
+
+              <div className="pt-2 grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+                {hangDoiOn.danhSach.slice(0, 5).map((muc) => (
+                  <div key={muc.tenKhaiNiem} className="py-3 flex items-baseline justify-between gap-4">
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-text-primary block truncate">{muc.tenKhaiNiem}</span>
+                      <span className="text-xs text-text-secondary">{muc.lyDo}</span>
+                    </div>
+                    <span className="text-xs tabular-nums text-text-muted shrink-0">
+                      còn nhớ {Math.round(muc.mucConNho * 100)}%
+                      {muc.mucNhoNgayThi !== null && `, ngày thi ${Math.round(muc.mucNhoNgayThi * 100)}%`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/*
+                Nói ra phần bị cắt. Cắt âm thầm thì màn hình đọc ra là "hôm nay chỉ có bấy nhiêu
+                việc", một lời nói dối do bỏ sót.
+              */}
+              {hangDoiOn.soBiCatDoHetGio > 0 && (
+                <p className="text-xs text-text-muted pt-2">
+                  Còn {hangDoiOn.soBiCatDoHetGio} khái niệm nữa đáng ôn, nhưng vượt quỹ {hangDoiOn.phutMoiNgay} phút mỗi ngày bạn đã đặt.
+                </p>
+              )}
+              {hangDoiOn.hoanLai.length > 0 && (
+                <p className="text-xs text-text-muted pt-1">
+                  {hangDoiOn.hoanLai.length} khái niệm khác đã tới hạn nhưng ôn hôm nay gần như không nâng được mức nhớ vào ngày thi, nên để gần ngày thi hơn.
+                </p>
+              )}
+
+              <div className="pt-3">
+                <button
+                  onClick={() => onStartExam("due")}
+                  className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
+                >
+                  Ôn {hangDoiOn.danhSach.length} khái niệm này
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Hai việc còn lại: HÀNG chứ không phải thẻ. Cùng khuôn với mọi danh sách khác. */}
           <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">

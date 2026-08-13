@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Search, LayoutDashboard, Play, RotateCcw, Target, Brain, BookOpen, Layers, Sparkles, Settings as SettingsIcon } from "lucide-react";
+import { learnerModelService } from "../services/learnerModel";
 
 interface GlobalCommandPaletteProps {
   isOpen: boolean;
@@ -42,7 +43,22 @@ export default function GlobalCommandPalette({
 
   if (!isOpen) return null;
 
+  /**
+   * Hàng đợi ôn hôm nay, đọc để biết có mục nào đáng đưa vào ô tìm nhanh không.
+   *
+   * Chỉ hiện khi thật sự có khái niệm tới hạn. Một mục "Ôn 0 khái niệm tới hạn" vừa vô dụng vừa
+   * làm người học tưởng hệ thống đang giục.
+   */
+  const hangDoiOn = learnerModelService.layKhaiNiemToiHan();
+
   const commands = [
+    ...(hangDoiOn.danhSach.length > 0 ? [{
+      id: "cmd_on_toi_han",
+      category: "Luyện tập",
+      title: `Ôn ${hangDoiOn.danhSach.length} khái niệm tới hạn${hangDoiOn.xepTheoNgayThi ? " (xếp theo lợi cho ngày thi)" : ""}`,
+      icon: Play,
+      action: () => { onNavigate("practice", { type: "due" }); onClose(); }
+    }] : []),
     {
       id: "cmd_practice_adaptive",
       category: "Luyện tập",

@@ -17,7 +17,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
 
 import { dbService, setConceptMasteryBothKeys, questionMap, dangKyDonDuLieuSuyRa } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
-import { conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, rutCapNhoLai } from "./conceptMemoryService";
+import { conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, loiIchOnHomNay, mucNhoVaoNgayThi, rutBangChungTriNho, rutCapNhoLai } from "./conceptMemoryService";
 import { TimeService } from "./time";
 import { soThapPhan } from "./numberFormat";
 
@@ -50,6 +50,49 @@ export interface ConceptProfile {
    */
   doBenTriNhoNgay?: number;
 }
+
+/** Một khái niệm trong hàng đợi ôn hôm nay. */
+export interface MucOnTap {
+  tenKhaiNiem: string;
+  /** Âm nghĩa là chưa tới hạn. */
+  soNgayQuaHan: number;
+  /** Mức còn nhớ ngay lúc này, thang 0 đến 1. */
+  mucConNho: number;
+  /** Độ bền `S` tính bằng ngày. */
+  doBenNgay: number;
+  /** Mức nhớ dự báo vào ngày thi nếu KHÔNG ôn. `null` khi chưa đặt ngày thi. */
+  mucNhoNgayThi: number | null;
+  /** Mức nhớ ngày thi tăng thêm nếu ôn hôm nay. `null` khi chưa đặt ngày thi. */
+  loiIchNeuOnHomNay: number | null;
+  /** Câu giải thích vì sao mục này nằm ở đây, viết cho người học đọc. */
+  lyDo: string;
+}
+
+/** Kết quả xếp hàng đợi ôn hôm nay. */
+export interface HangDoiOnTap {
+  /**
+   * `true` khi đang xếp theo lợi ích cho ngày thi, `false` khi lùi về xếp theo mức quá hạn kiểu
+   * Anki vì chưa đặt ngày thi. Màn hình BẮT BUỘC đọc cờ này trước khi chọn câu chữ, vì hai chế
+   * độ trả lời hai câu hỏi khác nhau.
+   */
+  xepTheoNgayThi: boolean;
+  soNgayToiKyThi: number | null;
+  danhSach: MucOnTap[];
+  /** Số khái niệm đáng ôn nhưng bị cắt vì không đủ quỹ thời gian hôm nay. */
+  soBiCatDoHetGio: number;
+  /** Tới hạn theo lối cũ nhưng ôn hôm nay không giúp gì cho ngày thi, nên hoãn lại. */
+  hoanLai: MucOnTap[];
+  phutMoiNgay: number;
+  /** Nhịp đã dùng để quy đổi thời gian, giây mỗi câu. */
+  giayMoiCauDaDung: number;
+}
+
+/**
+ * Số câu dành cho mỗi khái niệm trong một lượt ôn. Dùng chung giữa phép cắt theo quỹ thời gian ở
+ * `layKhaiNiemToiHan` và phép rút câu của loại đề "due"; đặt hai con số khác nhau thì hàng đợi
+ * hứa một đằng còn đề sinh ra một nẻo.
+ */
+export const SO_CAU_MOI_KHAI_NIEM = 3;
 
 export interface AdaptiveMemory {
   preferredExplanationStyle: "academic" | "simplified" | "intuitive" | "visual";
@@ -875,6 +918,153 @@ export const learnerModelService = {
    *
    * Nay gọi thẳng `doBenTriNhoNgay`, đúng một nguồn công thức cho cả dự án.
    */
+  /**
+   * HÀNG ĐỢI ÔN HÔM NAY, xếp theo LỢI ÍCH CHO NGÀY THI chứ không theo mức quá hạn.
+   *
+   * VÌ SAO CÓ HÀM NÀY. `nextReviewAt` được tính lại tươi ở mỗi lần đọc từ 27/07/2026 và đang
+   * được dùng thật ở hai chỗ (chấm ưu tiên câu hỏi, và lời nhắc gửi gia sư AI), nhưng `grep` toàn
+   * bộ `src/components` cho 0 kết quả: KHÔNG màn hình nào hiện nó ra. Toàn bộ giá trị của giãn
+   * cách lặp lại nằm ở chỗ nó bảo người học hôm nay làm gì, mà đúng phần đó chưa dựng.
+   *
+   * VÌ SAO XẾP THEO LỢI ÍCH CHỨ KHÔNG THEO MỨC QUÁ HẠN, và đây là điểm khác Anki.
+   *
+   * Anki, cả SM-2 lẫn FSRS, chọn thẻ bằng một câu hỏi duy nhất: mức nhớ HÔM NAY đã tụt dưới mức
+   * mong muốn chưa. Cách ấy đúng cho người muốn nhớ mãi mãi. Người ôn thi thì chỉ cần nhớ cao
+   * nhất vào ĐÚNG MỘT NGÀY, nên câu hỏi đúng phải là: ôn thẻ này hôm nay thì NGÀY THI được thêm
+   * bao nhiêu. Xem ba ca đối chiếu trong chú thích `loiIchOnHomNay`.
+   *
+   * BA ĐIỀU HÀM NÀY LÀM MÀ ANKI KHÔNG LÀM:
+   *
+   * 1. **Bỏ qua khái niệm ôn hôm nay cũng vô ích.** Khái niệm quá mong manh mà ngày thi còn xa
+   *    thì ôn hôm nay không kéo nổi mức nhớ ngày thi lên, vì nó sẽ quên lại trước khi tới ngày.
+   *    Việc đúng là để dành nó tới gần ngày thi. Anki vẫn bắt ôn, và người học vẫn sẽ quên.
+   * 2. **Cắt hàng đợi theo QUỸ THỜI GIAN thật của người học**, không cắt theo số thẻ. Anki cắt
+   *    theo số thẻ mỗi ngày, một con số người dùng phải tự đoán. Ở đây quỹ thời gian là
+   *    `dailyStudyMinutes` người học đã đặt, còn tốc độ là nhịp ĐO ĐƯỢC của chính họ
+   *    (`nhipRiengMoiCau`), nên phần bị cắt là phần thật sự không kịp làm.
+   * 3. **Nói ra vì sao mỗi khái niệm nằm trong danh sách.** Trường `lyDo` đi kèm từng mục.
+   *
+   * KHI CHƯA ĐẶT NGÀY THI thì không có gì để tối ưu tới, nên lùi về đúng cách của Anki: xếp theo
+   * mức quá hạn. `xepTheoNgayThi` báo rõ đang ở chế độ nào, đừng để màn hình nói nhầm.
+   *
+   * Bất biến 4.9c: không tính lại đường cong quên ở đây, chỉ đọc kết quả của công thức duy nhất.
+   * Bất biến 4.5: tên khái niệm là tên của đồ thị tri thức, không phải `question.concept`.
+   * Bất biến 4.7: sắp xếp TẤT ĐỊNH, hoà thì so tên.
+   */
+  layKhaiNiemToiHan(gioiHanPhut?: number): HangDoiOnTap {
+    const profiles = this.getConceptProfiles();
+    const bayGio = TimeService.now().getTime();
+
+    let soNgayToiKyThi: number | null = null;
+    const ngayThi = dbService.getSubjectGoal()?.examDate;
+    if (ngayThi) {
+      const cach = TimeService.daysBetween(TimeService.today(), ngayThi);
+      if (Number.isFinite(cach)) soNgayToiKyThi = Math.max(0, cach);
+    }
+
+    const hoSoTriNho = conceptMemoryService.getAllConceptProfiles();
+    const tatCa: MucOnTap[] = [];
+
+    for (const ten of Object.keys(profiles)) {
+      // Bắt buộc tính lại: `getConceptProfiles` trả về bản đã lưu, chưa chạy đường cong quên.
+      const hoSo = this.recalculateForgettingScore(profiles[ten]);
+      if (!hoSo.lastStudiedAt || !hoSo.nextReviewAt) continue;
+
+      const soNgayDaNghi = Math.max(0, (bayGio - new Date(hoSo.lastStudiedAt).getTime()) / 86400000);
+      const soNgayQuaHan = (bayGio - new Date(hoSo.nextReviewAt).getTime()) / 86400000;
+      const doBenNgay = hoSo.doBenTriNhoNgay ?? 1;
+
+      const banGocTriNho = hoSoTriNho[ten];
+      const bangChung = banGocTriNho
+        ? rutBangChungTriNho(banGocTriNho)
+        : {
+          soLanNhoLaiDung: hoSo.correctCount,
+          soLanNhoLaiSai: hoSo.incorrectCount,
+          dinhCaoDoThao: 50,
+          doKhoKhaiNiem: 5.0,
+          mocHocISO: hoSo.reviewHistory,
+        };
+
+      const loiIch = loiIchOnHomNay(bangChung, soNgayToiKyThi, soNgayDaNghi);
+      const nhoNgayThi = mucNhoVaoNgayThi(doBenNgay, soNgayToiKyThi, soNgayDaNghi);
+
+      tatCa.push({
+        tenKhaiNiem: ten,
+        soNgayQuaHan: parseFloat(soNgayQuaHan.toFixed(2)),
+        mucConNho: hoSo.forgettingScore,
+        doBenNgay,
+        mucNhoNgayThi: nhoNgayThi,
+        loiIchNeuOnHomNay: loiIch,
+        lyDo: "",
+      });
+    }
+
+    const xepTheoNgayThi = soNgayToiKyThi !== null;
+
+    // NGƯỠNG LỢI ÍCH ĐÁNG BỎ CÔNG, tính bằng điểm phần trăm mức nhớ ngày thi.
+    //
+    // Đặt 1 điểm phần trăm, cố ý rất thấp. Nó không phải để lọc bớt cho gọn mà chỉ để loại đúng
+    // nhóm "ôn hôm nay coi như không thay đổi gì cho ngày thi", tức nhóm mà Anki bắt ôn một cách
+    // lãng phí. Đặt cao hơn sẽ bắt đầu cắt cả những khái niệm đáng ôn, và lúc ấy phải đo lại chứ
+    // đừng đoán.
+    const NGUONG_LOI_ICH = 0.01;
+
+    const toiHan = tatCa.filter(m => {
+      if (!xepTheoNgayThi) return m.soNgayQuaHan >= 0;
+      // Có ngày thi thì tiêu chí là lợi ích, không phải hạn. Một khái niệm chưa tới hạn nhưng ôn
+      // vào là được nhiều cho ngày thi thì vẫn đáng làm, và ngược lại.
+      return (m.loiIchNeuOnHomNay ?? 0) >= NGUONG_LOI_ICH;
+    });
+
+    toiHan.sort((a, b) => {
+      if (xepTheoNgayThi) {
+        const chenh = (b.loiIchNeuOnHomNay ?? 0) - (a.loiIchNeuOnHomNay ?? 0);
+        if (Math.abs(chenh) > 1e-9) return chenh;
+      }
+      const chenhHan = b.soNgayQuaHan - a.soNgayQuaHan;
+      if (Math.abs(chenhHan) > 1e-9) return chenhHan;
+      return a.tenKhaiNiem.localeCompare(b.tenKhaiNiem, "vi");
+    });
+
+    for (const m of toiHan) {
+      if (xepTheoNgayThi && m.loiIchNeuOnHomNay !== null) {
+        m.lyDo = `Ôn hôm nay nâng mức nhớ ngày thi thêm ${Math.round(m.loiIchNeuOnHomNay * 100)} điểm phần trăm`;
+      } else if (m.soNgayQuaHan >= 1) {
+        m.lyDo = `Quá hạn ôn ${Math.round(m.soNgayQuaHan)} ngày`;
+      } else {
+        m.lyDo = "Vừa tới hạn ôn hôm nay";
+      }
+    }
+
+    // Nhóm bị hoãn: tới hạn theo lối cũ nhưng ôn hôm nay không giúp gì được cho ngày thi.
+    const hoanLai = xepTheoNgayThi
+      ? tatCa
+        .filter(m => m.soNgayQuaHan >= 0 && (m.loiIchNeuOnHomNay ?? 0) < NGUONG_LOI_ICH)
+        .sort((a, b) => b.soNgayQuaHan - a.soNgayQuaHan || a.tenKhaiNiem.localeCompare(b.tenKhaiNiem, "vi"))
+      : [];
+    for (const m of hoanLai) {
+      m.lyDo = "Ôn hôm nay gần như không nâng được mức nhớ vào ngày thi, nên để gần ngày thi hơn";
+    }
+
+    // Cắt theo quỹ thời gian. Nhịp lấy từ chính người học khi đã đủ dữ liệu, không đủ thì lùi về
+    // ước tính của ngân hàng câu hỏi. `SO_CAU_MOI_KHAI_NIEM` là số câu một lượt ôn dành cho mỗi
+    // khái niệm, khớp với cách `generateExam` rút câu cho loại đề "due".
+    const phutMoiNgay = gioiHanPhut ?? dbService.getSubjectGoal()?.dailyStudyMinutes ?? 45;
+    const giayMoiCau = nhipRiengMoiCau() ?? 35;
+    const soCauLamDuoc = Math.max(1, Math.floor((phutMoiNgay * 60) / Math.max(1, giayMoiCau)));
+    const soKhaiNiemVua = Math.max(1, Math.floor(soCauLamDuoc / SO_CAU_MOI_KHAI_NIEM));
+
+    return {
+      xepTheoNgayThi,
+      soNgayToiKyThi,
+      danhSach: toiHan.slice(0, soKhaiNiemVua),
+      soBiCatDoHetGio: Math.max(0, toiHan.length - soKhaiNiemVua),
+      hoanLai,
+      phutMoiNgay,
+      giayMoiCauDaDung: giayMoiCau,
+    };
+  },
+
   recalculateForgettingScore(profile: ConceptProfile): ConceptProfile {
     if (!profile.lastStudiedAt) return { ...profile, forgettingScore: 1.0 };
 

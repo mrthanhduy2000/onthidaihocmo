@@ -181,7 +181,7 @@ export interface ExamReviewResult {
 
 export interface ExamAttempt {
   id: string;
-  examType: "sequential" | "random" | "ai-smart" | "chapter" | "topic" | "difficulty" | "incorrect" | "bookmark" | "adaptive" | "custom";
+  examType: "sequential" | "random" | "ai-smart" | "chapter" | "topic" | "difficulty" | "incorrect" | "bookmark" | "adaptive" | "custom" | "due";
   chapterId?: number;
   topicId?: string;
   difficulty?: DifficultyLevel;
