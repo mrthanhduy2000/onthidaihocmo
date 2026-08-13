@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 12/08/2026, **XONG Giai đoạn 1** của đợt 8 giai đoạn. Ngân hàng câu hỏi đã hết lộ đáp án qua độ dài phương án.
+**Cập nhật lần cuối**: 13/08/2026, **XONG Giai đoạn 1, 3, 4**. Hàng đợi ôn nay xếp theo lợi ích cho ngày thi, thứ Anki không làm được.
 
 ---
 
@@ -14,12 +14,12 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Đợt 8 giai đoạn, bước tiếp là Giai đoạn 4 (xem lý do đẩy lên bên dưới) |
-| **Current Milestone** | Giai đoạn 1 XONG cả 1A, 1B, 1C |
-| **Current Phase** | Giai đoạn 0 và 1 XONG. Chưa bắt đầu giai đoạn nào tiếp theo |
-| **Completed %** | 2 trên 9 khối việc |
+| **Current Objective** | Đợt 8 giai đoạn, còn Giai đoạn 2, 5, 6, 7, 8 |
+| **Current Milestone** | Hàng đợi ôn hôm nay đã chạy, xếp theo lợi ích cho ngày thi |
+| **Current Phase** | Giai đoạn 0, 1, 3, 4 XONG. Tiếp theo: Giai đoạn 2 |
+| **Completed %** | 4 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **234/234 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **248/248 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
@@ -62,9 +62,9 @@ phải mở file ngoài repo:
 |---|---|---|---|
 | 0 | Dọn bàn, dựng thước đo ngân hàng | không | **XONG 12/08** |
 | 1 | Khử thiên lệch độ dài ngân hàng câu hỏi | `AJ` (7) | **XONG 12/08** |
-| 2 | Đường báo câu hỏi sai, cho `REJECTED` có hiệu lực | `AK` | chưa |
-| 3 | Hàng đợi ôn hôm nay, đưa `nextReviewAt` ra màn hình | `AL` | chưa |
-| 4 | Bỏ số bịa ở tầng mục tiêu (ngày thi, điểm mục tiêu) | `AM` | chưa, **nên làm TIẾP THEO** |
+| 2 | Đường báo câu hỏi sai, cho `REJECTED` có hiệu lực | `AK` | **tiếp theo** |
+| 3 | Hàng đợi ôn hôm nay, xếp theo lợi ích cho ngày thi | `AL` (9) | **XONG 13/08** |
+| 4 | Bỏ số bịa ở tầng mục tiêu (ngày thi, điểm mục tiêu) | `AM` (5) | **XONG 13/08** |
 | 5 | Ghi thời gian từng câu | `AN` | chưa |
 | 6 | Chế độ nhớ lại chủ động, chạy song song trắc nghiệm | `AO` | chưa |
 | 7 | Nạp môn mới trong một buổi tối | `AP` | chưa |

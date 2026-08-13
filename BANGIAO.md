@@ -59,6 +59,84 @@ sao, và còn nợ gì.
 
 ---
 
+### 13/08/2026, hàng đợi ôn xếp theo lợi ích cho ngày thi, và thôi bịa ngày thi
+
+Hai giai đoạn trong một ngày: Giai đoạn 4 (gỡ số bịa ở tầng mục tiêu) rồi Giai đoạn 3 (hàng đợi
+ôn). Làm theo thứ tự đó vì Giai đoạn 3 phải đọc ngày thi thật, mà trước đó ngày thi là số bịa.
+
+Bộ kiểm: **234 lên 248**, không phép kiểm nào biến mất.
+
+#### Giai đoạn 4, và ba chỗ không ngờ trước
+
+`getSubjectGoal` trả `hôm nay + 14 ngày` và `8,5` khi kho trống, nên màn Bàn học in ra "Còn 14
+ngày tới kỳ thi 26/08/2026, mục tiêu 8,5" trên hồ sơ chưa từng đặt gì. Từ 30/07/2026 nó không còn
+là lỗi hiển thị: bất biến 4.9i cho `scoreQuestions` một yếu tố trọng số 0,15 chấm theo mức nhớ
+**vào ngày thi**, nên một ngày thi bịa điều khiển thật việc chọn câu.
+
+1. **`strictNullChecks` đang TẮT.** Cách làm mà kế hoạch đề ra, "đổi kiểu rồi để `tsc` chỉ ra mọi
+   chỗ phải xử lý", hoàn toàn không chạy ở dự án này. Phải rà tay 8 file. Ghi lại để AI sau khỏi
+   ngồi chờ `tsc` báo lỗi.
+2. **`examForecaster` giữ BẢN SAO THỨ HAI của cùng một điều bịa**: `let remainingDays = 14`. Gỡ ở
+   `getSubjectGoal` mà quên chỗ này thì màn hình vẫn nói "còn 14 ngày". Nhóm `AM3` là bộ quét cả
+   họ để chuyện đó không tái diễn ở file thứ ba.
+3. **Hai ô chọn trong Cài đặt không có mục "Chưa đặt"**, nên thẻ `select` tự nhảy về mục đầu là
+   7,0 và màn hình lại nói người học đã đặt mục tiêu 7,0. Con số bịa quay lại bằng cửa sau.
+
+**Một lỗi thiết kế trong chính thay đổi này, bắt được nhờ phép kiểm cũ đỏ.** Kế hoạch nói đổi mốc
+phán đoán mò từ `estimatedTime` sang trung vị nhịp thật của người học. Làm vậy cho `doNhipLamBai`
+thì phép kiểm P6 đỏ ngay, và đỏ đúng: khi mốc chính là trung vị của người học thì tổng thời gian
+thật chia tổng mốc luôn xấp xỉ 1 **theo định nghĩa**, nên mức đoán mò gộp không bao giờ khác 0
+được nữa. Một chỉ số bị làm cho không thể khác 0 còn tệ hơn chỉ số thô, vì nó im lặng đúng lúc cần
+lên tiếng.
+
+Ranh giới đúng: "lượt NÀY có nhanh bất thường không" là câu hỏi so với chính người ấy nên dùng mốc
+riêng; "người này nhìn chung có làm ẩu không" cần một mốc NGOÀI người học nên giữ `estimatedTime`
+dù nó thô.
+
+#### Giai đoạn 3, và vì sao cách xếp này hơn Anki
+
+Anki, cả SM-2 lẫn FSRS, chọn thẻ bằng một câu hỏi duy nhất: mức nhớ **hôm nay** đã tụt dưới mức
+mong muốn chưa. Đúng cho người muốn nhớ mãi mãi. Người ôn thi chỉ cần nhớ cao nhất vào **đúng một
+ngày**, nên câu hỏi đúng là: ôn thẻ này hôm nay thì **ngày thi** được thêm bao nhiêu.
+
+Hàm mới `loiIchOnHomNay` trả lời đúng câu ấy. Ba ca:
+
+| Trạng thái | Khoảng cách thi | Không ôn | Ôn hôm nay | Lợi ích |
+|---|---|---|---|---|
+| S = 27,3 ngày | 5 ngày | 83% | 93% | **+10 điểm phần trăm** |
+| S = 1,5 ngày | 30 ngày | 0% | 0% | **gần bằng 0** |
+| S = 1,5 ngày | 3 ngày | 14% | 30% | **+16, cao nhất bảng** |
+
+Cùng một khái niệm, cùng một trạng thái trí nhớ, mà thứ tự ưu tiên **lật ngược** chỉ vì ngày thi
+xa hay gần. Phép kiểm `AL2` canh đúng điều đó và đo được trên dữ liệu thật: thi còn 45 ngày thì
+đầu bảng là khái niệm bền, thi còn 2 ngày thì đầu bảng là khái niệm mong manh.
+
+Ba việc khác Anki: **hoãn** khái niệm ôn hôm nay cũng vô ích cho ngày thi (Anki vẫn bắt ôn, và
+người học vẫn sẽ quên trước khi thi); **cắt hàng đợi theo quỹ thời gian thật** thay vì theo số thẻ,
+dùng nhịp đo được của chính người học từ Giai đoạn 4, và nói ra phần bị cắt; **nói ra lý do** từng
+khái niệm có mặt.
+
+Chưa đặt ngày thi thì lùi về đúng cách Anki và báo bằng cờ `xepTheoNgayThi` để màn hình không nói
+nhầm mình đang làm gì.
+
+**Hai lỗi thật bắt được khi viết phép kiểm và khi mở trình duyệt:**
+
+1. `"due"` không nằm trong `constrainedTypes` của `generateExam`, nên hàng đợi rỗng làm `pool`
+   được lấy bù bằng **toàn bộ ngân hàng**: đề dán nhãn "ôn khái niệm tới hạn" mà 10 trên 10 câu
+   thuộc khái niệm chưa tới hạn. Đúng cái bẫy mà chú thích ngay tại đó cảnh báo cho loại đề khác.
+2. Chuỗi nhãn loại đề trên màn làm bài là một dãy tam nguyên có nhánh cuối làm mặc định, nên đề
+   `"due"` hiện tiêu đề "Luyện tập theo Thứ tự gốc". Ba loại `incorrect`, `bookmark`, `difficulty`
+   cũng đang rơi vào đó từ trước mà không ai biết. **Nhánh mặc định im lặng luôn là chỗ đáng đặt
+   phép kiểm.**
+
+#### Còn nợ ở phần xếp lịch
+
+Hàng đợi mới trả lời "hôm nay ôn gì". Chưa trả lời "từ nay tới ngày thi, ngày nào ôn cái gì", tức
+chưa có bản kế hoạch trải dài. Đó mới là thứ FSRS hoàn toàn không làm được, và là bước tiếp theo
+đáng làm nhất cho phần này.
+
+---
+
 ### 12/08/2026, sửa xong 140 câu lệch độ dài, và ba lần chính mình đo sai
 
 Khép lại Giai đoạn 1 của kế hoạch 8 giai đoạn. Lượt trước đã chặn nguồn; lượt này sửa phần đã nằm
