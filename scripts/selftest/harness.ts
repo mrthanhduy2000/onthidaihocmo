@@ -3717,6 +3717,140 @@ check("Lời nhắc viết lại phương án nhiễu bơm chữ cái thật c�
     : `engine bơm: ${bomChuCaiTrongEngine}, công cụ sửa bơm: ${bomChuCaiTrongCongCu}. Thiếu thì mô hình sẽ chép lại chữ cái trong ví dụ và gọi nhầm đáp án đúng là phương án sai`);
 
 // ===========================================================================
+// AN. Thời gian từng câu
+// ===========================================================================
+g("AN. Thời gian từng câu");
+
+// AN1. Bản ghi CŨ không có `answerTimings` vẫn phải đọc được, mọi engine không nổ.
+//
+// Đây là phép kiểm phải viết TRƯỚC, vì phần lớn lịch sử hiện có của Đàm không có trường này. Một
+// trường mới bắt buộc sẽ làm toàn bộ lịch sử cũ hỏng ngay lúc nạp, và kiểu lỗi ấy không hiện ra
+// trong `tsc` vì `strictNullChecks` đang tắt.
+dbService.clearAllHistory();
+const dsCauAN = questions.slice(0, 10).map(q => q.id);
+dbService.saveAttempt({
+  id: "an1-cu", examType: "random", startTime: new Date(0).toISOString(),
+  endTime: new Date(0).toISOString(), questions: dsCauAN, answers: {}, bookmarks: [], flags: [],
+  isSubmitted: true, score: 0, timeSpent: 300,
+} as any);
+let banGhiCuDocDuoc = true;
+try {
+  learnerModelService.doNhipLamBai();
+  nhipRiengMoiCau();
+  mocNhipChuan(dsCauAN);
+} catch {
+  banGhiCuDocDuoc = false;
+}
+check("Bản ghi lịch sử cũ không có thời gian từng câu vẫn đọc được",
+  banGhiCuDocDuoc,
+  banGhiCuDocDuoc
+    ? "lượt không có answerTimings vẫn chạy qua cả ba đường đo nhịp, không ngoại lệ nào"
+    : "một engine ném lỗi khi gặp bản ghi cũ");
+
+// AN2. Nhịp riêng phải ưu tiên số ĐO TỪNG CÂU, và số đo ấy phải phân hóa được.
+//
+// Điểm mấu chốt: trước đây mọi câu trong cùng một lượt mang CÙNG một con số (phân bổ đều), nên
+// mọi chỉ số suy ra từ thời gian đều mù. Phép kiểm dựng một lượt có câu nhanh 5 giây và câu chậm
+// 60 giây, rồi đòi trung vị phải bám nhóm câu thật chứ không phải trung bình cả lượt.
+dbService.clearAllHistory();
+const thoiGianTungCau: Record<number, number> = {};
+questions.slice(0, 30).forEach((q, i) => { thoiGianTungCau[q.id] = i < 15 ? 5 : 60; });
+dbService.saveAttempt({
+  id: "an2-moi", examType: "random", startTime: new Date(0).toISOString(),
+  endTime: new Date(0).toISOString(), questions: questions.slice(0, 30).map(q => q.id),
+  answers: {}, bookmarks: [], flags: [], isSubmitted: true, score: 0,
+  timeSpent: 15 * 5 + 15 * 60, answerTimings: thoiGianTungCau,
+} as any);
+const nhipTuSoDo = nhipRiengMoiCau();
+// Trung vị của 15 mẫu 5 giây và 15 mẫu 60 giây là 32,5. Trung bình cả lượt là 32,5 giây một câu
+// nên hai con số trùng nhau ở ca này; điều PHẢI khác là số lượng MẪU. Kiểm bằng cách bỏ đi một
+// nửa nhanh: nếu đang đọc từng câu thì trung vị nhảy lên 60, nếu vẫn đọc trung bình lượt thì không.
+dbService.clearAllHistory();
+const chiCauCham: Record<number, number> = {};
+questions.slice(0, 25).forEach(q => { chiCauCham[q.id] = 60; });
+dbService.saveAttempt({
+  id: "an2-cham", examType: "random", startTime: new Date(0).toISOString(),
+  endTime: new Date(0).toISOString(), questions: questions.slice(0, 25).map(q => q.id),
+  answers: {}, bookmarks: [], flags: [], isSubmitted: true, score: 0,
+  // Tổng thời gian cố ý ghi SAI thành 250 giây, tức 10 giây một câu, để phân biệt hai đường đọc.
+  timeSpent: 250, answerTimings: chiCauCham,
+} as any);
+const nhipUuTienSoDo = nhipRiengMoiCau();
+const dungSoDoTungCau = nhipUuTienSoDo !== null && Math.abs(nhipUuTienSoDo - 60) < 0.01;
+check("Nhịp riêng đọc số đo từng câu chứ không đọc tổng thời gian lượt",
+  dungSoDoTungCau,
+  dungSoDoTungCau
+    ? "25 câu đo được 60 giây mỗi câu cho trung vị 60, dù tổng thời gian lượt ghi 10 giây một câu"
+    : `trung vị đo được ${nhipUuTienSoDo}, đáng lẽ 60 giây. Nhịp từ lượt trước: ${nhipTuSoDo}`);
+
+// AN3. Màn làm bài phải chốt đoạn đếm ở CẢ BỐN tình huống đã lường trước.
+//
+// Canh ở nguồn vì đây là logic của trình duyệt, không gọi lại được trong Node. Bốn tình huống:
+// quay lại câu cũ (cộng dồn chứ không ghi đè), chuyển câu bằng phím tắt (chung một đường), tạm
+// dừng đồng hồ, và tab bị ẩn. Thiếu cái cuối thì một lần đi pha cà phê thành 20 phút nghĩ một câu.
+const nguonManBaiAN = readFileSync(path.join(process.cwd(), "src/components/PracticeView.tsx"), "utf8");
+const bonTinhHuong = {
+  "cộng dồn khi quay lại câu cũ": /thoiGianTungCauRef\.current\[maCau\] = \(thoiGianTungCauRef\.current\[maCau\] \|\| 0\) \+ giay/,
+  "chốt theo currentIdx nên phím tắt cũng đi qua": /\[currentIdx, activeQuestion\?\.id, timerActive, exam\.isSubmitted\]/,
+  "dừng khi tạm dừng đồng hồ": /timerActive && document\.visibilityState === "visible"/,
+  "dừng khi tab bị ẩn": /visibilitychange/,
+};
+const thieuTinhHuong = Object.keys(bonTinhHuong).filter(k => !(bonTinhHuong as any)[k].test(nguonManBaiAN));
+check("Đồng hồ từng câu xử đúng cả bốn tình huống đã lường",
+  thieuTinhHuong.length === 0,
+  thieuTinhHuong.length === 0
+    ? "cộng dồn khi quay lại, chung đường với phím tắt, dừng khi tạm dừng, dừng khi tab ẩn"
+    : `thiếu: ${thieuTinhHuong.join("; ")}`);
+
+// AN4. Cây cầu vào tầng trí nhớ phải dùng số đo thật khi có, và lùi về phân bổ đều khi không có.
+//
+// Bất biến 4.9e: `dbService.addOnSubmit` là cây cầu DUY NHẤT, tuyệt đối không mở đường thứ hai.
+const nguonCauNoi = readFileSync(path.join(process.cwd(), "src/services/studentEvolutionEngine.ts"), "utf8");
+const dungSoDoThat = /attempt\.answerTimings \|\| \{\}/.test(nguonCauNoi)
+  && /responseTimeSeconds: layThoiGianCau\(qId\)/.test(nguonCauNoi)
+  && /phanBoDeu/.test(nguonCauNoi);
+check("Cây cầu vào tầng trí nhớ dùng thời gian đo thật, có đường lùi cho bản ghi cũ",
+  dungSoDoThat,
+  dungSoDoThat
+    ? "đọc answerTimings cho từng câu, bản ghi cũ không có thì lùi về phân bổ đều thay vì đọc thành 0"
+    : "chưa nối số đo thật vào, hoặc thiếu đường lùi cho lịch sử cũ");
+
+// AN5. BỘ QUÉT CẢ HỌ: mọi nơi mở đoạn đếm đều phải đi qua cổng, không nơi nào gọi thẳng.
+//
+// VÌ SAO CÓ PHÉP KIỂM NÀY (13/08/2026). AN3 ở trên canh rằng bốn tình huống ĐƯỢC KHAI trong mã,
+// và nó xanh. Nhưng nó xanh trong khi `handleSelectAnswer` vẫn mở đoạn đếm bằng một lời gọi thẳng
+// không qua điều kiện nào. Hệ quả đo được: bấm đáp án lúc đang TẠM DỪNG đồng hồ vẫn mở một đoạn,
+// và đoạn đó bị cộng vào câu khi tạm dừng kết thúc. Tức tình huống 3 được khai là đã xử nhưng thật
+// ra có một cửa sau.
+//
+// Bài học: canh sự TỒN TẠI của một cổng thì không đủ, phải canh rằng KHÔNG AI ĐI VÒNG qua nó.
+// Vì vậy phép kiểm này quét từng lời gọi `batDauDemChoCau` và đòi mỗi lời gọi phải nằm trong tầm
+// ảnh hưởng của `duocDemGio()`. Thêm một cửa sau mới ở bất cứ đâu là đỏ ngay.
+const viTriGoiDemGio: number[] = [];
+for (let i = nguonManBaiAN.indexOf("batDauDemChoCau("); i !== -1; i = nguonManBaiAN.indexOf("batDauDemChoCau(", i + 1)) {
+  // Bỏ qua chính dòng khai báo hàm, đó không phải lời gọi.
+  if (/const\s+$/.test(nguonManBaiAN.slice(Math.max(0, i - 10), i))) continue;
+  viTriGoiDemGio.push(i);
+}
+// Một lời gọi được coi là hợp lệ khi cổng nằm trong CHÍNH ĐỐI SỐ của nó (dạng
+// `duocDemGio() ? maCau : null`), hoặc nằm ở khối bao ngay trên (dạng `if (duocDemGio()) { ... }`).
+// Quét cả hai phía vì hai dạng này đặt cổng ở hai chỗ khác nhau trong văn bản.
+const goiKhongQuaCong = viTriGoiDemGio.filter(i => {
+  const doiSo = nguonManBaiAN.slice(i, nguonManBaiAN.indexOf(")", i) + 1);
+  const khoiBaoTren = nguonManBaiAN.slice(Math.max(0, i - 220), i);
+  return !doiSo.includes("duocDemGio()") && !khoiBaoTren.includes("duocDemGio()");
+});
+check("Không lời gọi nào mở đoạn đếm mà đi vòng qua cổng ba điều kiện",
+  viTriGoiDemGio.length > 0 && goiKhongQuaCong.length === 0,
+  viTriGoiDemGio.length === 0
+    ? "không tìm thấy lời gọi nào, phép kiểm đang rỗng"
+    : goiKhongQuaCong.length === 0
+      ? `cả ${viTriGoiDemGio.length} lời gọi đều nằm dưới duocDemGio()`
+      : `${goiKhongQuaCong.length}/${viTriGoiDemGio.length} lời gọi mở đoạn đếm không qua cổng`);
+
+dbService.clearAllHistory();
+
+// ===========================================================================
 // AK. Đường báo câu hỏi sai, và hiệu lực thật của việc loại bỏ
 // ===========================================================================
 g("AK. Báo câu hỏi sai");

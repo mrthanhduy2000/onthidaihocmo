@@ -29,6 +29,64 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
   
   // Ref to track timeSpent to avoid rendering/updating DB on every single second
   const timeSpentRef = useRef<number>(initialExam.timeSpent);
+
+  /*
+    ĐỒNG HỒ TỪNG CÂU.
+
+    Bốn tình huống phải xử đúng, và cả bốn đều đã làm hỏng phép đo này ở các sản phẩm khác:
+
+    1. QUAY LẠI CÂU CŨ. Thời gian của một câu là TỔNG CÁC ĐOẠN đã nhìn nó, không phải hiệu hai mốc
+       đầu cuối. Người học xem câu 3, nhảy sang câu 7, rồi quay lại câu 3 thì cả hai đoạn đều tính
+       cho câu 3.
+    2. CHUYỂN CÂU BẰNG PHÍM TẮT. Mũi tên, dấu phẩy, dấu chấm đều đi qua cùng một `setCurrentIdx`,
+       nên chốt đoạn ở một `useEffect` theo `currentIdx` là đủ cho mọi đường chuyển. Viết hai đường
+       ghi mốc thì sớm muộn hai đường lệch nhau.
+    3. TẠM DỪNG ĐỒNG HỒ. Khoảng dừng không được tính vào câu nào.
+    4. TAB BỊ ẨN. Không chặn thì một lần đi pha cà phê thành 20 phút suy nghĩ cho một câu, và đó
+       là kiểu nhiễu phá hỏng trung vị mạnh nhất.
+
+    Cất trong `ref` chứ không phải `state`: nó đổi mỗi giây và không có gì trên màn hình đọc nó, nên
+    để trong `state` chỉ tạo ra một lượt dựng lại màn mỗi giây.
+  */
+  const thoiGianTungCauRef = useRef<Record<number, number>>({ ...(initialExam.answerTimings || {}) });
+  /** Mốc bắt đầu đoạn đang đếm, mili giây. `null` khi đang tạm dừng hoặc tab bị ẩn. */
+  const mocBatDauDoanRef = useRef<number | null>(null);
+  /** Mã câu của đoạn đang đếm. */
+  const maCauDangDemRef = useRef<number | null>(null);
+
+  /** Chốt đoạn đang đếm và cộng vào tổng của câu đó. Gọi được nhiều lần, không cộng trùng. */
+  const chotDoanDangDem = () => {
+    const moc = mocBatDauDoanRef.current;
+    const maCau = maCauDangDemRef.current;
+    mocBatDauDoanRef.current = null;
+    if (moc === null || maCau === null) return;
+    const giay = (Date.now() - moc) / 1000;
+    // Bỏ đoạn dưới nửa giây: đó là lúc lướt qua câu chứ không phải đọc nó.
+    if (giay < 0.5) return;
+    thoiGianTungCauRef.current[maCau] = (thoiGianTungCauRef.current[maCau] || 0) + giay;
+  };
+
+  /** Bắt đầu đếm cho một câu. Chốt đoạn cũ trước để không bỏ sót. */
+  const batDauDemChoCau = (maCau: number | null) => {
+    chotDoanDangDem();
+    maCauDangDemRef.current = maCau;
+    mocBatDauDoanRef.current = maCau === null ? null : Date.now();
+  };
+
+  /*
+    MỘT CỔNG DUY NHẤT quyết định đồng hồ từng câu có được chạy hay không.
+
+    VÌ SAO GOM LẠI (13/08/2026). Bản đầu để lời gọi trong `handleSelectAnswer` mở đoạn đếm thẳng,
+    không qua điều kiện nào. Hệ quả đo được: bấm đáp án trong lúc ĐANG TẠM DỪNG đồng hồ vẫn mở một
+    đoạn, và đoạn đó bị cộng vào câu khi tạm dừng kết thúc. Đúng vào tình huống 3 mà chính khối này
+    khai là đã lường. Một cổng đóng, một cửa sau mở, thì cổng ấy không canh được gì.
+  */
+  const duocDemGio = () => timerActive && document.visibilityState === "visible";
+
+  /** Mở đoạn đếm cho một câu, nhưng chỉ khi cổng cho phép. Mọi nơi muốn đếm phải đi qua đây. */
+  const demChoCauNeuDuoc = (maCau: number) => {
+    batDauDemChoCau(duocDemGio() ? maCau : null);
+  };
   // Đánh dấu đã nộp để các effect nền (đồng bộ định kỳ, cleanup khi unmount) KHÔNG
   // vô tình ghi lại bản chưa nộp đè lên bản đã nộp (dùng ref để tránh giá trị exam cũ trong closure).
   const submittedRef = useRef<boolean>(initialExam.isSubmitted);
@@ -74,6 +132,34 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     .filter((q): q is Question => !!q);
 
   const activeQuestion = examQuestions[currentIdx];
+
+  /*
+    BA ĐIỀU KIỆN CÙNG QUYẾT ĐỊNH đồng hồ từng câu có chạy hay không: đã nộp bài chưa, đồng hồ có
+    đang tạm dừng không, và tab có đang hiện không. Gom cả ba vào MỘT effect thay vì ba effect
+    riêng, để không có kẽ hở giữa chúng.
+  */
+  useEffect(() => {
+    if (exam.isSubmitted || !activeQuestion) {
+      chotDoanDangDem();
+      maCauDangDemRef.current = null;
+      return;
+    }
+
+    const capNhatTheoTrangThai = () => {
+      if (duocDemGio()) {
+        if (mocBatDauDoanRef.current === null) batDauDemChoCau(activeQuestion.id);
+      } else {
+        chotDoanDangDem();
+      }
+    };
+
+    demChoCauNeuDuoc(activeQuestion.id);
+    document.addEventListener("visibilitychange", capNhatTheoTrangThai);
+    return () => {
+      document.removeEventListener("visibilitychange", capNhatTheoTrangThai);
+      chotDoanDangDem();
+    };
+  }, [currentIdx, activeQuestion?.id, timerActive, exam.isSubmitted]);
 
   // Giữ hàm chọn đáp án MỚI NHẤT trong một ref, để trình nghe phím không phải gắn lại sau mỗi
   // lần render mà vẫn không bao giờ gọi nhầm bản cũ (đóng gói giá trị cũ của exam).
@@ -235,9 +321,14 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
     // sai khi chấm và xem lại. Đã bỏ hoàn toàn để danh sách câu hỏi giữ nguyên trong suốt bài làm;
     // độ khó thích ứng đã được xử lý ngay từ khâu tạo đề (learningEngine.scoreQuestions).
 
+    // Chốt đoạn đang đếm rồi đếm tiếp ngay, để thời gian tới lúc chọn đáp án được ghi lại kể cả
+    // khi người học ngồi lại trên chính câu đó. Phải đi qua cổng chung, vì bấm đáp án lúc đang
+    // tạm dừng đồng hồ thì khoảng ngồi sau đó KHÔNG được tính vào câu nào.
+    demChoCauNeuDuoc(activeQuestion.id);
     const updated: ExamAttempt = {
       ...exam,
       timeSpent: timeSpentRef.current,
+      answerTimings: { ...thoiGianTungCauRef.current },
       answers: {
         ...exam.answers,
         [activeQuestion.id]: optionKey
@@ -337,9 +428,13 @@ export default function PracticeView({ exam: initialExam, onNavigateHome }: Prac
         }
       });
 
+      // Chốt đoạn cuối TRƯỚC khi dựng bản ghi, nếu không thì thời gian ngồi trên câu cuối cùng bị
+      // mất trắng, và đó thường lại là câu người học nghĩ lâu nhất.
+      chotDoanDangDem();
       const updated: ExamAttempt = {
         ...exam,
         timeSpent: timeSpentRef.current,
+        answerTimings: { ...thoiGianTungCauRef.current },
         isSubmitted: true,
         score: correctCount,
       };

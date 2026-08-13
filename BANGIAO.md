@@ -59,6 +59,85 @@ sao, và còn nợ gì.
 
 ---
 
+### 13/08/2026, ghi thời gian TỪNG CÂU, và một cổng có cửa sau
+
+Giai đoạn 5. Trước lượt này ứng dụng chỉ ghi **tổng thời gian cả lượt**, nên ba chỉ số phải sống
+bằng phân bổ đều: `averageResponseTime` theo khái niệm, `responseTimeImprovement`, và
+`guessingFrequency` vốn phải mượn `estimatedTime` làm mốc, mà trường đó bằng đúng 35,0 giây cho cả
+ba mức khó ở ngân hàng AI sinh. Chia đều rồi đo phân hóa là đo chính phép chia của mình.
+
+Bộ kiểm: **253 lên 258**, không phép kiểm nào biến mất.
+
+#### Đo gì, và bốn tình huống phải xử đúng
+
+`answerTimings?: Record<number, number>` thêm vào `ExamAttempt`, **bắt buộc để tùy chọn** vì mọi bản
+ghi lịch sử cũ không có trường này và phải đọc được nguyên vẹn. Thời gian một câu là **tổng các đoạn
+nhìn nó**, không phải hiệu hai mốc đầu cuối. Bốn tình huống đã lường:
+
+1. Quay lại câu cũ: cộng dồn, không ghi đè.
+2. Chuyển câu bằng phím tắt: chung một đường với bấm chuột, vì effect bám `currentIdx`.
+3. Tạm dừng đồng hồ: khoảng dừng không rơi vào câu nào.
+4. Tab bị ẩn: ngừng đếm. Thiếu điều này thì một lần đi pha cà phê thành 20 phút nghĩ một câu, và
+   đó là kiểu nhiễu phá trung vị mạnh nhất.
+
+Cất trong `ref` chứ không phải `state`: nó đổi mỗi giây và không có gì trên màn hình đọc nó, để
+trong `state` chỉ tạo một lượt dựng lại màn mỗi giây. Đoạn dưới nửa giây bị bỏ, đó là lúc lướt qua
+câu chứ không phải đọc nó.
+
+#### Lỗi đáng ghi nhất: một cổng đóng, một cửa sau mở
+
+Bản đầu gom cả ba điều kiện vào một effect và viết chú thích rằng đã xử đủ bốn tình huống. Phép kiểm
+AN3 quét nguồn, thấy đủ bốn dấu hiệu, và **xanh**. Nhưng `handleSelectAnswer` mở đoạn đếm bằng một
+lời gọi thẳng `batDauDemChoCau(activeQuestion.id)`, không qua điều kiện nào. Hệ quả đo được: bấm đáp
+án trong lúc đang **tạm dừng đồng hồ** vẫn mở một đoạn, và đoạn đó bị cộng vào câu khi tạm dừng kết
+thúc. Đúng vào tình huống 3 mà chính khối mã ấy khai là đã xử.
+
+Sửa: gom điều kiện thành một hàm `duocDemGio()` và một lối vào duy nhất `demChoCauNeuDuoc()`, mọi
+nơi muốn đếm phải đi qua đó.
+
+**Bài học, và nó khái quát hơn ca này**: canh sự TỒN TẠI của một cổng thì không đủ, phải canh rằng
+KHÔNG AI ĐI VÒNG qua nó. AN3 hỏi "trong mã có nhắc tới tab bị ẩn không" và câu trả lời là có, trong
+khi câu hỏi đúng là "có lời gọi nào bỏ qua nó không". Vì vậy AN5 được viết thành **bộ quét cả họ**:
+nó liệt kê từng lời gọi `batDauDemChoCau` và đòi mỗi lời gọi phải nằm trong tầm ảnh hưởng của
+`duocDemGio()`, dù cổng nằm trong chính đối số hay ở khối bao ngay trên. Thêm một cửa sau mới ở bất
+cứ đâu là đỏ ngay.
+
+Chính phép kiểm AN5 cũng sai ở bản đầu: nó chỉ quét ngược lên trước lời gọi, nên bắt nhầm một lời
+gọi lành vốn đặt cổng ngay trong đối số. Phá thử cho ra 2/3 thay vì 1/3, và con số lệch đó là thứ
+lộ ra lỗi. Đây là lần thứ hai trong dự án một phép kiểm mới đỏ vì chính nó sai chứ không phải vì dữ
+liệu sai.
+
+#### Kiểm chứng trên bản chạy thật, không phải suy luận
+
+Lượt đo đầu tiên trong trình duyệt tự động cho kết quả trông như hỏng: dừng cố ý 6 giây ở câu 1 mà
+chỉ ghi 1 giây. Nguyên nhân hóa ra là tab tự động hóa báo `visibilityState: "hidden"` vĩnh viễn, tức
+**cơ chế đang làm đúng việc của nó**, chỉ là môi trường đo lại chính là thứ nó được thiết kế để loại
+bỏ. Ghim `visibilityState` thành hiện hình rồi đo lại.
+
+Phép thử quyết định cho tình huống 3, chọn cách đọc **dấu hiệu** chứ không đọc đồng hồ treo tường
+(vì tab ẩn thì trình duyệt bóp `setTimeout`, mọi số đo theo thời gian chờ đều không tin được): để
+một câu ngồi qua **16 giây tạm dừng**, có bấm đáp án ở giữa. Ghi được **0,896 giây**, đúng phần chạy
+lại sau khi bấm tiếp tục. Với mã cũ, 16 giây đó đã chảy vào câu.
+
+Lượt hoàn chỉnh: đề `due` 10 câu, cả 10 câu đều có số đo, phân hóa từ 1,0 tới 67,1 giây thay vì chia
+đều.
+
+#### Một lệch còn để ngỏ, ghi lại để không ai tưởng là lỗi mới
+
+Trong lượt đo ấy `timeSpent` ghi 15 giây trong khi tổng thời gian từng câu là 246,5 giây. Hai đồng
+hồ chạy bằng hai cơ chế: tổng lượt đếm bằng `setInterval` mỗi giây nên bị trình duyệt bóp khi tab
+ẩn, từng câu đo bằng `Date.now()` nên vẫn đúng. Với tab hiện thì hai số bám nhau. **Chưa có bất biến
+nào ràng tổng từng câu không vượt tổng lượt.** Hiện chưa hại vì mọi nơi tiêu thụ đều dùng trung vị
+(chống nhiễu tốt), nhưng nếu về sau có engine nào chia hai số này cho nhau thì phải dựng ràng buộc
+trước.
+
+#### Cố ý KHÔNG hiển thị gì mới
+
+Chỉ thu dữ liệu. Bất biến 4.9: không hiện con số chưa đủ dày. Việc này **không hồi tố được**, chỉ có
+tác dụng từ lúc bật, nên đặt sớm để dữ liệu kịp dày trước khi Giai đoạn 6 và 7 cần tới.
+
+---
+
 ### 13/08/2026, hàng đợi ôn xếp theo lợi ích cho ngày thi, và thôi bịa ngày thi
 
 Hai giai đoạn trong một ngày: Giai đoạn 4 (gỡ số bịa ở tầng mục tiêu) rồi Giai đoạn 3 (hàng đợi

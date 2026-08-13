@@ -194,6 +194,23 @@ export interface ExamAttempt {
   isSubmitted: boolean;
   score: number; // number of correct answers
   timeSpent: number; // in seconds
+  /**
+   * Số giây đã ở trên TỪNG CÂU, tra theo mã câu.
+   *
+   * BẮT BUỘC để tùy chọn. Mọi bản ghi lịch sử có trước 13/08/2026 không có trường này, và nếu để
+   * bắt buộc thì mọi engine đọc lịch sử cũ sẽ nổ.
+   *
+   * Vì sao cần: trước đây ứng dụng CHỈ ghi tổng thời gian cả lượt, nên `averageResponseTime` theo
+   * khái niệm là chia đều chứ không phải đo, `responseTimeImprovement` chỉ có một giá trị duy
+   * nhất, và phát hiện đoán mò phải dựa vào `estimatedTime` vốn bằng đúng 35,0 giây cho cả ba mức
+   * khó trên 280 câu.
+   *
+   * Đã cân nhắc phân bổ tổng thời gian theo `estimatedTime` và BÁC BỎ: trường đó không bám độ
+   * khó, chia theo nó chỉ tạo phân hóa giả.
+   *
+   * Việc này KHÔNG hồi tố được, chỉ có tác dụng từ lúc bật.
+   */
+  answerTimings?: Record<number, number>;
   examSpecification?: ExamSpecification;
   examReviewResult?: ExamReviewResult;
 }

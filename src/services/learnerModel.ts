@@ -563,16 +563,28 @@ export function mocNhipChuan(dsCau: number[]): number {
  */
 export function nhipRiengMoiCau(): number | null {
   const lichSu = dbService.getHistory().filter(a => a.isSubmitted);
-  const nhipTungLuot: number[] = [];
+  const mauNhip: number[] = [];
   let tongCau = 0;
   for (const luot of lichSu) {
     const soCau = (luot.questions || []).length;
-    if (soCau === 0 || !luot.timeSpent || luot.timeSpent <= 0) continue;
-    nhipTungLuot.push(luot.timeSpent / soCau);
+    if (soCau === 0) continue;
+
+    // Ưu tiên số ĐO TỪNG CÂU khi có (từ 13/08/2026). Mỗi câu là một mẫu riêng, nên trung vị bám
+    // sát nhịp thật hơn hẳn so với trung vị của các nhịp trung bình theo lượt.
+    const doDuoc = Object.values(luot.answerTimings || {}).filter(v => typeof v === "number" && v > 0);
+    if (doDuoc.length > 0) {
+      mauNhip.push(...doDuoc);
+      tongCau += doDuoc.length;
+      continue;
+    }
+
+    // Bản ghi cũ chỉ có tổng thời gian: một mẫu cho cả lượt.
+    if (!luot.timeSpent || luot.timeSpent <= 0) continue;
+    mauNhip.push(luot.timeSpent / soCau);
     tongCau += soCau;
   }
-  if (tongCau < TOI_THIEU_CAU_LAY_NHIP_RIENG || nhipTungLuot.length === 0) return null;
-  const daSap = nhipTungLuot.slice().sort((a, b) => a - b);
+  if (tongCau < TOI_THIEU_CAU_LAY_NHIP_RIENG || mauNhip.length === 0) return null;
+  const daSap = mauNhip.slice().sort((a, b) => a - b);
   const giua = Math.floor(daSap.length / 2);
   return daSap.length % 2 === 1 ? daSap[giua] : (daSap[giua - 1] + daSap[giua]) / 2;
 }

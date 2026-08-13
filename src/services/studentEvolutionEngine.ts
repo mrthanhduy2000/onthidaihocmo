@@ -550,11 +550,22 @@ dbService.addOnSubmit((attempt) => {
   const totalAns = Object.keys(answers).length;
   if (totalAns === 0) return;
 
-  // Thời gian mỗi câu là PHÂN BỔ ĐỀU, không phải đo được. Ứng dụng chỉ ghi tổng thời gian của
-  // cả lượt, không ghi thời gian từng câu. Đã cân nhắc phân bổ theo `estimatedTime` cho có
-  // phân hóa, nhưng đo lại thì trường đó gần như KHÔNG bám độ khó (trung bình 34,7s cho câu
-  // Dễ, 35,3s cho Trung bình, 35,2s cho Khó), nên chia theo nó chỉ tạo phân hóa giả.
-  const timeSpentPerQ = Math.max(5, Math.round((attempt.timeSpent || 0) / Math.max(1, totalAns)));
+  // THỜI GIAN TỪNG CÂU, đo thật từ 13/08/2026.
+  //
+  // Trước đó chỉ có tổng thời gian cả lượt nên phải PHÂN BỔ ĐỀU, tức mọi câu trong một lượt đều
+  // mang cùng một con số và mọi chỉ số suy ra từ nó đều không phân hóa được. Đã cân nhắc phân bổ
+  // theo `estimatedTime` cho có vẻ phân hóa và BÁC BỎ, vì trường đó bằng đúng 35,0 giây cho cả ba
+  // mức khó trên 280 câu; chia theo nó chỉ tạo phân hóa giả.
+  //
+  // Bản ghi CŨ không có `answerTimings`, và đó là phần lớn lịch sử hiện có. Vẫn phải lùi về phân
+  // bổ đều cho chúng, nếu không thì mọi lượt trước ngày bật tính năng sẽ bị đọc thành 0 giây, tức
+  // biến toàn bộ lịch sử cũ thành bằng chứng đoán mò.
+  const thoiGianDoDuoc = attempt.answerTimings || {};
+  const phanBoDeu = Math.max(5, Math.round((attempt.timeSpent || 0) / Math.max(1, totalAns)));
+  const layThoiGianCau = (qId: number): number => {
+    const doDuoc = thoiGianDoDuoc[qId];
+    return typeof doDuoc === "number" && doDuoc > 0 ? Math.round(doDuoc) : phanBoDeu;
+  };
 
   // Nhịp của CHÍNH lượt này so với tổng thời gian ước tính của các câu trong đề. Dùng lại
   // đúng ngưỡng của `doNhipLamBai` để cả dự án chỉ có một định nghĩa "làm nhanh bất thường".
@@ -591,7 +602,7 @@ dbService.addOnSubmit((attempt) => {
       question: q,
       studentAnswer: String(answer),
       correctAnswer: q.correctAnswer,
-      responseTimeSeconds: timeSpentPerQ,
+      responseTimeSeconds: layThoiGianCau(qId),
       retryCount: 0,
       confidence: doTuTin,
       guessDetection: lamVoiVang,
@@ -611,7 +622,7 @@ dbService.addOnSubmit((attempt) => {
         wasCorrect: isCorrect,
         confidence: doTuTin,
         coTinHieuTuTin,
-        responseTimeSeconds: timeSpentPerQ,
+        responseTimeSeconds: layThoiGianCau(qId),
         teachingStrategy: NHAN_TU_LAM_BAI,
         explanationLength: "balanced",
         detectedMisconception: bayHieuSai,
