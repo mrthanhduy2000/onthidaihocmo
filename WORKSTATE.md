@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 13/08/2026, **XONG Giai đoạn 1 tới 6**. Có chế độ nhớ lại chủ động, và lịch ôn thôi mời ôn dồn.
+**Cập nhật lần cuối**: 13/08/2026, **XONG Giai đoạn 1 tới 6, Giai đoạn 7 làm được phần không cần AI**.
 
 ---
 
@@ -14,12 +14,12 @@ quyết định.
 
 | Mục | Giá trị |
 |---|---|
-| **Current Objective** | Đợt 8 giai đoạn, còn Giai đoạn 7, 8 |
-| **Current Milestone** | Nhớ lại chủ động chạy song song trắc nghiệm; hiệu ứng giãn cách đã tính đủ |
-| **Current Phase** | Giai đoạn 0 tới 6 XONG. Tiếp theo: Giai đoạn 7, nạp môn mới |
-| **Completed %** | 7 trên 9 khối việc |
+| **Current Objective** | Đợt 8 giai đoạn, còn Giai đoạn 8 và phần thuật sĩ của Giai đoạn 7 |
+| **Current Milestone** | Tạo được môn mới từ giao diện; ranh giới giữa các môn đã kín |
+| **Current Phase** | Giai đoạn 0 tới 6 XONG, 7 xong phần đo được. Tiếp theo: Giai đoạn 8 |
+| **Completed %** | 8 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **268/268 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **274/274 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 

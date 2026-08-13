@@ -66,6 +66,10 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView, onO
 
   // Smart Search Modal
   const [showSearchModal, setShowSearchModal] = useState(false);
+  // Ô tạo môn mới trong tab Môn học. Mở tại chỗ chứ không bật hộp thoại: đây là một ô nhập một
+  // dòng, dựng hộp thoại cho nó là nặng hơn việc nó làm.
+  const [dangTaoMon, setDangTaoMon] = useState(false);
+  const [tenMonMoi, setTenMonMoi] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Smart Import Modal
@@ -1055,6 +1059,71 @@ Danh sách môn học
                 </div>
               );
             })}
+          </div>
+
+          {/*
+            CỬA VÀO CHO VIỆC TẠO MÔN MỚI.
+
+            ĐO ĐƯỢC NGÀY 13/08/2026, và kết quả sắc hơn bản kế hoạch dự đoán. Kế hoạch cho rằng
+            luồng nạp môn "rải rác qua nhiều chỗ" nên cần gom lại thành một thuật sĩ. Thực tế:
+            `dbService.addSubject` có **0 nơi gọi** trong toàn bộ `src/`, `deleteSubject` có 0 nơi
+            gọi ở bất cứ đâu, và tab này chỉ liệt kê môn chứ không có nút tạo. Tức chi phí nạp một
+            môn mới từ giao diện không phải "một tuần" mà là VÔ HẠN: phải sửa mã hoặc gọi thẳng
+            dịch vụ từ bảng điều khiển trình duyệt.
+
+            Cùng một họ lỗi với "màn hình xây xong không có cửa" mà AK1 canh, chỉ khác là ở tầng
+            dịch vụ chứ không ở tầng màn hình.
+
+            Dựng đúng cái cửa, không dựng thuật sĩ. Các bước sau (dán tài liệu, sinh câu hỏi từng
+            chương) đã có sẵn ở "Thêm tài liệu" và chạy được ngay sau khi môn tồn tại.
+          */}
+          <div className="pt-2 border-t border-border-primary/70 space-y-2">
+            {!dangTaoMon ? (
+              <button
+                onClick={() => setDangTaoMon(true)}
+                className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
+              >
+                Thêm môn học mới
+              </button>
+            ) : (
+              <div className="space-y-2.5 pt-1">
+                <label className="block space-y-1">
+                  <span className="text-xs font-semibold text-text-muted">Tên môn học</span>
+                  <input
+                    value={tenMonMoi}
+                    onChange={e => setTenMonMoi(e.target.value)}
+                    placeholder="Ví dụ: Thống kê ứng dụng"
+                    className="w-full bg-bg-surface border border-border-primary rounded px-3 h-9 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand-info"
+                  />
+                </label>
+                <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem]">
+                  Tạo xong sẽ chuyển thẳng sang môn mới. Bước tiếp theo là bấm "Thêm tài liệu" để
+                  dán nội dung từng chương và sinh câu hỏi.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const ten = tenMonMoi.trim();
+                      if (!ten) return;
+                      const monMoi = dbService.addSubject(ten, "");
+                      setTenMonMoi("");
+                      setDangTaoMon(false);
+                      handleSubjectSwitch(monMoi.id);
+                    }}
+                    disabled={tenMonMoi.trim().length === 0}
+                    className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot disabled:opacity-40 disabled:cursor-not-allowed text-sm rounded transition cursor-pointer"
+                  >
+                    Tạo môn
+                  </button>
+                  <button
+                    onClick={() => { setDangTaoMon(false); setTenMonMoi(""); }}
+                    className="px-4 h-9 bg-bg-card border border-border-primary hover:border-text-muted text-text-primary text-sm rounded transition cursor-pointer"
+                  >
+                    Thôi
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

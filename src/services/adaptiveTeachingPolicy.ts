@@ -5,7 +5,7 @@
 
 import { AdaptiveMemory, studentModelService, StudentModel } from "./learnerModel";
 import { PedagogicalEvaluation, pedagogicalEvaluationEngine } from "./pedagogicalEvaluationEngine";
-import { dangKyDonDuLieuSuyRa } from "./db";
+import { dangKyDonDuLieuSuyRa, dbService } from "./db";
 
 export interface PolicyAuditEntry {
   id: string;
@@ -22,7 +22,9 @@ export interface AdaptivePolicyResult {
   updatedAdaptiveMemory: AdaptiveMemory;
 }
 
-const POLICY_AUDIT_LOG_KEY = "poly_econ_policy_audit_log";
+// Gắn mã môn từ 13/08/2026. Nhật ký chọn phong cách dạy của môn này không được lẫn sang môn khác,
+// vì chính nó là đầu vào để chọn phong cách dạy cho lượt sau.
+const POLICY_AUDIT_LOG_KEY = () => `poly_econ_policy_audit_log_${dbService.getActiveSubjectId()}`;
 const MAX_AUDIT_LOGS = 50;
 
 export const adaptiveTeachingPolicy = {
@@ -127,7 +129,7 @@ export const adaptiveTeachingPolicy = {
   },
 
   getAuditLog(): PolicyAuditEntry[] {
-    const raw = localStorage.getItem(POLICY_AUDIT_LOG_KEY);
+    const raw = localStorage.getItem(POLICY_AUDIT_LOG_KEY());
     if (raw) {
       try {
         return JSON.parse(raw);
@@ -144,7 +146,7 @@ export const adaptiveTeachingPolicy = {
     if (logs.length > MAX_AUDIT_LOGS) {
       logs.pop();
     }
-    localStorage.setItem(POLICY_AUDIT_LOG_KEY, JSON.stringify(logs));
+    localStorage.setItem(POLICY_AUDIT_LOG_KEY(), JSON.stringify(logs));
   }
 };
 
@@ -152,5 +154,5 @@ export const adaptiveTeachingPolicy = {
 // LƯU Ý: khóa này KHÔNG gắn mã môn, tức nó gộp chung mọi môn. Đây là thiếu sót có sẵn từ
 // trước, ghi lại ở đây để người sau biết mà tách khi cần.
 dangKyDonDuLieuSuyRa("policyAudit", () => {
-  localStorage.removeItem(POLICY_AUDIT_LOG_KEY);
+  localStorage.removeItem(POLICY_AUDIT_LOG_KEY());
 });

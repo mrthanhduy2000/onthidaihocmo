@@ -13,7 +13,7 @@ import {
   BlueprintItem,
   AdaptiveMetadata
 } from "../data/customer_behavior_kb";
-import { questions, topics, chapters, questionMap, dbService, dangKyDoThiTriThuc } from "./db";
+import { questions, topics, chapters, questionMap, dbService, dangKyDoThiTriThuc, maMonDangNap } from "./db";
 import { Question } from "../types";
 
 // Re-export core types
@@ -67,6 +67,28 @@ export const kbService = {
     if (subjectId === "customer_behavior") {
       return cbKnowledgeGraph;
     }
+
+    /*
+      CHỈ TỔNG HỢP ĐƯỢC CHO MÔN ĐANG MỞ, và đây là chỗ phải cẩn thận nhất cả hàm.
+
+      `questions` là mảng cấp mô đun, bị `loadSubject` dọn sạch rồi nạp lại mỗi lần đổi môn, nên
+      nó luôn là câu hỏi của môn ĐANG MỞ chứ không phải của `subjectId` truyền vào. Bản trước tổng
+      hợp thẳng từ nó rồi gắn mã `synth_${subjectId}_N...`, tức hỏi đồ thị của môn A trong lúc môn
+      B đang mở thì nhận về các nút dựng từ câu hỏi môn B nhưng mang tên môn A.
+
+      Phân loại theo AGENTS mục 3: đây KHÔNG phải loại "với môn khác thì trả về ít hơn" (loại ghi
+      nợ được), mà là loại "trả về của môn SAI" (loại phải sửa ngay), vì nó nói dối mà không có dấu
+      hiệu gì. Với hai môn thì chưa lộ do môn biên soạn tay đã thoát ở nhánh trên; với bốn môn học
+      kỳ sau thì lộ ngay.
+
+      So với `maMonDangNap` chứ KHÔNG so với mã môn đang mở: `loadSubject` nạp dữ liệu còn
+      `setActiveSubjectId` đổi mã môn, hai việc tách rời và có nơi gọi cái này mà không gọi cái
+      kia. So nhầm mốc thì chặn luôn cả những lượt hỏi hợp lệ.
+
+      Trả mảng rỗng thay vì đoán. Nơi gọi đã có sẵn nhánh xử lý đồ thị rỗng, và thiếu dữ liệu thì
+      không suy diễn là nếp chung của dự án.
+    */
+    if (subjectId !== maMonDangNap) return [];
 
     // Dynamic Synthesis for Subject Independence
     const subjectQuestions = questions.filter(q => q.questionType === "multiple-choice" || q.questionType === undefined || q.questionType as any === "multiple-choice");

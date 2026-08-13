@@ -145,7 +145,9 @@ export interface AIOrchestratorStats {
   errorCount: number;
 }
 
-const ORCHESTRATOR_STATS_KEY = "poly_econ_orchestrator_stats";
+// Gắn mã môn từ 13/08/2026. Số lượt gọi AI và chi phí ước tính là số liệu CỦA MỘT MÔN; gộp chung
+// thì màn quan trắc báo chi phí của cả bốn môn cho môn đang xem.
+const ORCHESTRATOR_STATS_KEY = () => `poly_econ_orchestrator_stats_${dbService.getActiveSubjectId()}`;
 
 export const studentModelService = {
   /**
@@ -1257,7 +1259,7 @@ export const learnerModelService = {
    * Orchestrator Stats / AI Telemetry persistence
    */
   getOrchestratorStats(): AIOrchestratorStats {
-    const raw = localStorage.getItem(ORCHESTRATOR_STATS_KEY);
+    const raw = localStorage.getItem(ORCHESTRATOR_STATS_KEY());
     if (!raw) {
       return {
         apiCallsCount: 0,
@@ -1285,7 +1287,7 @@ export const learnerModelService = {
   },
 
   saveOrchestratorStats(stats: AIOrchestratorStats): void {
-    localStorage.setItem(ORCHESTRATOR_STATS_KEY, JSON.stringify(stats));
+    localStorage.setItem(ORCHESTRATOR_STATS_KEY(), JSON.stringify(stats));
   },
 
   logAiCall(tokens: number, cost: number, responseTimeMs: number, cacheHit: boolean = false): void {

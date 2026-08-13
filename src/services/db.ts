@@ -164,7 +164,21 @@ export function suyRaMucBloom(q: Question): string {
 }
 
 // Load subject data in-place
+/**
+ * Mã môn đang thật sự NẰM TRONG các mảng `questions`, `topics`, `chapters`.
+ *
+ * Khác `activeSubjectId`: `loadSubject` nạp dữ liệu, `setActiveSubjectId` đổi mã môn, hai việc
+ * tách rời và có nơi gọi cái này mà không gọi cái kia. Nơi nào suy ra kết quả TỪ các mảng ấy thì
+ * phải so với mốc này, không được so với mã môn đang mở.
+ *
+ * Đo được ngày 13/08/2026: `kbService.getKnowledgeGraph` tổng hợp nút từ `questions` rồi gắn mã
+ * `synth_${subjectId}_...`, nên hỏi đồ thị môn A trong lúc mảng đang chứa câu hỏi môn B sẽ nhận
+ * về nút của môn B mang tên môn A.
+ */
+export let maMonDangNap: string = "";
+
 export function loadSubject(subjectId: string) {
+  maMonDangNap = subjectId;
   questions.length = 0;
   topics.length = 0;
   chapters.length = 0;

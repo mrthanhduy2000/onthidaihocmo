@@ -7,7 +7,7 @@ import { LearningPlan } from "./learningPlanner";
 import { TeachingDecision } from "./teachingDecisionEngine";
 import { StudentModel } from "./learnerModel";
 import { Question } from "../types";
-import { dangKyDonDuLieuSuyRa } from "./db";
+import { dangKyDonDuLieuSuyRa, dbService } from "./db";
 
 export interface StrategyStats {
   strategyName: string;
@@ -53,8 +53,18 @@ export interface PedagogicalEvaluation {
   };
 }
 
-const STRATEGY_STATS_KEY = "poly_econ_pedagogical_strategy_stats";
-const EVALUATION_HISTORY_KEY = "poly_econ_pedagogical_evaluation_history";
+/*
+  GẮN MÃ MÔN, sửa ngày 13/08/2026.
+
+  Hai khóa này trước đây dùng chung cho MỌI môn. Với hai môn thì chưa lộ vì một môn đã đóng, nhưng
+  đây là kho luyện thi nhiều môn và học kỳ sau có bốn môn cùng lúc: lịch sử chấm sư phạm của môn
+  Thống kê sẽ chảy vào bảng hiệu quả chiến lược của môn Hành vi khách hàng, rồi
+  `adaptiveTeachingPolicy` chọn phong cách dạy cho môn này dựa trên kết quả của môn kia.
+
+  Phân loại theo AGENTS mục 3: loại "trả về của môn SAI", phải sửa ngay chứ không ghi nợ được.
+*/
+const STRATEGY_STATS_KEY = () => `poly_econ_pedagogical_strategy_stats_${dbService.getActiveSubjectId()}`;
+const EVALUATION_HISTORY_KEY = () => `poly_econ_pedagogical_evaluation_history_${dbService.getActiveSubjectId()}`;
 const MAX_HISTORY = 100;
 
 export const pedagogicalEvaluationEngine = {
@@ -290,7 +300,7 @@ export const pedagogicalEvaluationEngine = {
   },
 
   getStrategyStats(): Record<string, StrategyStats> {
-    const raw = localStorage.getItem(STRATEGY_STATS_KEY);
+    const raw = localStorage.getItem(STRATEGY_STATS_KEY());
     // `averageSessionCompletion` khởi tạo bằng 0, KHÔNG phải 100.
     //
     // Bản cũ đặt 100 cho cả bảy chiến lược trong khi `totalInteractions` bằng 0, tức khẳng định
@@ -355,11 +365,11 @@ export const pedagogicalEvaluationEngine = {
       averageSessionCompletion: 100
     };
 
-    localStorage.setItem(STRATEGY_STATS_KEY, JSON.stringify(stats));
+    localStorage.setItem(STRATEGY_STATS_KEY(), JSON.stringify(stats));
   },
 
   getEvaluationHistory(): PedagogicalEvaluation[] {
-    const raw = localStorage.getItem(EVALUATION_HISTORY_KEY);
+    const raw = localStorage.getItem(EVALUATION_HISTORY_KEY());
     if (raw) {
       try {
         return JSON.parse(raw);
@@ -376,13 +386,13 @@ export const pedagogicalEvaluationEngine = {
     if (history.length > MAX_HISTORY) {
       history.pop();
     }
-    localStorage.setItem(EVALUATION_HISTORY_KEY, JSON.stringify(history));
+    localStorage.setItem(EVALUATION_HISTORY_KEY(), JSON.stringify(history));
   }
 };
 
 // Lịch sử chấm sư phạm và bảng hiệu quả chiến lược đều suy ra từ lịch sử học.
-// LƯU Ý: hai khóa này KHÔNG gắn mã môn, xem chú thích cùng loại ở adaptiveTeachingPolicy.
+// Từ 13/08/2026 hai khóa này ĐÃ gắn mã môn, nên chỉ dọn của môn đang mở.
 dangKyDonDuLieuSuyRa("pedagogicalEvaluation", () => {
-  localStorage.removeItem(EVALUATION_HISTORY_KEY);
-  localStorage.removeItem(STRATEGY_STATS_KEY);
+  localStorage.removeItem(EVALUATION_HISTORY_KEY());
+  localStorage.removeItem(STRATEGY_STATS_KEY());
 });

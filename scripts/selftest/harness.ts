@@ -4149,6 +4149,159 @@ check("Mọi loại đề đều có nhãn tiếng Việt, không loại nào l�
 dbService.clearAllHistory();
 
 // ===========================================================================
+// AP. Nạp môn mới, và ranh giới giữa các môn
+// ===========================================================================
+g("AP. Ranh giới giữa các môn");
+
+// AP1. Hỏi đồ thị của môn KHÁC môn đang mở thì không được trả về nút của môn đang mở.
+//
+// ĐO ĐƯỢC NGÀY 13/08/2026. `kbService.getKnowledgeGraph(subjectId)` tổng hợp nút từ mảng
+// `questions` cấp mô đun, mà mảng ấy bị `loadSubject` dọn rồi nạp lại mỗi lần đổi môn, tức nó
+// luôn là câu hỏi của môn ĐANG MỞ. Bản trước gắn mã `synth_${subjectId}_N...` lên chính các nút
+// ấy, nên hỏi đồ thị môn A trong lúc môn B đang mở sẽ nhận về nút dựng từ câu hỏi môn B mang tên
+// môn A.
+//
+// Phân loại theo AGENTS mục 3: KHÔNG phải loại "trả về ít hơn" (ghi nợ được) mà là loại "trả về
+// của môn SAI" (phải sửa ngay), vì nó nói dối mà không có dấu hiệu gì.
+const monDangMoAP = dbService.getActiveSubjectId();
+const doThiMonLa = kbService.getKnowledgeGraph("mot_mon_khong_ton_tai_ap1");
+const doThiMonDangMo = kbService.getKnowledgeGraph(monDangMoAP);
+check("Hỏi đồ thị tri thức của môn khác không trả về nút của môn đang mở",
+  doThiMonLa.length === 0 && doThiMonDangMo.length > 0,
+  doThiMonLa.length > 0
+    ? `trả về ${doThiMonLa.length} nút cho một môn chưa nạp, dựng từ câu hỏi của môn đang mở`
+    : `môn lạ trả 0 nút, môn đang mở vẫn trả ${doThiMonDangMo.length} nút`);
+
+// AP2. Môn tự tạo PHẢI có đồ thị tri thức khác rỗng, và mọi nút phải mang cờ nút tổng hợp.
+//
+// Đây là điều kiện cần để hàng đợi ôn (Giai đoạn 3) và chế độ nhớ lại (Giai đoạn 6) chạy được cho
+// môn mới. Cờ `laNutTongHop` là ranh giới đã chốt: nút sinh tự động dùng để XẾP LỊCH ÔN được,
+// nhưng KHÔNG được dùng làm bằng chứng học thuật.
+
+const cauThuAP: any[] = [1, 2, 3].map(i => ({
+  id: 900000 + i,
+  chapterId: 1,
+  topicId: "AP_T1",
+  question: `Câu hỏi thử số ${i} cho môn tự tạo, đủ dài để không bị lọc chất lượng.`,
+  options: { a: "Phương án a thử nghiệm", b: "Phương án b thử nghiệm", c: "Phương án c thử nghiệm", d: "Phương án d thử nghiệm" },
+  correctAnswer: "a",
+  explanation: `Lời giải thử số ${i}, đủ dài để bộ tổng hợp đồ thị rút được định nghĩa từ đây.`,
+  difficulty: "Trung bình",
+  knowledgeMapping: [`Khái niệm thử ${i <= 2 ? 1 : 2}`],
+  questionType: "multiple-choice",
+}));
+// `addSubject` tự sinh mã môn, nên phải lấy mã nó trả về chứ không được tự đặt.
+const maMonThuAP = dbService.addSubject("Môn thử AP", "Môn dựng trong bộ kiểm").id;
+dbService.addQuestionsToSubject(maMonThuAP, cauThuAP, [{ id: 1, title: "Chương thử" } as any], [{ id: "AP_T1", chapterId: 1, title: "Chủ đề thử" } as any]);
+dbService.setActiveSubjectId(maMonThuAP);
+loadSubject(maMonThuAP);
+const doThiMonMoi = kbService.getKnowledgeGraph(maMonThuAP);
+const nutThieuCo = doThiMonMoi.filter(n => !n.laNutTongHop);
+check("Môn tự tạo có đồ thị tri thức khác rỗng, mọi nút đều mang cờ nút tổng hợp",
+  doThiMonMoi.length > 0 && nutThieuCo.length === 0,
+  doThiMonMoi.length === 0
+    ? "môn mới không có nút nào, hàng đợi ôn và chế độ nhớ lại đều không chạy được"
+    : nutThieuCo.length > 0
+      ? `${nutThieuCo.length}/${doThiMonMoi.length} nút sinh tự động KHÔNG mang cờ, có thể bị dùng làm bằng chứng học thuật`
+      : `${doThiMonMoi.length} nút sinh tự động, nút nào cũng có cờ`);
+
+// AP3. Nút TỔNG HỢP không được lọt vào chỗ dùng làm bằng chứng học thuật.
+const canhBaoTuNutTongHop = cauThuAP
+  .map(q => kbService.layCanhBaoBayHocThuat(maMonThuAP, q as any))
+  .filter(Boolean);
+check("Nút sinh tự động không được dùng làm bằng chứng học thuật",
+  canhBaoTuNutTongHop.length === 0,
+  canhBaoTuNutTongHop.length === 0
+    ? "bẫy học thuật trả null cho mọi câu của môn sinh tự động, đúng ranh giới đã chốt"
+    : `${canhBaoTuNutTongHop.length} câu nhận được cảnh báo học thuật dựng từ chuỗi mẫu`);
+
+// AP4. BỘ QUÉT CẢ HỌ: mọi khóa lưu trữ mang dữ liệu CỦA MỘT MÔN đều phải gắn mã môn.
+//
+// Đây là phép kiểm giá trị nhất nhóm này. Đo ngày 13/08/2026: bốn khóa còn dùng chung cho mọi môn,
+// trong đó `poly_econ_pedagogical_*` và `poly_econ_policy_audit_log` là đầu vào để chọn phong cách
+// dạy, nên lịch sử chấm của môn Thống kê sẽ điều khiển cách dạy môn Hành vi khách hàng. Với hai
+// môn chưa lộ, với bốn môn học kỳ sau thì lộ ngay.
+//
+// Danh sách miễn trừ phải nêu ĐÍCH DANH và có lý do, không được để mở.
+const KHOA_DUNG_CHUNG_CO_LY_DO = new Set([
+  "poly_econ_active_subject_id",   // chính nó cho biết môn nào đang mở
+  "poly_econ_custom_subjects",     // danh mục các môn, không thuộc môn nào
+  "poly_econ_archived_subjects",   // danh mục môn đã đóng
+  "poly_econ_settings",            // thiết lập giao diện, dùng chung là đúng chủ ý
+  "poly_econ_time_offset",         // lệch giờ máy, không liên quan môn học
+  "poly_econ_exam_submitted",      // tên sự kiện trình duyệt, không phải khóa lưu trữ
+  "poly_econ_last_hero_action_type", // trạng thái giao diện tạm, không phải dữ liệu học
+  "poly_econ_unfinished_session",  // khóa CŨ, chỉ còn được xóa đi để dọn tàn dư
+]);
+const khoaTimThay = new Set<string>();
+const thuMucDichVu = path.join(process.cwd(), "src/services");
+readdirSync(thuMucDichVu).filter(f => f.endsWith(".ts")).forEach(f => {
+  const src = readFileSync(path.join(thuMucDichVu, f), "utf8");
+  // Chỉ bắt khóa viết dưới dạng chuỗi ĐÓNG, tức không có phần ghép mã môn phía sau.
+  const re = /["'](poly_econ_[a-z_]+)["']/g;
+  for (let m = re.exec(src); m; m = re.exec(src)) khoaTimThay.add(m[1]);
+});
+const khoaThieuMaMon = [...khoaTimThay].filter(k => !KHOA_DUNG_CHUNG_CO_LY_DO.has(k) && !k.endsWith("_"));
+check("Mọi khóa lưu trữ mang dữ liệu của một môn đều gắn mã môn",
+  khoaTimThay.size > 0 && khoaThieuMaMon.length === 0,
+  khoaTimThay.size === 0
+    ? "không quét ra khóa nào, phép kiểm đang rỗng"
+    : khoaThieuMaMon.length === 0
+      ? `${khoaTimThay.size} khóa, ${KHOA_DUNG_CHUNG_CO_LY_DO.size} khóa dùng chung có lý do nêu đích danh`
+      : `thiếu mã môn: ${khoaThieuMaMon.join(", ")}`);
+
+// AP5. Đổi qua đổi lại giữa hai môn thì số liệu KHÔNG được lẫn.
+//
+// Chạy trên engine thật: làm bài ở môn thử, rồi quay về môn chính và kiểm rằng thống kê của môn
+// chính không nhận thêm gì.
+const deMonThu = aiService.generateExam({ type: "sequential", count: 3 });
+deMonThu.answers = {};
+deMonThu.questions.forEach(id => { const qq = questionMap.get(id); if (qq) deMonThu.answers[id] = qq.correctAnswer; });
+deMonThu.isSubmitted = true;
+dbService.saveAttempt(deMonThu);
+const daGiaiMonThu = dbService.getStatistics().totalSolved;
+
+dbService.setActiveSubjectId(monDangMoAP);
+loadSubject(monDangMoAP);
+const daGiaiMonChinh = dbService.getStatistics().totalSolved;
+check("Đổi môn thì thống kê không lẫn sang nhau",
+  daGiaiMonThu > 0 && daGiaiMonChinh === 0,
+  daGiaiMonThu === 0
+    ? "môn thử không ghi được lượt nào, phép kiểm đang rỗng"
+    : `môn thử ${daGiaiMonThu} câu đã giải, môn chính vẫn ${daGiaiMonChinh}`);
+
+// AP6. BỘ QUÉT CẢ HỌ: việc quản lý môn học phải có CỬA trên giao diện.
+//
+// ĐO ĐƯỢC NGÀY 13/08/2026, và kết quả sắc hơn bản kế hoạch dự đoán. Kế hoạch cho rằng luồng nạp
+// môn "rải rác qua nhiều chỗ" nên cần gom thành một thuật sĩ. Thực tế `dbService.addSubject` có
+// **0 nơi gọi** trong toàn bộ `src/`, nên chi phí nạp một môn mới từ giao diện không phải "một
+// tuần" mà là VÔ HẠN: phải sửa mã hoặc gọi thẳng dịch vụ từ bảng điều khiển trình duyệt.
+//
+// Cùng họ với "màn hình xây xong không có cửa" mà AK1 canh, chỉ khác là ở tầng DỊCH VỤ. AK1 quét
+// `currentView`, nên nó không thể thấy một hàm dịch vụ không ai gọi. Phép kiểm này bịt khoảng đó.
+const HAM_QUAN_LY_MON_PHAI_CO_CUA = ["addSubject"];
+const nguonGiaoDien: string[] = [];
+["src/components", "src"].forEach(thuMuc => {
+  const duongDan = path.join(process.cwd(), thuMuc);
+  readdirSync(duongDan, { withFileTypes: true })
+    .filter(e => e.isFile() && (e.name.endsWith(".tsx") || e.name.endsWith(".ts")))
+    .forEach(e => nguonGiaoDien.push(readFileSync(path.join(duongDan, e.name), "utf8")));
+});
+const hamKhongCoCua = HAM_QUAN_LY_MON_PHAI_CO_CUA.filter(
+  ten => !nguonGiaoDien.some(src => new RegExp(`dbService\\.${ten}\\s*\\(`).test(src))
+);
+check("Việc tạo môn học mới có cửa trên giao diện, không chỉ có ở tầng dịch vụ",
+  nguonGiaoDien.length > 0 && hamKhongCoCua.length === 0,
+  nguonGiaoDien.length === 0
+    ? "không đọc được file giao diện nào, phép kiểm đang rỗng"
+    : hamKhongCoCua.length === 0
+      ? `${HAM_QUAN_LY_MON_PHAI_CO_CUA.length} hàm quản lý môn đều có nơi gọi từ giao diện`
+      : `không có cửa cho: ${hamKhongCoCua.join(", ")}`);
+
+dbService.deleteSubject(maMonThuAP);
+dbService.clearAllHistory();
+
+// ===========================================================================
 // AK. Đường báo câu hỏi sai, và hiệu lực thật của việc loại bỏ
 // ===========================================================================
 g("AK. Báo câu hỏi sai");

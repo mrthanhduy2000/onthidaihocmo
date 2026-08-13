@@ -59,6 +59,71 @@ sao, và còn nợ gì.
 
 ---
 
+### 13/08/2026, ranh giới giữa các môn, và một cánh cửa chưa từng được dựng
+
+Giai đoạn 7, phần làm được. Bộ kiểm: **268 lên 274**, không phép kiểm nào biến mất.
+
+#### Đo trước khi viết, và ba điều bản kế hoạch nói sai
+
+Nguyên tắc "đo trước khi viết code" lần này lật ngược cả ba giả định của kế hoạch:
+
+**1. Đồ thị tri thức tự động ĐÃ CÓ SẴN.** Kế hoạch xếp "sinh đồ thị tri thức tự động từ tài liệu"
+là hạng mục nặng nhất và là nút thắt thật. Thực tế `kbService.getKnowledgeGraph` đã tổng hợp nút từ
+nhãn `knowledgeMapping` của câu hỏi cho mọi môn không phải `customer_behavior`, và đã gắn sẵn cờ
+`laNutTongHop`. Không phải viết gì. AP2 và AP3 ghim lại để nó không mất đi.
+
+**2. Nút thắt thật là KHÔNG CÓ CỬA, không phải luồng rời rạc.** Kế hoạch cho rằng việc nạp môn
+"rải rác qua nhiều chỗ" nên cần gom thành một thuật sĩ. Đo được:
+
+| Đo | Kết quả |
+|---|---|
+| Nơi gọi `dbService.addSubject` trong `src/` | **0** |
+| Nơi gọi `dbService.deleteSubject` ở bất cứ đâu | **0** |
+| Nút tạo môn mới trên tab Môn học | **không có** |
+
+Nghĩa là chi phí nạp một môn mới từ giao diện không phải "một tuần" mà là **vô hạn**: phải sửa mã
+hoặc gọi thẳng dịch vụ từ bảng điều khiển trình duyệt. Cùng họ với "màn hình xây xong không có cửa"
+mà AK1 canh, chỉ khác là ở tầng **dịch vụ** nên AK1 không thể thấy. Đã dựng đúng cái cửa đó, và
+AP6 là bộ quét bịt khoảng trống ấy.
+
+**3. Có một lỗi loại "trả về của môn SAI" mà kế hoạch không biết.** `getKnowledgeGraph(subjectId)`
+tổng hợp nút từ mảng `questions` cấp mô đun, mà mảng ấy bị `loadSubject` dọn rồi nạp lại mỗi lần
+đổi môn, tức nó luôn là câu hỏi của môn đang được nạp chứ không phải của `subjectId` truyền vào.
+Rồi gắn mã `synth_${subjectId}_N...` lên chính các nút ấy. Đo mức nghiêm trọng bằng cách phá thử
+bản đã vá: **312 nút trả về cho một môn chưa hề nạp**, dựng từ câu hỏi của môn khác.
+
+Phân loại theo AGENTS mục 3: không phải loại "trả về ít hơn" (ghi nợ được) mà là loại "trả về của
+môn SAI" (phải sửa ngay), vì nó nói dối mà không có dấu hiệu gì.
+
+Bản vá đầu tiên của tôi **cũng sai**: nó so `subjectId` với `getActiveSubjectId()`, trong khi
+`loadSubject` nạp dữ liệu còn `setActiveSubjectId` đổi mã môn là hai việc tách rời, có nơi gọi cái
+này mà không gọi cái kia. Hai phép kiểm cũ chuyển đỏ và đó là thứ lộ ra sai lầm. Đã thêm
+`maMonDangNap` để `db.ts` công bố đúng mốc "môn nào đang nằm trong mảng".
+
+#### Bốn khóa lưu trữ dùng chung cho mọi môn
+
+`poly_econ_pedagogical_evaluation_history`, `poly_econ_pedagogical_strategy_stats`,
+`poly_econ_policy_audit_log`, `poly_econ_orchestrator_stats`. Hai khóa đầu là **đầu vào để chọn
+phong cách dạy**, nên lịch sử chấm của môn Thống kê sẽ điều khiển cách dạy môn Hành vi khách hàng.
+Với hai môn chưa lộ, với bốn môn học kỳ sau thì lộ ngay. Đã gắn mã môn cả bốn.
+
+AP4 là bộ quét cả họ, có danh sách miễn trừ **nêu đích danh kèm lý do** cho 8 khóa dùng chung hợp
+lệ (mã môn đang mở, danh mục môn, thiết lập giao diện, lệch giờ máy...). Danh sách đóng, thêm khóa
+mới không gắn mã môn là đỏ ngay.
+
+#### Phần CỐ Ý CHƯA LÀM, và lý do
+
+Thuật sĩ nạp môn liền mạch (bước 2 của kế hoạch) **chưa dựng**. Lý do không phải hết thời gian:
+bước 1 của chính kế hoạch ghi "chưa có bảng đo này thì chưa được viết dòng nào", mà phần đo còn
+thiếu đúng khúc cần AI (dán tài liệu rồi sinh câu hỏi từng chương), và **cổng AI đang trả 401** vì
+phiên Supabase đã chết. Dựng một thuật sĩ mà bước lõi của nó không chạy thử được là dựng mù.
+
+Phần dựng được và thử được thì đã dựng: tạo môn từ giao diện, chuyển sang môn mới, trạng thái rỗng
+nói đúng ("Hệ thống chưa biết bạn yếu ở đâu", "Chưa đặt ngày thi", không bịa số nào). Đã tạo thử
+một môn "Thống kê ứng dụng" trên bản chạy thật và xác nhận trọn đường đó.
+
+---
+
 ### 13/08/2026, nhớ lại chủ động, và nửa công thức giãn cách bị bỏ quên
 
 Giai đoạn 6. Bộ kiểm: **258 lên 268**, không phép kiểm nào biến mất.
