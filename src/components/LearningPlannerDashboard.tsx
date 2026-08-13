@@ -38,7 +38,10 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
 
   // Simulator State
   const [simMinutes, setSimMinutes] = useState<number>(goal.dailyStudyMinutes || 45);
-  const [simDays, setSimDays] = useState<number>(prediction.metricsBreakdown.remainingDays || 14);
+  // Ô mô phỏng cần MỘT con số để chạy, nên 14 ở đây là giá trị khởi động của một thanh trượt mà
+  // người học tự kéo, không phải một khẳng định về ngày thi. Khác hẳn con số 14 đã gỡ ở
+  // `getSubjectGoal` và ở bộ dự báo.
+  const [simDays, setSimDays] = useState<number>(prediction.metricsBreakdown.remainingDays ?? 14);
 
   /*
     CHƯA TRẢ LỜI CÂU NÀO THÌ CHƯA CÓ GÌ ĐỂ DỰ BÁO.
@@ -158,7 +161,11 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
         <div className="flex items-center gap-3">
           <div className="bg-bg-card border border-border-primary/80 rounded-xl px-4 py-2 text-right">
             <span className="text-2xs tabular-nums text-text-muted block">Mục tiêu hiện tại</span>
-            <span className="text-sm font-semibold text-text-primary">{soThapPhan(goal.targetScore, 1)} điểm</span>
+            {goal.targetScore !== null ? (
+              <span className="text-sm font-semibold text-text-primary">{soThapPhan(goal.targetScore, 1)} điểm</span>
+            ) : (
+              <span className="text-sm text-text-muted">Chưa đặt</span>
+            )}
           </div>
 
           <div className={`bg-bg-card border rounded-xl px-4 py-2 text-right ${chuaCoBaiLam ? "border-border-primary/80" : "border-brand-info/30"}`}>
@@ -261,10 +268,12 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     Chưa dự báo được, vì bạn chưa trả lời câu nào.
                   </p>
                   <p className="text-sm text-text-secondary font-sans leading-relaxed">
-                    Mục tiêu của bạn là {soThapPhan(prediction.targetScore, 1)} điểm, còn{" "}
-                    {prediction.metricsBreakdown.remainingDays} ngày nữa tới kỳ thi. Làm xong lượt
-                    ôn đầu tiên là màn này bắt đầu ước lượng được điểm, và mọi việc cần làm bên
-                    dưới sẽ tính theo đúng chỗ bạn còn yếu.
+                    {prediction.targetScore !== null && `Mục tiêu của bạn là ${soThapPhan(prediction.targetScore, 1)} điểm. `}
+                    {prediction.metricsBreakdown.remainingDays !== null
+                      ? `Còn ${prediction.metricsBreakdown.remainingDays} ngày nữa tới kỳ thi. `
+                      : "Bạn chưa đặt ngày thi, đặt trong Cài đặt để màn này xếp được lịch ôn theo hạn. "}
+                    Làm xong lượt ôn đầu tiên là màn này bắt đầu ước lượng được điểm, và mọi việc
+                    cần làm bên dưới sẽ tính theo đúng chỗ bạn còn yếu.
                   </p>
                   <div className="pt-2">
                     <button
@@ -299,7 +308,9 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                 <div className="space-y-3 md:px-6 md:border-l md:border-border-primary">
                   <h3 className="text-sm font-bold text-text-muted font-sans">Mục tiêu</h3>
                   <p className="text-xl font-bold text-text-primary font-sans leading-snug">
-                    Còn {soThapPhan(prediction.gap, 1)} điểm nữa là tới {soThapPhan(prediction.targetScore, 1)}.
+                    {prediction.gap !== null && prediction.targetScore !== null
+                      ? `Còn ${soThapPhan(prediction.gap, 1)} điểm nữa là tới ${soThapPhan(prediction.targetScore, 1)}.`
+                      : "Bạn chưa đặt điểm mục tiêu."}
                   </p>
                   {/*
                     NHÃN CŨ GỌI SAI TÊN ĐẠI LƯỢNG. `readinessPercentage` là
@@ -308,15 +319,25 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
                     mâu thuẫn với "Nắm chắc kiến thức 0%" ở màn Bàn học, dù cả hai đều đúng theo
                     định nghĩa riêng. Nay nói thẳng ra nó đo gì.
                   */}
-                  <p className="text-sm text-text-secondary font-sans">
-                    Điểm dự báo đang bằng {prediction.readinessPercentage}% mục tiêu.
-                  </p>
-                  <div className="w-full bg-bg-surface rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-brand-success h-full transition-all duration-300"
-                      style={{ width: `${prediction.readinessPercentage}%` }}
-                    />
-                  </div>
+                  {prediction.readinessPercentage !== null ? (
+                    <>
+                      <p className="text-sm text-text-secondary font-sans">
+                        Điểm dự báo đang bằng {prediction.readinessPercentage}% mục tiêu.
+                      </p>
+                      <div className="w-full bg-bg-surface rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-brand-success h-full transition-all duration-300"
+                          style={{ width: `${prediction.readinessPercentage}%` }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Không vẽ thanh tiến độ rỗng. Một thanh 0% đọc ra là "chưa đạt gì cả", trong
+                    // khi sự thật là chưa có mục tiêu để đo.
+                    <p className="text-sm text-text-secondary font-sans">
+                      Đặt điểm mục tiêu trong Cài đặt để màn này đo được bạn đang đi được bao xa.
+                    </p>
+                  )}
                 </div>
 
                 {/* Chỗ cần chú ý */}
@@ -351,7 +372,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
           */}
           <div className="space-y-3">
             <h3 className="text-xl font-bold text-text-primary font-sans">
-              {chuaCoBaiLam
+              {chuaCoBaiLam || prediction.gap === null
                 ? "Việc nên làm trước"
                 : `Việc cần làm để đi hết ${soThapPhan(prediction.gap, 1)} điểm còn lại`}
             </h3>
@@ -450,11 +471,18 @@ Thiết lập Mục tiêu & Ngày thi ({dbService.getActiveSubjectName()})
               {/* Target Score */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-text-muted block">Điểm mong muốn</label>
+                {/*
+                  Ô chọn phải có mục "Chưa đặt" và phải là mục ĐANG CHỌN khi người học chưa đặt.
+                  Thiếu nó thì thẻ `select` tự nhảy về mục đầu tiên là 7,0, và màn hình lại nói
+                  người học đã đặt mục tiêu 7,0 trong khi họ chưa chạm vào ô này bao giờ. Đó đúng
+                  là cách con số bịa cũ quay lại bằng cửa sau.
+                */}
                 <select
-                  value={goal.targetScore}
-                  onChange={(e) => handleGoalSave({ targetScore: Number(e.target.value) })}
+                  value={goal.targetScore ?? ""}
+                  onChange={(e) => handleGoalSave({ targetScore: e.target.value === "" ? null : Number(e.target.value) })}
                   className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-xs font-semibold text-text-primary cursor-pointer focus:outline-none"
                 >
+                  <option value="">Chưa đặt</option>
                   {[7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0].map(s => (
                     <option key={s} value={s}>{soThapPhan(s, 1)} điểm</option>
                   ))}
@@ -466,8 +494,8 @@ Thiết lập Mục tiêu & Ngày thi ({dbService.getActiveSubjectName()})
                 <label className="text-xs font-medium text-text-muted block">Ngày thi dự kiến</label>
                 <input
                   type="date"
-                  value={goal.examDate}
-                  onChange={(e) => handleGoalSave({ examDate: e.target.value })}
+                  value={goal.examDate ?? ""}
+                  onChange={(e) => handleGoalSave({ examDate: e.target.value || null })}
                   className="w-full bg-bg-surface border border-border-primary rounded-xl px-3 py-2 text-xs tabular-nums text-text-primary cursor-pointer focus:outline-none"
                 />
               </div>
@@ -530,15 +558,21 @@ Tổng quan lịch thi đa môn học
                           <span className="px-2 py-0.2 text-2xs bg-brand-info-bg text-brand-info tabular-nums rounded-full">Đang chọn</span>
                         )}
                       </div>
-                      <span className="text-xs tabular-nums text-brand-warning font-bold">
-                        Còn {subPrediction.metricsBreakdown.remainingDays} ngày
-                      </span>
+                      {subPrediction.metricsBreakdown.remainingDays !== null ? (
+                        <span className="text-xs tabular-nums text-brand-warning font-bold">
+                          Còn {subPrediction.metricsBreakdown.remainingDays} ngày
+                        </span>
+                      ) : (
+                        <span className="text-xs text-text-muted">Chưa đặt ngày thi</span>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-center text-xs tabular-nums bg-bg-card/80 p-2.5 rounded-lg border border-border-primary/60">
                       <div>
                         <span className="text-2xs text-text-muted block">Mục tiêu</span>
-                        <strong className="text-text-primary">{soThapPhan(subGoal.targetScore, 1)}</strong>
+                        <strong className="text-text-primary">
+                          {subGoal.targetScore !== null ? soThapPhan(subGoal.targetScore, 1) : "Chưa đặt"}
+                        </strong>
                       </div>
                       <div>
                         <span className="text-2xs text-text-muted block">Dự báo</span>
@@ -546,7 +580,11 @@ Tổng quan lịch thi đa môn học
                       </div>
                       <div>
                         <span className="text-2xs text-text-muted block">Sẵn sàng</span>
-                        <strong className="text-brand-success">{subPrediction.readinessPercentage}%</strong>
+                        {subPrediction.readinessPercentage !== null ? (
+                          <strong className="text-brand-success">{subPrediction.readinessPercentage}%</strong>
+                        ) : (
+                          <strong className="text-text-muted">Chưa đo</strong>
+                        )}
                       </div>
                     </div>
                   </div>

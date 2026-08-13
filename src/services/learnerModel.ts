@@ -468,9 +468,70 @@ const MUC_TUT_KICH_TRAN = 0.30;
 export function luotCoNhipNhanh(luot: { questions?: number[]; timeSpent?: number }): boolean {
   const dsCau = luot.questions || [];
   if (dsCau.length === 0 || !luot.timeSpent || luot.timeSpent <= 0) return false;
-  const chuan = dsCau.reduce((s, id) => s + (questionMap.get(id)?.estimatedTime || 0), 0);
+  const chuan = mocNhipChuan(dsCau);
   if (chuan <= 0) return false;
   return luot.timeSpent / chuan <= NHIP_NHANH_TOI_DA;
+}
+
+/** Số câu tối thiểu của chính người học mới dám lấy nhịp của họ làm mốc. */
+const TOI_THIEU_CAU_LAY_NHIP_RIENG = 20;
+
+/**
+ * MỐC THỜI GIAN CHUẨN cho một danh sách câu, giây, dùng để hỏi "lượt NÀY có nhanh bất thường
+ * không". Ưu tiên nhịp THẬT của chính người học, chỉ lùi về `estimatedTime` khi chưa đủ bằng chứng.
+ *
+ * CHỈ DÙNG CHO PHÉP SO TỪNG LƯỢT, đừng mang sang phép đo gộp. Bản đầu của lượt 13/08/2026 đã thay
+ * luôn mốc trong `doNhipLamBai`, và phép kiểm P6 đỏ ngay: khi mốc chính là trung vị của chính người
+ * học thì tổng thời gian thật chia tổng mốc luôn xấp xỉ 1 **theo định nghĩa**, nên mức đoán mò gộp
+ * không bao giờ khác 0 được nữa. Một chỉ số bị làm cho không thể khác 0 thì tệ hơn một chỉ số thô,
+ * vì nó im lặng đúng lúc cần lên tiếng. Đây là họ lỗi "phép kiểm rỗng" mang sang tầng số đo.
+ *
+ * Ranh giới đúng: câu hỏi "lượt này có nhanh bất thường không" là câu hỏi SO VỚI CHÍNH NGƯỜI ẤY,
+ * nên mốc riêng là đúng. Câu hỏi "người này nhìn chung có làm ẩu không" cần một mốc NGOÀI người
+ * học, nên `doNhipLamBai` phải giữ `estimatedTime` dù nó thô.
+ *
+ * VÌ SAO ĐỔI (đo ngày 12/08/2026). `estimatedTime` bằng đúng **35,0 giây cho cả ba mức khó** trên
+ * 280 câu của ngân hàng AI sinh, tức nó là một HẰNG SỐ đội lốt số đo. Hai ngân hàng biên soạn tay
+ * thì có bám độ khó (30,0 / 41,7 / 50,0 giây), nên con số "34,7 / 35,3 / 35,2" từng ghi trong
+ * WORKSTATE là trung bình của hai loại trộn lẫn và che mất sự thật này.
+ *
+ * Hệ quả với phần phát hiện đoán mò: so thời gian thật với một hằng số nhân số câu thì chỉ đo
+ * được TỐC ĐỘ TUYỆT ĐỐI, không phân biệt nổi người làm nhanh vì thạo với người làm nhanh vì câu
+ * dễ. Nhịp riêng của người học không có nhược điểm ấy, vì nó tự mang theo tốc độ nền của chính họ.
+ *
+ * Ngưỡng 20 câu là mức đã dùng cho các mạch dữ liệu khác của dự án. Dưới mức đó thì nhịp riêng
+ * còn nhiễu hơn cả một hằng số, nên vẫn lùi về `estimatedTime` và nói rõ trong phần giải trình.
+ *
+ * Giai đoạn 5 sẽ thay hẳn bằng thời gian ĐO TỪNG CÂU. Khi đó hàm này chỉ còn là đường lùi.
+ */
+export function mocNhipChuan(dsCau: number[]): number {
+  const nhipRieng = nhipRiengMoiCau();
+  if (nhipRieng !== null) return nhipRieng * dsCau.length;
+  return dsCau.reduce((s, id) => s + (questionMap.get(id)?.estimatedTime || 0), 0);
+}
+
+/**
+ * Trung vị số giây mỗi câu của chính người học, hoặc `null` khi chưa đủ 20 câu.
+ *
+ * Dùng TRUNG VỊ chứ không dùng trung bình: một lượt bị bỏ dở với đồng hồ chạy suốt sẽ kéo trung
+ * bình lên hàng nghìn giây một câu, còn trung vị thì không nhúc nhích.
+ *
+ * Bất biến 4.9f: tính lại tất định tại mỗi lần đọc, không cộng dồn vào ô nhớ.
+ */
+export function nhipRiengMoiCau(): number | null {
+  const lichSu = dbService.getHistory().filter(a => a.isSubmitted);
+  const nhipTungLuot: number[] = [];
+  let tongCau = 0;
+  for (const luot of lichSu) {
+    const soCau = (luot.questions || []).length;
+    if (soCau === 0 || !luot.timeSpent || luot.timeSpent <= 0) continue;
+    nhipTungLuot.push(luot.timeSpent / soCau);
+    tongCau += soCau;
+  }
+  if (tongCau < TOI_THIEU_CAU_LAY_NHIP_RIENG || nhipTungLuot.length === 0) return null;
+  const daSap = nhipTungLuot.slice().sort((a, b) => a - b);
+  const giua = Math.floor(daSap.length / 2);
+  return daSap.length % 2 === 1 ? daSap[giua] : (daSap[giua - 1] + daSap[giua]) / 2;
 }
 
 /** Kết quả đo nhịp làm bài và mức đoán mò suy ra từ đó. */
@@ -621,6 +682,8 @@ export const learnerModelService = {
     for (const luot of lichSu) {
       const dsCau = luot.questions || [];
       if (dsCau.length === 0) continue;
+      // CỐ Ý dùng `estimatedTime` chứ không dùng `mocNhipChuan`: phép đo gộp cần một mốc NGOÀI
+      // người học, xem chú thích dài ở `mocNhipChuan`.
       const chuan = dsCau.reduce((s, id) => s + (questionMap.get(id)?.estimatedTime || 0), 0);
       // Không có mốc chuẩn thì không so được, bỏ lượt đó thay vì gán bừa một con số.
       if (chuan <= 0 || !luot.timeSpent || luot.timeSpent <= 0) continue;
@@ -649,7 +712,7 @@ export const learnerModelService = {
       : 0;
 
     const giaiTrinh = duDuLieu
-      ? `Xét ${soLuotXet} lượt đã nộp: ${tongThat}s thật so với ${tongChuan}s ước tính, tỷ lệ nhịp ${soThapPhan(tyLeNhip, 2)}. Tỷ lệ đúng ${soThapPhan((tyLeDung * 100), 1)}%. Hệ số nhanh ${soThapPhan(heSoNhanh, 2)} nhân tỷ lệ sai ${soThapPhan(tyLeSai, 2)} cho mức đoán mò ${soThapPhan((tyLeDoanMo * 100), 1)}%.`
+      ? `Xét ${soLuotXet} lượt đã nộp: ${tongThat}s thật so với ${tongChuan}s theo ước tính của ngân hàng câu hỏi, tỷ lệ nhịp ${soThapPhan(tyLeNhip, 2)}. Tỷ lệ đúng ${soThapPhan((tyLeDung * 100), 1)}%. Hệ số nhanh ${soThapPhan(heSoNhanh, 2)} nhân tỷ lệ sai ${soThapPhan(tyLeSai, 2)} cho mức đoán mò ${soThapPhan((tyLeDoanMo * 100), 1)}%.`
       : `Chưa đủ dữ liệu: cần tối thiểu ${TOI_THIEU_LUOT_NHIP} lượt đã nộp có cả thời gian thật và mốc ước tính, hiện có ${soLuotXet}.`;
 
     return {

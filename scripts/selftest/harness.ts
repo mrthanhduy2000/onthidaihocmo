@@ -33,7 +33,7 @@ import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvalu
 import { TimeService } from "../../src/services/time";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
 import { kbService } from "../../src/services/kbService";
-import { learnerModelService, studentModelService } from "../../src/services/learnerModel";
+import { learnerModelService, mocNhipChuan, nhipRiengMoiCau, studentModelService } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { teachingAnalytics } from "../../src/services/teachingAnalytics";
@@ -861,13 +861,26 @@ const duBaoJ = examForecaster.calculatePrediction();
 // Màn hình đặt sẵn hai thanh trượt đúng bằng kế hoạch hiện tại. Bản cũ neo cứng ở 45 phút và
 // 14 ngày, nên chỉ cần Đàm đổi thời lượng học hoặc ngày thi là màn hình mở ra đã hiện hai con
 // số khác nhau cho cùng một hiện trạng.
+//
+// Phải TỰ ĐẶT ngày thi ở đây. Trước 13/08/2026 nhóm này im lặng dựa vào giá trị mặc định bịa của
+// `getSubjectGoal` (hôm nay cộng 14 ngày), nên nó vừa kiểm bộ mô phỏng vừa vô tình phụ thuộc vào
+// đúng con số mà nhóm AM sinh ra để cấm. Đặt tường minh thì phép kiểm nói rõ nó đang kiểm cái gì.
+dbService.saveSubjectGoal({
+  subjectId: dbService.getActiveSubjectId(),
+  targetScore: 8.5,
+  examDate: TimeService.formatDateISO(TimeService.parseToDate(TimeService.now().getTime() + 21 * 86400000)),
+  dailyStudyMinutes: 45,
+  priority: "High",
+  updatedAt: TimeService.now().toISOString(),
+});
+const duBaoJKemMucTieu = examForecaster.calculatePrediction();
 const keHoach = dbService.getSubjectGoal();
 const phutHienTai = keHoach.dailyStudyMinutes || 45;
-const ngayHienTai = duBaoJ.metricsBreakdown.remainingDays;
+const ngayHienTai = duBaoJKemMucTieu.metricsBreakdown.remainingDays as number;
 const moPhongTaiCho = examForecaster.simulateDeadlineOutcome(phutHienTai, ngayHienTai);
 check("Mô phỏng tại đúng kế hoạch hiện tại trùng với dự báo",
-  Math.abs(moPhongTaiCho - duBaoJ.predictedScore) < 0.05,
-  `dự báo ${duBaoJ.predictedScore}, mô phỏng ${moPhongTaiCho} tại ${phutHienTai} phút và ${ngayHienTai} ngày`);
+  Math.abs(moPhongTaiCho - duBaoJKemMucTieu.predictedScore) < 0.05,
+  `dự báo ${duBaoJKemMucTieu.predictedScore}, mô phỏng ${moPhongTaiCho} tại ${phutHienTai} phút và ${ngayHienTai} ngày`);
 
 // Kéo thanh nào cũng phải đơn điệu: học nhiều hơn không được ra điểm thấp hơn.
 const theoPhut = [15, 30, 45, 60, 90, 120, 180].map(m => examForecaster.simulateDeadlineOutcome(m, ngayHienTai));
@@ -3701,6 +3714,120 @@ check("Lời nhắc viết lại phương án nhiễu bơm chữ cái thật c�
   bomChuCaiTrongEngine && bomChuCaiTrongCongCu
     ? "cả đường trình duyệt lẫn đường sửa hàng loạt đều nói rõ ba chữ cái nhiễu của chính câu đang sửa"
     : `engine bơm: ${bomChuCaiTrongEngine}, công cụ sửa bơm: ${bomChuCaiTrongCongCu}. Thiếu thì mô hình sẽ chép lại chữ cái trong ví dụ và gọi nhầm đáp án đúng là phương án sai`);
+
+// ===========================================================================
+// AM. Không bịa ngày thi và điểm mục tiêu
+// ===========================================================================
+g("AM. Không bịa ngày thi và điểm mục tiêu");
+
+// AM1. `getSubjectGoal` với kho trống KHÔNG được trả về ngày thi và điểm mục tiêu.
+//
+// Đây là GỐC của cả họ lỗi. Trước 13/08/2026 hàm này trả `hôm nay + 14 ngày` và `8,5`, rồi hai
+// con số ấy chảy ra khắp nơi: dòng số liệu Bàn học, tab Môn học, bộ dự báo điểm, bộ lập kế hoạch.
+// Mọi phép kiểm cũ đều canh tầng component nên không chạm tới, vì ở tầng ấy con số đã trông y như
+// một giá trị người học tự đặt.
+//
+// Từ 30/07/2026 nó nặng hơn lỗi hiển thị: bất biến 4.9i cho `scoreQuestions` một yếu tố trọng số
+// 0,15 chấm theo mức nhớ VÀO NGÀY THI, nên một ngày thi bịa điều khiển thật việc chọn câu.
+const KHOA_MUC_TIEU = `poly_econ_goal_${dbService.getActiveSubjectId()}`;
+const mucTieuDaLuu = localStorage.getItem(KHOA_MUC_TIEU);
+localStorage.removeItem(KHOA_MUC_TIEU);
+const mucTieuTrong = dbService.getSubjectGoal();
+check("Kho mục tiêu trống thì không trả về ngày thi và điểm mục tiêu",
+  mucTieuTrong.examDate === null && mucTieuTrong.targetScore === null,
+  mucTieuTrong.examDate === null && mucTieuTrong.targetScore === null
+    ? "cả hai trả null, còn dailyStudyMinutes và priority vẫn có mặc định vì đó là thiết lập thói quen"
+    : `examDate = ${JSON.stringify(mucTieuTrong.examDate)}, targetScore = ${JSON.stringify(mucTieuTrong.targetScore)}, tức vẫn đang bịa`);
+
+// AM2. Mọi đại lượng SUY RA từ hai trường ấy cũng phải là `null`, không được thay bằng số trung tính.
+//
+// Canh ở tầng dữ liệu chứ không phải tầng chữ, vì đây mới là chỗ lỗi tái phát được. Bộ dự báo từng
+// giữ BẢN SAO THỨ HAI của cùng một điều bịa (`let remainingDays = 14`), nên gỡ ở `getSubjectGoal`
+// mà quên chỗ ấy thì màn hình vẫn nói "còn 14 ngày".
+//
+// Riêng `urgencyIndex` phải là `null` chứ không phải 0: một chỉ số cấp bách bằng 0 đọc ra là
+// "không có gì gấp", khác hẳn "chưa biết có gấp hay không".
+const duBaoKhongMucTieu = examForecaster.calculatePrediction(dbService.getActiveSubjectId());
+const suyRaSach = duBaoKhongMucTieu.metricsBreakdown.remainingDays === null
+  && duBaoKhongMucTieu.targetScore === null
+  && duBaoKhongMucTieu.gap === null
+  && duBaoKhongMucTieu.readinessPercentage === null
+  && (duBaoKhongMucTieu.metricsBreakdown.urgencyIndex ?? null) === null;
+check("Bộ dự báo không dựng số thay cho ngày thi và điểm mục tiêu còn trống",
+  suyRaSach,
+  suyRaSach
+    ? "remainingDays, targetScore, gap, readinessPercentage, urgencyIndex đều null khi chưa đặt mục tiêu"
+    : `remainingDays=${duBaoKhongMucTieu.metricsBreakdown.remainingDays}, targetScore=${duBaoKhongMucTieu.targetScore}, gap=${duBaoKhongMucTieu.gap}, readiness=${duBaoKhongMucTieu.readinessPercentage}, urgency=${duBaoKhongMucTieu.metricsBreakdown.urgencyIndex}`);
+
+// AM3. Bộ quét cả họ: không nguồn nào được dựng lại giá trị mặc định cho hai trường ấy.
+//
+// Đây là phép kiểm đáng giá nhất nhóm này, theo đúng bài học "bộ quét tổng quát đáng giá hơn sửa
+// một tên". AM1 và AM2 canh hành vi hiện tại; phép kiểm này canh việc ai đó viết lại đường cũ ở
+// một file thứ ba mà hai phép kiểm kia không đi qua.
+const NGUON_CO_THE_BIA = [
+  "src/services/db.ts",
+  "src/services/examForecaster.ts",
+  "src/services/curriculumIntelligenceEngine.ts",
+  "src/services/learningEngine.ts",
+];
+const noiBiaLai: string[] = [];
+for (const duongDan of NGUON_CO_THE_BIA) {
+  const nguon = readFileSync(path.join(process.cwd(), duongDan), "utf8");
+  // Bỏ chú thích trước khi quét: các chú thích trong dự án CÓ nhắc tới "14 ngày" và "8,5" để giải
+  // thích vì sao đã gỡ chúng đi, và đó là thứ phải giữ chứ không phải thứ phải bắt.
+  const khongChuThich = nguon
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .split("\n").filter(d => !d.trim().startsWith("//")).join("\n");
+  if (/targetScore:\s*\d/.test(khongChuThich)) noiBiaLai.push(`${duongDan} gán sẵn targetScore`);
+  if (/examDate:\s*(defaultDate|["'`])/.test(khongChuThich)) noiBiaLai.push(`${duongDan} gán sẵn examDate`);
+  if (/remainingDays\s*=\s*\d/.test(khongChuThich)) noiBiaLai.push(`${duongDan} gán sẵn remainingDays`);
+  if (/14\s*\*\s*24\s*\*\s*60\s*\*\s*60/.test(khongChuThich)) noiBiaLai.push(`${duongDan} còn phép cộng 14 ngày`);
+}
+check("Không nguồn nào dựng lại ngày thi hay điểm mục tiêu mặc định",
+  noiBiaLai.length === 0,
+  noiBiaLai.length === 0
+    ? `quét ${NGUON_CO_THE_BIA.length} file engine, không chỗ nào gán sẵn hai trường ấy hay cộng thêm 14 ngày`
+    : noiBiaLai.join("; "));
+
+// AM4. Phát hiện đoán mò phải ưu tiên nhịp RIÊNG của người học, không bám `estimatedTime`.
+//
+// `estimatedTime` bằng đúng 35,0 giây cho cả ba mức khó trên 280 câu của ngân hàng AI sinh, tức
+// một hằng số đội lốt số đo. So thời gian thật với hằng số nhân số câu thì chỉ đo được tốc độ
+// tuyệt đối, không phân biệt nổi người làm nhanh vì thạo với người gặp đề dễ.
+//
+// Chưa đủ 20 câu thì vẫn lùi về `estimatedTime`, đó là chủ ý: dưới mức ấy nhịp riêng còn nhiễu
+// hơn hằng số. Nên phép kiểm canh CẢ HAI nhánh.
+dbService.clearAllHistory();
+const nhipKhiChuaCoGi = nhipRiengMoiCau();
+const mocKhiChuaCoGi = mocNhipChuan(questions.slice(0, 10).map(q => q.id));
+const uocTinhNganHang = questions.slice(0, 10).reduce((s, q) => s + (q.estimatedTime || 0), 0);
+const nhanhVeUocTinh = nhipKhiChuaCoGi === null && Math.abs(mocKhiChuaCoGi - uocTinhNganHang) < 0.01;
+check("Chưa đủ 20 câu thì mốc nhịp lùi về ước tính của ngân hàng",
+  nhanhVeUocTinh,
+  nhanhVeUocTinh
+    ? `lịch sử trống nên nhịp riêng null và mốc bằng đúng tổng estimatedTime (${uocTinhNganHang}s cho 10 câu)`
+    : `nhịp riêng = ${nhipKhiChuaCoGi}, mốc = ${mocKhiChuaCoGi}s trong khi ước tính ngân hàng = ${uocTinhNganHang}s`);
+
+// Dựng 3 lượt, 10 câu mỗi lượt, nhịp 20 giây một câu. Đủ 30 câu nên phải vượt ngưỡng 20.
+for (let i = 0; i < 3; i++) {
+  const dsCau = questions.slice(i * 10, i * 10 + 10).map(q => q.id);
+  dbService.saveAttempt({
+    id: `am4-${i}`, examType: "random", startTime: new Date(0).toISOString(),
+    endTime: new Date(0).toISOString(), questions: dsCau, answers: {}, bookmarks: [], flags: [],
+    isSubmitted: true, score: 0, timeSpent: dsCau.length * 20,
+  } as any);
+}
+const nhipSauKhiCoDuLieu = nhipRiengMoiCau();
+const dungNhipRieng = nhipSauKhiCoDuLieu !== null && Math.abs(nhipSauKhiCoDuLieu - 20) < 0.01;
+check("Đủ dữ liệu thì mốc nhịp chuyển sang nhịp riêng của người học",
+  dungNhipRieng,
+  dungNhipRieng
+    ? "30 câu ở nhịp 20 giây một câu cho trung vị đúng 20 giây, thay hẳn hằng số 35 giây của ngân hàng"
+    : `nhịp riêng đo được ${nhipSauKhiCoDuLieu}, đáng lẽ 20 giây một câu`);
+dbService.clearAllHistory();
+
+// Trả lại mục tiêu đã lưu để không làm hỏng hồ sơ thật khi chạy trên máy Đàm.
+if (mucTieuDaLuu !== null) localStorage.setItem(KHOA_MUC_TIEU, mucTieuDaLuu);
 
 // ===========================================================================
 // Kết quả

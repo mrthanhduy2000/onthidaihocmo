@@ -58,6 +58,8 @@ export default function App() {
   const [unfinishedSession, setUnfinishedSession] = useState<ExamAttempt | null>(() => workspaceService.getUnfinishedSession());
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  /** Tăng mỗi lần hộp Cài đặt đóng, để màn Bàn học đọc lại mục tiêu. */
+  const [phienBanMucTieu, setPhienBanMucTieu] = useState(0);
 
   // Load latest statistics when switching views
   useEffect(() => {
@@ -311,6 +313,8 @@ export default function App() {
               }
             }}
             onNavigateView={(view) => setCurrentView(view as any)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            phienBanMucTieu={phienBanMucTieu}
           />
         )}
 
@@ -406,7 +410,12 @@ export default function App() {
       {/* Product Settings & Backup Modal */}
       <ProductSettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+        onClose={() => {
+          setIsSettingsOpen(false);
+          // Báo cho màn Bàn học đọc lại mục tiêu. Xem chú thích `phienBanMucTieu` ở
+          // PersonalWorkspaceView.
+          setPhienBanMucTieu(v => v + 1);
+        }}
         onRefreshData={() => {
           setStats(dbService.getStatistics());
         }}

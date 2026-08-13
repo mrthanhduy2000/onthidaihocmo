@@ -142,11 +142,14 @@ Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-bg-surface p-4 border border-border-primary/80 rounded-xl">
               <div>
                 <label className="text-sm text-text-secondary block mb-1">Điểm mong muốn</label>
+                {/* Có mục "Chưa đặt" và nó là mục đang chọn khi chưa đặt, xem lý do ở
+                    `LearningPlannerDashboard` cùng chỗ này. */}
                 <select
-                  value={goal.targetScore}
-                  onChange={(e) => handleGoalUpdate("targetScore", Number(e.target.value))}
+                  value={goal.targetScore ?? ""}
+                  onChange={(e) => handleGoalUpdate("targetScore", e.target.value === "" ? null : Number(e.target.value))}
                   className="w-full bg-bg-card border border-border-primary rounded-lg px-2.5 py-1.5 text-xs font-semibold text-text-primary"
                 >
+                  <option value="">Chưa đặt</option>
                   {[7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0].map(s => (
                     <option key={s} value={s}>{soThapPhan(s, 1)} điểm</option>
                   ))}
@@ -157,8 +160,8 @@ Mục tiêu môn học hiện tại ({dbService.getActiveSubjectName()})
                 <label className="text-sm text-text-secondary block mb-1">Ngày thi chính thức</label>
                 <input
                   type="date"
-                  value={goal.examDate}
-                  onChange={(e) => handleGoalUpdate("examDate", e.target.value)}
+                  value={goal.examDate ?? ""}
+                  onChange={(e) => handleGoalUpdate("examDate", e.target.value || null)}
                   className="w-full bg-bg-card border border-border-primary rounded-lg px-2.5 py-1.5 text-xs tabular-nums text-text-primary"
                 />
               </div>

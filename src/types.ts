@@ -245,10 +245,27 @@ export interface DashboardOverview {
   lastExam?: ExamAttempt;
 }
 
+/**
+ * Mục tiêu của một môn.
+ *
+ * `targetScore` và `examDate` NHẬN `null`, và đó là điểm khác quan trọng nhất của kiểu này.
+ * Chúng là hai KHẲNG ĐỊNH VỀ Ý ĐỊNH của người học, không phải thiết lập kỹ thuật, nên khi người
+ * học chưa đặt thì không được bịa ra. Trước 13/08/2026 `getSubjectGoal` trả về hôm nay cộng 14
+ * ngày và điểm 8,5, và màn Bàn học in ra "Còn 14 ngày tới kỳ thi ..., mục tiêu 8,5" trên hồ sơ
+ * chưa từng đặt gì. Đó là bất biến 4.9 bị phá ngay ở tầng dữ liệu, chỗ mà mọi phép kiểm canh
+ * tầng component không với tới.
+ *
+ * Từ 30/07/2026 nó nặng hơn một lỗi hiển thị. Bất biến 4.9i cho `learningEngine.scoreQuestions`
+ * một yếu tố trọng số 0,15 chấm theo mức nhớ VÀO NGÀY THI, nên một ngày thi bịa sẽ điều khiển
+ * thật việc chọn câu nào cho người học ôn.
+ *
+ * `dailyStudyMinutes` và `priority` GIỮ NGUYÊN không cho `null`: đó là thiết lập thói quen, có
+ * mặc định hợp lý thì dùng được, không phải khẳng định về thực tế.
+ */
 export interface SubjectGoal {
   subjectId: string;
-  targetScore: number; // e.g. 8.0, 8.5, 9.0, 10.0
-  examDate: string; // ISO date YYYY-MM-DD
+  targetScore: number | null; // null = người học chưa đặt
+  examDate: string | null; // ISO date YYYY-MM-DD, null = người học chưa đặt
   dailyStudyMinutes: number; // e.g. 30, 45, 60, 90, 120
   priority: "High" | "Medium" | "Low";
   updatedAt: string;
@@ -259,9 +276,12 @@ export interface ExamPrediction {
   predictedScore: number; // e.g. 8.1
   confidenceMargin: number; // e.g. 0.3 -> 8.1 ± 0.3
   confidenceLevel: "Cao" | "Trung bình" | "Cần thêm dữ liệu";
-  targetScore: number;
-  gap: number; // targetScore - predictedScore
-  readinessPercentage: number; // 0-100%
+  /** `null` khi người học chưa đặt mục tiêu. Xem chú thích `SubjectGoal`. */
+  targetScore: number | null;
+  /** `null` khi chưa có mục tiêu để trừ ra. */
+  gap: number | null; // targetScore - predictedScore
+  /** Tỷ lệ điểm dự báo trên điểm mục tiêu. `null` khi chưa đặt mục tiêu. */
+  readinessPercentage: number | null; // 0-100%
   metricsBreakdown: {
     masteryScore: number; // 0-100
     chapterCoverage: number; // 0-100
@@ -272,7 +292,8 @@ export interface ExamPrediction {
     wrongQuestionRate: number; // 0-100
     mockExamAverage: number; // 0-10
     studyDebtCount: number;
-    remainingDays: number;
+    /** `null` khi người học chưa đặt ngày thi. Đừng thay bằng một con số mặc định. */
+    remainingDays: number | null;
     stableMastery?: number;
     learningAcceleration?: number;
     urgencyIndex?: number;

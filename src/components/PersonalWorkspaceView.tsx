@@ -25,10 +25,19 @@ interface PersonalWorkspaceViewProps {
   key?: string;
   onStartExam: (type: string, param?: any) => void;
   onNavigateView: (view: string) => void;
+  /** Mở hộp Cài đặt. Cần vì màn này mời người học đặt ngày thi khi chưa có. */
+  onOpenSettings: () => void;
+  /**
+   * Tăng lên mỗi lần hộp Cài đặt đóng lại. Màn này đọc mục tiêu MỘT LẦN lúc dựng, nên nếu không
+   * có tín hiệu thì người học đặt xong ngày thi quay ra vẫn thấy "Chưa đặt ngày thi" cho tới khi
+   * tải lại trang. Lỗi cũ vốn ẩn vì trước đây ô ngày thi luôn có sẵn một giá trị bịa, không ai
+   * vào Cài đặt để đặt lần đầu cả.
+   */
+  phienBanMucTieu?: number;
 }
 
-export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: PersonalWorkspaceViewProps) {
-  const [activeTab, setActiveTab] = useState<"workspace" | "resources" | "health" | "timeline" | "snapshots" | "subjects" | "admin_health">("workspace");
+export default function PersonalWorkspaceView({ onStartExam, onNavigateView, onOpenSettings, phienBanMucTieu = 0 }: PersonalWorkspaceViewProps) {
+  const [activeTab, setActiveTab] = useState<"workspace" | "resources" | "health" | "timeline" | "snapshots" | "subjects">("workspace");
   
   const activeSubId = dbService.getActiveSubjectId();
   const subjects = dbService.getSubjects();
@@ -42,6 +51,14 @@ export default function PersonalWorkspaceView({ onStartExam, onNavigateView }: P
   const [timeline, setTimeline] = useState<LearningLogEntry[]>(() => workspaceService.getLearningTimeline());
   const [snapshots, setSnapshots] = useState<StudySnapshot[]>(() => workspaceService.getStudySnapshots());
   
+  // Đọc lại mục tiêu và bản dự báo khi hộp Cài đặt vừa đóng. Đọc lại thay vì cho remount cả màn,
+  // để không mất tab đang mở và vị trí cuộn của người học.
+  useEffect(() => {
+    if (phienBanMucTieu === 0) return;
+    setGoal(dbService.getSubjectGoal(activeSubId));
+    setPrediction(examForecaster.calculatePrediction(activeSubId));
+  }, [phienBanMucTieu, activeSubId]);
+
   // Archiving
   const [archivedIds, setArchivedIds] = useState<string[]>(() => workspaceService.getArchivedSubjectIds());
 
@@ -358,9 +375,31 @@ Bàn học hôm nay
           nhầm chỗ. Vạch trái thì tự biến mất khi các mẩu không còn nằm cùng hàng.
         */}
         <div className="pt-3 border-t border-border-primary/60 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-1 text-sm text-text-secondary font-sans">
+          {/*
+            CHƯA ĐẶT NGÀY THI THÌ NÓI ĐÚNG NHƯ VẬY, kèm một lối đặt ngay.
+
+            Bản cũ luôn in "Còn 14 ngày tới kỳ thi 26/08/2026" vì `getSubjectGoal` mặc định hôm nay
+            cộng 14 ngày. Người học chưa đặt gì mà màn hình nói chắc như đã đặt. Từ 30/07/2026 con
+            số ấy còn điều khiển việc chọn câu qua bất biến 4.9i, nên đây không còn là lỗi chữ.
+
+            Lời mời là MỘT DÒNG CHỮ có liên kết, không phải một thẻ và không phải hộp thoại tự bật
+            (khuôn trình bày 4.9g).
+          */}
           <span className="flex items-center gap-1.5">
             <Clock className="w-4 h-4 shrink-0 text-text-muted" />
-            <span>Còn <strong className="text-text-primary">{remainingDays} ngày</strong> tới kỳ thi {ngayThiTiengViet}</span>
+            {remainingDays !== null ? (
+              <span>Còn <strong className="text-text-primary">{remainingDays} ngày</strong> tới kỳ thi {ngayThiTiengViet}</span>
+            ) : (
+              <span>
+                Chưa đặt ngày thi{" "}
+                <button
+                  onClick={onOpenSettings}
+                  className="text-brand-info font-bold hover:underline cursor-pointer"
+                >
+                  Đặt ngay
+                </button>
+              </span>
+            )}
           </span>
 
           {/*
@@ -384,7 +423,7 @@ Bàn học hôm nay
             ) : (
               <span className="text-text-muted">Chưa đủ dữ liệu</span>
             )}
-            , mục tiêu {soThapPhan(goal.targetScore, 1)}
+            {goal.targetScore !== null ? `, mục tiêu ${soThapPhan(goal.targetScore, 1)}` : ""}
           </span>
 
           <span className="flex items-center gap-2 sm:border-l sm:border-border-primary sm:pl-3.5 sm:ml-3.5">
@@ -865,9 +904,18 @@ Danh sách môn học
                 >
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-semibold text-text-primary">{sub.name}</h4>
-                    <span className="text-2xs tabular-nums text-brand-warning font-bold">
-                      Còn {subPrediction.metricsBreakdown.remainingDays} ngày
-                    </span>
+                    {/*
+                      Bỏ CẢ MÀU lẫn SỐ khi chưa đặt ngày thi. Bản cũ tô `brand-warning` cho mọi môn,
+                      nên một môn chưa đặt gì vẫn hiện chữ cam "Còn 14 ngày", tức vừa bịa số vừa
+                      thúc giục bằng màu. Chưa đặt thì dùng chữ xám và nói thẳng là chưa đặt.
+                    */}
+                    {subPrediction.metricsBreakdown.remainingDays !== null ? (
+                      <span className="text-2xs tabular-nums text-brand-warning font-bold">
+                        Còn {subPrediction.metricsBreakdown.remainingDays} ngày
+                      </span>
+                    ) : (
+                      <span className="text-2xs text-text-muted">Chưa đặt ngày thi</span>
+                    )}
                   </div>
 
                   <div className="space-y-1.5 text-xs tabular-nums">
@@ -877,7 +925,11 @@ Danh sách môn học
                     </div>
                     <div className="flex justify-between text-text-muted">
                       <span>Điểm mục tiêu:</span>
-                      <strong className="text-text-primary">{soThapPhan(subGoal.targetScore, 1)}</strong>
+                      {subGoal.targetScore !== null ? (
+                        <strong className="text-text-primary">{soThapPhan(subGoal.targetScore, 1)}</strong>
+                      ) : (
+                        <span className="text-text-muted">Chưa đặt</span>
+                      )}
                     </div>
                   </div>
 
@@ -895,32 +947,19 @@ Danh sách môn học
       )}
 
       {/* TAB 7: SUBJECT HEALTH DASHBOARD (ADMIN) */}
-      {activeTab === "admin_health" && (
-        <div className="bg-bg-card border border-border-primary rounded-2xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-xs tabular-nums text-text-primary">
-Báo cáo chất lượng học liệu
-          </h3>
+      {/*
+        GỠ HẲN KHỐI "Báo cáo chất lượng học liệu".
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center tabular-nums bg-bg-surface p-4 rounded-xl border border-border-primary/80">
-            <div>
-              <span className="text-2xs text-text-muted block">Độ phủ kiến thức</span>
-              <span className="text-2xl font-bold text-brand-success">98%</span>
-            </div>
-            <div>
-              <span className="text-2xs text-text-muted block">Tỷ lệ trùng lặp</span>
-              <span className="text-2xl font-bold text-brand-info">1.2%</span>
-            </div>
-            <div>
-              <span className="text-2xs text-text-muted block">Tổng số câu hỏi</span>
-              <span className="text-2xl font-bold text-text-primary">{dbService.getQuestions().length}</span>
-            </div>
-            <div>
-              <span className="text-2xs text-text-muted block">Cân bằng mức độ</span>
-              <span className="text-2xl font-bold text-brand-success">Tốt</span>
-            </div>
-          </div>
-        </div>
-      )}
+        Nó in ba con số viết cứng: độ phủ kiến thức 98%, tỷ lệ trùng lặp 1,2%, cân bằng mức độ
+        "Tốt". Cả ba giống hệt nhau với mọi môn, mọi thời điểm, mọi người học, tức là ba khẳng
+        định chưa từng đo. Chúng sống sót qua nhiều đợt truy quét "con số bịa" chỉ vì tab này
+        KHÔNG CÓ LỐI VÀO nào, nên không phép kiểm nào và không con mắt nào đi qua.
+
+        Chọn gỡ thay vì nối vào số thật, vì màn Chất lượng học thuật đã làm đúng việc đó bằng số
+        đo thật. Dựng lại ở đây là dựng nguồn thứ hai cho cùng một câu hỏi.
+
+        Con số duy nhất có thật trong khối (tổng số câu hỏi) đã có ở chỗ khác.
+      */}
 
       {/* SMART SEARCH MODAL */}
       {showSearchModal && (

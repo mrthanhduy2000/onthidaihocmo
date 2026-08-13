@@ -897,12 +897,19 @@ export const dbService = {
         return JSON.parse(raw);
       } catch {}
     }
-    // Default fallback goal
-    const defaultDate = TimeService.formatDateISO(TimeService.parseToDate(TimeService.now().getTime() + 14 * 24 * 60 * 60 * 1000));
+    // CHƯA ĐẶT THÌ TRẢ VỀ `null`, KHÔNG BỊA.
+    //
+    // Bản cũ trả về `examDate = hôm nay + 14 ngày` và `targetScore = 8,5`. Hai con số ấy chảy
+    // thẳng ra màn Bàn học thành "Còn 14 ngày tới kỳ thi 26/08/2026, mục tiêu 8,5" trên một hồ sơ
+    // chưa từng đặt gì, và từ 30/07/2026 còn điều khiển thật việc chọn câu qua yếu tố chấm ưu tiên
+    // theo mức nhớ vào ngày thi (bất biến 4.9i). Xem chú thích kiểu `SubjectGoal` trong types.ts.
+    //
+    // Hai trường còn lại giữ mặc định vì chúng là thiết lập thói quen chứ không phải khẳng định
+    // về thực tế: ứng dụng cần một nhịp học mỗi ngày để xếp việc, và 45 phút là nhịp trung tính.
     return {
       subjectId: subId,
-      targetScore: 8.5,
-      examDate: defaultDate,
+      targetScore: null,
+      examDate: null,
       dailyStudyMinutes: 45,
       priority: "High",
       updatedAt: TimeService.now().toISOString()

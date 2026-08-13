@@ -613,7 +613,12 @@ export const examForecaster = {
     // -------------------------------------------------------------
     // LAYER 6: Deadline Proximity & Non-Linear Pressure Curve Stage
     // -------------------------------------------------------------
-    let remainingDays = 14;
+    // CHƯA ĐẶT NGÀY THI THÌ `null`, KHÔNG LÙI VỀ 14.
+    //
+    // Con số 14 cũ là bản sao thứ hai của cùng một điều bịa (bản gốc nằm ở `getSubjectGoal`), nên
+    // gỡ ở một chỗ mà quên chỗ này thì bộ dự báo vẫn tự tin nói "còn 14 ngày". Mọi thứ suy ra từ
+    // đây (giai đoạn áp lực, chỉ số cấp bách, bất định về thời gian) đều phải chịu được `null`.
+    let remainingDays: number | null = null;
     if (goal.examDate) {
       const todayIso = TimeService.today();
       const diff = TimeService.daysBetween(todayIso, goal.examDate);
@@ -623,7 +628,10 @@ export const examForecaster = {
     // Deadline Pressure Curve Mapping
     let pressureCurveStage = "Giai đoạn xây nền (còn trên 60 ngày)";
     let stageLabel = "Foundation";
-    if (remainingDays <= 2) {
+    if (remainingDays === null) {
+      pressureCurveStage = "Chưa đặt ngày thi nên chưa xếp được giai đoạn ôn";
+      stageLabel = "Chưa đặt ngày thi";
+    } else if (remainingDays <= 2) {
       pressureCurveStage = "Giai đoạn ôn nhớ nhanh (còn 1-2 ngày)";
       stageLabel = "Memory Refresh";
     } else if (remainingDays <= 6) {
@@ -640,9 +648,14 @@ export const examForecaster = {
       stageLabel = "Coverage";
     }
 
-    const urgencyIndex = Math.round(
-      ((goal.targetScore - 5.0) * (100 - conceptCoverage) * Math.max(1, studyDebtCount)) / Math.pow(remainingDays, 1.2)
-    );
+    // Chỉ số cấp bách cần CẢ ngày thi lẫn điểm mục tiêu. Thiếu một trong hai thì không có gì để
+    // so nên trả `null`, chứ không thay bằng giá trị trung tính: một chỉ số cấp bách bằng 0 đọc
+    // ra là "không có gì gấp", khác hẳn "chưa biết có gấp hay không".
+    const urgencyIndex = (remainingDays !== null && goal.targetScore !== null)
+      ? Math.round(
+        ((goal.targetScore - 5.0) * (100 - conceptCoverage) * Math.max(1, studyDebtCount)) / Math.pow(remainingDays, 1.2)
+      )
+      : null;
 
     // -------------------------------------------------------------
     // LAYER 7: Evidence-Based Adaptive Weighting
@@ -772,12 +785,25 @@ export const examForecaster = {
     // -------------------------------------------------------------
     // LAYER 10: Uncertainty Decomposition (7 Vectors)
     // -------------------------------------------------------------
-    const gap = Math.max(0, Math.round((goal.targetScore - finalPredictedScore) * 10) / 10);
+    const gap = goal.targetScore !== null
+      ? Math.max(0, Math.round((goal.targetScore - finalPredictedScore) * 10) / 10)
+      : null;
 
-    const knowledgeUncertainty = Math.min(1.0, Math.max(0, gap / Math.max(1, goal.targetScore)));
+    // Chưa đặt mục tiêu thì không có khoảng cách nào để đo, nên vector này lùi về mức trung tính
+    // 0,5 chứ không phải 0. Cho 0 nghĩa là "chắc chắn đạt mục tiêu", một khẳng định không có căn
+    // cứ; 0,5 nghĩa là "không biết", đúng với thực tế.
+    const knowledgeUncertainty = (gap !== null && goal.targetScore !== null)
+      ? Math.min(1.0, Math.max(0, gap / Math.max(1, goal.targetScore)))
+      : 0.5;
     const retentionUncertainty = Math.min(1.0, Math.max(0, (14 - streak) / 14));
     const coverageUncertainty = Math.min(1.0, Math.max(0, (100 - chapterCoverage) / 100));
-    const timeUncertainty = Math.min(1.0, remainingDays <= 3 && (finalPredictedScore / goal.targetScore) < 0.8 ? 0.85 : remainingDays <= 7 ? 0.45 : 0.15);
+    // Chưa đặt ngày thi thì không có sức ép thời gian nào đo được. Lùi về 0,15, đúng mức mà bản cũ
+    // dùng cho "còn trên 7 ngày", vì không biết hạn thì mặc định coi như còn xa.
+    const timeUncertainty = remainingDays === null
+      ? 0.15
+      : Math.min(1.0, remainingDays <= 3 && goal.targetScore !== null && (finalPredictedScore / goal.targetScore) < 0.8
+        ? 0.85
+        : remainingDays <= 7 ? 0.45 : 0.15);
     // Bất định về HÀNH VI học tập.
     //
     // Phần nền: càng ít câu đã làm thì càng khó tin vào dự báo. Bản cũ dùng bậc thang
@@ -834,7 +860,12 @@ export const examForecaster = {
       confidenceLevel = "Trung bình";
     }
 
-    const readinessPercentage = Math.min(100, Math.max(0, Math.round((finalPredictedScore / goal.targetScore) * 100)));
+    // Mức sẵn sàng là TỶ LỆ TRÊN MỤC TIÊU, nên không có mục tiêu thì không có mức sẵn sàng. Đừng
+    // lấy điểm dự báo chia cho 10 thay thế: đó là một đại lượng khác, và nhãn ở
+    // `LearningPlannerDashboard` đã từng gọi sai tên đúng chỗ này một lần rồi.
+    const readinessPercentage = goal.targetScore !== null
+      ? Math.min(100, Math.max(0, Math.round((finalPredictedScore / goal.targetScore) * 100)))
+      : null;
 
     // -------------------------------------------------------------
     // LAYER 11: Local Sensitivity Analysis & Opportunity Cost Engine
@@ -972,7 +1003,9 @@ export const examForecaster = {
       riskReasons.push(`Còn ${studyDebtCount} câu trong sổ câu sai chưa làm lại.`);
       mitigations.push("Ưu tiên dọn sạch Sổ tay câu sai trước khi làm đề thi thử mới.");
     }
-    if (remainingDays <= 5 && readinessPercentage < 75) {
+    // `null <= 5` cho `true` trong JavaScript, nên phải chặn `null` TRƯỚC. Bỏ qua bước này thì
+    // hồ sơ chưa đặt ngày thi lại hiện cảnh báo "Cận kề ngày thi (null ngày)".
+    if (remainingDays !== null && readinessPercentage !== null && remainingDays <= 5 && readinessPercentage < 75) {
       riskReasons.push(`Cận kề ngày thi (${remainingDays} ngày) trong khi độ sẵn sàng đạt ${readinessPercentage}%.`);
       mitigations.push(`Tập trung giai đoạn ${stageLabelVN(stageLabel)} làm đề thi thử tự thích ứng để gia tăng phản xạ.`);
     }
