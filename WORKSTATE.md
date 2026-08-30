@@ -6,7 +6,7 @@ này là tiếp tục được ngay, không phải dò lại từ đầu.
 Đọc kèm: [AGENTS.md](AGENTS.md) cho bất biến kỹ thuật, [BANGIAO.md](BANGIAO.md) cho lịch sử
 quyết định.
 
-**Cập nhật lần cuối**: 13/08/2026, **XONG cả 8 giai đoạn**, trừ thuật sĩ nạp môn đang chờ Supabase sống lại.
+**Cập nhật lần cuối**: 30/08/2026, có **lịch ôn từng ngày tới ngày thi**, thứ Anki không làm được.
 
 ---
 
@@ -15,11 +15,11 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Đợt 8 giai đoạn ĐÃ XONG. Còn nợ: thuật sĩ nạp môn (chờ AI sống lại) |
-| **Current Milestone** | Gói mã 973 xuống 374 KB, gỡ 1.263 dòng mã chết |
+| **Current Milestone** | Lịch ôn từng ngày: dự báo 88% mức nhớ ngày thi so với 5% nếu không ôn |
 | **Current Phase** | Cả 8 giai đoạn XONG. Việc chặn đường: Supabase chết nên AI 401 |
 | **Completed %** | 9 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **277/277 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **284/284 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 

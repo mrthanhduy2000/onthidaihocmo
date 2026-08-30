@@ -59,6 +59,79 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, lịch ôn TỪNG NGÀY tới ngày thi, và một phép kiểm tự mục theo thời gian
+
+Bộ kiểm: **277 lên 284**, không phép kiểm nào biến mất.
+
+Đây là món nợ đã ghi lại hồi 13/08: hàng đợi trả lời được "hôm nay ôn gì" nhưng chưa trả lời được
+"từ giờ tới ngày thi, mỗi ngày ôn gì".
+
+#### Vì sao Anki không thể làm việc này
+
+Không phải "Anki chưa có tính năng đó". Mô hình của Anki **không có khái niệm hạn chót**: cả SM-2
+lẫn FSRS đều chọn thẻ theo đúng một quy tắc là mức nhớ hôm nay đã tụt dưới ngưỡng mong muốn hay
+chưa, và lịch của chúng chạy ra vô hạn. Không có ngày thi trong mô hình thì không tồn tại câu hỏi
+"để dành khái niệm này tới bao giờ".
+
+`lapKeHoachOnTheoNgay` xếp tham lam theo thứ tự thời gian: với mỗi ngày d, tính lợi ích của từng
+khái niệm nếu ôn vào **đúng ngày đó**, lấy các khái niệm lợi nhất vừa quỹ thời gian, rồi mô phỏng
+lượt ôn ấy để ngày sau tính trên trạng thái đã cập nhật.
+
+Điều đáng nói là hành vi "để dành khái niệm dễ quên tới sát ngày thi" **không được lập trình vào**.
+Nó tự nảy ra: ở ngày 0 khoảng cách tới ngày thi còn dài nên khái niệm trôi nhanh có lợi ích thấp;
+càng gần ngày thi lợi ích của chúng càng tăng. Đo được trên dữ liệu thử, kỳ thi còn 30 ngày:
+
+| Khái niệm | Ngày được xếp, trung bình |
+|---|---|
+| Bền (9 đúng 1 sai, 5 ngày lịch) | ngày **+9,3** |
+| Mong manh (2 đúng 6 sai, 1 ngày lịch) | ngày **+27,0** |
+
+Trên bản chạy thật, kỳ thi còn 18 ngày, quỹ 45 phút: dự báo mức nhớ ngày thi **88% nếu theo lịch**
+so với **5% nếu không ôn gì**. Bảy ngày đầu là ngày nghỉ, vì vừa ôn xong thì ôn lại gần như không
+bồi thêm được gì.
+
+#### Ba lỗi tìm được, và cả ba đều do phép kiểm bắt
+
+**1. Hai màn hình cùng trả lời "hôm nay ôn gì" mà đưa ra hai danh sách khác nhau.** Hàng đợi và
+ngày đầu của kế hoạch cùng sắp giảm dần theo lợi ích, nhưng **phá hoà khác nhau**: một bên theo số
+ngày quá hạn, một bên theo tên. Khi nhiều khái niệm có cùng bằng chứng thì lợi ích bằng nhau tuyệt
+đối và hai màn lệch hẳn. Đã gom về `soSanhUuTienOn` dùng chung, phá hoà bằng **số ngày đã nghỉ** vì
+đó là đại lượng bộ lập lịch tính được ở mọi ngày trong tương lai, còn "quá hạn" chỉ có nghĩa cho
+hôm nay. Một khoá phá hoà mà một trong hai nơi không tính được thì không phải khoá dùng chung.
+
+**2. Màn hình mời làm một việc không tồn tại.** Vừa ôn xong nên lịch bắt đầu từ ngày thứ bảy, mà
+nút vẫn mời "Làm phần của hôm nay". Nay ngày nghỉ thì nói thẳng là nghỉ và chỉ ra ngày có việc gần
+nhất. Cùng họ với bất biến 4.9h, chỉ khác là câu trả lời đúng ở đây là "hôm nay nghỉ" chứ không
+phải "bạn chưa có dữ liệu".
+
+**3. Câu giải thích bám sai nguyên nhân.** Nhánh "chưa có lịch sử học" vẫn in kèm lời khuyên đi đặt
+ngày thi.
+
+#### Lỗi đáng ghi nhất, và nó không nằm trong mã sản phẩm
+
+Trong lúc tách hàm dùng chung, phép kiểm AO9 chuyển đỏ và báo "vừa ôn xong mà ôn lại vẫn được hứa
+2,5 điểm phần trăm". Nhìn thì đúng như một hồi quy do phép tách gây ra.
+
+Thật ra **mã hoàn toàn đúng, chính phép kiểm mới sai**. AO9 dựng ba mốc học viết cứng
+"2026-08-05/08/13". Hệ số giãn cách đếm số NGÀY LỊCH khác nhau, nên khi hôm nay đã trôi khỏi mốc
+cuối thì lượt ôn giả định tạo thêm một ngày lịch mới và lợi ích thôi bằng 0. Nó đạt đúng vào hôm
+viết ra rồi tự đỏ mười bảy ngày sau. Dựng mốc tương đối theo `TimeService.now()` thì bảng số ra lại
+đúng y như đã ghi: 0 ngày cho 0,0 điểm, nửa ngày 4,6, ba ngày 23,5, mười ngày 51,9.
+
+**Bài học: một phép kiểm tự hỏng theo thời gian còn tệ hơn không có phép kiểm**, vì nó dạy người
+đọc bỏ qua màu đỏ, và lần này nó suýt khiến tôi "sửa" một đoạn mã không hỏng. AR6 quét cả họ: không
+phép kiểm nào được ghim ngày tháng viết cứng làm dữ liệu thử, danh sách miễn trừ nêu đích danh.
+
+Đây là lần thứ tư trong dự án một phép kiểm mới sai ở bản đầu, và lần này là kiểu sai nguy hiểm
+nhất trong bốn lần: ba lần trước phép kiểm đỏ ngay nên lộ ra, lần này nó xanh rồi mới mục.
+
+#### Cố ý không làm
+
+Không hiển thị lịch dạng lưới lịch tháng. Bốn mươi ngày × mười khái niệm là một bảng không ai đọc,
+trong khi thứ người học cần là vài ngày đầu. Danh sách hàng, tối đa 14 ngày, và nói ra phần bị cắt.
+
+---
+
 ### 13/08/2026, tách gói, và gói nặng nhất hóa ra không phải mã
 
 Giai đoạn 8, giai đoạn cuối của đợt. Bộ kiểm: **274 lên 277**, không phép kiểm nào biến mất.

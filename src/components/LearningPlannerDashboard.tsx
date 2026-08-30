@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Target, TrendingUp, Clock, AlertTriangle, Sliders, CheckCircle2, Trash2, Copy, Info, Layers } from "lucide-react";
+import { Target, TrendingUp, Clock, AlertTriangle, Sliders, CheckCircle2, Trash2, Copy, Info, Layers, CalendarDays } from "lucide-react";
 import { dbService } from "../services/db";
 import { examForecaster } from "../services/examForecaster";
 import { SubjectGoal, ExamPrediction, StudyDebtItem, ExamAttempt } from "../types";
 import { TimeService } from "../services/time";
 import { soThapPhan } from "../services/numberFormat";
+import { learnerModelService } from "../services/learnerModel";
 
 interface LearningPlannerDashboardProps {
   key?: string;
@@ -18,7 +19,7 @@ interface LearningPlannerDashboardProps {
 }
 
 export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }: LearningPlannerDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"forecast" | "goals" | "budget" | "debt" | "simulator" | "sessions">("forecast");
+  const [activeTab, setActiveTab] = useState<"forecast" | "lich" | "goals" | "budget" | "debt" | "simulator" | "sessions">("forecast");
 
   // Subject Goal State
   const activeSubjectId = dbService.getActiveSubjectId();
@@ -183,6 +184,7 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       <div className="flex items-center gap-1 overflow-x-auto pb-2 border-b border-border-primary/60 no-scrollbar">
         {[
           { key: "forecast", label: "Dự báo và khoảng cách", icon: TrendingUp },
+          { key: "lich", label: "Lịch ôn từng ngày", icon: CalendarDays },
           { key: "goals", label: "Mục tiêu & Đặt lịch thi", icon: Target },
           { key: "budget", label: "Thời gian mỗi ngày", icon: Clock },
           { key: "debt", label: "Phần cần sửa", icon: AlertTriangle, count: debtItems.filter(i => i.status === "pending").length },
@@ -459,6 +461,166 @@ export default function LearningPlannerDashboard({ onStartExam, onNavigateHome }
       )}
 
       {/* TAB 2: GOALS & TIMELINE */}
+      {/*
+        LỊCH ÔN TỪNG NGÀY TỚI NGÀY THI.
+
+        VÌ SAO KHỐI NÀY TỒN TẠI. Hàng đợi trên Bàn học đã trả lời được "hôm nay ôn gì". Nhưng người
+        ôn thi cần thấy CẢ ĐOẠN ĐƯỜNG: khái niệm nào để dành tới sát ngày thi thay vì ôn sớm rồi
+        quên, ngày nào được nghỉ, và làm theo lịch thì tới hôm thi còn nhớ hơn bao nhiêu.
+
+        Đây là thứ Anki không thể làm, và lý do sâu hơn "chưa có tính năng": mô hình của Anki KHÔNG
+        CÓ khái niệm hạn chót, lịch của nó chạy ra vô hạn. Không có ngày thi trong mô hình thì không
+        có câu hỏi "từ giờ tới hôm đó, mỗi ngày nên ôn gì".
+
+        Khuôn trình bày 4.9g: HÀNG chứ không phải thẻ, không hộp lồng hộp.
+      */}
+      {activeTab === "lich" && (() => {
+        const keHoach = learnerModelService.lapKeHoachOnTheoNgay();
+
+        if (!keHoach.duDuLieu) {
+          return (
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-text-primary font-sans">Chưa xếp được lịch ôn</h3>
+              {/*
+                Câu giải thích phải bám ĐÚNG lý do. Bản đầu in kèm câu về ngày thi cho cả hai nhánh,
+                nên người chưa làm bài nào lại đọc được lời khuyên đi đặt ngày thi, tức màn hình chỉ
+                sai nguyên nhân. Bất biến 4.9h: màn hình phải nói đúng với người chưa bắt đầu.
+              */}
+              <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem]">
+                {keHoach.lyDoChuaLap}{" "}
+                {keHoach.soNgayToiKyThi === null
+                  ? "Lịch này xếp theo mức có lợi nhất cho ĐÚNG ngày thi, nên thiếu ngày thi thì nó không hơn gì một danh sách quá hạn thông thường."
+                  : "Lịch cần biết bạn đang nhớ tới đâu mới xếp được. Làm xong một lượt ôn là nó có căn cứ."}
+              </p>
+              {keHoach.soNgayToiKyThi === null && (
+                <button
+                  onClick={() => setActiveTab("goals")}
+                  className="mt-1 px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
+                >
+                  Đặt ngày thi
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        const nangDuoc = keHoach.mucNhoNgayThiNeuTheoKeHoach - keHoach.mucNhoNgayThiNeuKhongOn;
+        return (
+          <div className="space-y-5">
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold text-text-primary font-sans">
+                Lịch ôn {keHoach.cacNgay.length} ngày tới kỳ thi
+              </h3>
+              <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem]">
+                Còn {keHoach.soNgayToiKyThi} ngày, quỹ {keHoach.phutMoiNgay} phút mỗi ngày. Khái niệm
+                dễ quên được để dành tới gần ngày thi, khái niệm bền ôn sớm.
+              </p>
+            </div>
+
+            {/*
+              HAI KỊCH BẢN cạnh nhau. Một con số đơn độc không nói lên điều gì: người học cần thấy
+              nó so với việc không làm gì. Đây là số suy ra từ đường cong quên, không phải số đo,
+              nên câu chữ phải nói đúng là DỰ BÁO.
+            */}
+            <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+              <div className="py-3 flex items-baseline justify-between gap-4">
+                <span className="text-sm text-text-secondary">Dự báo mức nhớ vào ngày thi nếu làm theo lịch này</span>
+                <span className="text-sm font-semibold text-text-primary tabular-nums shrink-0">
+                  {Math.round(keHoach.mucNhoNgayThiNeuTheoKeHoach * 100)}%
+                </span>
+              </div>
+              <div className="py-3 flex items-baseline justify-between gap-4">
+                <span className="text-sm text-text-secondary">Nếu từ giờ không ôn gì thêm</span>
+                <span className="text-sm font-semibold text-text-primary tabular-nums shrink-0">
+                  {Math.round(keHoach.mucNhoNgayThiNeuKhongOn * 100)}%
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-text-muted">
+              Chênh {Math.round(nangDuoc * 100)} điểm phần trăm. Đây là dự báo suy ra từ đường cong
+              quên của chính bạn, không phải số đo, nên hãy đọc nó như một hướng chứ không như một
+              lời hứa.
+            </p>
+
+            <div className="grid grid-cols-1 divide-y divide-border-primary/70 border-y border-border-primary/70">
+              {keHoach.cacNgay.slice(0, 14).map(ngay => (
+                <div key={ngay.soNgayNua} className="py-3 space-y-1">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-sm font-semibold text-text-primary">
+                      {/*
+                        "Trong N ngày nữa" chứ không phải "Còn N ngày nữa": tiêu đề ngay phía trên
+                        đã dùng "Còn N ngày" cho khoảng cách tới KỲ THI, hai thứ khác nhau mà cùng
+                        một lối nói thì đọc lướt sẽ lẫn.
+                      */}
+                      {ngay.soNgayNua === 0 ? "Hôm nay" : ngay.soNgayNua === 1 ? "Ngày mai" : `Trong ${ngay.soNgayNua} ngày nữa`}
+                      <span className="text-text-muted font-normal"> · {TimeService.formatDate(ngay.ngayISO)}</span>
+                    </span>
+                    <span className="text-xs text-text-muted tabular-nums shrink-0">
+                      {ngay.danhSach.length} khái niệm
+                    </span>
+                  </div>
+                  <p className="text-sm text-text-secondary leading-relaxed">
+                    {ngay.danhSach.map(m => m.tenKhaiNiem).join(", ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Nói ra phần bị giấu. Cắt âm thầm thì màn hình đọc ra là "chỉ có bấy nhiêu". */}
+            {keHoach.cacNgay.length > 14 && (
+              <p className="text-xs text-text-muted">
+                Còn {keHoach.cacNgay.length - 14} ngày nữa trong lịch, chưa hiện ở đây. Lịch được xếp
+                lại mỗi lần bạn mở màn này, nên cứ làm theo vài ngày đầu là đủ.
+              </p>
+            )}
+            {keHoach.soNgayNghi > 0 && (
+              <p className="text-xs text-text-muted">
+                {keHoach.soNgayNghi} ngày trong quãng này không có việc. Nghỉ đúng lúc cũng là một
+                phần của lịch: ôn lại khi vẫn còn nhớ rõ thì gần như không bồi thêm được gì.
+              </p>
+            )}
+            {keHoach.khongXepDuoc.length > 0 && (
+              <p className="text-xs text-text-muted">
+                {keHoach.khongXepDuoc.length} khái niệm không xếp được ngày nào vì vượt quỹ{" "}
+                {keHoach.phutMoiNgay} phút mỗi ngày. Tăng quỹ thời gian trong mục Thời gian mỗi ngày
+                nếu muốn phủ hết.
+              </p>
+            )}
+            {keHoach.daCatVìQuaXa && (
+              <p className="text-xs text-text-muted">
+                Kỳ thi còn xa hơn 90 ngày nên lịch chỉ xếp tới ngày thứ 90.
+              </p>
+            )}
+
+            {/*
+              NÚT CHỈ HIỆN KHI HÔM NAY THẬT SỰ CÓ VIỆC.
+
+              Đo được trên bản chạy thật ngày 30/08/2026: vừa ôn xong nên lịch bắt đầu từ ngày thứ
+              bảy, mà nút vẫn mời "Làm phần của hôm nay". Bấm vào là sinh một đề rỗng cho một việc
+              không tồn tại. Màn hình phải nói đúng cả khi câu trả lời đúng là "hôm nay nghỉ".
+            */}
+            {keHoach.cacNgay.some(n => n.soNgayNua === 0) ? (
+              <div>
+                <button
+                  onClick={() => onStartExam("due")}
+                  className="px-4 h-9 bg-nut-chinh text-white hover:bg-nut-chinh-re-chuot text-sm rounded transition cursor-pointer"
+                >
+                  Làm phần của hôm nay
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm text-text-secondary leading-relaxed max-w-[42rem]">
+                Hôm nay không có việc trong lịch. Việc gần nhất là{" "}
+                {keHoach.cacNgay[0].soNgayNua === 1
+                  ? "ngày mai"
+                  : `trong ${keHoach.cacNgay[0].soNgayNua} ngày nữa`}
+                , ngày {TimeService.formatDate(keHoach.cacNgay[0].ngayISO)}.
+              </p>
+            )}
+          </div>
+        );
+      })()}
+
       {activeTab === "goals" && (
         <div className="space-y-6">
           {/* Goal Editor Form */}

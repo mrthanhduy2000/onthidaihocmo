@@ -17,7 +17,7 @@ if (typeof globalThis !== "undefined" && typeof (globalThis as any).localStorage
 
 import { dbService, setConceptMasteryBothKeys, questionMap, dangKyDonDuLieuSuyRa } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
-import { conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, loiIchOnHomNay, mucNhoVaoNgayThi, rutBangChungTriNho, rutCapNhoLai } from "./conceptMemoryService";
+import { BangChungTriNho, bangChungSauMotLuotOn, conceptMemoryService, conNhoSauNgay, doBenTriNhoNgay, doKhoTienNghiem, loiIchOnHomNay, mucNhoVaoNgayThi, rutBangChungTriNho, rutCapNhoLai } from "./conceptMemoryService";
 import { TimeService } from "./time";
 import { soThapPhan } from "./numberFormat";
 
@@ -64,6 +64,8 @@ export interface MucOnTap {
   mucNhoNgayThi: number | null;
   /** Mức nhớ ngày thi tăng thêm nếu ôn hôm nay. `null` khi chưa đặt ngày thi. */
   loiIchNeuOnHomNay: number | null;
+  /** Số ngày đã nghỉ kể từ lần học gần nhất. Dùng làm khoá phá hoà, và đọc được cho người học. */
+  soNgayDaNghi: number;
   /** Câu giải thích vì sao mục này nằm ở đây, viết cho người học đọc. */
   lyDo: string;
 }
@@ -93,6 +95,96 @@ export interface HangDoiOnTap {
  * hứa một đằng còn đề sinh ra một nẻo.
  */
 export const SO_CAU_MOI_KHAI_NIEM = 3;
+
+/**
+ * NGƯỠNG LỢI ÍCH ĐÁNG BỎ CÔNG, tính bằng điểm phần trăm mức nhớ vào ngày thi.
+ *
+ * Đặt 1 điểm phần trăm, cố ý rất thấp. Nó không phải để lọc bớt cho gọn mà chỉ để loại đúng nhóm
+ * "ôn hôm nay coi như không thay đổi gì cho ngày thi", tức nhóm mà Anki bắt ôn một cách lãng phí.
+ * Đặt cao hơn sẽ bắt đầu cắt cả những khái niệm đáng ôn, và lúc ấy phải đo lại chứ đừng đoán.
+ *
+ * ĐỂ Ở CẤP MÔ ĐUN vì có hai nơi dùng: hàng đợi hôm nay và bộ lập lịch nhiều ngày. Hai nơi đặt hai
+ * ngưỡng khác nhau thì ngày đầu của kế hoạch sẽ không khớp với việc hôm nay, và màn hình tự mâu
+ * thuẫn với chính nó.
+ */
+export const NGUONG_LOI_ICH = 0.01;
+
+/**
+ * QUY TẮC ƯU TIÊN ÔN, dùng chung cho hàng đợi hôm nay và bộ lập lịch nhiều ngày.
+ *
+ * ĐO ĐƯỢC NGÀY 30/08/2026: hai nơi từng tự viết phép sắp xếp riêng, cùng sắp giảm dần theo lợi
+ * ích nhưng PHÁ HOÀ khác nhau, một bên theo số ngày quá hạn còn một bên theo tên. Khi nhiều khái
+ * niệm có cùng bằng chứng thì lợi ích bằng nhau tuyệt đối, và hai màn hình cùng trả lời câu hỏi
+ * "hôm nay ôn gì" lại đưa ra hai danh sách khác nhau. Người học không biết tin màn nào.
+ *
+ * Phá hoà bằng SỐ NGÀY ĐÃ NGHỈ chứ không bằng số ngày quá hạn: số ngày nghỉ là đại lượng bộ lập
+ * lịch tính được ở MỌI ngày trong tương lai, còn "quá hạn" chỉ có nghĩa cho hôm nay. Một khoá phá
+ * hoà mà một trong hai nơi không tính được thì không phải khoá dùng chung.
+ *
+ * Bất biến 4.7: tất định, hoà nữa thì so tên.
+ */
+export function soSanhUuTienOn(
+  a: { loiIch: number; soNgayDaNghi: number; ten: string },
+  b: { loiIch: number; soNgayDaNghi: number; ten: string }
+): number {
+  const chenhLoiIch = b.loiIch - a.loiIch;
+  if (Math.abs(chenhLoiIch) > 1e-9) return chenhLoiIch;
+  const chenhNghi = b.soNgayDaNghi - a.soNgayDaNghi;
+  if (Math.abs(chenhNghi) > 1e-9) return chenhNghi;
+  return a.ten.localeCompare(b.ten, "vi");
+}
+
+/** Trần số ngày lập kế hoạch. Kỳ thi xa hơn mức này thì cắt và nói rõ là đã cắt. */
+export const TRAN_NGAY_LAP_KE_HOACH = 90;
+
+/**
+ * Quỹ việc của MỘT ngày: bao nhiêu khái niệm ôn được trong `phutMoiNgay` phút.
+ *
+ * Nhịp lấy từ chính người học khi đã đủ dữ liệu, chưa đủ thì lùi về ước tính của ngân hàng câu
+ * hỏi. Tách ra thành hàm riêng vì hàng đợi hôm nay và bộ lập lịch nhiều ngày PHẢI dùng cùng một
+ * phép tính; lệch nhau thì kế hoạch hứa một đằng, việc hôm nay làm một nẻo.
+ */
+export function quyViecMotNgay(gioiHanPhut?: number): { phutMoiNgay: number; giayMoiCau: number; soKhaiNiemVua: number } {
+  const phutMoiNgay = gioiHanPhut ?? dbService.getSubjectGoal()?.dailyStudyMinutes ?? 45;
+  const giayMoiCau = nhipRiengMoiCau() ?? 35;
+  const soCauLamDuoc = Math.max(1, Math.floor((phutMoiNgay * 60) / Math.max(1, giayMoiCau)));
+  return { phutMoiNgay, giayMoiCau, soKhaiNiemVua: Math.max(1, Math.floor(soCauLamDuoc / SO_CAU_MOI_KHAI_NIEM)) };
+}
+
+/** Một khái niệm trong kế hoạch của một ngày cụ thể. */
+export interface MucKeHoachNgay {
+  tenKhaiNiem: string;
+  /** Lợi ích dự kiến nếu ôn khái niệm này vào ĐÚNG ngày đó, điểm phần trăm mức nhớ ngày thi. */
+  loiIch: number;
+}
+
+/** Một ngày trong kế hoạch ôn. */
+export interface NgayTrongKeHoach {
+  /** 0 là hôm nay, 1 là ngày mai. */
+  soNgayNua: number;
+  ngayISO: string;
+  danhSach: MucKeHoachNgay[];
+}
+
+/** Kế hoạch ôn từ hôm nay tới trước ngày thi. */
+export interface KeHoachOnNhieuNgay {
+  duDuLieu: boolean;
+  /** Vì sao chưa lập được. Rỗng khi lập được. */
+  lyDoChuaLap: string;
+  soNgayToiKyThi: number | null;
+  phutMoiNgay: number;
+  /** Chỉ các ngày CÓ việc. Ngày trống không đưa vào, nhưng được đếm ở `soNgayNghi`. */
+  cacNgay: NgayTrongKeHoach[];
+  soNgayNghi: number;
+  /** Mức nhớ trung bình vào ngày thi NẾU làm theo kế hoạch, thang 0 đến 1. */
+  mucNhoNgayThiNeuTheoKeHoach: number;
+  /** Mức nhớ trung bình vào ngày thi NẾU không ôn gì thêm, thang 0 đến 1. */
+  mucNhoNgayThiNeuKhongOn: number;
+  /** Khái niệm không xếp được ngày nào vì hết quỹ thời gian. */
+  khongXepDuoc: string[];
+  /** Kỳ thi xa hơn trần lập kế hoạch nên đã cắt bớt. */
+  daCatVìQuaXa: boolean;
+}
 
 export interface AdaptiveMemory {
   preferredExplanationStyle: "academic" | "simplified" | "intuitive" | "visual";
@@ -965,7 +1057,24 @@ export const learnerModelService = {
    * Bất biến 4.5: tên khái niệm là tên của đồ thị tri thức, không phải `question.concept`.
    * Bất biến 4.7: sắp xếp TẤT ĐỊNH, hoà thì so tên.
    */
-  layKhaiNiemToiHan(gioiHanPhut?: number): HangDoiOnTap {
+  /**
+   * NỀN CHUNG cho mọi việc xếp lịch: mỗi khái niệm kèm bằng chứng trí nhớ và số ngày đã nghỉ.
+   *
+   * Tách ra ngày 30/08/2026 vì hàng đợi hôm nay và bộ lập lịch nhiều ngày cần đúng cùng một bộ
+   * đầu vào. Để hai nơi tự dựng là tạo bản chép thứ hai của cách rút bằng chứng, và khi đó ngày
+   * đầu của kế hoạch có thể không khớp với việc hôm nay, tức màn hình tự mâu thuẫn với chính nó.
+   */
+  nenTangXepLich(): {
+    soNgayToiKyThi: number | null;
+    cacKhaiNiem: Array<{
+      tenKhaiNiem: string;
+      bangChung: BangChungTriNho;
+      soNgayDaNghi: number;
+      soNgayQuaHan: number;
+      mucConNho: number;
+      doBenNgay: number;
+    }>;
+  } {
     const profiles = this.getConceptProfiles();
     const bayGio = TimeService.now().getTime();
 
@@ -977,7 +1086,10 @@ export const learnerModelService = {
     }
 
     const hoSoTriNho = conceptMemoryService.getAllConceptProfiles();
-    const tatCa: MucOnTap[] = [];
+    const cacKhaiNiem: Array<{
+      tenKhaiNiem: string; bangChung: BangChungTriNho; soNgayDaNghi: number;
+      soNgayQuaHan: number; mucConNho: number; doBenNgay: number;
+    }> = [];
 
     for (const ten of Object.keys(profiles)) {
       // Bắt buộc tính lại: `getConceptProfiles` trả về bản đã lưu, chưa chạy đường cong quên.
@@ -986,42 +1098,167 @@ export const learnerModelService = {
 
       const soNgayDaNghi = Math.max(0, (bayGio - new Date(hoSo.lastStudiedAt).getTime()) / 86400000);
       const soNgayQuaHan = (bayGio - new Date(hoSo.nextReviewAt).getTime()) / 86400000;
-      const doBenNgay = hoSo.doBenTriNhoNgay ?? 1;
-
       const banGocTriNho = hoSoTriNho[ten];
-      const bangChung = banGocTriNho
-        ? rutBangChungTriNho(banGocTriNho)
-        : {
-          soLanNhoLaiDung: hoSo.correctCount,
-          soLanNhoLaiSai: hoSo.incorrectCount,
-          dinhCaoDoThao: 50,
-          doKhoKhaiNiem: 5.0,
-          mocHocISO: hoSo.reviewHistory,
-        };
 
-      const loiIch = loiIchOnHomNay(bangChung, soNgayToiKyThi, soNgayDaNghi);
-      const nhoNgayThi = mucNhoVaoNgayThi(doBenNgay, soNgayToiKyThi, soNgayDaNghi);
-
-      tatCa.push({
+      cacKhaiNiem.push({
         tenKhaiNiem: ten,
-        soNgayQuaHan: parseFloat(soNgayQuaHan.toFixed(2)),
+        soNgayDaNghi,
+        soNgayQuaHan,
         mucConNho: hoSo.forgettingScore,
-        doBenNgay,
-        mucNhoNgayThi: nhoNgayThi,
-        loiIchNeuOnHomNay: loiIch,
-        lyDo: "",
+        doBenNgay: hoSo.doBenTriNhoNgay ?? 1,
+        bangChung: banGocTriNho
+          ? rutBangChungTriNho(banGocTriNho)
+          : {
+            soLanNhoLaiDung: hoSo.correctCount,
+            soLanNhoLaiSai: hoSo.incorrectCount,
+            dinhCaoDoThao: 50,
+            doKhoKhaiNiem: 5.0,
+            mocHocISO: hoSo.reviewHistory,
+          },
       });
     }
 
-    const xepTheoNgayThi = soNgayToiKyThi !== null;
+    // Tất định: sắp theo tên trước khi trả về, để mọi nơi tiêu thụ nhận cùng một thứ tự (4.7).
+    cacKhaiNiem.sort((a, b) => a.tenKhaiNiem.localeCompare(b.tenKhaiNiem, "vi"));
+    return { soNgayToiKyThi, cacKhaiNiem };
+  },
 
-    // NGƯỠNG LỢI ÍCH ĐÁNG BỎ CÔNG, tính bằng điểm phần trăm mức nhớ ngày thi.
-    //
-    // Đặt 1 điểm phần trăm, cố ý rất thấp. Nó không phải để lọc bớt cho gọn mà chỉ để loại đúng
-    // nhóm "ôn hôm nay coi như không thay đổi gì cho ngày thi", tức nhóm mà Anki bắt ôn một cách
-    // lãng phí. Đặt cao hơn sẽ bắt đầu cắt cả những khái niệm đáng ôn, và lúc ấy phải đo lại chứ
-    // đừng đoán.
-    const NGUONG_LOI_ICH = 0.01;
+  /**
+   * KẾ HOẠCH ÔN TỪ HÔM NAY TỚI TRƯỚC NGÀY THI, mỗi ngày ôn khái niệm nào.
+   *
+   * ĐÂY LÀ THỨ ANKI KHÔNG THỂ LÀM, và lý do sâu hơn "Anki chưa có tính năng đó": mô hình của Anki
+   * KHÔNG CÓ khái niệm hạn chót. Cả SM-2 lẫn FSRS đều chọn thẻ theo một quy tắc duy nhất là mức
+   * nhớ hôm nay đã tụt dưới ngưỡng mong muốn hay chưa, và lịch của chúng chạy ra vô hạn. Không có
+   * ngày thi trong mô hình thì không có cách nào hỏi "từ giờ tới hôm đó, mỗi ngày nên ôn gì".
+   *
+   * Hàng đợi hôm nay đã trả lời được "hôm nay ôn gì". Hàm này trả lời phần còn lại, và đó là phần
+   * người ôn thi thật sự cần: nhìn thấy cả đoạn đường, biết khái niệm nào để dành tới sát ngày thi
+   * chứ không ôn sớm rồi quên.
+   *
+   * CÁCH XẾP: tham lam theo thứ tự thời gian. Với mỗi ngày d, tính lợi ích của từng khái niệm nếu
+   * ôn vào đúng ngày đó, lấy các khái niệm lợi nhất vừa quỹ thời gian, rồi MÔ PHỎNG lượt ôn ấy để
+   * ngày sau tính trên trạng thái đã cập nhật.
+   *
+   * Vì sao xếp tham lam theo thứ tự thời gian là đúng chứ không chỉ là dễ: lợi ích của một khái
+   * niệm phụ thuộc khoảng cách từ ngày ôn tới ngày thi. Ở ngày 0, khoảng cách còn dài nên khái
+   * niệm trôi nhanh có lợi ích THẤP; càng gần ngày thi lợi ích của chúng càng tăng. Nghĩa là việc
+   * "để dành khái niệm dễ quên tới sát ngày thi" tự nảy ra từ công thức, không phải một luật dán
+   * thêm bên ngoài. Đó cũng là điều `loiIchOnHomNay` đã chứng minh cho MỘT ngày, nay trải ra cả
+   * đoạn đường.
+   *
+   * KHÔNG viết đường cong mới ở đây (bất biến 4.9c). Chỉ gọi lại `loiIchOnHomNay`,
+   * `bangChungSauMotLuotOn`, `doBenTriNhoNgay` và `conNhoSauNgay`.
+   *
+   * Tất định (bất biến 4.7): hoà lợi ích thì so tên.
+   */
+  lapKeHoachOnTheoNgay(gioiHanPhut?: number): KeHoachOnNhieuNgay {
+    const nen = this.nenTangXepLich();
+    const { phutMoiNgay, soKhaiNiemVua } = quyViecMotNgay(gioiHanPhut);
+    const khung: KeHoachOnNhieuNgay = {
+      duDuLieu: false,
+      lyDoChuaLap: "",
+      soNgayToiKyThi: nen.soNgayToiKyThi,
+      phutMoiNgay,
+      cacNgay: [],
+      soNgayNghi: 0,
+      mucNhoNgayThiNeuTheoKeHoach: 0,
+      mucNhoNgayThiNeuKhongOn: 0,
+      khongXepDuoc: [],
+      daCatVìQuaXa: false,
+    };
+
+    // Không có ngày thi thì KHÔNG lập kế hoạch. Cả giá trị của hàm này nằm ở chỗ nó xếp theo hạn
+    // chót; thiếu hạn chót thì nó chỉ còn là Anki, mà việc đó hàng đợi hôm nay đã làm rồi.
+    if (nen.soNgayToiKyThi === null) {
+      return { ...khung, lyDoChuaLap: "Chưa đặt ngày thi nên chưa xếp được lịch từng ngày." };
+    }
+    if (nen.cacKhaiNiem.length === 0) {
+      return { ...khung, lyDoChuaLap: "Chưa có khái niệm nào có lịch sử học để xếp." };
+    }
+
+    const D = nen.soNgayToiKyThi;
+    const soNgayLap = Math.max(1, Math.min(TRAN_NGAY_LAP_KE_HOACH, D));
+    const bayGio = TimeService.now().getTime();
+
+    // Trạng thái mô phỏng cho từng khái niệm.
+    const trangThai = nen.cacKhaiNiem.map(k => ({
+      ten: k.tenKhaiNiem,
+      bangChung: k.bangChung,
+      /** Ngày ôn gần nhất TRONG kế hoạch, `null` nghĩa là chưa xếp ngày nào. */
+      ngayOnCuoi: null as number | null,
+      soNgayDaNghiBanDau: k.soNgayDaNghi,
+      bangChungGoc: k.bangChung,
+    }));
+
+    const cacNgay: NgayTrongKeHoach[] = [];
+    let soNgayNghi = 0;
+
+    for (let d = 0; d < soNgayLap; d++) {
+      const ungVien = trangThai.map(t => {
+        const daNghi = t.ngayOnCuoi === null ? t.soNgayDaNghiBanDau + d : d - t.ngayOnCuoi;
+        return { t, daNghi, loiIch: loiIchOnHomNay(t.bangChung, D - d, daNghi) ?? 0 };
+      });
+
+      ungVien.sort((a, b) => soSanhUuTienOn(
+        { loiIch: a.loiIch, soNgayDaNghi: a.daNghi, ten: a.t.ten },
+        { loiIch: b.loiIch, soNgayDaNghi: b.daNghi, ten: b.t.ten }
+      ));
+
+      const chon = ungVien.filter(u => u.loiIch >= NGUONG_LOI_ICH).slice(0, soKhaiNiemVua);
+      if (chon.length === 0) { soNgayNghi++; continue; }
+
+      const mocNgayDo = new Date(bayGio + d * 86400000).toISOString();
+      chon.forEach(u => {
+        u.t.bangChung = bangChungSauMotLuotOn(u.t.bangChung, u.daNghi, mocNgayDo);
+        u.t.ngayOnCuoi = d;
+      });
+
+      cacNgay.push({
+        soNgayNua: d,
+        ngayISO: TimeService.formatDateISO(mocNgayDo),
+        danhSach: chon.map(u => ({ tenKhaiNiem: u.t.ten, loiIch: u.loiIch })),
+      });
+    }
+
+    // Mức nhớ vào ngày thi, hai kịch bản. Đây là con số ĐO ĐƯỢC từ mô hình chứ không phải lời hứa:
+    // cùng một đường cong, chỉ khác ở chỗ có mô phỏng các lượt ôn hay không.
+    const nhoTheoKeHoach = trangThai.map(t => conNhoSauNgay(
+      doBenTriNhoNgay(t.bangChung),
+      t.ngayOnCuoi === null ? t.soNgayDaNghiBanDau + D : D - t.ngayOnCuoi
+    ));
+    const nhoNeuKhongOn = trangThai.map(t => conNhoSauNgay(
+      doBenTriNhoNgay(t.bangChungGoc), t.soNgayDaNghiBanDau + D
+    ));
+    const trungBinh = (ds: number[]) => ds.length === 0 ? 0 : ds.reduce((a, b) => a + b, 0) / ds.length;
+
+    return {
+      ...khung,
+      duDuLieu: true,
+      cacNgay,
+      soNgayNghi,
+      mucNhoNgayThiNeuTheoKeHoach: trungBinh(nhoTheoKeHoach),
+      mucNhoNgayThiNeuKhongOn: trungBinh(nhoNeuKhongOn),
+      khongXepDuoc: trangThai.filter(t => t.ngayOnCuoi === null).map(t => t.ten),
+      daCatVìQuaXa: D > TRAN_NGAY_LAP_KE_HOACH,
+    };
+  },
+
+  layKhaiNiemToiHan(gioiHanPhut?: number): HangDoiOnTap {
+    const nen = this.nenTangXepLich();
+    const soNgayToiKyThi = nen.soNgayToiKyThi;
+
+    const tatCa: MucOnTap[] = nen.cacKhaiNiem.map(k => ({
+      tenKhaiNiem: k.tenKhaiNiem,
+      soNgayQuaHan: parseFloat(k.soNgayQuaHan.toFixed(2)),
+      mucConNho: k.mucConNho,
+      doBenNgay: k.doBenNgay,
+      mucNhoNgayThi: mucNhoVaoNgayThi(k.doBenNgay, soNgayToiKyThi, k.soNgayDaNghi),
+      loiIchNeuOnHomNay: loiIchOnHomNay(k.bangChung, soNgayToiKyThi, k.soNgayDaNghi),
+      soNgayDaNghi: k.soNgayDaNghi,
+      lyDo: "",
+    }));
+
+    const xepTheoNgayThi = soNgayToiKyThi !== null;
 
     const toiHan = tatCa.filter(m => {
       if (!xepTheoNgayThi) return m.soNgayQuaHan >= 0;
@@ -1031,10 +1268,15 @@ export const learnerModelService = {
     });
 
     toiHan.sort((a, b) => {
+      // Có ngày thi thì xếp theo lợi ích, dùng ĐÚNG quy tắc mà bộ lập lịch nhiều ngày dùng, để
+      // ngày đầu của kế hoạch không bao giờ lệch với việc hôm nay. Nhóm kiểm AR canh điều đó.
       if (xepTheoNgayThi) {
-        const chenh = (b.loiIchNeuOnHomNay ?? 0) - (a.loiIchNeuOnHomNay ?? 0);
-        if (Math.abs(chenh) > 1e-9) return chenh;
+        return soSanhUuTienOn(
+          { loiIch: a.loiIchNeuOnHomNay ?? 0, soNgayDaNghi: a.soNgayDaNghi, ten: a.tenKhaiNiem },
+          { loiIch: b.loiIchNeuOnHomNay ?? 0, soNgayDaNghi: b.soNgayDaNghi, ten: b.tenKhaiNiem }
+        );
       }
+      // Chưa đặt ngày thi thì lùi về xếp theo mức quá hạn, tức đúng cách của Anki.
       const chenhHan = b.soNgayQuaHan - a.soNgayQuaHan;
       if (Math.abs(chenhHan) > 1e-9) return chenhHan;
       return a.tenKhaiNiem.localeCompare(b.tenKhaiNiem, "vi");
@@ -1063,10 +1305,7 @@ export const learnerModelService = {
     // Cắt theo quỹ thời gian. Nhịp lấy từ chính người học khi đã đủ dữ liệu, không đủ thì lùi về
     // ước tính của ngân hàng câu hỏi. `SO_CAU_MOI_KHAI_NIEM` là số câu một lượt ôn dành cho mỗi
     // khái niệm, khớp với cách `generateExam` rút câu cho loại đề "due".
-    const phutMoiNgay = gioiHanPhut ?? dbService.getSubjectGoal()?.dailyStudyMinutes ?? 45;
-    const giayMoiCau = nhipRiengMoiCau() ?? 35;
-    const soCauLamDuoc = Math.max(1, Math.floor((phutMoiNgay * 60) / Math.max(1, giayMoiCau)));
-    const soKhaiNiemVua = Math.max(1, Math.floor(soCauLamDuoc / SO_CAU_MOI_KHAI_NIEM));
+    const { phutMoiNgay, giayMoiCau, soKhaiNiemVua } = quyViecMotNgay(gioiHanPhut);
 
     return {
       xepTheoNgayThi,

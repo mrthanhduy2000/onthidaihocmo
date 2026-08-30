@@ -4015,9 +4015,23 @@ check("Kết quả chấm không dùng được thì bị chặn, không đượ
 // cách lượt trước mười phút hay mười ngày. Nửa công thức khử ôn dồn, nửa kia vẫn thưởng cho nó.
 //
 // Đây là chỗ ăn thua so với Anki, nên phải ghim bằng số đo chứ không bằng lời hứa trong chú thích.
+/*
+  MỐC HỌC DỰNG TƯƠNG ĐỐI THEO HÔM NAY, không viết cứng ngày tháng.
+
+  Bản đầu viết cứng ba mốc "2026-08-05/08/13". Nó đạt đúng vào hôm viết ra rồi TỰ ĐỎ vào những
+  hôm sau, bất kể mã có đổi hay không: hệ số giãn cách đếm số NGÀY LỊCH khác nhau, nên khi hôm nay
+  đã trôi khỏi mốc cuối thì lượt ôn giả định tạo thêm một ngày lịch mới và lợi ích thôi bằng 0.
+  Đo được ngày 30/08/2026, mười bảy ngày sau khi viết: phép kiểm báo 2,5 điểm phần trăm và chỉ tay
+  vào một đoạn mã hoàn toàn đúng.
+
+  Một phép kiểm tự hỏng theo thời gian còn tệ hơn không có phép kiểm, vì nó dạy người đọc bỏ qua
+  màu đỏ. Dựng mốc theo `TimeService.now()` thì nó đúng mãi mãi.
+*/
+const NGAY_MS_AO9 = 86400000;
+const mocLuiNgay = (n: number) => new Date(TimeService.now().getTime() - n * NGAY_MS_AO9).toISOString();
 const bcGianCach: any = {
   soLanNhoLaiDung: 4, soLanNhoLaiSai: 2, dinhCaoDoThao: 60, doKhoKhaiNiem: 6.0,
-  mocHocISO: ["2026-08-05T09:00:00Z", "2026-08-08T09:00:00Z", "2026-08-13T09:00:00Z"], capNhoLai: [],
+  mocHocISO: [mocLuiNgay(8), mocLuiNgay(5), mocLuiNgay(0)], capNhoLai: [],
 };
 const loiIchNgay0 = loiIchOnHomNay(bcGianCach, 3, 0) ?? -1;
 const loiIchNuaNgay = loiIchOnHomNay(bcGianCach, 3, 0.5) ?? -1;
@@ -4708,6 +4722,150 @@ localStorage.removeItem(KHOA_HO_SO_KN);
 if (hoSoKhaiNiemDaLuu !== null) localStorage.setItem(KHOA_HO_SO_KN, hoSoKhaiNiemDaLuu);
 if (mucTieuTruocAL !== null) localStorage.setItem(`poly_econ_goal_${dbService.getActiveSubjectId()}`, mucTieuTruocAL);
 else localStorage.removeItem(`poly_econ_goal_${dbService.getActiveSubjectId()}`);
+
+// ===========================================================================
+// AR. Kế hoạch ôn nhiều ngày
+// ===========================================================================
+g("AR. Kế hoạch ôn nhiều ngày");
+
+// AR1. NGÀY ĐẦU CỦA KẾ HOẠCH PHẢI KHỚP VỚI VIỆC HÔM NAY.
+//
+// Hai màn hình cùng trả lời "hôm nay ôn gì": khối hàng đợi trên Bàn học, và ngày đầu của kế hoạch
+// trên màn Kế hoạch. Lệch nhau là ứng dụng tự mâu thuẫn với chính nó, và người học không biết tin
+// màn nào. Vì vậy cả hai phải đi qua cùng một nền (`nenTangXepLich`), cùng một ngưỡng lợi ích, và
+// cùng một phép tính quỹ thời gian.
+// Dựng lại hồ sơ trước khi đo: các nhóm phía trên có dọn lịch sử, và một phép kiểm chạy trên kho
+// rỗng thì không kiểm được gì.
+dungHoSoOnTap(TEN_BEN, 9, 1, 6, 5);
+dungHoSoOnTap(TEN_MONG_MANH, 2, 6, 6, 1);
+for (let i = 2; i < Math.min(8, doThiAL.length); i++) dungHoSoOnTap(doThiAL[i].concept, 4, 2, 5, 3);
+datNgayThi(20);
+const QUY_PHUT_AR = 10;
+const hangDoiHomNayAR = learnerModelService.layKhaiNiemToiHan(QUY_PHUT_AR);
+const keHoachAR = learnerModelService.lapKeHoachOnTheoNgay(QUY_PHUT_AR);
+const ngayDauAR = keHoachAR.cacNgay.find(n => n.soNgayNua === 0);
+const tenHangDoiAR = hangDoiHomNayAR.danhSach.map(m => m.tenKhaiNiem).join("|");
+const tenNgayDauAR = (ngayDauAR?.danhSach || []).map(m => m.tenKhaiNiem).join("|");
+check("Ngày đầu của kế hoạch khớp đúng việc hôm nay, hai màn không nói khác nhau",
+  keHoachAR.duDuLieu && tenHangDoiAR === tenNgayDauAR,
+  !keHoachAR.duDuLieu
+    ? `chưa lập được kế hoạch: ${keHoachAR.lyDoChuaLap}`
+    : tenHangDoiAR === tenNgayDauAR
+      ? `cả hai cùng ${tenHangDoiAR.split("|").filter(Boolean).length} khái niệm, cùng thứ tự`
+      : `hàng đợi: ${tenHangDoiAR || "(rỗng)"}\nngày 0 : ${tenNgayDauAR || "(rỗng)"}`);
+
+// AR2. PHÉP KIỂM QUAN TRỌNG NHẤT CỦA NHÓM: khái niệm MONG MANH phải bị xếp MUỘN hơn.
+//
+// AL2 đã chứng minh thứ hạng lật ngược cho MỘT ngày. Phép kiểm này chứng minh điều đó trải ra cả
+// đoạn đường: khi kỳ thi còn xa, khái niệm trôi nhanh phải được ĐỂ DÀNH tới gần ngày thi, còn
+// khái niệm bền thì ôn sớm vì ôn xong nó vẫn giữ được tới hôm thi.
+//
+// Anki không thể làm việc này, và lý do sâu hơn "chưa có tính năng": mô hình của Anki KHÔNG CÓ
+// khái niệm hạn chót. Cả SM-2 lẫn FSRS đều chỉ hỏi "mức nhớ hôm nay đã tụt dưới ngưỡng chưa", và
+// lịch của chúng chạy ra vô hạn. Không có ngày thi thì không có câu hỏi "để dành tới bao giờ".
+datNgayThi(30);
+const keHoachXa = learnerModelService.lapKeHoachOnTheoNgay(3);
+const ngayXuatHien = (ten: string): number[] =>
+  keHoachXa.cacNgay.filter(n => n.danhSach.some(m => m.tenKhaiNiem === ten)).map(n => n.soNgayNua);
+const ngayBen = ngayXuatHien(TEN_BEN);
+const ngayMongManh = ngayXuatHien(TEN_MONG_MANH);
+const trungBinhNgay = (ds: number[]) => ds.length === 0 ? -1 : ds.reduce((a, b) => a + b, 0) / ds.length;
+const tbBen = trungBinhNgay(ngayBen);
+const tbMongManh = trungBinhNgay(ngayMongManh);
+const deDanhDung = ngayBen.length > 0 && ngayMongManh.length > 0 && tbMongManh > tbBen;
+check("Khái niệm dễ quên được để dành tới gần ngày thi, khái niệm bền ôn sớm",
+  deDanhDung,
+  deDanhDung
+    ? `"${TEN_BEN}" (bền) xếp trung bình ngày +${tbBen.toFixed(1)}, "${TEN_MONG_MANH}" (mong manh) ngày +${tbMongManh.toFixed(1)}`
+    : `bền xếp các ngày [${ngayBen.join(",")}] tb ${tbBen.toFixed(1)}; mong manh [${ngayMongManh.join(",")}] tb ${tbMongManh.toFixed(1)}`);
+
+// AR3. Chưa đặt ngày thi thì KHÔNG lập kế hoạch, và nói rõ vì sao.
+//
+// Bất biến 4.9: không hiện con số chưa đo. Cả giá trị của bộ lập lịch nằm ở chỗ nó xếp theo hạn
+// chót; thiếu hạn chót mà vẫn vẽ ra một lịch là bịa ra một kỳ thi người học chưa từng đặt.
+datNgayThi(null);
+const keHoachKhongNgayThi = learnerModelService.lapKeHoachOnTheoNgay(30);
+check("Chưa đặt ngày thi thì không vẽ ra lịch, và nói rõ lý do",
+  !keHoachKhongNgayThi.duDuLieu
+    && keHoachKhongNgayThi.cacNgay.length === 0
+    && keHoachKhongNgayThi.soNgayToiKyThi === null
+    && keHoachKhongNgayThi.lyDoChuaLap.length > 0,
+  !keHoachKhongNgayThi.duDuLieu && keHoachKhongNgayThi.cacNgay.length === 0
+    ? `trả duDuLieu=false, 0 ngày, kèm lý do đọc được: "${keHoachKhongNgayThi.lyDoChuaLap}"`
+    : `vẫn vẽ ra ${keHoachKhongNgayThi.cacNgay.length} ngày dù chưa đặt ngày thi`);
+
+// AR4. Tất định (bất biến 4.7): hai lần gọi liên tiếp cho đúng một kế hoạch.
+datNgayThi(20);
+const inKeHoach = (k: any) => k.cacNgay.map((n: any) => `${n.soNgayNua}:${n.danhSach.map((m: any) => m.tenKhaiNiem).join(",")}`).join(";");
+const keHoachLan1 = inKeHoach(learnerModelService.lapKeHoachOnTheoNgay(10));
+const keHoachLan2 = inKeHoach(learnerModelService.lapKeHoachOnTheoNgay(10));
+check("Kế hoạch ôn tất định giữa hai lần gọi liên tiếp",
+  keHoachLan1 === keHoachLan2 && keHoachLan1.length > 0,
+  keHoachLan1 === keHoachLan2
+    ? `${keHoachLan1.split(";").length} ngày, khớp hoàn toàn`
+    : `lần 1: ${keHoachLan1.slice(0, 120)}\nlần 2: ${keHoachLan2.slice(0, 120)}`);
+
+// AR5. Kế hoạch phải NÂNG được mức nhớ ngày thi, và phải báo cả hai kịch bản.
+//
+// Báo cả hai vì một con số đơn độc "89%" không nói lên điều gì: người học cần thấy nó so với việc
+// không làm gì. Đây cũng là nếp đã dùng cho mọi mạch dữ liệu trước, trình bày cả hai kịch bản khi
+// có biến số quyết định kết quả.
+const keHoachDoLoiIch = learnerModelService.lapKeHoachOnTheoNgay(10);
+const nangDuoc = keHoachDoLoiIch.mucNhoNgayThiNeuTheoKeHoach - keHoachDoLoiIch.mucNhoNgayThiNeuKhongOn;
+check("Kế hoạch nâng được mức nhớ ngày thi, và báo cả hai kịch bản",
+  keHoachDoLoiIch.duDuLieu && nangDuoc > 0
+    && keHoachDoLoiIch.mucNhoNgayThiNeuTheoKeHoach <= 1 && keHoachDoLoiIch.mucNhoNgayThiNeuKhongOn >= 0,
+  keHoachDoLoiIch.duDuLieu
+    ? `theo kế hoạch ${(keHoachDoLoiIch.mucNhoNgayThiNeuTheoKeHoach * 100).toFixed(1)}%, không ôn gì ${(keHoachDoLoiIch.mucNhoNgayThiNeuKhongOn * 100).toFixed(1)}%, chênh ${(nangDuoc * 100).toFixed(1)} điểm phần trăm`
+    : `chưa lập được: ${keHoachDoLoiIch.lyDoChuaLap}`);
+
+// AR6. BỘ QUÉT CẢ HỌ: không phép kiểm nào được ghim ngày tháng viết cứng làm dữ liệu thử.
+//
+// ĐO ĐƯỢC NGÀY 30/08/2026. Phép kiểm AO9 dựng ba mốc học viết cứng "2026-08-05/08/13". Nó đạt
+// đúng vào hôm viết ra rồi TỰ ĐỎ mười bảy ngày sau, chỉ tay vào một đoạn mã hoàn toàn đúng: hệ số
+// giãn cách đếm số NGÀY LỊCH khác nhau, nên khi hôm nay đã trôi khỏi mốc cuối thì lượt ôn giả
+// định tạo thêm một ngày lịch mới và lợi ích thôi bằng 0.
+//
+// Một phép kiểm tự hỏng theo thời gian còn TỆ HƠN không có phép kiểm, vì nó dạy người đọc bỏ qua
+// màu đỏ. Mốc thời gian trong dữ liệu thử phải dựng tương đối theo `TimeService.now()`.
+const nguonHarness = readFileSync(path.join(process.cwd(), "scripts/selftest/harness.ts"), "utf8");
+const harnessKhongChuThich = nguonHarness
+  .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, " "))
+  .replace(/\/\/[^\n]*/g, m => m.replace(/[^\n]/g, " "));
+// Ngoại lệ nêu đích danh: mốc quy ước cho bản ghi thiếu ngày, không phải dữ liệu thử về thời gian.
+const NGAY_CUNG_CO_LY_DO = new Set(["2000-01-01"]);
+const ngayVietCung = [...new Set((harnessKhongChuThich.match(/"(\d{4}-\d{2}-\d{2})[^"]*"/g) || [])
+  .map(m => m.slice(1, 11)))].filter(d => !NGAY_CUNG_CO_LY_DO.has(d));
+check("Không phép kiểm nào ghim ngày tháng viết cứng, nên không phép kiểm nào tự hỏng theo thời gian",
+  ngayVietCung.length === 0,
+  ngayVietCung.length === 0
+    ? `dữ liệu thử về thời gian đều dựng tương đối theo TimeService.now()`
+    : `ngày viết cứng sẽ mục theo thời gian: ${ngayVietCung.join(", ")}`);
+
+// AR7. Màn Kế hoạch không được mời làm việc của hôm nay khi HÔM NAY LÀ NGÀY NGHỈ.
+//
+// ĐO ĐƯỢC TRÊN BẢN CHẠY THẬT NGÀY 30/08/2026: vừa ôn xong một lượt nên lịch bắt đầu từ ngày thứ
+// bảy, tức bảy ngày đầu đều là ngày nghỉ, mà nút vẫn mời "Làm phần của hôm nay". Bấm vào là sinh
+// một đề cho một việc không tồn tại.
+//
+// Cùng họ với bất biến 4.9h (màn hình phải nói đúng với người chưa bắt đầu), chỉ khác là ở đây câu
+// trả lời đúng là "hôm nay nghỉ" chứ không phải "bạn chưa có dữ liệu". Nghỉ đúng lúc là một phần
+// của lịch chứ không phải một trạng thái trống cần lấp.
+const nguonManKeHoach = readFileSync(path.join(process.cwd(), "src/components/LearningPlannerDashboard.tsx"), "utf8");
+const viTriMoiLamHomNay = nguonManKeHoach.indexOf('onStartExam("due")');
+const doanTruocLoiMoi = viTriMoiLamHomNay === -1
+  ? ""
+  : nguonManKeHoach.slice(Math.max(0, viTriMoiLamHomNay - 400), viTriMoiLamHomNay);
+const coCanhNgayNghi = /soNgayNua === 0/.test(doanTruocLoiMoi);
+check("Màn Kế hoạch chỉ mời làm việc hôm nay khi hôm nay thật sự có việc",
+  viTriMoiLamHomNay !== -1 && coCanhNgayNghi,
+  viTriMoiLamHomNay === -1
+    ? "không tìm thấy lời mời làm việc hôm nay, phép kiểm đang rỗng"
+    : coCanhNgayNghi
+      ? "lời mời nằm sau nhánh kiểm hôm nay có việc, ngày nghỉ thì nói ra là nghỉ"
+      : "lời mời làm việc hôm nay hiện cả khi hôm nay là ngày nghỉ");
+
+datNgayThi(null);
 
 // ===========================================================================
 // AM. Không bịa ngày thi và điểm mục tiêu
