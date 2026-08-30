@@ -59,6 +59,67 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, LỖI ĐẮT NHẤT TỪ TRƯỚC TỚI NAY: một dòng đọc biến môi trường
+
+Bộ kiểm: **297 lên 298**, không phép kiểm nào biến mất.
+
+Suốt nhiều tuần, bốn cổng AI trả 401 trên bản chạy thật. Mọi chẩn đoán đều chỉ sang Supabase và
+Vercel. `WORKSTATE.md` ghi hẳn Nợ 4 với kết luận "dự án Supabase không còn tồn tại", có bằng chứng
+NXDOMAIN hẳn hoi. **Cả hai nơi đó hoàn toàn vô can.**
+
+#### Tính năng vừa dựng tự phơi ra nguyên nhân
+
+Chuỗi lần lượt như sau, và đáng ghi lại vì nó cho thấy vì sao "hiện trạng thái ra màn hình" đáng
+làm hơn vẻ ngoài của nó:
+
+1. Thêm chẩn đoán AI vào chân trang. Bản chạy thật báo **"Chưa cấu hình đăng nhập"**, chứ không
+   phải "không lấy được phiên" như tôi đoán.
+2. Nghĩa là biến `VITE_SUPABASE_*` không tới được trình duyệt. Nhưng `/api/health` (đóng dấu lúc
+   dựng, cùng một lượt build) lại báo `coCauHinhDangNhap: true`. **Hai khâu dựng cùng một lượt, một
+   thấy biến, một không.**
+3. Tải thẳng gói giao diện đã deploy về, tìm URL dự án Supabase: **không có**.
+4. Dựng thử hai lượt ở máy nhà, một có file `.env`, một chỉ có biến môi trường như trên Vercel.
+   **Cả hai đều không nhúng được URL.** Tức lỗi không nằm ở chỗ đặt biến.
+
+#### Nguyên nhân
+
+`supabaseClient.ts` đọc cấu hình như sau:
+
+    const bienMoiTruong = (import.meta as any)?.env ?? {};
+    const url = bienMoiTruong.VITE_SUPABASE_URL;
+
+Vite thay biến theo **đúng chuỗi văn bản** `import.meta.env.VITE_SUPABASE_URL`. Dạng
+`(import.meta)?.env` rồi đọc qua biến trung gian thì không khớp mẫu nào, nên không có phép thay nào
+xảy ra. Giá trị luôn là `undefined`, `isSupabaseConfigured` luôn `false`, và bốn cổng AI trả 401
+vĩnh viễn trên mọi bản dựng.
+
+Trớ trêu là cách viết ấy được thêm vào để **chặn Bẫy 2**, và nó chặn thật. Bản vá cho một lỗi đã
+tạo ra một lỗi khác, nặng hơn, và im lặng hơn.
+
+Bản sửa giữ cả hai: đọc nguyên văn để Vite thay được, bọc `try/catch` để ngoài Vite không nổ. Bộ
+tự kiểm chứng và gói serverless đều thay `import.meta.env` thành `{}` nên không ném gì.
+
+#### Vì sao 297 phép kiểm không bắt được
+
+Nó không sai logic, không sai kiểu dữ liệu, không nổ, không làm đỏ bất cứ chặng nào. Nó chỉ lặng lẽ
+cho ra `undefined`. Đây đúng là loại lỗi mà `check:prod` sinh ra để bắt, nhưng `check:prod` lại
+**kiểm bằng biến của máy nhà** rồi in ra "giống hệt giao diện thật", nên nó cũng bị lừa: máy nhà có
+biến trỏ vào một dự án đã chết, và nó báo "Supabase fetch failed", một kết luận sai chỉ sang đúng
+chỗ vô can.
+
+AT8 quét cả họ: mọi biến `VITE_*` trong `src/` phải xuất hiện dưới dạng `import.meta.env.VITE_...`
+nguyên văn. Bản đầu của chính AT8 cũng sai, nó bắt cả tên biến nhắc trong câu chữ và trong khai báo
+kiểu, ba file hoàn toàn lành. Đã siết lại thành chỉ xét phép đọc thuộc tính.
+
+#### Chưa nói được là đã xong
+
+Bản sửa nhúng được URL vào gói, đó là điều đã đo. Còn AI có chạy thật hay không thì phụ thuộc dự án
+Supabase ở URL ấy còn sống không, mà URL trong `.env` máy nhà đang trả NXDOMAIN. Sau khi deploy sẽ
+biết: nếu chân trang chuyển từ "Chưa cấu hình đăng nhập" sang "Không lấy được phiên" thì cấu hình đã
+tới nơi và phần còn lại đúng là Supabase.
+
+---
+
 ### 30/08/2026, AI hỏng thì phải nói ra hỏng ở đâu
 
 Bộ kiểm: **295 lên 297**, không phép kiểm nào biến mất.

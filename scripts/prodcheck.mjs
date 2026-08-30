@@ -45,7 +45,10 @@ async function hit(method, urlPath, body, token) {
       signal: ctrl.signal,
     });
     const text = await res.text();
-    return { status: res.status, body: text.slice(0, 200) };
+    // Giữ NGUYÊN thân phản hồi, chỉ cắt lúc IN ra. Bản cũ cắt ngay tại đây ở mốc 200 ký tự, nên
+    // khi cổng health dài thêm vài trường thì `JSON.parse` hỏng và phép kiểm cấu hình đọc ra
+    // "không có trường" trong khi trường ấy vẫn nằm đó. Cắt để hiển thị thì cắt ở chỗ hiển thị.
+    return { status: res.status, body: text };
   } catch (e) {
     return { status: 0, body: `không gọi được: ${e.message}` };
   } finally {
@@ -64,7 +67,7 @@ if (!pageOk) bad = true;
 
 const health = await hit("GET", "/api/health");
 const healthOk = health.status === 200;
-console.log(`${healthOk ? "DAT " : "HONG"}  /api/health  (HTTP ${health.status})  ${health.body.replace(/\s+/g, " ")}`);
+console.log(`${healthOk ? "DAT " : "HONG"}  /api/health  (HTTP ${health.status})  ${health.body.replace(/\s+/g, " ").slice(0, 260)}`);
 if (!healthOk) bad = true;
 
 console.log("\nTrạng thái các cổng AI (gọi KHÔNG kèm token đăng nhập):");

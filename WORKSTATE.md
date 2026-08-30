@@ -19,7 +19,7 @@ quyết định.
 | **Current Phase** | Cả 8 giai đoạn XONG. Việc chặn đường: Supabase chết nên AI 401 |
 | **Completed %** | 9 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **297/297 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **298/298 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 

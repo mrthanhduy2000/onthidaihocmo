@@ -5020,6 +5020,58 @@ check("Cổng kiểm tra chỉ báo CÓ hay KHÔNG có khóa, không hé lộ ph
       ? "cổng để lộ một phần khóa Gemini, mà cổng này không đòi đăng nhập"
       : "chỉ trả về đúng một giá trị luận lý");
 
+// AT8. BỘ QUÉT CẢ HỌ: biến `VITE_*` phải đọc NGUYÊN VĂN, không qua biến trung gian.
+//
+// LỖI ĐẮT NHẤT TÌM ĐƯỢC TỪ TRƯỚC TỚI NAY, đo ngày 30/08/2026. `supabaseClient.ts` đọc cấu hình
+// bằng `const bienMoiTruong = (import.meta as any)?.env ?? {}` rồi lấy
+// `bienMoiTruong.VITE_SUPABASE_URL`. Cách viết ấy chặn được Bẫy 2 thật, nhưng nó ĐỒNG THỜI vô hiệu
+// hoá phép thay của Vite: Vite thay theo đúng chuỗi văn bản `import.meta.env.VITE_X`, còn
+// `(import.meta)?.env` thì không khớp mẫu nào.
+//
+// Hệ quả: giá trị không bao giờ được nhúng vào gói, `isSupabaseConfigured` luôn `false` trên MỌI
+// bản dựng, và bốn cổng AI trả 401 vĩnh viễn. Dựng thử hai lượt, một có `.env` một chỉ có biến môi
+// trường, cả hai đều không nhúng được URL. Suốt thời gian ấy mọi chẩn đoán đều chỉ sang Supabase và
+// Vercel, hai nơi hoàn toàn vô can.
+//
+// Không phép kiểm nào trong 297 phép bắt được nó, vì nó không sai ở logic, không sai ở kiểu dữ
+// liệu, và không nổ. Nó chỉ lặng lẽ cho ra `undefined`.
+//
+// Canh cả họ: mọi biến `VITE_*` trong `src/` phải xuất hiện dưới dạng `import.meta.env.VITE_...`
+// nguyên văn, vì chỉ dạng ấy mới được thay.
+const cacFileNguonSrc: Array<{ ten: string; noiDung: string }> = [];
+["src/services", "src/components", "src"].forEach(tm => {
+  const duongDan = path.join(process.cwd(), tm);
+  try {
+    readdirSync(duongDan, { withFileTypes: true })
+      .filter(e => e.isFile() && /\.(ts|tsx)$/.test(e.name))
+      .forEach(e => cacFileNguonSrc.push({
+        ten: `${tm}/${e.name}`,
+        noiDung: boChuThich(readFileSync(path.join(duongDan, e.name), "utf8")),
+      }));
+  } catch { /* thư mục không có thì bỏ qua */ }
+});
+const docViteSai: string[] = [];
+cacFileNguonSrc.forEach(f => {
+  /*
+    Chỉ xét PHÉP ĐỌC THUỘC TÍNH, tức có dấu chấm ngay trước tên biến. Nhắc tên biến trong câu chữ
+    ("Đặt VITE_SUPABASE_URL rồi deploy lại") và khai báo kiểu (`readonly VITE_SUPABASE_URL?: string`)
+    đều hợp lệ và có ích, không được phạt. Bản đầu của phép kiểm này bắt cả ba dạng và đỏ ngay lần
+    chạy đầu ở ba file hoàn toàn lành, đúng cái khuôn "bộ quét phạt chính lời giải thích về nó".
+  */
+  const re = /\.VITE_[A-Z0-9_]+/g;
+  for (let m = re.exec(f.noiDung); m; m = re.exec(f.noiDung)) {
+    const truoc = f.noiDung.slice(Math.max(0, m.index - 15), m.index + 1);
+    if (!truoc.endsWith("import.meta.env.")) docViteSai.push(`${f.ten}: ${m[0].slice(1)}`);
+  }
+});
+check("Mọi biến VITE_ đọc nguyên văn qua import.meta.env, dạng khác thì Vite không thay được",
+  cacFileNguonSrc.length > 0 && docViteSai.length === 0,
+  cacFileNguonSrc.length === 0
+    ? "không đọc được file nguồn nào, phép kiểm đang rỗng"
+    : docViteSai.length === 0
+      ? `quét ${cacFileNguonSrc.length} file, mọi biến VITE_ đều ở dạng Vite thay được`
+      : `đọc qua trung gian nên KHÔNG BAO GIỜ có giá trị: ${[...new Set(docViteSai)].join(", ")}`);
+
 // ===========================================================================
 // AU. Kế hoạch chương trình bám việc thật
 // ===========================================================================
