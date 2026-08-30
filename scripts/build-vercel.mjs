@@ -11,6 +11,7 @@
  * Quan trọng: script này KHÔNG xóa/sửa file nguồn .ts nào. Chỉ ghi ra .vercel/output.
  */
 import { build as esbuild } from "esbuild";
+import { dinhNghiaPhienBan } from "./phien-ban-build.mjs";
 import { execSync } from "node:child_process";
 import { mkdirSync, writeFileSync, rmSync, cpSync, existsSync } from "node:fs";
 import path from "node:path";
@@ -66,7 +67,7 @@ async function main() {
       // đọc `import.meta.env`, thứ chỉ Vite mới có. Chỉ cần một hàm serverless lỡ nhập gián
       // tiếp tới `supabaseClient` là cả gói nổ ngay lúc nạp, trả 500, dù build vẫn xanh.
       // Thay bằng object rỗng đúng như `scripts/check.mjs` vẫn làm.
-      define: { "import.meta.env": "{}" },
+      define: { "import.meta.env": "{}", ...dinhNghiaPhienBan() },
     });
 
     // Cấu hình runtime cho hàm. shouldAddHelpers=true để có sẵn req.body và res.status().json().

@@ -36,6 +36,7 @@ import { kbService } from "../../src/services/kbService";
 import { khaiNiemBiKet, learnerModelService, mocNhipChuan, NGUONG_TY_LE_DUNG_BI_KET, nhipRiengMoiCau, studentModelService, TOI_THIEU_LUOT_KET_LUAN_BI_KET } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { contentQualityAssurance } from "../../src/services/contentQualityAssurance";
+import { banDangChay, doiChieuVoiMayChu, KHONG_RO } from "../../src/services/phienBan";
 import { taoCauHoiNhoLai, chamCauTraLoi, docKetQuaCham } from "../../src/services/recallService";
 import { evidenceCoverageAuditService } from "../../src/services/evidenceCoverageAudit";
 import { teachingAnalytics } from "../../src/services/teachingAnalytics";
@@ -56,6 +57,22 @@ function check(name: string, ok: boolean, detail = "") {
 }
 
 function info(text: string) { notes.push(text); }
+
+/**
+ * Bóc chú thích khỏi mã nguồn, giữ nguyên VỊ TRÍ mọi ký tự còn lại.
+ *
+ * VÌ SAO PHẢI CÓ, và vì sao nó là hàm dùng chung chứ không viết lại mỗi chỗ: đã BA LẦN một phép
+ * kiểm quét nguồn đỏ ngay lần chạy đầu vì nó bắt đúng dòng chú thích GIẢI THÍCH rằng chỗ đó không
+ * được có thứ ấy. AO1 vấp với `expectedPoints`, AT1 vấp với `import.meta.env`. Một bộ quét không
+ * phân biệt được chú thích với mã sẽ phạt chính lời giải thích về nó.
+ *
+ * Thay bằng khoảng trắng cùng độ dài, giữ nguyên xuống dòng, để mọi phép so vị trí ký tự vẫn khớp
+ * với bản gốc.
+ */
+function boChuThich(src: string): string {
+  const trang = (m: string) => m.replace(/[^\n]/g, " ");
+  return src.replace(/\/\*[\s\S]*?\*\//g, trang).replace(/\/\/[^\n]*/g, trang);
+}
 
 /** So sánh 2 tập nội dung phương án (không quan tâm thứ tự). */
 function sameOptionSet(a: Question["options"], b: Question["options"]): boolean {
@@ -3874,10 +3891,7 @@ const nguonManNhoLai = readFileSync(path.join(process.cwd(), "src/components/Rec
 
   Thay bằng khoảng trắng cùng độ dài để mọi vị trí ký tự vẫn khớp với bản gốc.
 */
-const giuDoDai = (m: string) => m.replace(/[^\n]/g, " ");
-const manNhoLaiKhongChuThich = nguonManNhoLai
-  .replace(/\/\*[\s\S]*?\*\//g, giuDoDai)
-  .replace(/\/\/[^\n]*/g, giuDoDai);
+const manNhoLaiKhongChuThich = boChuThich(nguonManNhoLai);
 
 const mocDaCham = manNhoLaiKhongChuThich.indexOf('trangThai === "da-cham" && ketQua');
 const mocThanHam = manNhoLaiKhongChuThich.indexOf("return (");
@@ -4829,9 +4843,7 @@ check("Kế hoạch nâng được mức nhớ ngày thi, và báo cả hai kị
 // Một phép kiểm tự hỏng theo thời gian còn TỆ HƠN không có phép kiểm, vì nó dạy người đọc bỏ qua
 // màu đỏ. Mốc thời gian trong dữ liệu thử phải dựng tương đối theo `TimeService.now()`.
 const nguonHarness = readFileSync(path.join(process.cwd(), "scripts/selftest/harness.ts"), "utf8");
-const harnessKhongChuThich = nguonHarness
-  .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, " "))
-  .replace(/\/\/[^\n]*/g, m => m.replace(/[^\n]/g, " "));
+const harnessKhongChuThich = boChuThich(nguonHarness);
 // Ngoại lệ nêu đích danh: mốc quy ước cho bản ghi thiếu ngày, không phải dữ liệu thử về thời gian.
 const NGAY_CUNG_CO_LY_DO = new Set(["2000-01-01"]);
 const ngayVietCung = [...new Set((harnessKhongChuThich.match(/"(\d{4}-\d{2}-\d{2})[^"]*"/g) || [])
@@ -4864,6 +4876,113 @@ check("Màn Kế hoạch chỉ mời làm việc hôm nay khi hôm nay thật s�
     : coCanhNgayNghi
       ? "lời mời nằm sau nhánh kiểm hôm nay có việc, ngày nghỉ thì nói ra là nghỉ"
       : "lời mời làm việc hôm nay hiện cả khi hôm nay là ngày nghỉ");
+
+// ===========================================================================
+// AT. Phiên bản bản dựng
+// ===========================================================================
+g("AT. Phiên bản bản dựng");
+
+// AT1. Bộ đọc phiên bản KHÔNG được đi qua `import.meta.env`, và phải có đường lùi.
+//
+// Bẫy 2 trong AGENTS.md: script chạy ngoài Vite (chính bộ kiểm này, và `bank-audit`) sẽ nổ khi gặp
+// `import.meta.env`. Bộ đọc phiên bản là thứ nằm sâu trong `App.tsx` nên nếu nó nổ thì nổ cả ứng
+// dụng, không phải nổ một góc.
+//
+// Đường lùi cũng bắt buộc: khi KHÔNG khâu dựng nào thay biến vào (đúng tình huống bộ kiểm này),
+// đọc thẳng biến chưa khai là ném lỗi tham chiếu.
+const nguonPhienBan = boChuThich(readFileSync(path.join(process.cwd(), "src/services/phienBan.ts"), "utf8"));
+const bienBom = ["__BAN_SHA__", "__BAN_NGAY_COMMIT__", "__BAN_THOI_DIEM_DUNG__", "__BAN_TREN_VERCEL__"];
+const thieuDuongLui = bienBom.filter(b => !new RegExp(`typeof ${b} !== "undefined"`).test(nguonPhienBan));
+const dungImportMeta = /import\.meta\.env/.test(nguonPhienBan);
+check("Bộ đọc phiên bản tránh được Bẫy 2 và có đường lùi cho mọi biến",
+  !dungImportMeta && thieuDuongLui.length === 0 && banDangChay.sha === KHONG_RO,
+  dungImportMeta
+    ? "đọc qua import.meta.env, mọi script chạy ngoài Vite sẽ nổ"
+    : thieuDuongLui.length > 0
+      ? `thiếu đường lùi cho: ${thieuDuongLui.join(", ")}`
+      : `${bienBom.length} biến đều có đường lùi, và trong bộ kiểm nó rơi đúng về "${KHONG_RO}"`);
+
+// AT2. MỘT NGUỒN DUY NHẤT cho thông tin bản dựng, ba đường chạy cùng dùng.
+//
+// Ba nơi cần con số này: gói giao diện (Vite), hàm serverless (esbuild qua `build-vercel`), và máy
+// chủ dev (`tsx`, không có phép thay nào nên phải đặt qua biến môi trường). Nếu nơi nào tự hỏi git
+// riêng thì hai con số có thể lệch vì lý do chẳng liên quan gì tới việc deploy, và phép so "máy chủ
+// đã có bản mới hơn chưa" mất sạch ý nghĩa, tức tính năng này tự phản bội mục đích của nó.
+const NOI_CAN_NGUON_CHUNG = ["vite.config.ts", "scripts/build-vercel.mjs", "server.ts"];
+const noiKhongDungNguonChung = NOI_CAN_NGUON_CHUNG.filter(f => {
+  const src = readFileSync(path.join(process.cwd(), f), "utf8");
+  return !/phien-ban-build/.test(src);
+});
+// Không nơi nào ngoài chính nguồn chung được tự hỏi git để lấy phiên bản.
+const tuHoiGit = NOI_CAN_NGUON_CHUNG.filter(f =>
+  /rev-parse|VERCEL_GIT_COMMIT_SHA/.test(readFileSync(path.join(process.cwd(), f), "utf8")));
+check("Ba đường chạy lấy phiên bản từ đúng một nguồn, không nơi nào tự hỏi git",
+  noiKhongDungNguonChung.length === 0 && tuHoiGit.length === 0,
+  noiKhongDungNguonChung.length > 0
+    ? `không dùng nguồn chung: ${noiKhongDungNguonChung.join(", ")}`
+    : tuHoiGit.length > 0
+      ? `tự hỏi git riêng: ${tuHoiGit.join(", ")}`
+      : `${NOI_CAN_NGUON_CHUNG.length} đường chạy đều đi qua scripts/phien-ban-build.mjs`);
+
+// AT3. Ba kết luận đối chiếu phải KHÁC NHAU, và "không hỏi được" tuyệt đối không được thành "mới nhất".
+//
+// Đây là phép kiểm quan trọng nhất nhóm. Mất mạng mà báo "đã mới nhất" thì đúng vào kiểu khẳng
+// định chưa đo mà bất biến 4.9 cấm, và tệ hơn nữa: người dùng sẽ tin là Vercel đã deploy xong
+// trong khi thật ra chưa hỏi được câu nào.
+const fetchGoc = globalThis.fetch;
+const datFetch = (fn: any) => { (globalThis as any).fetch = fn; };
+const traLoi = (obj: any, ok = true, status = 200) => async () => ({
+  ok, status, json: async () => obj,
+});
+
+async function kiemTraDoiChieuPhienBan() {
+  g("AT. Phiên bản bản dựng");
+  const ca: Array<{ ten: string; fetchGia: any; mong: string }> = [
+    { ten: "máy chủ cùng bản", fetchGia: traLoi({ sha: banDangChay.sha, ngayCommit: "", thoiDiemDung: "" }), mong: "moi-nhat" },
+    { ten: "máy chủ khác bản", fetchGia: traLoi({ sha: "khac999", ngayCommit: "", thoiDiemDung: "" }), mong: "co-ban-moi-hon" },
+    { ten: "cổng trả lỗi", fetchGia: traLoi({}, false, 500), mong: "khong-hoi-duoc" },
+    { ten: "cổng trả thiếu trường", fetchGia: traLoi({ status: "ok" }), mong: "khong-hoi-duoc" },
+    { ten: "mất mạng", fetchGia: async () => { throw new Error("mat mang"); }, mong: "khong-hoi-duoc" },
+  ];
+  const sai: string[] = [];
+  for (const c of ca) {
+    datFetch(c.fetchGia);
+    const kq = await doiChieuVoiMayChu();
+    if (kq.trangThai !== c.mong) sai.push(`${c.ten} cho "${kq.trangThai}" thay vì "${c.mong}"`);
+    // Mọi đường thất bại đều phải nêu lý do đọc được, để màn hình nói đúng nguyên nhân.
+    if (c.mong === "khong-hoi-duoc" && kq.lyDoKhongHoi.length === 0) sai.push(`${c.ten} không nêu lý do`);
+  }
+  datFetch(fetchGoc);
+  check("Ba kết luận đối chiếu phiên bản khác nhau, không hỏi được không thành mới nhất",
+    sai.length === 0,
+    sai.length === 0
+      ? `đúng cả ${ca.length} ca, gồm ba đường thất bại đều trả "khong-hoi-duoc" kèm lý do`
+      : sai.join("; "));
+}
+
+// AT4. Màn hình phải NÓI RA rằng chưa đối chiếu được, không im lặng cho qua.
+const nguonDauHieu = readFileSync(path.join(process.cwd(), "src/components/DauHieuPhienBan.tsx"), "utf8");
+const coNhanhKhongHoiDuoc = /trangThai === "khong-hoi-duoc"/.test(nguonDauHieu)
+  && /chưa đối chiếu được/.test(nguonDauHieu);
+const coNutTaiLai = /window\.location\.reload\(\)/.test(nguonDauHieu)
+  && /trangThai === "co-ban-moi-hon"/.test(nguonDauHieu);
+check("Chân trang nói rõ khi chưa đối chiếu được, và cho tải lại khi có bản mới",
+  coNhanhKhongHoiDuoc && coNutTaiLai,
+  !coNhanhKhongHoiDuoc
+    ? "không có nhánh nói rằng chưa đối chiếu được với máy chủ"
+    : !coNutTaiLai
+      ? "có bản mới hơn nhưng không cho người dùng tải lại"
+      : "ba trạng thái đều có câu chữ riêng, có bản mới thì cho tải lại ngay tại chỗ");
+
+// AT5. Cổng máy chủ và gói giao diện phải dùng ĐÚNG cùng bộ tên biến, nếu không phép so vô nghĩa.
+const nguonHealth = readFileSync(path.join(process.cwd(), "functions-src/health.ts"), "utf8");
+const bienThieuOHealth = bienBom.filter(b => !nguonHealth.includes(b));
+const healthTraSha = /sha:/.test(nguonHealth);
+check("Cổng kiểm tra máy chủ trả về đúng bộ trường mà trình duyệt đối chiếu",
+  bienThieuOHealth.length === 0 && healthTraSha,
+  bienThieuOHealth.length > 0
+    ? `cổng thiếu biến: ${bienThieuOHealth.join(", ")}`
+    : "cổng và gói giao diện dùng chung bộ tên biến, so được với nhau");
 
 // ===========================================================================
 // AS. Khái niệm ôn hoài vẫn sai
@@ -5077,6 +5196,7 @@ kiemTraMonTuTao()
     check("Môn người dùng tự tạo cũng chạy được tầng suy luận", false, `lỗi ngoài dự kiến: ${e?.message}`);
   })
   .then(kiemTraChamNhoLai)
+  .then(kiemTraDoiChieuPhienBan)
   .catch((e: any) => {
     check("Hai đường thất bại khi chấm đều không dựng ra điểm", false, `lỗi ngoài dự kiến: ${e?.message}`);
   })

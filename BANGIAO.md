@@ -59,6 +59,58 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, phiên bản bản dựng hiện ra ở chân trang
+
+Bộ kiểm: **287 lên 292**, không phép kiểm nào biến mất.
+
+#### Ba câu hỏi trước đây không có cách nào trả lời
+
+Đẩy lên `main` là deploy thật lên onthidaihocmo.vercel.app, nhưng từ trình duyệt thì không biết
+được: Vercel đã dựng xong bản mới chưa, trang đang mở có phải bản mới nhất không hay là bản cũ còn
+trong bộ nhớ đệm, và bản đang chạy có từ bao giờ.
+
+Nay chân trang hiện `bản b4ef6ef · 30/08 14:56 · dựng ở máy nhà`, và tự hỏi `/api/health` để đối
+chiếu với bản máy chủ đang phục vụ. Ba kết luận, ba câu chữ khác hẳn nhau:
+
+| Kết luận | Nghĩa | Màn hình nói |
+|---|---|---|
+| `moi-nhat` | hai bên khớp | không nói thêm gì |
+| `co-ban-moi-hon` | máy chủ có bản khác, trang đang mở là bản cũ trong bộ nhớ đệm | nêu mã bản mới, kèm nút tải lại |
+| `khong-hoi-duoc` | mất mạng hoặc cổng lỗi | "chưa đối chiếu được với máy chủ" |
+
+**Vế thứ ba là vế dễ làm ẩu nhất**, và AT3 canh đúng nó: mất mạng mà báo "đã mới nhất" thì vừa là
+khẳng định chưa đo (bất biến 4.9), vừa khiến người dùng tin là Vercel đã deploy xong trong khi
+chưa hỏi được câu nào. AT3 thử cả năm ca, gồm ba đường thất bại khác nhau.
+
+Cố ý KHÔNG tự tải lại trang khi phát hiện bản mới: người học có thể đang làm dở một bài.
+
+#### Một nguồn, ba đường chạy
+
+`scripts/phien-ban-build.mjs` là nguồn duy nhất. Ba nơi cần nó: gói giao diện (Vite `define`), hàm
+serverless (esbuild `define` trong `build-vercel.mjs`), và máy chủ dev.
+
+Đường dev là chỗ suýt hỏng: `npm run dev` chạy `functions-src/health.ts` qua `tsx`, mà `tsx` không
+có phép thay lúc dựng nào. Nếu chỉ đọc biến bơm sẵn thì cổng báo `khong-ro` trong khi gói giao diện
+(do Vite dựng, có phép thay) báo mã thật, và màn hình sẽ báo động giả "máy chủ đã có bản mới hơn"
+suốt buổi phát triển. Đã cho `server.ts` đặt biến môi trường lúc khởi động, lấy từ đúng nguồn chung.
+
+AT2 canh việc không nơi nào tự hỏi git riêng. Nếu có, hai con số lệch nhau vì lý do chẳng liên quan
+gì tới việc deploy, và tính năng này tự phản bội mục đích của nó.
+
+#### Lần thứ ba, và lần này gom hẳn thành hàm dùng chung
+
+AT1 đỏ ngay lần chạy đầu vì nó bắt đúng dòng chú thích của chính nó, dòng viết rằng chỗ này tuyệt
+đối không được đọc qua `import.meta.env`. Đây là lần thứ ba một bộ quét nguồn phạt chính lời giải
+thích về nó (AO1 vấp với `expectedPoints`, AR6 với ngày viết cứng).
+
+Hai lần trước vá tại chỗ. Lần này gom thành `boChuThich` dùng chung, và sửa luôn hai bản chép cũ ở
+AO1 và AR6. Ba lần lặp là đủ để biết đây không phải sự cố mà là một khuôn.
+
+Phá thử AT1 cho kết quả dứt khoát: bỏ đường lùi `typeof` thì **cả bộ kiểm sập** với lỗi tham chiếu,
+đúng như Bẫy 2 mô tả. Đường lùi ấy không phải phòng xa, nó đang gánh thật.
+
+---
+
 ### 30/08/2026, khái niệm ôn hoài vẫn sai, và một quyết định cố ý làm khác Anki
 
 Bộ kiểm: **284 lên 287**, không phép kiểm nào biến mất.

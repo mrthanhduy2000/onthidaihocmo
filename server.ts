@@ -9,6 +9,7 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import { layThongTinBan } from "./scripts/phien-ban-build.mjs";
 
 import health from "./functions-src/health";
 import generate from "./functions-src/ai/generate";
@@ -17,6 +18,20 @@ import chat from "./functions-src/ai/chat";
 import recommend from "./functions-src/ai/recommend";
 
 dotenv.config();
+
+/*
+  Bơm thông tin bản dựng vào biến môi trường cho đường chạy DEV.
+
+  `tsx` không có phép thay lúc dựng như esbuild và Vite, nên `functions-src/health.ts` chạy ở đây
+  sẽ không thấy các biến `__BAN_*__`. Không đặt sẵn thì cổng báo "khong-ro" còn gói giao diện báo
+  mã thật, và màn hình sẽ báo động giả "máy chủ đã có bản mới hơn" suốt buổi phát triển.
+
+  Lấy từ ĐÚNG nguồn `layThongTinBan` mà Vite và `build-vercel` dùng, không tự hỏi git lần nữa.
+*/
+const banDung = layThongTinBan();
+process.env.BAN_SHA = banDung.sha;
+process.env.BAN_NGAY_COMMIT = banDung.ngayCommit;
+process.env.BAN_THOI_DIEM_DUNG = banDung.thoiDiemDung;
 
 const app = express();
 // Cổng lấy từ biến môi trường để chạy được nhiều phiên song song. Không đặt biến thì vẫn là

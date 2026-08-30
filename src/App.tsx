@@ -22,6 +22,7 @@ import PersonalWorkspaceView from "./components/PersonalWorkspaceView";
 import SessionRecoveryBanner from "./components/SessionRecoveryBanner";
 import GlobalCommandPalette from "./components/GlobalCommandPalette";
 import RecallSessionView from "./components/RecallSessionView";
+import DauHieuPhienBan from "./components/DauHieuPhienBan";
 
 /*
   NĂM MÀN NẶNG NHẤT NẠP MUỘN, tách khỏi gói chính.
@@ -478,8 +479,8 @@ export default function App() {
       {/* Footer */}
       {!isDeepFocus && (
         <footer className="border-t border-border-primary bg-bg-card py-4 text-center">
-          <p className="text-xs text-text-muted tracking-wide font-sans">
-            Trợ lý ôn thi • {dbService.getActiveSubjectName()}
+          <p className="text-xs text-text-muted tracking-wide font-sans px-4">
+            Trợ lý ôn thi • {dbService.getActiveSubjectName()} · <DauHieuPhienBan />
           </p>
         </footer>
       )}
