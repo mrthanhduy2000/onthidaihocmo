@@ -35,6 +35,19 @@ export function layThongTinBan() {
     thoiDiemDung: new Date().toISOString(),
     /** `true` khi đang dựng trên Vercel, dùng để phân biệt bản chạy thật với bản chạy máy nhà. */
     dungTrenVercel: Boolean(process.env.VERCEL),
+    /**
+     * Khâu dựng CÓ thấy cấu hình đăng nhập hay không.
+     *
+     * Vì sao đóng dấu lúc dựng thay vì hỏi lúc chạy: biến `VITE_*` chỉ tồn tại trong gói giao diện
+     * sau khi Vite thay chúng vào, hàm serverless không đọc được. Mà đúng câu hỏi cần trả lời là
+     * "bản ĐANG DEPLOY có được cấu hình không", chứ không phải "máy đang chạy lệnh kiểm có được
+     * cấu hình không". Đóng dấu lúc dựng thì cổng `/api/health` trả lời được câu thứ nhất.
+     *
+     * Đo được ngày 30/08/2026: `check:prod` báo "không tạo được phiên ẩn danh" dựa trên biến của
+     * MÁY NHÀ, trong khi bản deploy thật ra chưa hề được đặt biến nào. Hai kết luận khác hẳn nhau
+     * và cách gỡ cũng khác hẳn, mà lệnh kiểm lại tự tin là đang đo "giống hệt giao diện thật".
+     */
+    coCauHinhDangNhap: Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
   };
 }
 
@@ -46,5 +59,6 @@ export function dinhNghiaPhienBan() {
     __BAN_NGAY_COMMIT__: JSON.stringify(ban.ngayCommit),
     __BAN_THOI_DIEM_DUNG__: JSON.stringify(ban.thoiDiemDung),
     __BAN_TREN_VERCEL__: JSON.stringify(ban.dungTrenVercel),
+    __BAN_CO_CAU_HINH_DANG_NHAP__: JSON.stringify(ban.coCauHinhDangNhap),
   };
 }

@@ -97,8 +97,33 @@ const sbAnon = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_K
 let token = "";
 let tokenNote = "";
 
-if (!sbUrl || !sbAnon) {
-  tokenNote = "BO QUA: thiếu VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY trong .env, không tạo được phiên.";
+/*
+  BẢN ĐANG DEPLOY CÓ ĐƯỢC CẤU HÌNH ĐĂNG NHẬP KHÔNG, hỏi thẳng máy chủ chứ không suy từ máy nhà.
+
+  ĐO ĐƯỢC NGÀY 30/08/2026. Lệnh này vốn kết luận về phần đăng nhập dựa trên biến trong `.env` của
+  MÁY ĐANG CHẠY LỆNH, rồi in ra "giống hệt giao diện thật". Thực tế máy nhà có biến trỏ vào một dự
+  án Supabase đã chết, còn bản deploy thì CHƯA HỀ được đặt biến nào. Hai tình huống ấy có cách gỡ
+  khác hẳn nhau, mà lệnh kiểm lại báo cùng một kết luận sai.
+
+  Nay cổng `/api/health` đóng dấu sẵn `coCauHinhDangNhap` lúc dựng, nên hỏi được đúng bản đang chạy.
+*/
+const banDeployCoCauHinh = (() => {
+  try {
+    return JSON.parse(health.body)?.coCauHinhDangNhap;
+  } catch {
+    return undefined;
+  }
+})();
+
+if (banDeployCoCauHinh === false) {
+  tokenNote = "HONG: BẢN ĐANG DEPLOY chưa được đặt VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. "
+    + "Đặt hai biến đó trong phần Environment Variables của Vercel rồi deploy lại. "
+    + "(Biến trong .env của máy này KHÔNG đi theo bản deploy.)";
+  bad = true;
+} else if (banDeployCoCauHinh === undefined) {
+  tokenNote = "BO QUA: bản đang deploy chưa có trường coCauHinhDangNhap, nên chưa biết nó được cấu hình hay chưa.";
+} else if (!sbUrl || !sbAnon) {
+  tokenNote = "BO QUA: bản deploy có cấu hình nhưng máy này thiếu biến để tự tạo phiên thử.";
 } else {
   try {
     const sb = createClient(sbUrl, sbAnon, { auth: { persistSession: false } });

@@ -21,6 +21,7 @@ declare const __BAN_SHA__: string;
 declare const __BAN_NGAY_COMMIT__: string;
 declare const __BAN_THOI_DIEM_DUNG__: string;
 declare const __BAN_TREN_VERCEL__: boolean;
+declare const __BAN_CO_CAU_HINH_DANG_NHAP__: boolean;
 
 export default function handler(_req: any, res: any) {
   res.status(200).json({
@@ -41,5 +42,15 @@ export default function handler(_req: any, res: any) {
       thấy "AI không chạy" rồi đoán mò.
     */
     coKhoaGemini: Boolean(process.env.GEMINI_API_KEY),
+    /*
+      Bản ĐANG DEPLOY có được đặt biến đăng nhập hay không, đóng dấu lúc dựng.
+
+      Trước 30/08/2026, `npm run check:prod` kết luận về phần đăng nhập dựa trên biến của MÁY NHÀ,
+      trong khi bản deploy có thể chưa hề được đặt biến nào. Hai tình huống ấy có cách gỡ khác hẳn
+      nhau, mà lệnh kiểm lại tự tin là đang đo "giống hệt giao diện thật".
+    */
+    coCauHinhDangNhap: typeof __BAN_CO_CAU_HINH_DANG_NHAP__ !== "undefined"
+      ? __BAN_CO_CAU_HINH_DANG_NHAP__
+      : Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY),
   });
 }
