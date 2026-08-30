@@ -64,8 +64,22 @@ sao, và còn nợ gì.
 Bộ kiểm: **297 lên 298**, không phép kiểm nào biến mất.
 
 Suốt nhiều tuần, bốn cổng AI trả 401 trên bản chạy thật. Mọi chẩn đoán đều chỉ sang Supabase và
-Vercel. `WORKSTATE.md` ghi hẳn Nợ 4 với kết luận "dự án Supabase không còn tồn tại", có bằng chứng
-NXDOMAIN hẳn hoi. **Cả hai nơi đó hoàn toàn vô can.**
+Vercel.
+
+**ĐÍNH CHÍNH, viết sau khi deploy và đo lại.** Bản đầu của mục này kết luận Supabase và Vercel
+"hoàn toàn vô can". Sai một nửa. Sau khi sửa xong và deploy, chẩn đoán trên bản thật chuyển từ
+"Chưa cấu hình đăng nhập" sang **"Không lấy được phiên đăng nhập"**, tức cấu hình đã tới nơi và
+phần còn lại đúng là Supabase thật. Có **HAI lỗi chồng lên nhau**:
+
+| | Lỗi | Ai sửa |
+|---|---|---|
+| 1 | Cấu hình không bao giờ tới được trình duyệt vì cách viết dòng đọc biến | đã sửa ở lượt này |
+| 2 | Dự án Supabase ở URL ấy đã chết (NXDOMAIN) | cần Đàm dựng lại |
+
+Lỗi thứ nhất **che mất** lỗi thứ hai: chừng nào cấu hình chưa tới nơi thì không ai biết được URL
+trong đó còn sống hay không. Đây đúng bằng khuôn "bài học đắt nhất" đã ghi trong `WORKSTATE.md`
+ngày 27/07/2026, cũng bốn cổng AI, cũng hai lỗi chồng nhau, cũng lỗi thứ nhất che lỗi thứ hai. Lặp
+lại nguyên xi sau một tháng.
 
 #### Tính năng vừa dựng tự phơi ra nguyên nhân
 
@@ -111,12 +125,14 @@ AT8 quét cả họ: mọi biến `VITE_*` trong `src/` phải xuất hiện dư
 nguyên văn. Bản đầu của chính AT8 cũng sai, nó bắt cả tên biến nhắc trong câu chữ và trong khai báo
 kiểu, ba file hoàn toàn lành. Đã siết lại thành chỉ xét phép đọc thuộc tính.
 
-#### Chưa nói được là đã xong
+#### Đã deploy và đo lại: đúng như dự đoán
 
-Bản sửa nhúng được URL vào gói, đó là điều đã đo. Còn AI có chạy thật hay không thì phụ thuộc dự án
-Supabase ở URL ấy còn sống không, mà URL trong `.env` máy nhà đang trả NXDOMAIN. Sau khi deploy sẽ
-biết: nếu chân trang chuyển từ "Chưa cấu hình đăng nhập" sang "Không lấy được phiên" thì cấu hình đã
-tới nơi và phần còn lại đúng là Supabase.
+Gói giao diện đã deploy nay **có** URL `wuzqqsjkoifhuuirimyj.supabase.co`, và chân trang chuyển
+đúng sang "Không lấy được phiên đăng nhập". Lỗi thứ nhất đã hết; lỗi thứ hai còn nguyên và cần Đàm.
+
+Bài học thật của lượt này không phải "cẩn thận với `import.meta.env`", mà là: **một chẩn đoán chỉ
+đúng tới lớp lỗi ngoài cùng**. Trước khi có dòng trạng thái ở chân trang, không có cách nào biết
+mình đang nhìn lớp nào. Ba tuần chỉ tay sang Supabase là ba tuần sửa đúng nơi nhưng chưa tới lượt.
 
 ---
 

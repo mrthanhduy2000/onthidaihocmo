@@ -1206,18 +1206,27 @@ câu hỏi, và đã quyết định cố ý không đụng: đưa nó xuống �
 thay đổi kiến trúc sâu đổi lấy chút thời gian tải trên một máy chạy cục bộ. **AQ2** đặt ngưỡng cho
 gói mã và miễn trừ gói dữ liệu bằng cách nhận diện theo nội dung.
 
-### Nợ 4: Bốn cổng AI đang chết trên bản chạy thật
+### Nợ 4: AI chưa dùng được trên bản chạy thật. CÒN MỘT LỚP, CẦN ĐÀM
 
-**Đây là món nợ duy nhất còn chặn đường, và nó cần Đàm.** `wuzqqsjkoifhuuirimyj.supabase.co` trả
-**NXDOMAIN**, tức dự án Supabase không còn tồn tại, trong khi `onthidaihocmo.vercel.app` phân giải
-bình thường và trả HTTP 200. Hệ quả: gia sư AI, sinh câu hỏi, và phần chấm bài nhớ lại đều không
-dùng được trên bản thật.
+Đo lại ngày 30/08/2026 sau khi sửa: có **hai lỗi chồng lên nhau**, lỗi thứ nhất che mất lỗi thứ hai.
 
-Cách gỡ: tạo dự án Supabase mới, bật Anonymous sign-ins, đặt `VITE_SUPABASE_URL` và
-`VITE_SUPABASE_ANON_KEY` trong Vercel, deploy lại, rồi chạy `npm run check:prod`.
+| | Lỗi | Trạng thái |
+|---|---|---|
+| 1 | Cấu hình Supabase không bao giờ tới được trình duyệt, vì `supabaseClient.ts` đọc qua biến trung gian nên Vite không thay được | **ĐÃ SỬA** 30/08/2026, nhóm kiểm **AT8** canh cả họ |
+| 2 | Dự án Supabase tại `wuzqqsjkoifhuuirimyj.supabase.co` trả NXDOMAIN, tức không còn tồn tại | **CÒN**, cần Đàm |
 
-Từ 30/08/2026 chân trang tự chẩn đoán và nói ra hỏng ở đâu, nên không cần chạy `check:prod` mới
-biết. Ba nguyên nhân được phân biệt riêng vì ba cách gỡ nằm ở ba chỗ khác nhau.
+**Việc Đàm cần làm**: tạo dự án Supabase mới, bật Anonymous sign-ins, cập nhật
+`VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY` trong phần Environment Variables của Vercel, deploy
+lại.
+
+**Cách biết đã xong**: chân trang tự chẩn đoán. Dòng "AI đang không dùng được" biến mất là xong.
+Rê chuột vào nó thì thấy nguyên nhân và cách gỡ. Không cần chạy `check:prod` mới biết.
+
+Ba nguyên nhân được phân biệt riêng vì ba cách gỡ nằm ở ba chỗ khác nhau: chưa cấu hình đăng nhập,
+không lấy được phiên, máy chủ thiếu khóa Gemini. Hiện bản thật đang ở nguyên nhân thứ hai.
+
+Khóa Gemini trên Vercel VẪN CÒN (`/api/health` báo `coKhoaGemini: true`), nên sau khi dựng lại
+Supabase là AI chạy được ngay, không phải làm gì thêm.
 
 ## Known Risks
 
