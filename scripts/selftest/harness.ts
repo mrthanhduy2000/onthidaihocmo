@@ -5073,6 +5073,67 @@ check("Mọi biến VITE_ đọc nguyên văn qua import.meta.env, dạng khác 
       : `đọc qua trung gian nên KHÔNG BAO GIỜ có giá trị: ${[...new Set(docViteSai)].join(", ")}`);
 
 // ===========================================================================
+// AV. Đề ôn xen kẽ khái niệm
+// ===========================================================================
+g("AV. Đề ôn xen kẽ khái niệm");
+
+// AV1. Hai câu LIỀN NHAU trong đề tới hạn không được thuộc cùng một khái niệm.
+//
+// Đây là thay đổi về học thuật, không phải về trình bày. Bản trước sắp theo hạng khái niệm rồi để
+// nguyên, nên ba câu liền nhau đều thuộc một khái niệm. Cách ấy hại theo hai đường cùng lúc:
+//
+//   1. Luyện kém hơn. Xen kẽ là một trong những kết quả vững nhất của ngành nghiên cứu học tập:
+//      trộn các dạng bài làm điểm TRONG buổi tệ đi nhưng giữ được lâu hơn và chuyển giao tốt hơn.
+//   2. Làm nhiễu chính SỐ ĐO. Câu thứ hai và thứ ba của cùng một khái niệm dễ hơn hẳn vì khái niệm
+//      còn nằm trong trí nhớ làm việc. Mà đúng sai của chúng chảy thẳng vào đường cong quên qua
+//      `addOnSubmit`. Gom cụm tức là tự bơm bằng chứng lạc quan vào bộ xếp lịch của chính mình.
+dungHoSoOnTap(TEN_BEN, 4, 2, 5, 3);
+dungHoSoOnTap(TEN_MONG_MANH, 3, 3, 5, 2);
+for (let i = 2; i < Math.min(8, doThiAL.length); i++) dungHoSoOnTap(doThiAL[i].concept, 4, 2, 5, 3);
+datNgayThi(20);
+
+const hangDoiAV = learnerModelService.layKhaiNiemToiHan();
+const deXenKe = aiService.generateExam({ type: "due", count: 10 });
+const khaiNiemCuaCau = (id: number): string => {
+  const q = questionMap.get(id);
+  if (!q) return "";
+  const nut = kbService.getConceptForQuestion(dbService.getActiveSubjectId(), q);
+  return nut ? nut.concept : "";
+};
+const chuoiKhaiNiem = deXenKe.questions.map(khaiNiemCuaCau);
+let capLienKe = 0;
+for (let i = 1; i < chuoiKhaiNiem.length; i++) {
+  if (chuoiKhaiNiem[i] && chuoiKhaiNiem[i] === chuoiKhaiNiem[i - 1]) capLienKe++;
+}
+const duNhieuKhaiNiem = new Set(chuoiKhaiNiem.filter(Boolean)).size >= 2;
+check("Đề tới hạn xen kẽ khái niệm, không xếp liền các câu cùng một khái niệm",
+  duNhieuKhaiNiem && capLienKe === 0,
+  !duNhieuKhaiNiem
+    ? `đề chỉ có ${new Set(chuoiKhaiNiem.filter(Boolean)).size} khái niệm, chưa kiểm được xen kẽ`
+    : capLienKe === 0
+      ? `${deXenKe.questions.length} câu trải trên ${new Set(chuoiKhaiNiem.filter(Boolean)).size} khái niệm, không cặp liền nào trùng khái niệm`
+      : `${capLienKe} cặp câu liền nhau thuộc cùng một khái niệm`);
+
+// AV2. Số câu của đề tới hạn phải KHỚP lời hứa của hàng đợi.
+//
+// Nút trên Bàn học ghi "Ôn N khái niệm này", và quỹ thời gian của hàng đợi tính theo
+// `SO_CAU_MOI_KHAI_NIEM` câu mỗi khái niệm. Nhưng nơi gọi truyền cứng 10 câu cho MỌI loại đề, nên
+// một hàng đợi 6 khái niệm chỉ nhận 10 câu, phủ chưa tới hai phần ba số khái niệm đã hứa. Màn hình
+// hứa một đằng, đề giao một nẻo.
+const soCauMongDoi = hangDoiAV.danhSach.length * SO_CAU_MOI_KHAI_NIEM;
+const khopLoiHua = deXenKe.questions.length === Math.min(soCauMongDoi, deXenKe.questions.length)
+  && deXenKe.questions.length > 10;
+check("Số câu của đề tới hạn khớp lời hứa của hàng đợi, không phải con số cứng 10",
+  hangDoiAV.danhSach.length > 4 && khopLoiHua,
+  hangDoiAV.danhSach.length <= 4
+    ? `hàng đợi chỉ ${hangDoiAV.danhSach.length} khái niệm, chưa phân biệt được với số cứng 10`
+    : khopLoiHua
+      ? `${hangDoiAV.danhSach.length} khái niệm cho ${deXenKe.questions.length} câu, đúng ${SO_CAU_MOI_KHAI_NIEM} câu mỗi khái niệm`
+      : `hàng đợi hứa ${hangDoiAV.danhSach.length} khái niệm tức ${soCauMongDoi} câu, đề chỉ có ${deXenKe.questions.length}`);
+
+datNgayThi(null);
+
+// ===========================================================================
 // AU. Kế hoạch chương trình bám việc thật
 // ===========================================================================
 g("AU. Kế hoạch chương trình bám việc thật");

@@ -8,7 +8,7 @@ import { kbService } from "./kbService";
 import { contentQualityAssurance } from "./contentQualityAssurance";
 import { TimeService } from "./time";
 import { learningEngine } from "./learningEngine";
-import { learnerModelService } from "./learnerModel";
+import { learnerModelService, SO_CAU_MOI_KHAI_NIEM } from "./learnerModel";
 import { assessmentDesignEngine } from "./assessmentDesignEngine";
 import { examReviewEngine } from "./examReviewEngine";
 import { workspaceService } from "./workspaceService";
@@ -875,6 +875,9 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     difficulty?: DifficultyLevel;
     count?: number;
   }): ExamAttempt {
+    /** Số câu do HÀNG ĐỢI ôn quyết định, chỉ đặt cho đề loại tới hạn. `null` là giữ số của nơi gọi. */
+    let soCauEpTheoHangDoi: number | null = null;
+
     // 1. Generate 100% deterministic ExamSpecification first via Assessment Design Engine
     const specType = config.type === "ai-smart" ? "mock" : config.type as any;
     const examSpec = assessmentDesignEngine.designExam({
@@ -950,7 +953,19 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
         .map(q => ({ q, hang: chamTheoHangDoi(q) }))
         .filter((x): x is { q: any; hang: number } => x.hang !== null);
       coHang.sort((a, b) => (a.hang - b.hang) || (a.q.id - b.q.id));
+
       pool = coHang.map(x => x.q);
+
+      /*
+        SỐ CÂU PHẢI KHỚP LỜI HỨA CỦA HÀNG ĐỢI.
+
+        Nút trên Bàn học ghi "Ôn N khái niệm này", và quỹ thời gian của hàng đợi tính theo
+        `SO_CAU_MOI_KHAI_NIEM` câu cho mỗi khái niệm. Nhưng nơi gọi luôn truyền cứng 10 câu, nên
+        một hàng đợi 6 khái niệm chỉ được 10 câu, phủ chưa tới hai phần ba số khái niệm đã hứa.
+        Hàng đợi là nguồn duy nhất quyết định "hôm nay bao nhiêu việc", nên số câu suy từ nó.
+      */
+      const soCauTheoHangDoi = hangDoi.danhSach.length * SO_CAU_MOI_KHAI_NIEM;
+      if (soCauTheoHangDoi > 0) soCauEpTheoHangDoi = Math.min(soCauTheoHangDoi, pool.length);
     } else if (config.type === "adaptive") {
       // Xếp hạng theo điểm ưu tiên, có nhiễu NHÂN nhẹ để hai đề liên tiếp không giống hệt nhau.
       //
@@ -1020,7 +1035,7 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
     }
 
     // 2. Fulfill ExamSpecification question by question
-    const selectedQuestions: Question[] = [];
+    let selectedQuestions: Question[] = [];
     const usedIds = new Set<number>();
 
     examSpec.questionSpecs.forEach(qSpec => {
@@ -1039,13 +1054,78 @@ Bạn đang có phong độ học tập cực kỳ ấn tượng với tỷ lệ
       }
     });
 
-    // Fallback if less than target count
-    const targetCount = config.count || examSpec.questionCount;
+    // Fallback if less than target count.
+    //
+    // Đề tới hạn ôn lấy số câu từ HÀNG ĐỢI chứ không từ nơi gọi: nút trên Bàn học ghi "Ôn N khái
+    // niệm này" và quỹ thời gian tính theo `SO_CAU_MOI_KHAI_NIEM` câu mỗi khái niệm, nên số câu
+    // phải khớp lời hứa ấy. Nơi gọi truyền cứng 10 cho mọi loại đề.
+    const targetCount = soCauEpTheoHangDoi ?? (config.count || examSpec.questionCount);
     while (selectedQuestions.length < targetCount && selectedQuestions.length < pool.length) {
       const remaining = pool.find(q => !usedIds.has(q.id));
       if (!remaining) break;
       usedIds.add(remaining.id);
       selectedQuestions.push(remaining);
+    }
+
+    /*
+      XEN KẼ CÁC KHÁI NIỆM cho đề tới hạn ôn. Đây là thay đổi về học thuật, không phải trình bày.
+
+      ĐẶT Ở ĐÂY chứ không đặt lúc sắp `pool`: sau khi sắp `pool` còn một vòng chọn theo bản thiết
+      kế đề và một vòng bù cho đủ số câu, cả hai đều xếp lại thứ tự. Đo được ngày 30/08/2026: xen kẽ
+      ở `pool` xong thì đề cuối cùng vẫn còn 7 cặp câu liền nhau cùng khái niệm. Thứ tự chỉ chốt
+      được ở bước cuối.
+
+      VÌ SAO PHẢI XEN KẼ. Bản trước gom ba câu liền của một khái niệm rồi mới sang khái niệm sau.
+      Cách ấy hại theo HAI đường cùng lúc:
+
+      1. Luyện kém hơn. Xen kẽ là một trong những kết quả vững nhất của ngành nghiên cứu học tập:
+         trộn các dạng bài làm điểm TRONG buổi học tệ đi nhưng giữ được lâu hơn và chuyển giao tốt
+         hơn hẳn so với gom cụm. Với người ôn thi thì đó đúng là đánh đổi cần lấy.
+
+      2. Làm nhiễu chính SỐ ĐO. Câu thứ hai và thứ ba của cùng một khái niệm dễ hơn hẳn vì khái
+         niệm vẫn còn trong trí nhớ làm việc, chưa cần nhớ lại thật. Mà đúng sai của chúng chảy
+         thẳng vào đường cong quên qua `addOnSubmit`. Gom cụm tức là tự bơm bằng chứng lạc quan vào
+         bộ xếp lịch của chính mình.
+
+      Chia vòng: mỗi vòng lấy MỘT câu của từng khái niệm, giữ nguyên thứ tự ưu tiên đã xếp. Tất
+      định (bất biến 4.7): thứ tự trong một khái niệm giữ nguyên thứ tự đã chọn.
+    */
+    if (config.type === "due" && selectedQuestions.length > 1) {
+      const theoKhaiNiem = new Map<string, any[]>();
+      selectedQuestions.forEach(q => {
+        const nut = kbService.getConceptForQuestion(dbService.getActiveSubjectId(), q);
+        const ten = nut ? nut.concept : `khong-tra-duoc-${q.id}`;
+        if (!theoKhaiNiem.has(ten)) theoKhaiNiem.set(ten, []);
+        theoKhaiNiem.get(ten)!.push(q);
+      });
+      if (theoKhaiNiem.size > 1) {
+        /*
+          Xếp theo lối "nhóm còn nhiều nhất đi trước, và không lặp lại nhóm vừa dùng".
+
+          Chia vòng đều thì chỉ đúng khi các nhóm BẰNG NHAU. Đo được ngày 30/08/2026: cơ chế chống
+          lặp câu cũ (`recordServedQuestionIds`) làm số câu mỗi khái niệm lệch nhau, và chia vòng
+          đều để lại 4 cặp trùng ở đuôi, vì các vòng cuối chỉ còn đúng một nhóm.
+
+          Cách này luôn cho 0 cặp trùng khi nhóm lớn nhất không quá nửa tổng số câu, và khi vượt
+          quá nửa thì nó đạt mức trùng ÍT NHẤT có thể về mặt toán học. Tất định (bất biến 4.7):
+          hoà số lượng thì so tên khái niệm.
+        */
+        const conLai = [...theoKhaiNiem.entries()]
+          .map(([ten, ds]) => ({ ten, ds: [...ds] }));
+        const xenKe: any[] = [];
+        let tenVuaDung = "";
+        while (xenKe.length < selectedQuestions.length) {
+          const ungVien = conLai
+            .filter(n => n.ds.length > 0)
+            .sort((a, b) => (b.ds.length - a.ds.length) || a.ten.localeCompare(b.ten, "vi"));
+          if (ungVien.length === 0) break;
+          // Ưu tiên nhóm khác nhóm vừa dùng; hết cách thì đành lấy lại, và đó là ca bắt buộc.
+          const chon = ungVien.find(n => n.ten !== tenVuaDung) ?? ungVien[0];
+          xenKe.push(chon.ds.shift());
+          tenVuaDung = chon.ten;
+        }
+        selectedQuestions = xenKe;
+      }
     }
 
     // 3. Review assembled exam via Exam Review Engine

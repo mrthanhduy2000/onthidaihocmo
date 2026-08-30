@@ -59,6 +59,50 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, đề ôn xen kẽ khái niệm, và số câu khớp lời hứa
+
+Bộ kiểm: **298 lên 300**, không phép kiểm nào biến mất.
+
+#### Gom cụm hại theo hai đường, không phải một
+
+Đề tới hạn ôn vốn sắp theo hạng khái niệm rồi để nguyên, nên ba câu liền nhau đều thuộc một khái
+niệm rồi mới sang khái niệm sau. Đây là chuyện học thuật chứ không phải trình bày:
+
+1. **Luyện kém hơn.** Xen kẽ là một trong những kết quả vững nhất của ngành nghiên cứu học tập:
+   trộn các dạng bài làm điểm TRONG buổi học tệ đi nhưng giữ được lâu hơn và chuyển giao tốt hơn
+   hẳn so với gom cụm. Với người ôn thi thì đó đúng là đánh đổi cần lấy.
+
+2. **Làm nhiễu chính số đo.** Câu thứ hai và thứ ba của cùng một khái niệm dễ hơn hẳn vì khái niệm
+   vẫn còn nằm trong trí nhớ làm việc, chưa cần nhớ lại thật. Mà đúng sai của chúng chảy thẳng vào
+   đường cong quên qua `addOnSubmit`. Gom cụm tức là **tự bơm bằng chứng lạc quan vào bộ xếp lịch
+   của chính mình**, rồi lịch ấy lại quyết định hôm sau ôn gì.
+
+Vế thứ hai mới là vế nặng, và nó là lý do việc này đáng làm ngay chứ không xếp vào mục thẩm mỹ.
+
+#### Hai lần đặt sai, cả hai đều do phép kiểm bắt
+
+**Lần một, sai chỗ.** Xen kẽ ngay lúc sắp `pool`. Nhưng sau đó còn một vòng chọn theo bản thiết kế
+đề và một vòng bù cho đủ số câu, cả hai đều xếp lại thứ tự. Đề cuối cùng vẫn còn 7 cặp liền nhau
+cùng khái niệm. Thứ tự chỉ chốt được ở bước cuối.
+
+**Lần hai, sai cách.** Chia vòng đều chỉ đúng khi các nhóm bằng nhau. Cơ chế chống lặp câu cũ
+(`recordServedQuestionIds`) làm số câu mỗi khái niệm lệch nhau, nên các vòng cuối chỉ còn một nhóm
+và để lại 4 cặp trùng ở đuôi. Điều đáng nói là phép kiểm **chập chờn**: có lượt xanh có lượt đỏ,
+tuỳ trạng thái các nhóm phía trước để lại. Một phép kiểm chập chờn dễ bị đổ cho "nhiễu" rồi bỏ qua,
+mà lần này nó đang nói đúng.
+
+Bản cuối xếp theo lối "nhóm còn nhiều nhất đi trước, không lặp lại nhóm vừa dùng". Cách này cho 0
+cặp trùng khi nhóm lớn nhất không quá nửa tổng số câu, và đạt mức trùng ít nhất có thể khi vượt
+quá. Ba lượt chạy liên tiếp với 6, 6, 7 khái niệm đều 0 cặp trùng.
+
+#### Số câu khớp lời hứa
+
+Nút trên Bàn học ghi "Ôn N khái niệm này", quỹ thời gian của hàng đợi tính theo 3 câu mỗi khái
+niệm, nhưng nơi gọi truyền cứng 10 câu cho mọi loại đề. Một hàng đợi 7 khái niệm chỉ nhận 10 câu,
+phủ chưa tới một nửa số khái niệm đã hứa. Nay số câu suy từ hàng đợi: 7 khái niệm cho 21 câu.
+
+---
+
 ### 30/08/2026, LỖI ĐẮT NHẤT TỪ TRƯỚC TỚI NAY: một dòng đọc biến môi trường
 
 Bộ kiểm: **297 lên 298**, không phép kiểm nào biến mất.
