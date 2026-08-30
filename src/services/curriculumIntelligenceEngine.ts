@@ -6,6 +6,7 @@
 import { dbService, chapters, questions } from "./db";
 import { kbService, KnowledgeNode } from "./kbService";
 import { TimeService } from "./time";
+import { learnerModelService, quyViecMotNgay, SO_CAU_MOI_KHAI_NIEM } from "./learnerModel";
 
 export type CurriculumStage = 
   | "FOUNDATION"
@@ -61,7 +62,8 @@ export interface CurriculumPlan {
   recommendedChapters: number[];
   recommendedExamType: "adaptive" | "mock" | "incorrect" | "chapter";
   estimatedStudyTime: number; // minutes
-  expectedRetentionGain: number; // percentage
+  /** Mức nhớ ngày thi tăng thêm nếu làm xong phần hôm nay, điểm phần trăm. `null` khi chưa đặt ngày thi. */
+  expectedRetentionGain: number | null;
   readinessScore: number; // 0-100
   masteryScore: number; // 0-100
   examDaysRemaining: number; // số ngày còn lại tới kỳ thi, tính từ mục tiêu môn học
@@ -419,6 +421,20 @@ export const curriculumIntelligenceEngine = {
         : undefined
     };
 
+    /*
+      Việc thật của hôm nay, lấy từ đúng hàng đợi mà màn Bàn học dùng, và đúng phép tính quỹ thời
+      gian mà bộ lập lịch dùng. Ba màn cùng nói về một buổi học thì phải cùng một con số.
+    */
+    const hangDoiHomNay = learnerModelService.layKhaiNiemToiHan();
+    const { giayMoiCau } = quyViecMotNgay();
+    const soPhutThatSuCanHomNay = Math.round(
+      (hangDoiHomNay.danhSach.length * SO_CAU_MOI_KHAI_NIEM * giayMoiCau) / 60
+    );
+    const coNgayThi = hangDoiHomNay.soNgayToiKyThi !== null;
+    const mucNhoTangThemHomNay = coNgayThi
+      ? hangDoiHomNay.danhSach.reduce((tong, m) => tong + (m.loiIchNeuOnHomNay ?? 0), 0) * 100
+      : null;
+
     return {
       todayGoal,
       weeklyGoal,
@@ -444,8 +460,25 @@ export const curriculumIntelligenceEngine = {
         .slice(0, 3)
         .map(c => c.chapterId),
       recommendedExamType,
-      estimatedStudyTime: stage === "FINAL_REVIEW" ? 35 : 20,
-      expectedRetentionGain: 15,
+      /*
+        HAI CON SỐ NÀY TRƯỚC ĐÂY LÀ SỐ BỊA, và một trong hai được in thẳng lên màn.
+
+        Bản cũ: `estimatedStudyTime` bằng 35 hoặc 20 tuỳ giai đoạn, `expectedRetentionGain` bằng
+        15 cho mọi người học mọi lúc. Màn Chương trình in ra "Dự kiến khoảng 20 phút" bất kể hôm
+        nay thật sự phải làm gì và người học làm nhanh cỡ nào. Đây là món nợ 2 đã ghi trong
+        WORKSTATE từ lâu, và tới 30/08/2026 mới có nguồn thật để thay.
+
+        Nay cả hai suy từ việc CÓ THẬT của hôm nay:
+
+          thời gian  = số khái niệm tới hạn × số câu mỗi khái niệm × nhịp ĐO ĐƯỢC của người học
+          mức nhớ    = tổng lợi ích của đúng các khái niệm ấy, tính theo mức nhớ vào NGÀY THI
+
+        Chưa đặt ngày thi thì phần mức nhớ trả `null`, vì lợi ích chỉ có nghĩa khi có hạn chót.
+        Không có việc nào hôm nay thì thời gian bằng 0, và màn hình phải nói đúng là không có việc
+        chứ không in ra một con số cho có.
+      */
+      estimatedStudyTime: soPhutThatSuCanHomNay,
+      expectedRetentionGain: mucNhoTangThemHomNay,
       readinessScore,
       masteryScore,
       examDaysRemaining,

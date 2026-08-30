@@ -33,7 +33,7 @@ import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvalu
 import { TimeService } from "../../src/services/time";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
 import { kbService } from "../../src/services/kbService";
-import { khaiNiemBiKet, learnerModelService, mocNhipChuan, NGUONG_TY_LE_DUNG_BI_KET, nhipRiengMoiCau, studentModelService, TOI_THIEU_LUOT_KET_LUAN_BI_KET } from "../../src/services/learnerModel";
+import { khaiNiemBiKet, learnerModelService, mocNhipChuan, NGUONG_TY_LE_DUNG_BI_KET, nhipRiengMoiCau, quyViecMotNgay, SO_CAU_MOI_KHAI_NIEM, studentModelService, TOI_THIEU_LUOT_KET_LUAN_BI_KET } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { contentQualityAssurance } from "../../src/services/contentQualityAssurance";
 import { banDangChay, doiChieuVoiMayChu, KHONG_RO } from "../../src/services/phienBan";
@@ -4983,6 +4983,73 @@ check("Cổng kiểm tra máy chủ trả về đúng bộ trường mà trình 
   bienThieuOHealth.length > 0
     ? `cổng thiếu biến: ${bienThieuOHealth.join(", ")}`
     : "cổng và gói giao diện dùng chung bộ tên biến, so được với nhau");
+
+// ===========================================================================
+// AU. Kế hoạch chương trình bám việc thật
+// ===========================================================================
+g("AU. Kế hoạch chương trình bám việc thật");
+
+// AU1. "Dự kiến khoảng N phút" phải BÁM việc thật của hôm nay, không phải hằng số theo giai đoạn.
+//
+// Đây là món nợ 2 ghi trong WORKSTATE từ lâu: `estimatedStudyTime` bằng đúng 35 hoặc 20 tuỳ giai
+// đoạn, và màn Chương trình in thẳng nó ra. Người học có 2 khái niệm tới hạn và người học có 14
+// khái niệm tới hạn cùng đọc được "khoảng 20 phút".
+//
+// Cách canh: đổi QUỸ THỜI GIAN mỗi ngày thì số khái niệm tới hạn đổi theo, nên con số phút phải
+// đổi theo. Hằng số thì không đổi bao giờ.
+dungHoSoOnTap(TEN_BEN, 4, 2, 5, 3);
+dungHoSoOnTap(TEN_MONG_MANH, 2, 6, 6, 1);
+for (let i = 2; i < Math.min(10, doThiAL.length); i++) dungHoSoOnTap(doThiAL[i].concept, 4, 2, 5, 3);
+datNgayThi(20);
+
+const hangDoiRong = learnerModelService.layKhaiNiemToiHan(60);
+const hangDoiHep = learnerModelService.layKhaiNiemToiHan(3);
+const phutTheoViec = (soKhaiNiem: number) =>
+  Math.round((soKhaiNiem * SO_CAU_MOI_KHAI_NIEM * (quyViecMotNgay().giayMoiCau)) / 60);
+const phutRong = phutTheoViec(hangDoiRong.danhSach.length);
+const phutHep = phutTheoViec(hangDoiHep.danhSach.length);
+const bamViecThat = hangDoiRong.danhSach.length > hangDoiHep.danhSach.length && phutRong > phutHep;
+// Và con số ấy phải THẬT SỰ được nơi dựng kế hoạch dùng, chứ không phải chỉ tính được ở đây.
+const nguonChuongTrinh = boChuThich(readFileSync(path.join(process.cwd(), "src/services/curriculumIntelligenceEngine.ts"), "utf8"));
+const khongCongHangSo = !/estimatedStudyTime:\s*stage ===/.test(nguonChuongTrinh)
+  && /estimatedStudyTime:\s*soPhutThatSuCanHomNay/.test(nguonChuongTrinh);
+check("Thời gian dự kiến hôm nay bám việc thật, không phải hằng số theo giai đoạn",
+  bamViecThat && khongCongHangSo,
+  !khongCongHangSo
+    ? "kế hoạch chương trình vẫn gán thời gian bằng hằng số theo giai đoạn"
+    : bamViecThat
+      ? `quỹ rộng cho ${hangDoiRong.danhSach.length} khái niệm tức ${phutRong} phút, quỹ hẹp cho ${hangDoiHep.danhSach.length} khái niệm tức ${phutHep} phút`
+      : `hai quỹ cho cùng ${hangDoiRong.danhSach.length} khái niệm, chưa phân hoá được`);
+
+// AU2. Mức nhớ tăng thêm phải là `null` khi CHƯA đặt ngày thi, không được là 15 cho mọi người.
+//
+// Bản cũ ghi cứng `expectedRetentionGain: 15`. Nó không hiển thị ở đâu nên chưa hại ai, nhưng một
+// lời hứa không căn cứ nằm sẵn trong dữ liệu là quả mìn chờ người sau nối vào màn hình.
+datNgayThi(null);
+const keHoachKhongNgay = curriculumIntelligenceEngine.getCurriculumPlan();
+datNgayThi(20);
+const keHoachCoNgay = curriculumIntelligenceEngine.getCurriculumPlan();
+const nullKhiChuaDat = keHoachKhongNgay.expectedRetentionGain === null;
+const coSoKhiDaDat = typeof keHoachCoNgay.expectedRetentionGain === "number";
+check("Mức nhớ tăng thêm chỉ có số khi đã đặt ngày thi, chưa đặt thì để trống",
+  nullKhiChuaDat && coSoKhiDaDat,
+  !nullKhiChuaDat
+    ? `chưa đặt ngày thi mà vẫn hứa ${keHoachKhongNgay.expectedRetentionGain} điểm phần trăm`
+    : !coSoKhiDaDat
+      ? "đã đặt ngày thi mà vẫn không tính ra được con số"
+      : `chưa đặt thì null, đã đặt thì ${Math.round(keHoachCoNgay.expectedRetentionGain as number)} điểm phần trăm`);
+
+// AU3. Màn hình phải nói đúng khi hôm nay KHÔNG có việc, không in "khoảng 0 phút".
+const nguonManChuongTrinh = boChuThich(readFileSync(path.join(process.cwd(), "src/components/CurriculumDashboard.tsx"), "utf8"));
+const coNhanhKhongViec = /estimatedStudyTime > 0/.test(nguonManChuongTrinh)
+  && /không có khái niệm nào tới hạn/.test(nguonManChuongTrinh);
+check("Màn Chương trình nói đúng khi hôm nay không có việc, không in ra khoảng 0 phút",
+  coNhanhKhongViec,
+  coNhanhKhongViec
+    ? "có nhánh riêng cho trường hợp không còn khái niệm nào tới hạn"
+    : "in thẳng số phút kể cả khi số đó bằng 0");
+
+datNgayThi(null);
 
 // ===========================================================================
 // AS. Khái niệm ôn hoài vẫn sai

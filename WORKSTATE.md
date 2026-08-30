@@ -19,7 +19,7 @@ quyết định.
 | **Current Phase** | Cả 8 giai đoạn XONG. Việc chặn đường: Supabase chết nên AI 401 |
 | **Completed %** | 9 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **292/292 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **295/295 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
@@ -1172,49 +1172,49 @@ Khi tài liệu mâu thuẫn với code thì **code thắng**. Cập nhật tài
 
 Ghi nhận qua khảo sát, **cố ý chưa xử lý**. Không tự ý dọn nếu chưa được giao.
 
-### Nợ 1: Mã chết, khoảng 1.180 dòng không nơi nào dùng tới
+### Nợ 1: Mã chết. ĐÃ XONG 13/08/2026
 
-| Loại | File | Dòng |
-|---|---|---|
-| Service mồ côi | `src/services/importPipeline.ts` | 187 |
-| Service mồ côi | `src/services/validation.ts` | 232 |
-| Component không được render | `src/components/AssessmentDesignDashboard.tsx` | 321 |
-| Component không được render | `src/components/Dashboard2Widgets.tsx` | 382 |
-| Component không được render | `src/components/DashboardClock.tsx` | 61 |
+Gỡ 6 file, 1.263 dòng: `importPipeline.ts`, `validation.ts`, `Dashboard2Widgets.tsx`,
+`DashboardClock.tsx`, `QuickActionFAB.tsx`, `AssessmentDesignDashboard.tsx`. Phép kiểm **AQ3** giữ
+cho nợ này không tái phát, và nó quét cả `scripts/` lẫn `functions-src/` chứ không chỉ `src/`, vì
+`aiOrchestrator.ts` không có nơi nhập nào trong `src/` nhưng là đường chạy thật của hàm serverless
+`recommend.ts`.
 
-Thêm 19 hàm và hằng được export nhưng không ai dùng, trong đó **8 engine nằm trong
-`evidencePipeline.ts`**. File này 839 dòng nhưng bên ngoài chỉ dùng đúng hai kiểu dữ liệu. Nhiều
-khả năng đây là cả một tầng kiến trúc dựng sẵn rồi chưa bao giờ đấu nối. Tham số
-`aiEngineExecutor` của `executePipeline` cũng là mã chết và **đã từng làm hỏng một lượt sửa** vì
-tên của nó khiến người đọc tin là có thể thay đường gọi AI qua đó.
+### Nợ 2: Con số chưa bám dữ liệu. ĐÃ XỬ PHẦN GÂY HẠI 30/08/2026
 
-**Rủi ro nếu để nguyên**: người sau đọc code sẽ tưởng các engine này đang chạy. Đây là rủi ro
-hiểu nhầm, không phải rủi ro chạy sai.
+**Đã sửa**: `getCurriculumPlan` từng gán `estimatedStudyTime` bằng 35 hoặc 20 tuỳ giai đoạn và
+`expectedRetentionGain` bằng 15 cho mọi người học mọi lúc. Con số phút được in thẳng lên màn
+Chương trình, nên người có 2 khái niệm tới hạn và người có 14 khái niệm cùng đọc "khoảng 20 phút".
+Nay cả hai suy từ việc thật của hôm nay: số khái niệm tới hạn nhân số câu mỗi khái niệm nhân nhịp
+đo được của chính người học, và tổng lợi ích của đúng các khái niệm ấy tính theo mức nhớ vào ngày
+thi. Chưa đặt ngày thi thì phần mức nhớ trả `null`. Nhóm kiểm **AU** canh cả ba vế.
 
-### Nợ 2: Con số chưa bám dữ liệu còn sót
+**Còn lại, đều là loại không khẳng định sai về người học**:
 
 | Chỗ | Còn gì |
 |---|---|
-| `getCurriculumPlan` | `estimatedStudyTime = 20` và `expectedRetentionGain = 15`, `weeklyPlan` chỉ đổi theo giai đoạn chứ không theo người học |
-| Ngân hàng câu hỏi | Trường `misconception` rỗng **292/292** câu. Từ 27/07/2026 **không còn gây hại**: đã có nguồn thay thế ở tầng khái niệm (nhóm kiểm **N**). Chỉ còn thiếu nếu muốn cảnh báo riêng cho TỪNG CÂU thay vì từng khái niệm |
-| Khối `review` biên soạn tay | `secondReviewDays` và `thirdReviewDays` vẫn chưa ai đọc. Chúng chỉ có nghĩa khi xếp lịch ôn nhiều mốc, mà hiện lịch ôn suy từ một con số độ bền duy nhất |
+| Ngân hàng câu hỏi | Trường `misconception` rỗng 292/292 câu. Từ 27/07/2026 không còn gây hại: đã có nguồn thay thế ở tầng khái niệm (nhóm kiểm **N**). Chỉ thiếu nếu muốn cảnh báo riêng cho TỪNG CÂU thay vì từng khái niệm |
+| Khối `review` biên soạn tay | `secondReviewDays` và `thirdReviewDays` vẫn chưa ai đọc. Chúng chỉ có nghĩa khi xếp lịch ôn nhiều mốc, mà lịch hiện suy từ một con số độ bền duy nhất |
 | `productObservabilityService` | 39 ngưỡng cứng, đã rà và sửa 3 lỗi nặng, phần ngưỡng thuần túy chưa đụng |
 | `curriculumIntelligenceEngine` | 18 ngưỡng cứng, đã rà và sửa 5 lỗi nặng cộng 1 lỗi ở lượt 3 |
 
-Mức độ nhẹ hơn hẳn những ca đã sửa: đây là **chỉ tiêu kế hoạch** hoặc **suy giảm êm**, không
-phải khẳng định sai về người học. Riêng `expectedRetentionGain` vẫn là một lời hứa không căn cứ,
-nhưng hiện **không hiển thị ở đâu cả**, nên chưa gây hại.
+### Nợ 3: Gói giao diện lớn. ĐÃ XONG 13/08/2026
 
-### Nợ 3: Gói giao diện lớn
+Gói mã từ 973 KB xuống **374 KB**: nạp muộn năm màn nặng, và bỏ bộ SDK Gemini khỏi bản trình duyệt
+(nó chỉ được dùng ở nhánh chạy trên Node). Gói còn lại 1.081 KB **không phải mã** mà là ngân hàng
+câu hỏi, và đã quyết định cố ý không đụng: đưa nó xuống đòi nạp dữ liệu môn học bất đồng bộ, tức
+thay đổi kiến trúc sâu đổi lấy chút thời gian tải trên một máy chạy cục bộ. **AQ2** đặt ngưỡng cho
+gói mã và miễn trừ gói dữ liệu bằng cách nhận diện theo nội dung.
 
-`index-*.js` khoảng **1,0 MB** trước khi nén. Vite cảnh báo mỗi lần build. Không ảnh hưởng đúng
-sai, chỉ ảnh hưởng tốc độ tải lần đầu.
+### Nợ 4: Bốn cổng AI đang chết trên bản chạy thật
 
-Hướng xử lý gợi ý: tách theo màn hình bằng `React.lazy` cho các dashboard nặng. **Cần cẩn thận**,
-vì nó đổi hành vi dựng giao diện (phải có ranh giới `Suspense`), và hỏng kiểu này thì ra màn hình
-trắng chứ không ra lỗi build. Làm thành một lượt riêng, đừng ghép vào lượt sửa logic.
+**Đây là món nợ duy nhất còn chặn đường, và nó cần Đàm.** `wuzqqsjkoifhuuirimyj.supabase.co` trả
+**NXDOMAIN**, tức dự án Supabase không còn tồn tại, trong khi `onthidaihocmo.vercel.app` phân giải
+bình thường và trả HTTP 200. Hệ quả: gia sư AI, sinh câu hỏi, và phần chấm bài nhớ lại đều không
+dùng được trên bản thật.
 
----
+Cách gỡ: tạo dự án Supabase mới, bật Anonymous sign-ins, đặt `VITE_SUPABASE_URL` và
+`VITE_SUPABASE_ANON_KEY` trong Vercel, deploy lại, rồi chạy `npm run check:prod`.
 
 ## Known Risks
 

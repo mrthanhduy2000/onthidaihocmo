@@ -59,6 +59,39 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, trả nợ 2: hai con số bịa cuối cùng còn hiển thị
+
+Bộ kiểm: **292 lên 295**, không phép kiểm nào biến mất.
+
+Rà lại danh sách nợ trong `WORKSTATE.md` thì Nợ 1 và Nợ 3 đã xong từ Giai đoạn 8 mà tài liệu chưa
+cập nhật. Nợ 2 còn một chỗ **đang hiển thị lên màn**, và tới hôm nay mới có nguồn thật để thay.
+
+`getCurriculumPlan` gán `estimatedStudyTime` bằng 35 hoặc 20 tuỳ giai đoạn, `expectedRetentionGain`
+bằng 15 cho mọi người học mọi lúc. Màn Chương trình in thẳng con số phút, nên người có 2 khái niệm
+tới hạn và người có 14 khái niệm cùng đọc được "Dự kiến khoảng 20 phút".
+
+Nay cả hai suy từ việc thật của hôm nay:
+
+    thời gian = số khái niệm tới hạn × số câu mỗi khái niệm × nhịp ĐO ĐƯỢC của người học
+    mức nhớ   = tổng lợi ích của đúng các khái niệm ấy, tính theo mức nhớ vào NGÀY THI
+
+Đo được: quỹ rộng cho 10 khái niệm tức 18 phút, quỹ hẹp cho 1 khái niệm tức 2 phút. Trước đó cả
+hai đều là 20.
+
+Ba điều đi kèm, đều là nếp cũ của dự án chứ không phải phát minh mới. Chưa đặt ngày thi thì phần
+mức nhớ trả `null` chứ không trả 15. Hôm nay không có việc thì màn hình nói đúng là không có việc
+chứ không in "khoảng 0 phút". Và con số phút lấy từ ĐÚNG hàng đợi mà màn Bàn học dùng, cùng đúng
+phép tính quỹ mà bộ lập lịch dùng, để ba màn cùng nói về một buổi học thì cùng một con số.
+
+`expectedRetentionGain` trước nay không hiển thị ở đâu nên chưa hại ai, nhưng một lời hứa không căn
+cứ nằm sẵn trong dữ liệu là quả mìn chờ người sau nối vào màn hình. Nay nó vừa có thật vừa được
+hiện ra: "Làm xong thì mức nhớ vào ngày thi tăng khoảng N điểm phần trăm."
+
+Đã cập nhật lại toàn bộ mục Nợ trong `WORKSTATE.md` cho khớp thực tế, và thêm **Nợ 4** cho món nợ
+duy nhất còn chặn đường: bốn cổng AI chết vì dự án Supabase không còn tồn tại. Món đó cần Đàm.
+
+---
+
 ### 30/08/2026, phiên bản bản dựng hiện ra ở chân trang
 
 Bộ kiểm: **287 lên 292**, không phép kiểm nào biến mất.

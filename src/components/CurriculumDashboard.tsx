@@ -152,8 +152,20 @@ export default function CurriculumDashboard({ onStartExam, onNavigate }: Curricu
 
         <p className="text-xl font-bold text-text-primary font-sans leading-snug max-w-[42rem]">
           Hôm nay: {plan.todayGoal}
+          {/*
+            Con số phút nay suy từ VIỆC THẬT của hôm nay (số khái niệm tới hạn nhân số câu mỗi
+            khái niệm nhân nhịp đo được của chính người học), không còn là 20 hay 35 viết cứng.
+            Vì vậy nó có thể bằng 0, và lúc ấy phải nói đúng là không có việc chứ không in ra
+            "khoảng 0 phút".
+          */}
           <span className="block text-base font-normal text-text-secondary pt-1">
-            Dự kiến khoảng {plan.estimatedStudyTime} phút.
+            {plan.estimatedStudyTime > 0
+              ? `Dự kiến khoảng ${plan.estimatedStudyTime} phút.`
+              : "Hôm nay không có khái niệm nào tới hạn ôn."}
+            {plan.estimatedStudyTime > 0 && plan.expectedRetentionGain !== null && plan.expectedRetentionGain >= 1 && (
+              <> Làm xong thì mức nhớ vào ngày thi tăng khoảng{" "}
+                {Math.round(plan.expectedRetentionGain)} điểm phần trăm.</>
+            )}
           </span>
         </p>
 
