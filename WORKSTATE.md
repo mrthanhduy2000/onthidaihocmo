@@ -15,11 +15,11 @@ quyết định.
 | Mục | Giá trị |
 |---|---|
 | **Current Objective** | Đợt 8 giai đoạn ĐÃ XONG. Còn nợ: thuật sĩ nạp môn (chờ AI sống lại) |
-| **Current Milestone** | Lịch ôn từng ngày: dự báo 88% mức nhớ ngày thi so với 5% nếu không ôn |
+| **Current Milestone** | Lịch ôn từng ngày, và khái niệm ôn hoài vẫn sai được chỉ sang cách học khác |
 | **Current Phase** | Cả 8 giai đoạn XONG. Việc chặn đường: Supabase chết nên AI 401 |
 | **Completed %** | 9 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **284/284 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **287/287 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 

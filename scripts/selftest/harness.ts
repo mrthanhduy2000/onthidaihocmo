@@ -33,7 +33,7 @@ import { pedagogicalEvaluationEngine } from "../../src/services/pedagogicalEvalu
 import { TimeService } from "../../src/services/time";
 import { assessmentDesignEngine } from "../../src/services/assessmentDesignEngine";
 import { kbService } from "../../src/services/kbService";
-import { learnerModelService, mocNhipChuan, nhipRiengMoiCau, studentModelService } from "../../src/services/learnerModel";
+import { khaiNiemBiKet, learnerModelService, mocNhipChuan, NGUONG_TY_LE_DUNG_BI_KET, nhipRiengMoiCau, studentModelService, TOI_THIEU_LUOT_KET_LUAN_BI_KET } from "../../src/services/learnerModel";
 import { examForecaster } from "../../src/services/examForecaster";
 import { contentQualityAssurance } from "../../src/services/contentQualityAssurance";
 import { taoCauHoiNhoLai, chamCauTraLoi, docKetQuaCham } from "../../src/services/recallService";
@@ -4864,6 +4864,67 @@ check("Màn Kế hoạch chỉ mời làm việc hôm nay khi hôm nay thật s�
     : coCanhNgayNghi
       ? "lời mời nằm sau nhánh kiểm hôm nay có việc, ngày nghỉ thì nói ra là nghỉ"
       : "lời mời làm việc hôm nay hiện cả khi hôm nay là ngày nghỉ");
+
+// ===========================================================================
+// AS. Khái niệm ôn hoài vẫn sai
+// ===========================================================================
+g("AS. Khái niệm ôn hoài vẫn sai");
+
+// AS1. Ngưỡng kết luận phải được tôn trọng ở CẢ HAI phía, không dán nhãn sớm cũng không bỏ sót.
+//
+// Dán nhãn sớm là phạt người học vì chưa học chứ không phải vì học mãi không vào. Đây là lý do
+// ngưỡng đặt 6 lượt, cùng mốc bằng chứng với cả dự án.
+const caKet = [
+  { ten: "đủ lượt, sai phần lớn", dung: 1, sai: 5, mong: true },
+  { ten: "đủ lượt, đúng 40%", dung: 4, sai: 6, mong: true },
+  { ten: "đủ lượt, đúng hơn 40%", dung: 5, sai: 5, mong: false },
+  { ten: "chưa đủ lượt dù sai hết", dung: 0, sai: 5, mong: false },
+  { ten: "chưa làm lượt nào", dung: 0, sai: 0, mong: false },
+];
+const caSaiKet = caKet.filter(c => khaiNiemBiKet(c.dung, c.sai) !== c.mong).map(c => c.ten);
+check("Nhãn ôn hoài vẫn sai chỉ dán khi đủ bằng chứng, không dán sớm",
+  caSaiKet.length === 0,
+  caSaiKet.length === 0
+    ? `đúng cả ${caKet.length} ca, ngưỡng ${TOI_THIEU_LUOT_KET_LUAN_BI_KET} lượt và tỷ lệ đúng ${NGUONG_TY_LE_DUNG_BI_KET}`
+    : `sai ở: ${caSaiKet.join("; ")}`);
+
+// AS2. PHÉP KIỂM QUAN TRỌNG NHẤT NHÓM: khái niệm bị kẹt VẪN phải nằm trong lịch.
+//
+// Đây là chỗ cố ý làm KHÁC Anki. Anki gặp thẻ ôn hoài vẫn quên thì ĐÌNH CHỈ nó (mặc định 8 lần
+// quên), và với học từ vựng vô thời hạn thì đúng: bỏ một thẻ không sao. Với ôn thi thì sai hẳn,
+// vì khái niệm ấy vẫn nằm trong đề và bỏ nó đi là bỏ điểm.
+//
+// Không có phép kiểm này thì một lượt "tối ưu hoá" sau đó rất dễ lặng lẽ lọc nó ra cho hàng đợi
+// gọn, và không ai biết là người học vừa bị giấu mất một phần đề thi.
+dungHoSoOnTap(TEN_MONG_MANH, 1, 7, 6, 2);
+datNgayThi(20);
+const hangDoiCoKet = learnerModelService.layKhaiNiemToiHan(60);
+const mucBiKet = hangDoiCoKet.danhSach.find(m => m.tenKhaiNiem === TEN_MONG_MANH);
+const conTrongLich = !!mucBiKet && mucBiKet.biKet;
+check("Khái niệm ôn hoài vẫn sai VẪN nằm trong lịch, khác hẳn cách Anki đình chỉ thẻ",
+  conTrongLich && hangDoiCoKet.soBiKet > 0,
+  !mucBiKet
+    ? `"${TEN_MONG_MANH}" đã biến mất khỏi hàng đợi, tức người học bị giấu mất một phần đề thi`
+    : mucBiKet.biKet
+      ? `vẫn trong hàng đợi, được đánh dấu đúng ${mucBiKet.soLuotDung}/${mucBiKet.soLuotDaLam} lượt`
+      : `còn trong hàng đợi nhưng không được đánh dấu là bị kẹt`);
+
+// AS3. Màn hình chỉ nói tới khái niệm bị kẹt KHI CÓ, và lời khuyên phải khác "ôn thêm đi".
+//
+// Bất biến 4.9h. Người chưa bị kẹt khái niệm nào mà đọc được lời khuyên đổi cách học thì màn hình
+// đang mô tả một vấn đề họ không có.
+const nguonBanHocAS = readFileSync(path.join(process.cwd(), "src/components/PersonalWorkspaceView.tsx"), "utf8");
+const coCong = /hangDoiOn\.soBiKet > 0 &&/.test(nguonBanHocAS);
+const chiSangVietLai = /Ôn bằng cách viết lại/.test(nguonBanHocAS.slice(
+  nguonBanHocAS.indexOf("hangDoiOn.soBiKet > 0 &&"),
+  nguonBanHocAS.indexOf("hangDoiOn.soBiKet > 0 &&") + 700));
+check("Lời nhắc về khái niệm bị kẹt chỉ hiện khi có, và chỉ sang cách học khác",
+  coCong && chiSangVietLai,
+  !coCong
+    ? "dòng nhắc hiện vô điều kiện, kể cả khi người học không bị kẹt khái niệm nào"
+    : !chiSangVietLai
+      ? "có nhắc nhưng không chỉ sang cách học khác, tức chỉ bảo người ta ôn thêm đúng cách đã không hiệu quả"
+      : "chỉ hiện khi số khái niệm bị kẹt lớn hơn 0, và chỉ sang chế độ viết lại");
 
 datNgayThi(null);
 

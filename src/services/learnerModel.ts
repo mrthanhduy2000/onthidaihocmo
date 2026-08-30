@@ -66,6 +66,11 @@ export interface MucOnTap {
   loiIchNeuOnHomNay: number | null;
   /** Số ngày đã nghỉ kể từ lần học gần nhất. Dùng làm khoá phá hoà, và đọc được cho người học. */
   soNgayDaNghi: number;
+  /** Ôn đủ nhiều lần rồi mà vẫn sai phần lớn. Xem `khaiNiemBiKet`. */
+  biKet: boolean;
+  /** Số lượt đã làm và số lượt đúng, để màn hình nói được con số thật chứ không nói chung chung. */
+  soLuotDaLam: number;
+  soLuotDung: number;
   /** Câu giải thích vì sao mục này nằm ở đây, viết cho người học đọc. */
   lyDo: string;
 }
@@ -84,6 +89,8 @@ export interface HangDoiOnTap {
   soBiCatDoHetGio: number;
   /** Tới hạn theo lối cũ nhưng ôn hôm nay không giúp gì cho ngày thi, nên hoãn lại. */
   hoanLai: MucOnTap[];
+  /** Số khái niệm trong hàng đợi hôm nay đang bị kẹt. Xem `khaiNiemBiKet`. */
+  soBiKet: number;
   phutMoiNgay: number;
   /** Nhịp đã dùng để quy đổi thời gian, giây mỗi câu. */
   giayMoiCauDaDung: number;
@@ -108,6 +115,42 @@ export const SO_CAU_MOI_KHAI_NIEM = 3;
  * thuẫn với chính nó.
  */
 export const NGUONG_LOI_ICH = 0.01;
+
+/**
+ * Số lượt tối thiểu mới dám kết luận "ôn hoài vẫn sai".
+ *
+ * Đặt 6, cùng mốc bằng chứng với `MOC_BANG_CHUNG_CO` của cả dự án. Dưới mức đó thì hai lần sai
+ * liên tiếp đã đủ dán nhãn cho một khái niệm mà người học mới gặp, tức phạt người ta vì chưa học
+ * chứ không phải vì học mãi không vào.
+ */
+export const TOI_THIEU_LUOT_KET_LUAN_BI_KET = 6;
+
+/** Tỷ lệ đúng từ mức này trở xuống mới coi là bị kẹt. */
+export const NGUONG_TY_LE_DUNG_BI_KET = 0.4;
+
+/**
+ * KHÁI NIỆM BỊ KẸT: ôn đủ nhiều lần rồi mà vẫn sai phần lớn.
+ *
+ * VÌ SAO CẦN, và vì sao nó gắn liền với bộ lập lịch. Bộ lập lịch xếp theo lợi ích dự kiến, mà công
+ * thức lợi ích giả định mỗi lượt ôn đều bồi được trí nhớ. Với khái niệm người học hiểu sai từ gốc
+ * thì giả định ấy hỏng: ôn thêm mười lượt trắc nghiệm vẫn là mười lượt chọn nhầm cùng một phương
+ * án. Không có tín hiệu này thì lịch sẽ xếp nó mỗi ngày cho tới ngày thi, ăn hết quỹ thời gian mà
+ * không nâng được gì.
+ *
+ * XỬ KHÁC ANKI CÓ CHỦ Ý. Anki gặp thẻ như vậy thì ĐÌNH CHỈ nó (mặc định 8 lần quên). Việc đó hợp
+ * lý với học từ vựng vô thời hạn: bỏ một thẻ không sao. Với ôn thi thì KHÔNG: khái niệm ấy vẫn nằm
+ * trong đề, bỏ nó đi là bỏ điểm. Vì vậy ở đây khái niệm bị kẹt **vẫn được xếp lịch**, chỉ khác là
+ * màn hình nói thẳng rằng làm thêm trắc nghiệm gần như không gỡ được, và chỉ sang chế độ viết lại,
+ * nơi bài chấm chỉ ra ĐÍCH DANH ý còn thiếu. Nhóm kiểm AS canh cả hai vế.
+ *
+ * `persistentErrorPenalty` trong `conceptMemoryService` cũng đo một thứ gần giống, nhưng nó có 0
+ * nơi đọc và trộn cả số lần tụt lùi vào, nên không dùng lại được làm tín hiệu cho người học đọc.
+ */
+export function khaiNiemBiKet(soDung: number, soSai: number): boolean {
+  const tong = Math.max(0, soDung) + Math.max(0, soSai);
+  if (tong < TOI_THIEU_LUOT_KET_LUAN_BI_KET) return false;
+  return soDung / tong <= NGUONG_TY_LE_DUNG_BI_KET;
+}
 
 /**
  * QUY TẮC ƯU TIÊN ÔN, dùng chung cho hàng đợi hôm nay và bộ lập lịch nhiều ngày.
@@ -1073,6 +1116,8 @@ export const learnerModelService = {
       soNgayQuaHan: number;
       mucConNho: number;
       doBenNgay: number;
+      soLuotDung: number;
+      soLuotSai: number;
     }>;
   } {
     const profiles = this.getConceptProfiles();
@@ -1089,6 +1134,7 @@ export const learnerModelService = {
     const cacKhaiNiem: Array<{
       tenKhaiNiem: string; bangChung: BangChungTriNho; soNgayDaNghi: number;
       soNgayQuaHan: number; mucConNho: number; doBenNgay: number;
+      soLuotDung: number; soLuotSai: number;
     }> = [];
 
     for (const ten of Object.keys(profiles)) {
@@ -1102,6 +1148,8 @@ export const learnerModelService = {
 
       cacKhaiNiem.push({
         tenKhaiNiem: ten,
+        soLuotDung: hoSo.correctCount || 0,
+        soLuotSai: hoSo.incorrectCount || 0,
         soNgayDaNghi,
         soNgayQuaHan,
         mucConNho: hoSo.forgettingScore,
@@ -1255,6 +1303,9 @@ export const learnerModelService = {
       mucNhoNgayThi: mucNhoVaoNgayThi(k.doBenNgay, soNgayToiKyThi, k.soNgayDaNghi),
       loiIchNeuOnHomNay: loiIchOnHomNay(k.bangChung, soNgayToiKyThi, k.soNgayDaNghi),
       soNgayDaNghi: k.soNgayDaNghi,
+      biKet: khaiNiemBiKet(k.soLuotDung, k.soLuotSai),
+      soLuotDaLam: k.soLuotDung + k.soLuotSai,
+      soLuotDung: k.soLuotDung,
       lyDo: "",
     }));
 
@@ -1262,6 +1313,22 @@ export const learnerModelService = {
 
     const toiHan = tatCa.filter(m => {
       if (!xepTheoNgayThi) return m.soNgayQuaHan >= 0;
+      /*
+        KHÁI NIỆM BỊ KẸT KHÔNG BAO GIỜ BỊ HOÃN, dù lợi ích tính ra thấp tới đâu.
+
+        ĐO ĐƯỢC NGÀY 30/08/2026, và phép kiểm AS2 là thứ phơi nó ra. Một khái niệm ôn 8 lượt đúng 1
+        có lợi ích dự kiến gần bằng 0 nên bị đẩy sang nhóm hoãn với lý do "ôn hôm nay không nâng
+        được mức nhớ vào ngày thi", tức hẹn tới sát ngày thi mới đụng lại.
+
+        Nhưng con số lợi ích ấy tính từ một mô hình GIẢ ĐỊNH mỗi lượt ôn đều bồi được trí nhớ. Với
+        khái niệm người học hiểu sai từ gốc thì chính giả định đó hỏng: lợi ích thấp không phải căn
+        cứ để hoãn, nó là TRIỆU CHỨNG. Hoãn tới ngày thứ mười tám nghĩa là tới ngày thi vẫn chưa
+        từng gỡ, và gỡ một hiểu sai thì cần thời gian chứ không cần lịch sát nút.
+
+        Vì vậy nhóm này bỏ qua ngưỡng lợi ích. Chúng vẫn xếp sau theo thứ tự ưu tiên và vẫn chịu
+        quỹ thời gian, chỉ khác là không bị loại một cách âm thầm.
+      */
+      if (m.biKet) return true;
       // Có ngày thi thì tiêu chí là lợi ích, không phải hạn. Một khái niệm chưa tới hạn nhưng ôn
       // vào là được nhiều cho ngày thi thì vẫn đáng làm, và ngược lại.
       return (m.loiIchNeuOnHomNay ?? 0) >= NGUONG_LOI_ICH;
@@ -1283,7 +1350,11 @@ export const learnerModelService = {
     });
 
     for (const m of toiHan) {
-      if (xepTheoNgayThi && m.loiIchNeuOnHomNay !== null) {
+      if (m.biKet) {
+        // Không lặp lại con số ở đây: cột bên phải của hàng đã in "đúng x/y lượt". Lý do chỉ nói
+        // phần mà con số không nói được, tức nên làm gì khác đi.
+        m.lyDo = "Ôn nhiều lần vẫn sai, cần đổi cách học chứ không phải làm thêm";
+      } else if (xepTheoNgayThi && m.loiIchNeuOnHomNay !== null) {
         m.lyDo = `Ôn hôm nay nâng mức nhớ ngày thi thêm ${Math.round(m.loiIchNeuOnHomNay * 100)} điểm phần trăm`;
       } else if (m.soNgayQuaHan >= 1) {
         m.lyDo = `Quá hạn ôn ${Math.round(m.soNgayQuaHan)} ngày`;
@@ -1295,7 +1366,7 @@ export const learnerModelService = {
     // Nhóm bị hoãn: tới hạn theo lối cũ nhưng ôn hôm nay không giúp gì được cho ngày thi.
     const hoanLai = xepTheoNgayThi
       ? tatCa
-        .filter(m => m.soNgayQuaHan >= 0 && (m.loiIchNeuOnHomNay ?? 0) < NGUONG_LOI_ICH)
+        .filter(m => !m.biKet && m.soNgayQuaHan >= 0 && (m.loiIchNeuOnHomNay ?? 0) < NGUONG_LOI_ICH)
         .sort((a, b) => b.soNgayQuaHan - a.soNgayQuaHan || a.tenKhaiNiem.localeCompare(b.tenKhaiNiem, "vi"))
       : [];
     for (const m of hoanLai) {
@@ -1311,6 +1382,7 @@ export const learnerModelService = {
       xepTheoNgayThi,
       soNgayToiKyThi,
       danhSach: toiHan.slice(0, soKhaiNiemVua),
+      soBiKet: toiHan.slice(0, soKhaiNiemVua).filter(m => m.biKet).length,
       soBiCatDoHetGio: Math.max(0, toiHan.length - soKhaiNiemVua),
       hoanLai,
       phutMoiNgay,

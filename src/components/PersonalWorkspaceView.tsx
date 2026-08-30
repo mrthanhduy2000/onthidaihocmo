@@ -606,6 +606,16 @@ Bàn học hôm nay
                       <span className="text-xs text-text-secondary">{muc.lyDo}</span>
                     </div>
                     <span className="text-xs tabular-nums text-text-muted shrink-0">
+                      {/*
+                        Khái niệm bị kẹt được nói ra ngay trên hàng, bằng CON SỐ THẬT chứ không
+                        bằng một nhãn cảm tính: người học cần biết đã làm bao nhiêu lượt và đúng
+                        mấy, mới tự thấy vì sao nên đổi cách học thay vì làm thêm.
+                      */}
+                      {muc.biKet && (
+                        <span className="text-brand-warning">
+                          đúng {muc.soLuotDung}/{muc.soLuotDaLam} lượt ·{" "}
+                        </span>
+                      )}
                       còn nhớ {Math.round(muc.mucConNho * 100)}%
                       {muc.mucNhoNgayThi !== null && `, ngày thi ${Math.round(muc.mucNhoNgayThi * 100)}%`}
                     </span>
@@ -620,6 +630,21 @@ Bàn học hôm nay
               {hangDoiOn.soBiCatDoHetGio > 0 && (
                 <p className="text-xs text-text-muted pt-2">
                   Còn {hangDoiOn.soBiCatDoHetGio} khái niệm nữa đáng ôn, nhưng vượt quỹ {hangDoiOn.phutMoiNgay} phút mỗi ngày bạn đã đặt.
+                </p>
+              )}
+              {/*
+                KHÁI NIỆM ÔN HOÀI VẪN SAI, và lời khuyên đi kèm phải khác "ôn thêm đi".
+
+                Anki gặp thẻ như vậy thì ĐÌNH CHỈ nó. Với ôn thi thì không được: khái niệm ấy vẫn
+                nằm trong đề, bỏ đi là bỏ điểm. Nên ở đây nó VẪN nằm trong lịch, chỉ khác là màn
+                hình nói thẳng rằng làm thêm trắc nghiệm gần như không gỡ được, và chỉ sang chế độ
+                viết lại, nơi bài chấm chỉ ra đích danh ý còn thiếu.
+              */}
+              {hangDoiOn.soBiKet > 0 && (
+                <p className="text-xs text-text-muted pt-2">
+                  {hangDoiOn.soBiKet} khái niệm trong danh sách trên bạn đã ôn nhiều lần mà vẫn sai
+                  phần lớn. Làm thêm trắc nghiệm thường không gỡ được kiểu này, vì chọn một trong
+                  bốn phương án không cho biết bạn hiểu sai chỗ nào. Thử "Ôn bằng cách viết lại".
                 </p>
               )}
               {hangDoiOn.hoanLai.length > 0 && (

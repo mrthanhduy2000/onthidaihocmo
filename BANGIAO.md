@@ -59,6 +59,57 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, khái niệm ôn hoài vẫn sai, và một quyết định cố ý làm khác Anki
+
+Bộ kiểm: **284 lên 287**, không phép kiểm nào biến mất.
+
+Làm ngay sau bộ lập lịch nhiều ngày vì hai thứ này dính nhau: lịch xếp theo lợi ích dự kiến, mà
+công thức lợi ích **giả định mỗi lượt ôn đều bồi được trí nhớ**. Với khái niệm người học hiểu sai
+từ gốc thì giả định ấy hỏng, và lịch sẽ xếp nó mỗi ngày cho tới ngày thi mà không nâng được gì.
+
+Trước lượt này dự án CÓ đo một thứ gần giống, `persistentErrorPenalty` trong `conceptMemoryService`,
+nhưng nó có **0 nơi đọc** ngoài chỗ ghi ra, và nó trộn cả số lần tụt lùi vào nên không dùng lại
+được làm tín hiệu cho người học đọc.
+
+#### Ngưỡng chọn theo lý do, không chọn cho tròn
+
+Sáu lượt, cùng mốc bằng chứng `MOC_BANG_CHUNG_CO` của cả dự án, và tỷ lệ đúng từ 40% trở xuống.
+Dưới sáu lượt thì hai lần sai liên tiếp đã đủ dán nhãn cho một khái niệm người học mới gặp, tức
+phạt người ta vì chưa học chứ không phải vì học mãi không vào. AS1 thử cả năm ca biên.
+
+#### Cố ý làm KHÁC Anki, và đây là chỗ đáng cân nhắc nhất
+
+Anki gặp thẻ ôn hoài vẫn quên thì **đình chỉ** nó, mặc định sau 8 lần quên. Với học từ vựng vô thời
+hạn thì hợp lý: bỏ một thẻ không sao. **Với ôn thi thì sai hẳn**, vì khái niệm ấy vẫn nằm trong đề
+và bỏ nó đi là bỏ điểm.
+
+Nên ở đây khái niệm bị kẹt **vẫn được xếp lịch**, chỉ khác là màn hình nói thẳng rằng làm thêm trắc
+nghiệm gần như không gỡ được, và chỉ sang chế độ viết lại, nơi bài chấm chỉ ra đích danh ý còn
+thiếu. Lời khuyên đó không phải suy đoán: chọn một trong bốn phương án chỉ đòi NHẬN RA đáp án, nên
+nó không thể cho biết người học hiểu sai chỗ nào.
+
+AS2 canh đúng vế này. Không có nó thì một lượt "tối ưu hoá" sau này rất dễ lặng lẽ lọc nhóm bị kẹt
+ra cho hàng đợi gọn, và không ai biết người học vừa bị giấu mất một phần đề thi.
+
+#### Lỗ hổng thiết kế do chính AS2 phơi ra
+
+Bản đầu chỉ đánh dấu chứ không đụng vào cách xếp, và AS2 đỏ ngay: khái niệm ôn 8 lượt đúng 1 **biến
+mất khỏi hàng đợi**. Nó bị đẩy sang nhóm hoãn với lý do "ôn hôm nay không nâng được mức nhớ vào
+ngày thi", tức hẹn tới sát ngày thi mới đụng lại.
+
+Nhìn qua thì đúng luật, nhưng nghĩ kỹ thì luật ấy sai ở đúng nhóm này: con số lợi ích tính từ mô
+hình giả định lượt ôn có tác dụng, nên với khái niệm bị kẹt **lợi ích thấp không phải căn cứ để
+hoãn, nó chính là triệu chứng**. Hoãn tới ngày thứ mười tám nghĩa là tới ngày thi vẫn chưa từng gỡ,
+mà gỡ một hiểu sai thì cần thời gian chứ không cần lịch sát nút.
+
+Đã sửa: nhóm bị kẹt bỏ qua ngưỡng lợi ích, vẫn xếp sau theo thứ tự ưu tiên và vẫn chịu quỹ thời
+gian, chỉ khác là không bị loại một cách âm thầm.
+
+Đây là lần thứ hai trong hai ngày một phép kiểm mới phơi ra lỗ hổng ở phần THIẾT KẾ chứ không ở
+phần mã, và cả hai lần đều nhờ phép kiểm được viết từ câu hỏi "điều gì sẽ sai một cách âm thầm".
+
+---
+
 ### 30/08/2026, lịch ôn TỪNG NGÀY tới ngày thi, và một phép kiểm tự mục theo thời gian
 
 Bộ kiểm: **277 lên 284**, không phép kiểm nào biến mất.
