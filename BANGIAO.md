@@ -59,6 +59,41 @@ sao, và còn nợ gì.
 
 ---
 
+### 30/08/2026, AI hỏng thì phải nói ra hỏng ở đâu
+
+Bộ kiểm: **295 lên 297**, không phép kiểm nào biến mất.
+
+Nợ 4 (bốn cổng AI chết vì dự án Supabase không còn tồn tại) cần Đàm dựng lại, tôi không làm thay
+được. Nhưng phần **hỏng trong im lặng** thì sửa được ngay, và đó mới là phần khó chịu thật.
+
+Trước lượt này: mỗi tính năng tự báo lỗi riêng ("chưa chấm được vì cổng AI không phản hồi", gia sư
+âm thầm rơi về bản ngoại tuyến, sinh câu hỏi báo lỗi thẳng), nhưng không chỗ nào nói nguyên nhân
+chung là gì. Muốn biết thì phải chạy `npm run check:prod` từ cửa sổ dòng lệnh, tức rời khỏi ứng
+dụng để hỏi về chính ứng dụng.
+
+Nay chân trang nói ngay, và **phân biệt được ba nguyên nhân có cách gỡ khác hẳn nhau**:
+
+| Hỏng ở đâu | Cách gỡ |
+|---|---|
+| Chưa cấu hình đăng nhập | Đặt `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY` rồi deploy lại |
+| Không lấy được phiên | Kiểm dự án Supabase còn sống không, bật Anonymous sign-ins |
+| Máy chủ chưa có khóa | Đặt `GEMINI_API_KEY` trong biến môi trường Vercel rồi deploy lại |
+
+Gộp cả ba thành "AI không chạy" là bắt người dùng đoán mò, mà ba cách gỡ nằm ở ba chỗ khác nhau.
+
+**KHÔNG tốn lượt gọi Gemini nào.** Cách chẩn đoán là kiểm hai điều kiện cần chứ không thử gọi
+thật: trình duyệt có lấy được phiên không, và máy chủ có khóa không. Thử gọi thật thì mỗi lần mở
+app là một lượt, cái giá không đáng cho một dòng chữ trạng thái. AT6 canh đúng điều này.
+
+**Cổng chỉ trả về CÓ hay KHÔNG có khóa**, không trả độ dài, không trả vài ký tự đầu. Cổng
+`/api/health` cố ý không đòi đăng nhập (nó phải dùng được ngay cả khi phần xác thực đang hỏng), nên
+mọi thứ nó trả về là công khai. AT7 canh việc này.
+
+Sẵn sàng thì im lặng: một dòng "AI sẵn sàng" đọc mỗi lần mở app là nhiễu, vì đó là trạng thái đáng
+lẽ luôn đúng. "Đang hỏi" và "không hỏi được" cũng im lặng, chưa biết thì đừng dọa.
+
+---
+
 ### 30/08/2026, trả nợ 2: hai con số bịa cuối cùng còn hiển thị
 
 Bộ kiểm: **292 lên 295**, không phép kiểm nào biến mất.

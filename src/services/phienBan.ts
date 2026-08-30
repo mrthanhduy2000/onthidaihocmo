@@ -95,3 +95,82 @@ export async function doiChieuVoiMayChu(): Promise<KetQuaDoiChieu> {
     return { ...khung, lyDoKhongHoi: "Không gọi được cổng kiểm tra, có thể đang mất mạng." };
   }
 }
+
+/*
+  CHẨN ĐOÁN VÌ SAO AI KHÔNG DÙNG ĐƯỢC.
+
+  VÌ SAO CẦN. Khi bốn cổng AI chết, ứng dụng hỏng trong IM LẶNG: mỗi tính năng tự báo lỗi riêng
+  ("chưa chấm được vì cổng AI không phản hồi", gia sư rơi về bản ngoại tuyến), nhưng không chỗ nào
+  nói nguyên nhân chung là gì và gỡ thế nào. Người dùng chỉ còn cách chạy `npm run check:prod` từ
+  cửa sổ dòng lệnh, tức phải rời khỏi ứng dụng để hỏi về chính ứng dụng.
+
+  KHÔNG TỐN LƯỢT GỌI GEMINI NÀO. Cách chẩn đoán là kiểm hai điều kiện cần, không phải thử gọi
+  thật: trình duyệt có lấy được phiên đăng nhập không, và máy chủ có khóa không. Thử gọi thật thì
+  mỗi lần mở app là một lượt Gemini, và đó là cái giá không đáng cho một dòng chữ trạng thái.
+*/
+
+export type TrangThaiAI =
+  | "dang-hoi"
+  | "san-sang"
+  | "chua-cau-hinh-dang-nhap"
+  | "khong-lay-duoc-phien"
+  | "may-chu-thieu-khoa"
+  | "khong-hoi-duoc";
+
+export interface ChanDoanAI {
+  trangThai: TrangThaiAI;
+  /** Câu viết cho người dùng đọc, nói rõ hỏng ở đâu. Rỗng khi sẵn sàng. */
+  moTa: string;
+  /** Việc cần làm để gỡ. Rỗng khi sẵn sàng hoặc khi chưa hỏi được. */
+  cachGo: string;
+}
+
+/**
+ * Chẩn đoán trạng thái AI bằng hai điều kiện cần, theo thứ tự từ gần người dùng ra xa.
+ *
+ * Thứ tự này quan trọng: hỏng ở bước đăng nhập thì chưa biết gì về khóa máy chủ, nên phải báo
+ * đúng bước hỏng đầu tiên chứ không đoán tiếp.
+ */
+export async function chanDoanAI(): Promise<ChanDoanAI> {
+  const { isSupabaseConfigured, ensureSession } = await import("./supabaseClient");
+
+  if (!isSupabaseConfigured) {
+    return {
+      trangThai: "chua-cau-hinh-dang-nhap",
+      moTa: "Chưa cấu hình đăng nhập nên không qua được cửa xác thực của các cổng AI.",
+      cachGo: "Đặt VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY rồi deploy lại.",
+    };
+  }
+
+  let coPhien = false;
+  try {
+    coPhien = Boolean((await ensureSession())?.access_token);
+  } catch {
+    coPhien = false;
+  }
+  if (!coPhien) {
+    return {
+      trangThai: "khong-lay-duoc-phien",
+      moTa: "Không lấy được phiên đăng nhập, nên mọi cổng AI đều trả về 401.",
+      cachGo: "Kiểm tra dự án Supabase còn sống không, và bật Anonymous sign-ins.",
+    };
+  }
+
+  try {
+    const res = await fetch("/api/health", { cache: "no-store" });
+    if (!res.ok) {
+      return { trangThai: "khong-hoi-duoc", moTa: `Cổng kiểm tra trả về ${res.status}.`, cachGo: "" };
+    }
+    const data = await res.json();
+    if (data?.coKhoaGemini === false) {
+      return {
+        trangThai: "may-chu-thieu-khoa",
+        moTa: "Đăng nhập được nhưng máy chủ chưa có khóa Gemini.",
+        cachGo: "Đặt GEMINI_API_KEY trong biến môi trường của Vercel rồi deploy lại.",
+      };
+    }
+    return { trangThai: "san-sang", moTa: "", cachGo: "" };
+  } catch {
+    return { trangThai: "khong-hoi-duoc", moTa: "Không gọi được cổng kiểm tra.", cachGo: "" };
+  }
+}

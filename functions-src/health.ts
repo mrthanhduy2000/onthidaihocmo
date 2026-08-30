@@ -30,5 +30,16 @@ export default function handler(_req: any, res: any) {
     ngayCommit: typeof __BAN_NGAY_COMMIT__ !== "undefined" ? __BAN_NGAY_COMMIT__ : (process.env.BAN_NGAY_COMMIT || ""),
     thoiDiemDung: typeof __BAN_THOI_DIEM_DUNG__ !== "undefined" ? __BAN_THOI_DIEM_DUNG__ : (process.env.BAN_THOI_DIEM_DUNG || ""),
     dungTrenVercel: typeof __BAN_TREN_VERCEL__ !== "undefined" ? __BAN_TREN_VERCEL__ : false,
+    /*
+      Máy chủ CÓ khóa Gemini hay không. Chỉ trả về đúng một giá trị luận lý, tuyệt đối không trả
+      về khóa, độ dài khóa, hay bất kỳ phần nào của nó: một chuỗi rỗng hay không cũng đủ để chẩn
+      đoán, còn mọi thứ hơn thế là rò rỉ.
+
+      Vì sao cần: khi AI không dùng được, có hai nguyên nhân hoàn toàn khác nhau và cách gỡ khác
+      hẳn nhau. Một là trình duyệt không lấy được phiên đăng nhập (hỏng ở Supabase), hai là máy
+      chủ chưa có khóa (hỏng ở biến môi trường Vercel). Không phân biệt được thì người dùng chỉ
+      thấy "AI không chạy" rồi đoán mò.
+    */
+    coKhoaGemini: Boolean(process.env.GEMINI_API_KEY),
   });
 }

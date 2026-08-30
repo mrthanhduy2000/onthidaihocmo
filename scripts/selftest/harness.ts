@@ -4984,6 +4984,42 @@ check("Cổng kiểm tra máy chủ trả về đúng bộ trường mà trình 
     ? `cổng thiếu biến: ${bienThieuOHealth.join(", ")}`
     : "cổng và gói giao diện dùng chung bộ tên biến, so được với nhau");
 
+// AT6. Chẩn đoán AI phải phân biệt được các nguyên nhân, và KHÔNG tốn lượt gọi Gemini nào.
+//
+// Khi bốn cổng AI chết, ứng dụng hỏng trong IM LẶNG: mỗi tính năng tự báo lỗi riêng nhưng không
+// chỗ nào nói nguyên nhân chung. Hai nguyên nhân có cách gỡ khác hẳn nhau, nên gộp chúng lại thành
+// "AI không chạy" là bắt người dùng đoán mò.
+//
+// Canh luôn việc KHÔNG gọi thật: thử gọi Gemini để biết nó sống thì mỗi lần mở app là một lượt,
+// và đó là cái giá không đáng cho một dòng chữ trạng thái.
+const nguonChanDoan = boChuThich(readFileSync(path.join(process.cwd(), "src/services/phienBan.ts"), "utf8"));
+const goiThatGemini = /api\/ai\/(complete|generate|chat|recommend)/.test(nguonChanDoan);
+const phanBietDuNguyenNhan = ["chua-cau-hinh-dang-nhap", "khong-lay-duoc-phien", "may-chu-thieu-khoa"]
+  .every(t => nguonChanDoan.includes(t));
+// Mọi nhánh hỏng đều phải nêu cách gỡ, nếu không thì nó chỉ báo tin xấu chứ không giúp được gì.
+const soCachGo = (nguonChanDoan.match(/cachGo: "[^"]{10,}"/g) || []).length;
+check("Chẩn đoán AI phân biệt đủ nguyên nhân, nêu cách gỡ, và không tốn lượt gọi Gemini",
+  !goiThatGemini && phanBietDuNguyenNhan && soCachGo >= 3,
+  goiThatGemini
+    ? "chẩn đoán gọi thật vào cổng AI, mỗi lần mở app là một lượt Gemini"
+    : !phanBietDuNguyenNhan
+      ? "gộp mọi nguyên nhân thành một, người dùng phải đoán mò cách gỡ"
+      : `phân biệt 3 nguyên nhân, ${soCachGo} nhánh có cách gỡ, chỉ kiểm điều kiện cần chứ không gọi thật`);
+
+// AT7. Cổng kiểm tra chỉ được trả về CÓ hay KHÔNG có khóa, tuyệt đối không hé lộ khóa.
+//
+// Một chuỗi rỗng hay không cũng đủ để chẩn đoán. Trả thêm độ dài, vài ký tự đầu, hay chính khóa
+// đều là rò rỉ, và cổng này cố ý KHÔNG đòi đăng nhập nên ai cũng gọi được.
+const traVeKhoa = /GEMINI_API_KEY(?!\s*\))/.test(nguonHealth.replace("Boolean(process.env.GEMINI_API_KEY)", ""));
+const chiTraLuanLy = /coKhoaGemini: Boolean\(process\.env\.GEMINI_API_KEY\)/.test(nguonHealth);
+check("Cổng kiểm tra chỉ báo CÓ hay KHÔNG có khóa, không hé lộ phần nào của khóa",
+  chiTraLuanLy && !traVeKhoa,
+  !chiTraLuanLy
+    ? "không thấy trường báo có khóa hay không"
+    : traVeKhoa
+      ? "cổng để lộ một phần khóa Gemini, mà cổng này không đòi đăng nhập"
+      : "chỉ trả về đúng một giá trị luận lý");
+
 // ===========================================================================
 // AU. Kế hoạch chương trình bám việc thật
 // ===========================================================================

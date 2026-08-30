@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { banDangChay, doiChieuVoiMayChu, KetQuaDoiChieu, KHONG_RO } from "../services/phienBan";
+import { banDangChay, chanDoanAI, ChanDoanAI, doiChieuVoiMayChu, KetQuaDoiChieu, KHONG_RO } from "../services/phienBan";
 import { TimeService } from "../services/time";
 
 /*
@@ -30,10 +30,12 @@ function gonThoiDiem(iso: string): string {
 
 export default function DauHieuPhienBan() {
   const [ketQua, setKetQua] = useState<KetQuaDoiChieu | null>(null);
+  const [ai, setAi] = useState<ChanDoanAI | null>(null);
 
   useEffect(() => {
     let conGan = true;
     doiChieuVoiMayChu().then(kq => { if (conGan) setKetQua(kq); });
+    chanDoanAI().then(kq => { if (conGan) setAi(kq); });
     return () => { conGan = false; };
   }, []);
 
@@ -72,6 +74,26 @@ export default function DauHieuPhienBan() {
       */}
       {trangThai === "khong-hoi-duoc" && (
         <span title={ketQua?.lyDoKhongHoi}>· chưa đối chiếu được với máy chủ</span>
+      )}
+
+      {/*
+        TRẠNG THÁI AI, chỉ hiện khi CÓ VẤN ĐỀ.
+
+        Sẵn sàng thì im lặng: một dòng "AI sẵn sàng" đọc mỗi lần mở app là nhiễu, vì đó là trạng
+        thái đáng lẽ luôn đúng. Hỏng thì phải nói ngay, nói hỏng ở đâu, và nói cách gỡ, vì trước
+        đây ứng dụng hỏng trong im lặng: mỗi tính năng tự báo lỗi riêng còn nguyên nhân chung thì
+        không chỗ nào nói.
+
+        "Đang hỏi" và "không hỏi được" cũng im lặng: chưa biết thì đừng dọa.
+
+        Câu ngắn ở chân trang, nguyên nhân và cách gỡ nằm trong chú giải khi rê chuột. Chân trang
+        là chỗ liếc chứ không phải chỗ đọc, và một dòng dài ở đó sẽ bị bỏ qua chứ không được đọc kỹ
+        hơn. Đây là ứng dụng chạy trên máy tính nên rê chuột là thao tác có thật.
+      */}
+      {ai && ai.trangThai !== "san-sang" && ai.trangThai !== "dang-hoi" && ai.trangThai !== "khong-hoi-duoc" && (
+        <span className="text-brand-warning" title={`${ai.moTa} ${ai.cachGo}`.trim()}>
+          · AI đang không dùng được
+        </span>
       )}
     </span>
   );

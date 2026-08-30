@@ -19,7 +19,7 @@ quyết định.
 | **Current Phase** | Cả 8 giai đoạn XONG. Việc chặn đường: Supabase chết nên AI 401 |
 | **Completed %** | 9 trên 9 khối việc |
 | **Git** | `main` khớp `origin/main`, cây làm việc sạch |
-| **Bộ kiểm** | **295/295 đạt**, đủ 6 chặng |
+| **Bộ kiểm** | **297/297 đạt**, đủ 6 chặng |
 
 **Safe Resume Point**: bất kỳ lúc nào. Không có việc dở dang, không có nhánh phụ.
 
@@ -1215,6 +1215,9 @@ dùng được trên bản thật.
 
 Cách gỡ: tạo dự án Supabase mới, bật Anonymous sign-ins, đặt `VITE_SUPABASE_URL` và
 `VITE_SUPABASE_ANON_KEY` trong Vercel, deploy lại, rồi chạy `npm run check:prod`.
+
+Từ 30/08/2026 chân trang tự chẩn đoán và nói ra hỏng ở đâu, nên không cần chạy `check:prod` mới
+biết. Ba nguyên nhân được phân biệt riêng vì ba cách gỡ nằm ở ba chỗ khác nhau.
 
 ## Known Risks
 
